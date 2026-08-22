@@ -1,0 +1,8 @@
+
+> @fenix-ui/fenix-ui@0.1.0 typecheck
+> tsc --noEmit
+
+src/components/floatlabel/floatlabel.ts(158,63): error TS1002: Unterminated string literal.
+src/components/floatlabel/floatlabel.ts(161,6): error TS1005: ')' expected.
+src/components/floatlabel/floatlabel.ts(167,38): error TS1002: Unterminated string literal.
+src/components/floatlabel/floatlabel.ts(168,5): error TS1005: ',' expected.

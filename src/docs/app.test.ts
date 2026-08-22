@@ -1,0 +1,89 @@
+/**
+ * Teste de integração da documentação: monta o DOM do index.html,
+ * carrega o app da doc e valida a renderização de cada página.
+ */
+import { describe, it, expect, beforeEach } from 'vitest';
+import { applyPreset } from '../core/presets';
+
+document.body.innerHTML = `
+  <select id="preset-select"></select>
+  <button id="mode-toggle"></button>
+  <aside id="sidebar"></aside>
+  <main id="main"></main>
+`;
+
+await import('../docs/app');
+
+const main = () => document.getElementById('main')!;
+
+function navigate(route: string): void {
+  location.hash = `#/${route}`;
+  window.dispatchEvent(new Event('hashchange'));
+}
+
+describe('docs app', () => {
+  beforeEach(() => {
+    navigate('introduction');
+  });
+
+  it('constrói a sidebar com todos os componentes', () => {
+    const links = [...document.querySelectorAll('#sidebar a')].map((a) => a.getAttribute('href'));
+    expect(links).toContain('#/fx-button');
+    expect(links).toContain('#/fx-badge');
+    expect(links).toContain('#/fx-select');
+    expect(links).toContain('#/fx-input');
+    expect(links).toContain('#/fx-switch');
+    expect(links).toContain('#/fx-multiselect');
+    expect(links).toContain('#/fx-spinner');
+    expect(links).toContain('#/theming');
+  });
+
+  it('página do button renderiza playground com fx-button ao vivo', () => {
+    navigate('fx-button');
+    expect(main().querySelector('#stage fx-button')).toBeTruthy();
+  });
+
+  it('página do badge renderiza playground com fx-badge ao vivo', () => {
+    navigate('fx-badge');
+    expect(main().querySelector('#stage fx-badge')).toBeTruthy();
+  });
+
+  it('página do spinner renderiza playground com fx-spinner ao vivo', () => {
+    navigate('fx-spinner');
+    const spinner = main().querySelector('#stage fx-spinner') as HTMLElement;
+    expect(spinner).toBeTruthy();
+    expect(spinner.shadowRoot?.querySelector('.spinner')).toBeTruthy();
+  });
+
+  it('controles do playground (fx-select) atualizam atributos ao vivo', () => {
+    navigate('fx-button');
+    const select = main().querySelector('fx-select[data-attr="variant"]') as any;
+    select.value = 'danger';
+    select.dispatchEvent(new Event('change'));
+    const btn = main().querySelector('#stage fx-button')!;
+    expect(btn.getAttribute('variant')).toBe('danger');
+  });
+
+  it('página de temas renderiza preview com input e select do tema ativo', () => {
+    navigate('theming');
+    expect(main().querySelector('.demo-stage fx-input')).toBeTruthy();
+    expect(main().querySelector('.demo-stage fx-select')).toBeTruthy();
+  });
+
+  it('página de temas NÃO sobrescreve o preset ativo ao navegar', () => {
+    applyPreset('seiya', 'light');
+    navigate('theming');
+    expect(document.documentElement.style.getPropertyValue('--fx-color-primary')).toBe('#e11d48');
+    // ...e ao sair e voltar, também permanece
+    navigate('introduction');
+    navigate('theming');
+    expect(document.documentElement.style.getPropertyValue('--fx-color-primary')).toBe('#e11d48');
+  });
+
+  it('página de temas lista presets dos cavaleiros e pinta swatches', () => {
+    navigate('theming');
+    expect(document.getElementById('swatches')!.children.length).toBeGreaterThan(0);
+    const opts = [...document.querySelectorAll('#th-preset option')].map((o) => o.getAttribute('value'));
+    expect(opts).toContain('seiya');
+  });
+});

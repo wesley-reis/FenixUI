@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FenixUI — Documentação</title>
+    <style>
+      :root {
+        --doc-sidebar-w: 250px;
+        --doc-header-h: 60px;
+        font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--fx-surface-background); color: var(--fx-text-default); transition: background .25s; }
+
+      /* ---------- Header ---------- */
+      header {
+        position: fixed; inset: 0 0 auto 0; height: var(--doc-header-h);
+        display: flex; align-items: center; gap: 1rem; padding: 0 1.25rem;
+        background: var(--fx-color-primary);
+        color: #fff;
+        border-bottom: 1px solid var(--fx-border-default);
+        box-shadow: var(--fx-shadow-md);
+        z-index: calc(var(--fx-z-dropdown, 1000) + 10);
+        transition: background .25s;
+      }
+      header h1 { font-size: 1.1rem; margin: 0; letter-spacing: -.02em; }
+      header .spacer { flex: 1; }
+      header select {
+        font: inherit; padding: .4rem .7rem; border-radius: var(--fx-radius-sm);
+        border: 1px solid rgba(255, 255, 255, .45); background: rgba(255, 255, 255, .14);
+        color: #fff; cursor: pointer;
+      }
+      header select option { color: var(--fx-text-default); background: var(--fx-surface); }
+      /* O próprio design system pinta o botão do header via tokens:
+         dentro do shadow do fx-button, as cores passam a ser brancas. */
+      header fx-button#mode-toggle {
+        --fx-color-primary: #ffffff;
+        --fx-color-secondary: #ffffff;
+        --fx-text-default: #ffffff;
+        --fx-surface-hover: rgba(255, 255, 255, .18);
+        --fx-border-default: rgba(255, 255, 255, .5);
+      }
+      /* Badge de versão em tom translúcido sobre o header */
+      header fx-badge { --fx-color-warning: rgba(255, 255, 255, .22); --fx-text-default: #fff; }
+
+      /* ---------- Layout ---------- */
+      aside {
+        position: fixed; top: var(--doc-header-h); bottom: 0; left: 0;
+        width: var(--doc-sidebar-w); overflow-y: auto;
+        border-right: 1px solid var(--fx-border-default);
+        background: var(--fx-surface); padding: 1rem .75rem;
+      }
+      aside .group { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em;
+        color: var(--fx-text-muted); margin: 1rem .5rem .35rem; }
+      aside a {
+        display: block; padding: .45rem .7rem; border-radius: var(--fx-radius-sm);
+        color: var(--fx-text-default); text-decoration: none; font-size: .9rem;
+      }
+      aside a:hover { background: var(--fx-surface-hover); }
+      aside a.active { background: color-mix(in srgb, var(--fx-color-primary) 14%, transparent);
+        color: var(--fx-color-primary); font-weight: 600; }
+      main { margin-left: var(--doc-sidebar-w); padding: calc(var(--doc-header-h) + 2rem) 2.5rem 4rem; max-width: 980px; }
+
+      /* ---------- Conteúdo ---------- */
+      main h2 { font-size: 1.65rem; margin: 0 0 .35rem; letter-spacing: -.03em; }
+      main h3 { margin: 2.2rem 0 .6rem; font-size: 1.05rem; }
+      main .lead { color: var(--fx-text-muted); margin-top: 0; }
+      code.inline { background: var(--fx-surface-hover); padding: .12em .4em; border-radius: 5px;
+        font-size: .86em; font-family: ui-monospace, Consolas, monospace; }
+
+      .demo {
+        border: 1px solid var(--fx-border-default); border-radius: var(--fx-radius-md);
+        background: var(--fx-surface); margin-bottom: .5rem;
+      }
+      .demo-stage { padding: 1.5rem; display: flex; flex-wrap: wrap; gap: .8rem; align-items: center; transition: background .25s; }
+      .demo-controls { display: flex; flex-wrap: wrap; gap: .8rem 1.4rem; padding: .8rem 1.5rem;
+        border-top: 1px dashed var(--fx-border-default); font-size: .85rem; }
+      .demo-controls label { display: inline-flex; align-items: center; gap: .45rem; cursor: pointer; }
+      .demo-controls select { font: inherit; padding: .15rem .4rem; }
+      .code-block { position: relative; margin: 0 0 1.8rem; }
+      .code-block pre {
+        margin: 0; background: var(--fx-surface-hover); border: 1px solid var(--fx-border-default);
+        border-radius: var(--fx-radius-md); padding: 1rem 1.1rem; overflow-x: auto;
+        font-size: .84rem; line-height: 1.55; font-family: ui-monospace, Consolas, monospace;
+      }
+      .copy-btn { position: absolute; top: .5rem; right: .5rem; font-size: .74rem; padding: .25rem .6rem;
+        border-radius: 6px; border: 1px solid var(--fx-border-default); background: var(--fx-surface);
+        color: var(--fx-text-muted); cursor: pointer; opacity: 0; transition: opacity .15s; }
+      .code-block:hover .copy-btn { opacity: 1; }
+      .copy-btn:hover { color: var(--fx-text-default); }
+
+      table.api { width: 100%; border-collapse: collapse; font-size: .87rem; margin-bottom: 2rem; }
+      table.api th, table.api td { text-align: left; padding: .55rem .75rem; border-bottom: 1px solid var(--fx-border-default); vertical-align: top; }
+      table.api th { color: var(--fx-text-muted); font-weight: 600; font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; }
+      table.api td:first-child code.inline { white-space: nowrap; }
+      table.api .type { color: var(--fx-color-info); font-family: ui-monospace, Consolas, monospace; font-size: .8rem; }
+      table.api .default { color: var(--fx-text-muted); }
+
+      .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: .8rem; }
+      .swatch { border: 1px solid var(--fx-border-default); border-radius: var(--fx-radius-md); overflow: hidden; background: var(--fx-surface); }
+      .swatch .chip { height: 56px; }
+      .swatch .meta { padding: .5rem .6rem; font-size: .75rem; font-family: ui-monospace, monospace; }
+      .swatch .meta b { display: block; font-size: .8rem; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>FenixUI</h1>
+      <fx-badge variant="warning" round>v0.1.0</fx-badge>
+      <div class="spacer"></div>
+      <fx-button id="mode-toggle" variant="ghost">🌙 Modo escuro</fx-button>
+    </header>
+
+    <aside id="sidebar"></aside>
+    <main id="main"></main>
+
+    <script type="module" src="/src/docs/app.ts"></script>
+  </body>
+</html>
