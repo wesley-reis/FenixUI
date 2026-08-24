@@ -62,6 +62,11 @@ export class FxTabs extends FxElement {
       box-shadow: var(--fx-effect-focus-ring, none);
       border-radius: var(--fx-radius-sm);
     }
+    /* Os <fx-tab> originais são renderizados como botões no shadow DOM.
+       Sem isto, o <slot> os projetaria de novo como texto cru abaixo das abas. */
+    ::slotted(fx-tab) {
+      display: none !important;
+    }
   `;
 
   static override get observedAttributes(): string[] {
@@ -85,13 +90,19 @@ export class FxTabs extends FxElement {
             ${disabled ? 'aria-disabled="true" data-disabled="true"' : ''}>${t.textContent?.trim()}</button>`;
         }).join('')}
       </div>
+      <slot></slot>
     `);
 
-    // Sincroniza painéis
-    document.querySelectorAll<FxTabPanel>('fx-tab-panel').forEach((p) => {
-      if (tabs.some((t) => t.getAttribute('tab') === p.tab)) {
-        p.visible = p.tab === active;
-      }
+    // Sincroniza apenas os painéis DESTE conjunto de abas
+    // (dentro do host ou irmãos seguintes — nunca global).
+    // IMPORTANTE: manipula o atributo `hidden` DIRETAMENTE (nunca a
+    // propriedade `.visible`), porque escrever a propriedade em um
+    // elemento ainda não upgradeado cria uma own property que faz
+    // shadowing dos accessors do prototype para sempre.
+    this.panels.forEach((p) => {
+      const show = p.getAttribute('tab') === active;
+      if (show) p.removeAttribute('hidden');
+      else p.setAttribute('hidden', '');
     });
 
     this.root.querySelectorAll<HTMLButtonElement>('.tab').forEach((btn) => {
@@ -103,6 +114,20 @@ export class FxTabs extends FxElement {
         );
       });
     });
+  }
+
+  /** Painéis associados: descendentes do host ou irmãos seguintes no DOM. */
+  private get panels(): FxTabPanel[] {
+    const inside = Array.from(this.querySelectorAll<FxTabPanel>('fx-tab-panel'));
+    if (inside.length) return inside;
+    const out: FxTabPanel[] = [];
+    let el = this.nextElementSibling;
+    while (el && !el.matches('fx-tabs')) {
+      if (el.matches('fx-tab-panel')) out.push(el as FxTabPanel);
+      else out.push(...Array.from(el.querySelectorAll<FxTabPanel>(':scope > fx-tab-panel')));
+      el = el.nextElementSibling;
+    }
+    return out;
   }
 }
 
@@ -126,14 +151,21 @@ export class FxTabPanel extends FxElement {
 
   protected override render(): void {
     this.setTemplate('<slot></slot>');
-    if (!this.hasAttribute('hidden') && !this._initialized) {
-      // Painéis não ativos começam ocultos
-      const tabs = Array.from(document.querySelectorAll('fx-tabs'));
-      const owner = tabs.find((t) => Array.from(t.querySelectorAll<HTMLElement>('fx-tab')).some((tb) => tb.getAttribute('tab') === this.tab));
-      if (owner) {
-        const active = (owner as FxTabs).value;
-        this.visible = active === this.tab;
-      }
+    if (!this._initialized) {
+      // Estado inicial: visível apenas se for a aba ativa do owner.
+      // (usa atributo direto — ver comentário em FxTabs.render)
+      const owner =
+        (this.closest<FxTabs>('fx-tabs')) ??
+        (() => {
+          let el = this.previousElementSibling;
+          while (el) {
+            if (el.matches('fx-tabs')) return el as FxTabs;
+            el = el.previousElementSibling;
+          }
+          return null;
+        })();
+      const active = owner ? (owner.getAttribute('value') || '') : '';
+      if (this.getAttribute('tab') !== active) this.setAttribute('hidden', '');
       this._initialized = true;
     }
   }

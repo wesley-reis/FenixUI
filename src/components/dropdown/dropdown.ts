@@ -31,8 +31,16 @@ export class FxDropdown extends FxElement {
       display: none;
     }
     :host([open]) .panel { display: block; }
-    :host([position='bottom-right']) .panel { left: 0; }
-    :host(:not([position='bottom-right'])) .panel { right: 0; }
+    /* left = alinhado à esquerda do trigger; right = à direita; center = centrado */
+    :host([position='left']) .panel,
+    :host([position='bottom-left']) .panel { left: 0; right: auto; }
+    :host([position='center']) .panel {
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    :host([position='right']) .panel,
+    :host([position='bottom-right']) .panel { right: 0; left: auto; }
+    :host(:not([position])) .panel { left: 0; right: auto; }
     ::slotted(fx-dropdown-item) { display: block; }
     .empty { color: var(--fx-text-muted); font-size: calc(var(--fx-font-size) - 2px); padding: var(--fx-space-sm); }
   `;
