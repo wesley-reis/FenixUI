@@ -1,0 +1,9 @@
+node_modules
+*.local
+.DS_Store
+coverage
+playwright-report
+test-results
+*.log
+*.txt
+*.test.ts
