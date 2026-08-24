@@ -9,7 +9,7 @@ import { defineElement } from '../../core/define';
  */
 export class FxSkeleton extends FxElement {
   static override styles = css`
-    :host { display: block; font-family: var(--fx-font-family); }
+    :host { display: block; width: 100%; min-width: 80px; font-family: var(--fx-font-family); }
     .bone {
       background: linear-gradient(
         90deg,

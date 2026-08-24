@@ -640,7 +640,7 @@ const components: ComponentDoc[] = [
     group: 'Feedback',
     lead: 'Placeholder animado para carregamento: texto, círculo, retângulo ou múltiplas linhas.',
     imports: ["import '@fenix-ui/fenix-ui/skeleton';"],
-    demoHtml: () => `<fx-skeleton width="100%" height="14px"></fx-skeleton>`,
+    demoHtml: (a) => `<fx-skeleton ${a}></fx-skeleton>`,
     variantsHtml: () =>
       `<h4>Texto</h4><fx-skeleton variant="text"></fx-skeleton><div style="display:flex;gap:12px;align-items:center;margin-top:8px"><fx-skeleton variant="circle" width="40px" height="40px"></fx-skeleton><div style="flex:1"><fx-skeleton variant="text"></fx-skeleton><fx-skeleton variant="text"></fx-skeleton></div></div><h4>Múltiplas linhas</h4><fx-skeleton variant="text" lines="3"></fx-skeleton><h4>Bloco</h4><fx-skeleton width="100%" height="120px"></fx-skeleton>`,
     controls: [
@@ -650,9 +650,9 @@ const components: ComponentDoc[] = [
       { kind: 'text', attr: 'lines', label: 'Linhas' },
     ],
     attributes: [
-      { name: 'variant', type: `'text' | 'circle' | 'rect'`, default: "'rect'", desc: 'Formato.' },
+      { name: 'variant', type: `'text' | 'circle' | 'rect'`, default: "'text'", desc: 'Formato.' },
       { name: 'width / height', type: 'string', default: '—', desc: 'Dimensões (CSS).' },
-      { name: 'lines', type: 'number', default: '1', desc: 'Linhas (variante text).' },
+      { name: 'lines', type: 'number', default: '3', desc: 'Linhas (variante text).' },
     ],
   },
   {
