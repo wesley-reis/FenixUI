@@ -4,6 +4,7 @@
   "description": "FenixUI Design System Web nativo (Web Components + Shadow DOM + Design Tokens) com tree-shaking por componente.",
   "type": "module",
   "license": "MIT",
+  "keywords":["UI", "UX", "Componentes", "Fenix", "FenixUI"],
   "files": [
     "dist/index.js",
     "README.md"
