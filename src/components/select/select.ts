@@ -1,4 +1,4 @@
-import { FxElement } from '../../core/base';
+﻿import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 
@@ -38,7 +38,7 @@ export class FxSelect extends FxElement {
       font-weight: var(--fx-font-weight);
       color: var(--fx-text-default);
       text-align: left;
-      background-color: var(--fx-surface);
+      background-color: var(--fx-surface-background);
       border: 1px solid var(--fx-border-default);
       border-radius: var(--fx-radius-md);
       padding: var(--fx-space-xs) var(--fx-space-md);
@@ -80,7 +80,7 @@ export class FxSelect extends FxElement {
       box-shadow: 0 0 0 3px color-mix(in srgb, var(--fx-color-success, #16a34a) 18%, transparent);
     }
     :host([disabled]) .trigger,
-    .trigger[aria-disabled='true'] { opacity: 0.55; cursor: not-allowed; background-color: var(--fx-surface-hover); }
+    .trigger[aria-disabled='true'] { opacity: 0.55; cursor: not-allowed; background-color: var(--fx-surface-surface-hover); }
     /* O rótulo encolhe (ellipsis) e os ícones NUNCA saem do campo. */
     .label,
     .placeholder {

@@ -83,7 +83,7 @@ atravessando o Shadow DOM. Todo componente reage automaticamente.
 | `fx-spinner` | `size` (sm/md/lg)                             | —            |
 
 Todos os componentes com tamanho usam **`md` como padrão** (valores inválidos caem para `md`).
-Escala alinhada ao mercado (Material/PrimeVue/Ant): **sm ≈ 32px · md ≈ 40px (padrão) · lg ≈ 48px**.
+Escala alinhada ao mercado (Material/Ant): **sm ≈ 32px · md ≈ 40px (padrão) · lg ≈ 48px**.
 
 Eventos usam o nativo `click` no botão; `input`, `change` e o `change` do select são
 `CustomEvent`s **composed** com `detail: { value }` (atravessam o Shadow DOM).

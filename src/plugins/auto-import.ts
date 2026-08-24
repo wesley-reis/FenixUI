@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Registro de tags → subpaths para o auto-import.
  * Mantido em um módulo próprio (sem depender de DOM) para ser usado
  * também no build do cliente via plugin.
@@ -17,6 +17,19 @@ export const fenixComponentMap: Record<string, string> = {
   'fx-radio': '@fenix-ui/fenix-ui/radio',
   'fx-table': '@fenix-ui/fenix-ui/table',
   'fx-floatlabel': '@fenix-ui/fenix-ui/floatlabel',
+  'fx-textarea': '@fenix-ui/fenix-ui/textarea',
+  'fx-dialog': '@fenix-ui/fenix-ui/dialog',
+  'fx-toast': '@fenix-ui/fenix-ui/toast',
+  'fx-tooltip': '@fenix-ui/fenix-ui/tooltip',
+  'fx-tabs': '@fenix-ui/fenix-ui/tabs',
+  'fx-tab-panel': '@fenix-ui/fenix-ui/tabs',
+  'fx-progress': '@fenix-ui/fenix-ui/progress',
+  'fx-skeleton': '@fenix-ui/fenix-ui/skeleton',
+  'fx-alert': '@fenix-ui/fenix-ui/alert',
+  'fx-dropdown': '@fenix-ui/fenix-ui/dropdown',
+  'fx-dropdown-item': '@fenix-ui/fenix-ui/dropdown',
+  'fx-pagination': '@fenix-ui/fenix-ui/pagination',
+  'fx-autocomplete': '@fenix-ui/fenix-ui/autocomplete',
 };
 
 const TAG_RE = /<(fx-[a-z][a-z-]*)(?=[\s/>])/g;
@@ -75,3 +88,4 @@ export function shouldTransform(id: string): boolean {
     /\.(ts|js|tsx|jsx|vue|html|svelte)$/.test(id)
   );
 }
+

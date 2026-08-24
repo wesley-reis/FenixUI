@@ -1,0 +1,88 @@
+
+> @fenix-ui/fenix-ui@0.1.0 build
+> npm run build:esm && npm run build:types && npm run build:cdn
+
+
+> @fenix-ui/fenix-ui@0.1.0 build:esm
+> vite build --config vite.config.ts
+
+[36mvite v5.4.21 [32mbuilding for production...[36m[39m
+transforming...
+[32m✓[39m 57 modules transformed.
+rendering chunks...
+computing gzip size...
+[2mdist/[22m[36mcomponents/badge/index.js                [39m[1m[2m 0.16 kB[22m[1m[22m[2m │ gzip: 0.12 kB[22m[2m │ map:  0.38 kB[22m
+[2mdist/[22m[36mcomponents/input/index.js                [39m[1m[2m 0.16 kB[22m[1m[22m[2m │ gzip: 0.12 kB[22m[2m │ map:  0.38 kB[22m
+[2mdist/[22m[36mcomponents/radio/index.js                [39m[1m[2m 0.16 kB[22m[1m[22m[2m │ gzip: 0.12 kB[22m[2m │ map:  0.38 kB[22m
+[2mdist/[22m[36mcomponents/table/index.js                [39m[1m[2m 0.16 kB[22m[1m[22m[2m │ gzip: 0.12 kB[22m[2m │ map:  0.24 kB[22m
+[2mdist/[22m[36mcomponents/alert/index.js                [39m[1m[2m 0.16 kB[22m[1m[22m[2m │ gzip: 0.12 kB[22m[2m │ map:  0.33 kB[22m
+[2mdist/[22m[36mcomponents/button/index.js               [39m[1m[2m 0.16 kB[22m[1m[22m[2m │ gzip: 0.12 kB[22m[2m │ map:  0.46 kB[22m
+[2mdist/[22m[36mcomponents/select/index.js               [39m[1m[2m 0.16 kB[22m[1m[22m[2m │ gzip: 0.12 kB[22m[2m │ map:  0.39 kB[22m
+[2mdist/[22m[36mcomponents/switch/index.js               [39m[1m[2m 0.16 kB[22m[1m[22m[2m │ gzip: 0.12 kB[22m[2m │ map:  0.39 kB[22m
+[2mdist/[22m[36mcomponents/dialog/index.js               [39m[1m[2m 0.16 kB[22m[1m[22m[2m │ gzip: 0.12 kB[22m[2m │ map:  0.35 kB[22m
+[2mdist/[22m[36mcomponents/spinner/index.js              [39m[1m[2m 0.17 kB[22m[1m[22m[2m │ gzip: 0.12 kB[22m[2m │ map:  0.37 kB[22m
+[2mdist/[22m[36mcomponents/tooltip/index.js              [39m[1m[2m 0.17 kB[22m[1m[22m[2m │ gzip: 0.12 kB[22m[2m │ map:  0.36 kB[22m
+[2mdist/[22m[36mcomponents/calendar/index.js             [39m[1m[2m 0.17 kB[22m[1m[22m[2m │ gzip: 0.12 kB[22m[2m │ map:  0.40 kB[22m
+[2mdist/[22m[36mcomponents/checkbox/index.js             [39m[1m[2m 0.17 kB[22m[1m[22m[2m │ gzip: 0.12 kB[22m[2m │ map:  0.40 kB[22m
+[2mdist/[22m[36mcomponents/textarea/index.js             [39m[1m[2m 0.17 kB[22m[1m[22m[2m │ gzip: 0.12 kB[22m[2m │ map:  0.58 kB[22m
+[2mdist/[22m[36mcomponents/progress/index.js             [39m[1m[2m 0.17 kB[22m[1m[22m[2m │ gzip: 0.12 kB[22m[2m │ map:  0.36 kB[22m
+[2mdist/[22m[36mcomponents/skeleton/index.js             [39m[1m[2m 0.17 kB[22m[1m[22m[2m │ gzip: 0.12 kB[22m[2m │ map:  0.36 kB[22m
+[2mdist/[22m[36mcomponents/toast/index.js                [39m[1m[2m 0.18 kB[22m[1m[22m[2m │ gzip: 0.13 kB[22m[2m │ map:  0.36 kB[22m
+[2mdist/[22m[36mcomponents/floatlabel/index.js           [39m[1m[2m 0.19 kB[22m[1m[22m[2m │ gzip: 0.13 kB[22m[2m │ map:  0.42 kB[22m
+[2mdist/[22m[36mcomponents/pagination/index.js           [39m[1m[2m 0.19 kB[22m[1m[22m[2m │ gzip: 0.13 kB[22m[2m │ map:  0.38 kB[22m
+[2mdist/[22m[36mcomponents/multiselect/index.js          [39m[1m[2m 0.19 kB[22m[1m[22m[2m │ gzip: 0.13 kB[22m[2m │ map:  0.42 kB[22m
+[2mdist/[22m[36mcomponents/autocomplete/index.js         [39m[1m[2m 0.20 kB[22m[1m[22m[2m │ gzip: 0.13 kB[22m[2m │ map:  0.39 kB[22m
+[2mdist/[22m[36mcomponents/tabs/index.js                 [39m[1m[2m 0.21 kB[22m[1m[22m[2m │ gzip: 0.14 kB[22m[2m │ map:  0.43 kB[22m
+[2mdist/[22m[36mcomponents/datepicker/index.js           [39m[1m[2m 0.22 kB[22m[1m[22m[2m │ gzip: 0.14 kB[22m[2m │ map:  0.44 kB[22m
+[2mdist/[22m[36mcomponents/dropdown/index.js             [39m[1m[2m 0.25 kB[22m[1m[22m[2m │ gzip: 0.14 kB[22m[2m │ map:  0.48 kB[22m
+[2mdist/[22m[36mcore/define.js                           [39m[1m[2m 0.26 kB[22m[1m[22m[2m │ gzip: 0.17 kB[22m[2m │ map:  0.73 kB[22m
+[2mdist/[22m[36mcore/css.js                              [39m[1m[2m 0.31 kB[22m[1m[22m[2m │ gzip: 0.23 kB[22m[2m │ map:  0.83 kB[22m
+[2mdist/[22m[36mplugins/index.js                         [39m[1m[2m 0.58 kB[22m[1m[22m[2m │ gzip: 0.29 kB[22m[2m │ map:  1.68 kB[22m
+[2mdist/[22m[36mcore/base.js                             [39m[1m[2m 1.08 kB[22m[1m[22m[2m │ gzip: 0.50 kB[22m[2m │ map:  2.59 kB[22m
+[2mdist/[22m[36mcomponents/spinner/spinner.js            [39m[1m[2m 1.64 kB[22m[1m[22m[2m │ gzip: 0.78 kB[22m[2m │ map:  2.41 kB[22m
+[2mdist/[22m[36mcomponents/badge/badge.js                [39m[1m[2m 1.79 kB[22m[1m[22m[2m │ gzip: 0.65 kB[22m[2m │ map:  2.45 kB[22m
+[2mdist/[22m[36mcore/theme.js                            [39m[1m[2m 2.16 kB[22m[1m[22m[2m │ gzip: 0.81 kB[22m[2m │ map:  5.33 kB[22m
+[2mdist/[22m[36mcore/tokens.js                           [39m[1m[2m 2.18 kB[22m[1m[22m[2m │ gzip: 0.92 kB[22m[2m │ map:  5.52 kB[22m
+[2mdist/[22m[36mcomponents/skeleton/skeleton.js          [39m[1m[2m 2.19 kB[22m[1m[22m[2m │ gzip: 0.91 kB[22m[2m │ map:  3.44 kB[22m
+[2mdist/[22m[36mcore/presets.js                          [39m[1m[2m 2.25 kB[22m[1m[22m[2m │ gzip: 0.81 kB[22m[2m │ map:  5.46 kB[22m
+[2mdist/[22m[36mplugins/auto-import.js                   [39m[1m[2m 2.63 kB[22m[1m[22m[2m │ gzip: 0.97 kB[22m[2m │ map:  5.22 kB[22m
+[2mdist/[22m[36mcomponents/alert/alert.js                [39m[1m[2m 2.86 kB[22m[1m[22m[2m │ gzip: 1.10 kB[22m[2m │ map:  4.10 kB[22m
+[2mdist/[22m[36mcomponents/tooltip/tooltip.js            [39m[1m[2m 2.93 kB[22m[1m[22m[2m │ gzip: 1.01 kB[22m[2m │ map:  3.92 kB[22m
+[2mdist/[22m[36mcomponents/progress/progress.js          [39m[1m[2m 3.17 kB[22m[1m[22m[2m │ gzip: 1.22 kB[22m[2m │ map:  4.85 kB[22m
+[2mdist/[22m[36mindex.js                                 [39m[1m[2m 3.62 kB[22m[1m[22m[2m │ gzip: 0.85 kB[22m[2m │ map:  0.14 kB[22m
+[2mdist/[22m[36mcomponents/switch/switch.js              [39m[1m[2m 3.70 kB[22m[1m[22m[2m │ gzip: 1.36 kB[22m[2m │ map:  5.59 kB[22m
+[2mdist/[22m[36mcomponents/textarea/textarea.js          [39m[1m[2m 3.84 kB[22m[1m[22m[2m │ gzip: 1.30 kB[22m[2m │ map:  5.95 kB[22m
+[2mdist/[22m[36mcomponents/radio/radio.js                [39m[1m[2m 4.15 kB[22m[1m[22m[2m │ gzip: 1.46 kB[22m[2m │ map:  6.62 kB[22m
+[2mdist/[22m[36mcomponents/dropdown/dropdown.js          [39m[1m[2m 4.16 kB[22m[1m[22m[2m │ gzip: 1.48 kB[22m[2m │ map:  6.55 kB[22m
+[2mdist/[22m[36mcomponents/tabs/tabs.js                  [39m[1m[2m 4.28 kB[22m[1m[22m[2m │ gzip: 1.46 kB[22m[2m │ map:  7.30 kB[22m
+[2mdist/[22m[36mcomponents/checkbox/checkbox.js          [39m[1m[2m 4.49 kB[22m[1m[22m[2m │ gzip: 1.51 kB[22m[2m │ map:  7.03 kB[22m
+[2mdist/[22m[36mcomponents/dialog/dialog.js              [39m[1m[2m 4.50 kB[22m[1m[22m[2m │ gzip: 1.55 kB[22m[2m │ map:  6.65 kB[22m
+[2mdist/[22m[36mcomponents/pagination/pagination.js      [39m[1m[2m 4.57 kB[22m[1m[22m[2m │ gzip: 1.63 kB[22m[2m │ map:  7.74 kB[22m
+[2mdist/[22m[36mcomponents/autocomplete/autocomplete.js  [39m[1m[2m 5.15 kB[22m[1m[22m[2m │ gzip: 1.72 kB[22m[2m │ map:  7.97 kB[22m
+[2mdist/[22m[36mcomponents/input/input.js                [39m[1m[2m 5.86 kB[22m[1m[22m[2m │ gzip: 1.88 kB[22m[2m │ map:  8.98 kB[22m
+[2mdist/[22m[36mcomponents/toast/toast.js                [39m[1m[2m 5.97 kB[22m[1m[22m[2m │ gzip: 2.31 kB[22m[2m │ map:  9.81 kB[22m
+[2mdist/[22m[36mcomponents/button/button.js              [39m[1m[2m 7.12 kB[22m[1m[22m[2m │ gzip: 2.26 kB[22m[2m │ map: 10.77 kB[22m
+[2mdist/[22m[36mcomponents/floatlabel/floatlabel.js      [39m[1m[2m 8.60 kB[22m[1m[22m[2m │ gzip: 2.51 kB[22m[2m │ map: 15.11 kB[22m
+[2mdist/[22m[36mcomponents/select/select.js              [39m[1m[2m10.45 kB[22m[1m[22m[2m │ gzip: 3.06 kB[22m[2m │ map: 17.09 kB[22m
+[2mdist/[22m[36mcomponents/table/table.js                [39m[1m[2m11.22 kB[22m[1m[22m[2m │ gzip: 3.41 kB[22m[2m │ map: 19.38 kB[22m
+[2mdist/[22m[36mcomponents/calendar/calendar.js          [39m[1m[2m12.31 kB[22m[1m[22m[2m │ gzip: 3.65 kB[22m[2m │ map: 23.19 kB[22m
+[2mdist/[22m[36mcomponents/multiselect/multiselect.js    [39m[1m[2m13.83 kB[22m[1m[22m[2m │ gzip: 3.61 kB[22m[2m │ map: 21.17 kB[22m
+[2mdist/[22m[36mcomponents/datepicker/datepicker.js      [39m[1m[2m17.44 kB[22m[1m[22m[2m │ gzip: 4.93 kB[22m[2m │ map: 30.99 kB[22m
+[2mdist/[22m[36mfenix-ui2.esm.js  [39m[1m[2m  2.98 kB[22m[1m[22m[2m │ gzip:  1.08 kB[22m[2m │ map:   6.81 kB[22m
+[2mdist/[22m[36mfenix-ui.esm.js   [39m[1m[2m149.72 kB[22m[1m[22m[2m │ gzip: 29.92 kB[22m[2m │ map: 263.90 kB[22m
+[32m✓ built in 3.61s[39m
+
+> @fenix-ui/fenix-ui@0.1.0 build:types
+> tsc -p tsconfig.build.json
+
+
+> @fenix-ui/fenix-ui@0.1.0 build:cdn
+> vite build --config vite.cdn.config.ts
+
+[36mvite v5.4.21 [32mbuilding for production...[36m[39m
+transforming...
+[32m✓[39m 56 modules transformed.
+rendering chunks...
+computing gzip size...
+[2mdist/[22m[36mfenix-ui.umd.min.js  [39m[1m[2m119.41 kB[22m[1m[22m[2m │ gzip: 24.32 kB[22m
+[32m✓ built in 1.03s[39m

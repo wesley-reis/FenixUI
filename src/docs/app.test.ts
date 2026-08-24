@@ -64,6 +64,26 @@ describe('docs app', () => {
     expect(btn.getAttribute('variant')).toBe('danger');
   });
 
+  it('página do floatlabel: label vive no shadow e a variante muda pelo controle', () => {
+    navigate('fx-floatlabel');
+    const fl = main().querySelector('#stage fx-floatlabel') as HTMLElement;
+    expect(fl).toBeTruthy();
+    const flabel = fl.shadowRoot?.querySelector('.flabel') as HTMLElement | null;
+    expect(flabel).toBeTruthy();
+    expect(flabel?.textContent).toBe('Nome de usuário');
+    // O CSS do shadow posiciona a label absolutamente sobre a borda.
+    // (jsdom não computa estilos de Shadow DOM, então validamos a regra no stylesheet.)
+    expect((fl.constructor as any).styles).toMatch(/\.flabel\s*\{[^}]*position:\s*absolute/s);
+
+    // Trocar a variante no controle atualiza o atributo do componente.
+    const sel = main().querySelector('fx-select[data-attr="variant"]') as any;
+    sel.value = 'over';
+    sel.dispatchEvent(new Event('change'));
+    const fl2 = main().querySelector('#stage fx-floatlabel') as HTMLElement;
+    expect(fl2.getAttribute('variant')).toBe('over');
+    expect(fl2.shadowRoot?.querySelector('.flabel')).toBeTruthy();
+  });
+
   it('página de temas renderiza preview com input e select do tema ativo', () => {
     navigate('theming');
     expect(main().querySelector('.demo-stage fx-input')).toBeTruthy();
@@ -85,5 +105,31 @@ describe('docs app', () => {
     expect(document.getElementById('swatches')!.children.length).toBeGreaterThan(0);
     const opts = [...document.querySelectorAll('#th-preset option')].map((o) => o.getAttribute('value'));
     expect(opts).toContain('seiya');
+  });
+
+  it.each([
+    'fx-textarea', 'fx-dialog', 'fx-tooltip', 'fx-tabs',
+    'fx-progress', 'fx-skeleton', 'fx-alert', 'fx-dropdown',
+    'fx-pagination', 'fx-autocomplete', 'fx-table',
+  ])('página %s renderiza playground ao vivo', (route) => {
+    navigate(route);
+    expect(main().querySelector(`#stage ${route}`)).toBeTruthy();
+  });
+
+  it('página do toast: botões disparam a API FenixToast', () => {
+    navigate('fx-toast');
+    const btns = main().querySelectorAll('#stage fx-button');
+    expect(btns.length).toBeGreaterThanOrEqual(4);
+    // A API imperativa está disponível globalmente
+    expect((window as any).FenixToast).toBeTruthy();
+  });
+
+  it('página da table exibe os dados fictícios no primeiro render', async () => {
+    navigate('fx-table');
+    const table = main().querySelector('#stage fx-table') as any;
+    expect(table).toBeTruthy();
+    await new Promise((r) => setTimeout(r, 0));
+    expect(table.data.length).toBeGreaterThan(0);
+    expect(table.shadowRoot!.querySelectorAll('tbody tr').length).toBeGreaterThan(0);
   });
 });

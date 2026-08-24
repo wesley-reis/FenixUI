@@ -1,4 +1,4 @@
-import { FxElement } from '../../core/base';
+﻿import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 
@@ -23,7 +23,7 @@ export class FxInput extends FxElement {
       min-height: var(--fx-size-md);
       font-weight: var(--fx-font-weight);
       color: var(--fx-text-default);
-      background-color: var(--fx-surface);
+      background-color: var(--fx-surface-background);
       border: 1px solid var(--fx-border-default);
       border-radius: var(--fx-radius-md);
       padding: var(--fx-space-md) var(--fx-space-lg);
@@ -44,7 +44,7 @@ export class FxInput extends FxElement {
     .field[readonly] {
       opacity: 0.55;
       cursor: not-allowed;
-      background-color: var(--fx-surface-hover);
+      background-color: var(--fx-surface-surface-hover);
     }
     /* Validação: sobrescrevem a borda/foco via token do preset. */
     :host([error]) .field,
@@ -145,8 +145,10 @@ export class FxInput extends FxElement {
         new CustomEvent(event, { bubbles: true, composed: true, detail: { value: field.value } }),
       );
     };
-    field.addEventListener('input', () => emit('input'));
-    field.addEventListener('change', () => emit('change'));
+    // Bloqueia o evento nativo (composed, sem detail) para que só o
+    // CustomEvent com detail chegue aos consumidores.
+    field.addEventListener('input', (e) => { e.stopPropagation(); emit('input'); });
+    field.addEventListener('change', (e) => { e.stopPropagation(); emit('change'); });
 
     // Clearable: botão × que limpa o campo e emite input/change vazios.
     const clearBtn = this.root.querySelector<HTMLButtonElement>('.clear');

@@ -1,7 +1,7 @@
 ﻿/**
  * Documentação interativa do FenixUI.
  *
- * SPA sem framework (hash routing) no estilo PrimeVue:
+ * SPA sem framework (hash routing) no 
  *  - navegação lateral por componente;
  *  - playground por componente com controles ao vivo;
  *  - tabelas de API (atributos, slots, eventos);
@@ -22,6 +22,17 @@ import '../components/floatlabel';
 import '../components/multiselect';
 import '../components/calendar';
 import '../components/datepicker';
+import '../components/textarea';
+import '../components/toast';
+import '../components/dialog';
+import '../components/tooltip';
+import '../components/tabs';
+import '../components/progress';
+import '../components/skeleton';
+import '../components/alert';
+import '../components/dropdown';
+import '../components/pagination';
+import '../components/autocomplete';
 import { fenixComponentMap } from '../plugins/auto-import';
 import { applyPreset, listPresets, defineCustomPreset, type FenixPreset } from '../core/presets';
 import { FenixUI } from '../core/theme';
@@ -378,16 +389,58 @@ const components: ComponentDoc[] = [
     tag: 'fx-table',
     title: 'Table',
     group: 'Exibição',
-    lead: 'Tabela estilo DataTable (PrimeVue) com ordenação, filtro no header, paginação e clique na linha. Colunas declaradas como <fx-column> dentro do componente.',
+    lead: 'Tabela estilo DataTable com ordenação, filtro no header, paginação e clique na linha. Colunas declaradas como <fx-column> dentro do componente.',
     imports: ["import '@fenix-ui/fenix-ui/table';"],
-    demoHtml: () =>
-      `<fx-table data="[{\\"id\\":1,\\"nome\\":\\"Ana\\",\\"idade\\":30},{\\"id\\":2,\\"nome\\":\\"Bruno\\",\\"idade\\":25}]"><fx-column field="nome" header="Nome" sortable filterable></fx-column><fx-column field="idade" header="Idade" sortable></fx-column></fx-table>`,
-    variantsHtml: () =>
-      '<fx-table striped hover pagination rows="5"><fx-column field="nome" header="Nome"></fx-column></fx-table>',
-    controls: [],
+    demoHtml: (a) => {
+      const data = [
+        { id: 1, nome: 'Ana Souza', cargo: 'Analista', departamento: 'Financeiro', salario: 5200, ativo: 'Sim' },
+        { id: 2, nome: 'Bruno Lima', cargo: 'Desenvolvedor', departamento: 'TI', salario: 7800, ativo: 'Sim' },
+        { id: 3, nome: 'Carla Dias', cargo: 'Designer', departamento: 'Marketing', salario: 6100, ativo: 'Não' },
+        { id: 4, nome: 'Diego Alves', cargo: 'Gerente', departamento: 'Vendas', salario: 9500, ativo: 'Sim' },
+        { id: 5, nome: 'Elaine Costa', cargo: 'Analista', departamento: 'RH', salario: 4900, ativo: 'Sim' },
+        { id: 6, nome: 'Fábio Rocha', cargo: 'DevOps', departamento: 'TI', salario: 8900, ativo: 'Não' },
+        { id: 7, nome: 'Gisele Martins', cargo: 'Contadora', departamento: 'Financeiro', salario: 6700, ativo: 'Sim' },
+        { id: 8, nome: 'Hugo Pereira', cargo: 'Vendedor', departamento: 'Vendas', salario: 3800, ativo: 'Sim' },
+        { id: 9, nome: 'Ivana Ferreira', cargo: 'Designer', departamento: 'Marketing', salario: 5600, ativo: 'Sim' },
+        { id: 10, nome: 'João Cardoso', cargo: 'Desenvolvedor', departamento: 'TI', salario: 8200, ativo: 'Não' },
+        { id: 11, nome: 'Karina Ribeiro', cargo: 'Recrutadora', departamento: 'RH', salario: 4500, ativo: 'Sim' },
+        { id: 12, nome: 'Lucas Moraes', cargo: 'Suporte', departamento: 'TI', salario: 3600, ativo: 'Sim' },
+      ];
+      const json = JSON.stringify(data).replace(/"/g, '&quot;');
+      return `<fx-table ${a} data="${json}"><fx-column field="nome" header="Nome" sortable filterable></fx-column><fx-column field="cargo" header="Cargo" sortable filterable></fx-column><fx-column field="departamento" header="Departamento" filterable></fx-column><fx-column field="salario" header="Salário (R$)" sortable></fx-column><fx-column field="ativo" header="Ativo"></fx-column></fx-table>`;
+    },
+    variantsHtml: () => {
+      const small = JSON.stringify([
+        { nome: 'Ana Souza', cargo: 'Analista', salario: 5200 },
+        { nome: 'Bruno Lima', cargo: 'Desenvolvedor', salario: 7800 },
+        { nome: 'Carla Dias', cargo: 'Designer', salario: 6100 },
+        { nome: 'Diego Alves', cargo: 'Gerente', salario: 9500 },
+        { nome: 'Elaine Costa', cargo: 'Analista', salario: 4900 },
+        { nome: 'Fábio Rocha', cargo: 'DevOps', salario: 8900 },
+        { nome: 'Gisele Martins', cargo: 'Contadora', salario: 6700 },
+      ]).replace(/"/g, '&quot;');
+      const cols = '<fx-column field="nome" header="Nome"></fx-column><fx-column field="cargo" header="Cargo"></fx-column><fx-column field="salario" header="Salário"></fx-column>';
+      return [
+        `<h4>Básica</h4><fx-table data="${small}">${cols}</fx-table>`,
+        `<h4>Ordenação + Filtro no header</h4><fx-table data="${small}" sort-field="nome" sort-order="asc"><fx-column field="nome" header="Nome" sortable filterable></fx-column><fx-column field="cargo" header="Cargo" sortable filterable></fx-column><fx-column field="salario" header="Salário" sortable></fx-column></fx-table>`,
+        `<h4>Paginação centralizada</h4><fx-table data="${small}" pagination rows="3" pagination-position="center">${cols}</fx-table>`,
+        `<h4>Listrada + hover + paginação à direita</h4><fx-table data="${small}" striped hover pagination rows="3" pagination-position="right">${cols}</fx-table>`,
+        `<h4>Vazia com mensagem customizada</h4><fx-table data='[]' empty-message="Nenhum funcionário encontrado">${cols}</fx-table>`,
+      ].join('');
+    },
+    controls: [
+      { kind: 'toggle', attr: 'pagination', label: 'Paginação', on: true },
+      { kind: 'toggle', attr: 'striped', label: 'Listrada', on: true },
+      { kind: 'toggle', attr: 'hover', label: 'Hover' },
+      { kind: 'select', attr: 'rows', label: 'Por página', options: ['3', '5', '10'], value: '5' },
+      { kind: 'select', attr: 'pagination-position', label: 'Posição paginação', options: ['left', 'center', 'right'], value: 'left' },
+    ],
     attributes: [
       { name: 'data', type: 'array', default: '[]', desc: 'Dados exibidos (JSON no atributo ou propriedade).' },
       { name: 'pagination', type: 'boolean', default: 'false', desc: 'Exibe paginação no footer.' },
+      { name: 'rows-options', type: 'string', default: "'5,10,20,50'", desc: 'Opções do seletor de itens por página.' },
+      { name: 'pagination-position', type: `'left' | 'center' | 'right'`, default: "'left'", desc: 'Alinhamento do pager.' },
+      { name: 'empty-message', type: 'string', default: "'Nenhum registro'", desc: 'Mensagem quando não há dados.' },
       { name: 'rows', type: 'number', default: '10', desc: 'Itens por página.' },
       { name: 'striped', type: 'boolean', default: 'false', desc: 'Linhas listradas.' },
       { name: 'hover', type: 'boolean', default: 'false', desc: 'Hover nas linhas.' },
@@ -406,38 +459,10 @@ const components: ComponentDoc[] = [
     ],
   },
   {
-    tag: 'fx-multiselect',
-    title: 'Multiselect',
-    group: 'Formulário',
-    lead: 'Seleção múltipla com chips, busca e limpeza. Escreva <option> nativos como filhos — espelhados automaticamente no dropdown customizado.',
-    imports: ["import '@fenix-ui/fenix-ui/multiselect';"],
-    demoHtml: (a) =>
-      `<fx-multiselect ${a} values="sp,rj" placeholder="Cidades"><option value="sp">São Paulo</option><option value="rj">Rio de Janeiro</option><option value="mg">Minas</option><option value="rs">Rio Grande</option></fx-multiselect>`,
-    variantsHtml: () =>
-      ['sm', 'md', 'lg']
-        .map((s) => `<fx-multiselect size="${s}" placeholder="Selecione…"><option value="a">Opção A</option><option value="b">Opção B</option></fx-multiselect>`)
-        .join(''),
-    controls: [
-      { kind: 'toggle', attr: 'searchable', label: 'Pesquisa', on: true },
-      { kind: 'toggle', attr: 'clearable', label: 'Limpar', on: true },
-      { kind: 'toggle', attr: 'disabled', label: 'Desabilitado' },
-    ],
-    attributes: [
-      { name: 'values', type: 'string', default: "''", desc: 'CSV com valores selecionados (refletido no host).' },
-      { name: 'searchable', type: 'boolean', default: 'true', desc: 'Mostra campo de busca no topo.' },
-      { name: 'clearable', type: 'boolean', default: 'true', desc: 'Mostra × para limpar tudo quando há seleção.' },
-      { name: 'disabled', type: 'boolean', default: 'false', desc: 'Desabilita.' },
-            { name: 'placeholder', type: 'string', default: "'Selecione…'", desc: 'Texto vazio.' },
-      { name: 'size', type: `'sm' | 'md' | 'lg'`, default: `'md'`, desc: 'Tamanho do controle.' },
-    ],
-    events: [{ name: 'change', type: `CustomEvent<{ values: string[] }>`, desc: 'Emitido ao alternar seleção (composed).' }],
-    slots: [{ name: '(padrão)', desc: '<option> nativos (value/label) espelhados no dropdown.' }],
-  },
-  {
     tag: 'fx-floatlabel',
     title: 'FloatLabel',
     group: 'Formulário',
-    lead: 'Rótulo flutuante estilo PrimeVue: comporta-se como placeholder quando vazio e sobe para o topo do campo ao focar, abrir ou preencher valor.',
+    lead: 'Rótulo flutuante  comporta-se como placeholder quando vazio e sobe para o topo do campo ao focar, abrir ou preencher valor.',
     imports: ["import '@fenix-ui/fenix-ui/floatlabel';"],
     demoHtml: (a) =>
       `<fx-floatlabel ${a}><fx-input id="demo-fl-input"></fx-input><label for="demo-fl-input">Nome de usuário</label></fx-floatlabel>`,
@@ -463,6 +488,262 @@ const components: ComponentDoc[] = [
       { name: '(padrão)', desc: 'Contém exatamente um campo de controle (fx-input, fx-select, etc.) e um <label>.' },
     ],
   },
+  {
+    tag: 'fx-textarea',
+    title: 'Textarea',
+    group: 'Formulário',
+    lead: 'Campo de texto multilinha com validação visual e tamanhos padronizados.',
+    imports: ["import '@fenix-ui/fenix-ui/textarea';"],
+    demoHtml: (a) => `<fx-textarea ${a} placeholder="Descreva sua necessidade..."></fx-textarea>`,
+    variantsHtml: () =>
+      '<h4>Tamanhos</h4><div style="display:flex;gap:12px"><fx-textarea size="sm" placeholder="sm"></fx-textarea><fx-textarea size="md" placeholder="md"></fx-textarea><fx-textarea size="lg" placeholder="lg"></fx-textarea></div><h4>Estados</h4><fx-textarea disabled value="Desabilitado"></fx-textarea><fx-textarea readonly value="Somente leitura"></fx-textarea>',
+    controls: [
+      { kind: 'select', attr: 'size', label: 'Tamanho', options: ['sm', 'md', 'lg'] },
+      { kind: 'text', attr: 'rows', label: 'Linhas', value: '4' },
+      { kind: 'text', attr: 'maxlength', label: 'Máx. caracteres' },
+      { kind: 'toggle', attr: 'disabled', label: 'Desabilitado' },
+      { kind: 'toggle', attr: 'readonly', label: 'Somente leitura' },
+    ],
+    attributes: [
+      { name: 'value', type: 'string', default: "''", desc: 'Texto do campo.' },
+      { name: 'size', type: `'sm' | 'md' | 'lg'`, default: "'md'", desc: 'Tamanho.' },
+      { name: 'rows', type: 'number', default: '4', desc: 'Altura em linhas.' },
+      { name: 'maxlength', type: 'number', default: '—', desc: 'Limite de caracteres.' },
+      { name: 'placeholder / disabled / readonly', type: 'string | boolean', default: '—', desc: 'Padrões de formulário.' },
+    ],
+    events: [
+      { name: 'input', type: `CustomEvent<{ value: string }>`, desc: 'Ao digitar.' },
+      { name: 'change', type: `CustomEvent<{ value: string }>`, desc: 'Ao concluir a edição.' },
+    ],
+  },
+  {
+    tag: 'fx-dialog',
+    title: 'Dialog',
+    group: 'Feedback',
+    lead: 'Janela modal com overlay, título e fechamento por ESC/clique fora. Controle o estado pelo atributo open.',
+    imports: ["import '@fenix-ui/fenix-ui/dialog';"],
+    demoHtml: () =>
+      `<fx-dialog id="dlg-demo" heading="Confirmar exclusão" size="md"><p style="margin:0">Tem certeza que deseja excluir este registro?</p><div slot="footer" style="display:flex;gap:8px;justify-content:flex-end"><fx-button size="sm" variant="outline" onclick="document.getElementById('dlg-demo').removeAttribute('open')">Cancelar</fx-button><fx-button size="sm" variant="danger" onclick="document.getElementById('dlg-demo').removeAttribute('open')">Excluir</fx-button></div></fx-dialog><fx-button onclick="document.getElementById('dlg-demo').setAttribute('open','')">Abrir dialog</fx-button>`,
+    variantsHtml: () => {
+      const mk = (id: string, size: string) =>
+        `<fx-dialog id="${id}" heading="Diálogo ${size}" size="${size}"><p style="margin:0">Conteúdo de exemplo.</p></fx-dialog>`;
+      return `${mk('dlg-s', 'sm')}${mk('dlg-l', 'lg')}<div style="display:flex;gap:12px"><fx-button size="sm" onclick="document.getElementById('dlg-s').setAttribute('open','')">Pequeno</fx-button><fx-button size="sm" onclick="document.getElementById('dlg-l').setAttribute('open','')">Grande</fx-button></div>`;
+    },
+    controls: [{ kind: 'select', attr: 'size', label: 'Tamanho', options: ['sm', 'md', 'lg'], value: 'md' }],
+    attributes: [
+      { name: 'open', type: 'boolean', default: 'false', desc: 'Exibe o dialog.' },
+      { name: 'heading', type: 'string', default: "''", desc: 'Título da janela.' },
+      { name: 'size', type: `'sm' | 'md' | 'lg'`, default: "'md'", desc: 'Largura máxima.' },
+    ],
+    events: [
+      { name: 'open', type: 'CustomEvent<void>', desc: 'Ao abrir.' },
+      { name: 'close', type: 'CustomEvent<void>', desc: 'Ao fechar (ESC, overlay ou botão).' },
+    ],
+    slots: [
+      { name: '(padrão)', desc: 'Corpo do diálogo.' },
+      { name: 'footer', desc: 'Ações (botões).' },
+    ],
+  },
+  {
+    tag: 'fx-toast',
+    title: 'Toast',
+    group: 'Feedback',
+    lead: 'Notificações flutuantes imperativas com posição e tempo de exibição configuráveis.',
+    imports: ["import '@fenix-ui/fenix-ui/toast';"],
+    demoHtml: (a) => {
+      const pos = /position="([^"]+)"/.exec(a)?.[1] ?? 'top-right';
+      const dur = /duration="([^"]+)"/.exec(a)?.[1] ?? '4000';
+      const title = /title="([^"]*)"/.exec(a)?.[1] || 'Sucesso';
+      const msg = /message="([^"]*)"/.exec(a)?.[1] || 'Registro salvo.';
+      const o = `{position:'${pos}',duration:${dur || '0'}}`;
+      return `<div style="display:flex;gap:12px;flex-wrap:wrap"><fx-button variant="success" size="sm" onclick="FenixToast.success('${title}','${msg}',${o})">Success</fx-button><fx-button variant="danger" size="sm" onclick="FenixToast.error('${title}','${msg}',${o})">Error</fx-button><fx-button variant="warning" size="sm" onclick="FenixToast.warning('${title}','${msg}',${o})">Warning</fx-button><fx-button variant="secondary" size="sm" onclick="FenixToast.info('${title}','${msg}',${o})">Info</fx-button></div>`;
+    },
+    variantsHtml: () =>
+      `<h4>Cada posição na tela</h4><div style="display:flex;gap:12px;flex-wrap:wrap">${['top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right'].map((p) => `<fx-button size="sm" variant="secondary" onclick="FenixToast.info('Posição: ${p}','Notificação de exemplo.',{position:'${p}',duration:3500})">${p}</fx-button>`).join('')}</div><h4>Duração customizada</h4><div style="display:flex;gap:12px;flex-wrap:wrap"><fx-button size="sm" onclick="FenixToast.warning('Fixo até fechar','duration: 0',{position:'bottom-center',duration:0})">duration: 0 (fixo)</fx-button><fx-button size="sm" onclick="FenixToast.success('Rápido','some em 1,5s',{position:'bottom-center',duration:1500})">duration: 1500</fx-button></div>`,
+    controls: [
+      {
+        kind: 'select',
+        attr: 'position',
+        label: 'Posição',
+        options: ['top-right', 'top-center', 'top-left', 'bottom-right', 'bottom-center', 'bottom-left'],
+        value: 'top-right',
+      },
+      { kind: 'text', attr: 'duration', label: 'Duração em ms (0 = fixo, mín. 1000)', value: '4000' },
+      { kind: 'text', attr: 'title', label: 'Título', value: 'Operação concluída' },
+      { kind: 'text', attr: 'message', label: 'Mensagem', value: 'Os dados foram salvos com sucesso.' },
+    ],
+    attributes: [
+      { name: '(API)', type: 'FenixToast', default: '—', desc: 'success/error/warning/info(title, message?, options?).' },
+      { name: 'options.position', type: `'top-right' | 'top-center' | 'top-left' | 'bottom-right' | 'bottom-center' | 'bottom-left'`, default: "'top-right'", desc: 'Região da tela onde empilha.' },
+      { name: 'options.duration', type: 'number', default: '4000', desc: 'Ms até dispensar. Mínimo 1000ms; 0 = fixo até fechar.' },
+      { name: '(retorno)', type: 'number', default: '—', desc: 'Id do toast para FenixToast.close(id).' },
+    ],
+  },
+  {
+    tag: 'fx-tooltip',
+    title: 'Tooltip',
+    group: 'Feedback',
+    lead: 'Dica contextual que aparece ao passar o mouse ou focar no elemento filho.',
+    imports: ["import '@fenix-ui/fenix-ui/tooltip';"],
+    demoHtml: () =>
+      `<fx-tooltip content="Salva o registro atual"><fx-button size="sm">Passe o mouse</fx-button></fx-tooltip>`,
+    variantsHtml: () =>
+      `<div style="display:flex;gap:24px;flex-wrap:wrap;padding:20px 10px 40px"><fx-tooltip content="Acima" position="top"><fx-badge>top</fx-badge></fx-tooltip><fx-tooltip content="Abaixo" position="bottom"><fx-badge>bottom</fx-badge></fx-tooltip><fx-tooltip content="Esquerda" position="left"><fx-badge>left</fx-badge></fx-tooltip><fx-tooltip content="Direita" position="right"><fx-badge>right</fx-badge></fx-tooltip></div>`,
+    controls: [
+      { kind: 'text', attr: 'content', label: 'Conteúdo', value: 'Texto da dica' },
+      { kind: 'select', attr: 'position', label: 'Posição', options: ['top', 'bottom', 'left', 'right'], value: 'top' },
+    ],
+    attributes: [
+      { name: 'content', type: 'string', default: "''", desc: 'Texto exibido.' },
+      { name: 'position', type: `'top' | 'bottom' | 'left' | 'right'`, default: "'top'", desc: 'Posição relativa ao alvo.' },
+    ],
+  },
+  {
+    tag: 'fx-tabs',
+    title: 'Tabs',
+    group: 'Navegação',
+    lead: 'Navegação por abas: <fx-tab tab="id"> para títulos e <fx-tab-panel tab="id"> para conteúdo.',
+    imports: ["import '@fenix-ui/fenix-ui/tabs';"],
+    demoHtml: (a) =>
+      `<fx-tabs ${a}><fx-tab tab="perfil">Perfil</fx-tab><fx-tab tab="seguranca">Segurança</fx-tab><fx-tab-panel tab="perfil"><p style="margin:8px 0">Dados do perfil.</p></fx-tab-panel><fx-tab-panel tab="seguranca"><p style="margin:8px 0">Senha e autenticação.</p></fx-tab-panel></fx-tabs>`,
+    variantsHtml: () => '',
+    controls: [{ kind: 'text', attr: 'value', label: 'Aba ativa (tab id)', value: 'perfil' }],
+    attributes: [{ name: 'value', type: 'string', default: 'primeira aba', desc: 'Tab ativa.' }],
+    events: [{ name: 'change', type: `CustomEvent<{ value: string }>`, desc: 'Ao trocar de aba.' }],
+  },
+  {
+    tag: 'fx-progress',
+    title: 'Progress',
+    group: 'Feedback',
+    lead: 'Indicador de progresso determinado ou indeterminado, com variantes semânticas.',
+    imports: ["import '@fenix-ui/fenix-ui/progress';"],
+    demoHtml: (a) => `<fx-progress ${a}></fx-progress>`,
+    variantsHtml: () =>
+      `<h4>Determinado</h4><fx-progress value="30"></fx-progress><fx-progress value="65"></fx-progress><h4>Com rótulo e variantes</h4><fx-progress value="80" label="Upload" variant="success"></fx-progress><fx-progress value="45" label="Processando" variant="warning"></fx-progress>`,
+    controls: [
+      { kind: 'text', attr: 'value', label: 'Valor (%)', value: '60' },
+      { kind: 'select', attr: 'variant', label: 'Variante', options: ['', 'success', 'warning', 'danger'] },
+      { kind: 'text', attr: 'label', label: 'Rótulo' },
+      { kind: 'toggle', attr: 'indeterminate', label: 'Indeterminado' },
+    ],
+    attributes: [
+      { name: 'value', type: 'number', default: '0', desc: 'Percentual concluído (0-100).' },
+      { name: 'variant', type: `'' | 'success' | 'warning' | 'danger'`, default: "''", desc: 'Cor.' },
+      { name: 'label', type: 'string', default: "''", desc: 'Rótulo acima da barra.' },
+      { name: 'indeterminate', type: 'boolean', default: 'false', desc: 'Animação sem valor definido.' },
+    ],
+    events: [{ name: 'complete', type: 'CustomEvent<void>', desc: 'Quando chega a 100%.' }],
+  },
+  {
+    tag: 'fx-skeleton',
+    title: 'Skeleton',
+    group: 'Feedback',
+    lead: 'Placeholder animado para carregamento: texto, círculo, retângulo ou múltiplas linhas.',
+    imports: ["import '@fenix-ui/fenix-ui/skeleton';"],
+    demoHtml: () => `<fx-skeleton width="100%" height="14px"></fx-skeleton>`,
+    variantsHtml: () =>
+      `<h4>Texto</h4><fx-skeleton variant="text"></fx-skeleton><div style="display:flex;gap:12px;align-items:center;margin-top:8px"><fx-skeleton variant="circle" width="40px" height="40px"></fx-skeleton><div style="flex:1"><fx-skeleton variant="text"></fx-skeleton><fx-skeleton variant="text"></fx-skeleton></div></div><h4>Múltiplas linhas</h4><fx-skeleton variant="text" lines="3"></fx-skeleton><h4>Bloco</h4><fx-skeleton width="100%" height="120px"></fx-skeleton>`,
+    controls: [
+      { kind: 'select', attr: 'variant', label: 'Variante', options: ['text', 'circle', 'rect'], value: 'text' },
+      { kind: 'text', attr: 'width', label: 'Largura', value: '100%' },
+      { kind: 'text', attr: 'height', label: 'Altura' },
+      { kind: 'text', attr: 'lines', label: 'Linhas' },
+    ],
+    attributes: [
+      { name: 'variant', type: `'text' | 'circle' | 'rect'`, default: "'rect'", desc: 'Formato.' },
+      { name: 'width / height', type: 'string', default: '—', desc: 'Dimensões (CSS).' },
+      { name: 'lines', type: 'number', default: '1', desc: 'Linhas (variante text).' },
+    ],
+  },
+  {
+    tag: 'fx-alert',
+    title: 'Alert',
+    group: 'Feedback',
+    lead: 'Aviso inline com variantes semânticas, título opcional e possibilidade de dispensar.',
+    imports: ["import '@fenix-ui/fenix-ui/alert';"],
+    demoHtml: (a) => `<fx-alert ${a}>Operação concluída com sucesso.</fx-alert>`,
+    variantsHtml: () =>
+      `<fx-alert variant="info" title="Informação">Nova versão disponível.</fx-alert><fx-alert variant="success" title="Sucesso">Dados salvos.</fx-alert><fx-alert variant="warning" title="Atenção" dismissible>Seu contrato vence em 5 dias.</fx-alert><fx-alert variant="danger" title="Erro">Não foi possível processar.</fx-alert>`,
+    controls: [
+      { kind: 'select', attr: 'variant', label: 'Variante', options: ['info', 'success', 'warning', 'danger'] },
+      { kind: 'text', attr: 'title', label: 'Título' },
+      { kind: 'toggle', attr: 'dismissible', label: 'Dispensável' },
+    ],
+    attributes: [
+      { name: 'variant', type: `'info' | 'success' | 'warning' | 'danger'`, default: "'info'", desc: 'Cor semântica.' },
+      { name: 'title', type: 'string', default: "''", desc: 'Título em negrito.' },
+      { name: 'dismissible', type: 'boolean', default: 'false', desc: 'Botão de fechar.' },
+    ],
+    events: [{ name: 'dismiss', type: 'CustomEvent<void>', desc: 'Ao fechar o alerta.' }],
+  },
+  {
+    tag: 'fx-dropdown',
+    title: 'Dropdown',
+    group: 'Navegação',
+    lead: 'Menu de ações disparado por botão. Itens como <fx-dropdown-item value="...">.',
+    imports: ["import '@fenix-ui/fenix-ui/dropdown';"],
+    demoHtml: (a) =>
+      `<fx-dropdown ${a}><fx-dropdown-item value="edit">Editar</fx-dropdown-item><fx-dropdown-item value="dup">Duplicar</fx-dropdown-item><fx-dropdown-item value="del">Excluir</fx-dropdown-item></fx-dropdown>`,
+    variantsHtml: () =>
+      `<div style="display:flex;gap:32px;padding-bottom:70px"><fx-dropdown label="Esquerda" position="left"><fx-dropdown-item value="a">Opção A</fx-dropdown-item><fx-dropdown-item value="b">Opção B</fx-dropdown-item></fx-dropdown><fx-dropdown label="Centro" position="center"><fx-dropdown-item value="a">Opção A</fx-dropdown-item><fx-dropdown-item value="b">Opção B</fx-dropdown-item></fx-dropdown><fx-dropdown label="Direita" position="right"><fx-dropdown-item value="a">Opção A</fx-dropdown-item><fx-dropdown-item value="b">Opção B</fx-dropdown-item></fx-dropdown></div>`,
+    controls: [
+      { kind: 'text', attr: 'label', label: 'Rótulo do botão', value: 'Ações' },
+      { kind: 'select', attr: 'position', label: 'Alinhamento', options: ['left', 'center', 'right'], value: 'left' },
+    ],
+    attributes: [
+      { name: 'label', type: 'string', default: "''", desc: 'Texto do botão gatilho.' },
+      { name: 'position', type: `'left' | 'center' | 'right'`, default: "'left'", desc: 'Alinhamento do menu.' },
+      { name: 'open', type: 'boolean', default: 'false', desc: 'Menu aberto (refletido).' },
+    ],
+    events: [{ name: 'select', type: `CustomEvent<{ value: string }>`, desc: 'Ao escolher um item.' }],
+  },
+  {
+    tag: 'fx-pagination',
+    title: 'Pagination',
+    group: 'Navegação',
+    lead: 'Paginação standalone com seletor de itens por página e alinhamento configurável.',
+    imports: ["import '@fenix-ui/fenix-ui/pagination';"],
+    demoHtml: (a) => `<fx-pagination ${a}></fx-pagination>`,
+    variantsHtml: () =>
+      `<h4>Alinhamentos</h4><fx-pagination total="120" rows="10" page="1" position="left"></fx-pagination><fx-pagination total="120" rows="10" page="3" position="center"></fx-pagination><fx-pagination total="120" rows="10" page="7" position="right"></fx-pagination>`,
+    controls: [
+      { kind: 'text', attr: 'total', label: 'Total de itens', value: '87' },
+      { kind: 'select', attr: 'rows', label: 'Por página', options: ['5', '10', '20'], value: '10' },
+      { kind: 'text', attr: 'page', label: 'Página inicial', value: '2' },
+      { kind: 'select', attr: 'position', label: 'Alinhamento', options: ['left', 'center', 'right'] },
+    ],
+    attributes: [
+      { name: 'page', type: 'number', default: '1', desc: 'Página atual.' },
+      { name: 'total', type: 'number', default: '0', desc: 'Total de itens.' },
+      { name: 'rows', type: 'number', default: '10', desc: 'Itens por página.' },
+      { name: 'rows-options', type: 'string', default: "'5,10,20,50'", desc: 'Opções do seletor.' },
+      { name: 'position', type: `'left' | 'center' | 'right'`, default: "'left'", desc: 'Alinhamento.' },
+    ],
+    events: [{ name: 'page-change', type: `CustomEvent<{ page: number; rows: number }>`, desc: 'Ao mudar página ou rows.' }],
+  },
+  {
+    tag: 'fx-autocomplete',
+    title: 'Autocomplete',
+    group: 'Formulário',
+    lead: 'Campo de busca com sugestões filtradas conforme digitação (source local).',
+    imports: ["import '@fenix-ui/fenix-ui/autocomplete';"],
+    demoHtml: (a) =>
+      `<fx-autocomplete ${a} source='["Brasil","Argentina","Chile","Colômbia","Peru","Uruguai"]' placeholder="Digite um país..."></fx-autocomplete>`,
+    variantsHtml: () =>
+      `<fx-autocomplete source='["Ana Souza","Bruno Lima","Carla Dias"]' placeholder="Funcionários..." min-chars="1"></fx-autocomplete>`,
+    controls: [
+      { kind: 'select', attr: 'size', label: 'Tamanho', options: ['sm', 'md', 'lg'] },
+      { kind: 'text', attr: 'placeholder', label: 'Placeholder', value: 'Buscar...' },
+      { kind: 'text', attr: 'min-chars', label: 'Mín. caracteres', value: '2' },
+      { kind: 'toggle', attr: 'disabled', label: 'Desabilitado' },
+    ],
+    attributes: [
+      { name: 'value', type: 'string', default: "''", desc: 'Valor selecionado.' },
+      { name: 'source', type: 'string[] (JSON)', default: '[]', desc: 'Opções filtráveis.' },
+      { name: 'min-chars', type: 'number', default: '2', desc: 'Mínimo para sugerir.' },
+    ],
+    events: [{ name: 'select', type: `CustomEvent<{ value: string }>`, desc: 'Ao escolher uma sugestão.' }],
+  },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -472,6 +753,46 @@ const components: ComponentDoc[] = [
 function codeBlock(code: string): string {
   return `<div class="code-block"><pre><code>${esc(code)}</code></pre><button class="copy-btn">Copiar</button></div>`;
 }
+
+/** Formata HTML em múltiplas linhas com indentação para facilitar a leitura. */
+const VOID_TAGS = /^(input|br|hr|img|meta|link)\b/i;
+export function formatHtml(src: string): string {
+  const tokens = src
+    .trim()
+    .replace(/>\s+</g, '><')
+    .match(/<[^>]+>|[^<]+/g);
+  if (!tokens) return src;
+  const lines: string[] = [];
+  let depth = 0;
+  for (let i = 0; i < tokens.length; i++) {
+    const tk = tokens[i];
+    const pad = '  '.repeat(depth);
+    if (tk.startsWith('</')) {
+      depth = Math.max(0, depth - 1);
+      lines.push('  '.repeat(depth) + tk);
+      continue;
+    }
+    if (!tk.startsWith('<')) {
+      const text = tk.trim();
+      if (text) lines.push(pad + text);
+      continue;
+    }
+    // tag de abertura
+    const name = (tk.match(/^<([a-zA-Z-]+)/)?.[1] ?? '').toLowerCase();
+    const isVoid = VOID_TAGS.test(name) || tk.endsWith('/>');
+    const next = tokens[i + 1];
+    if (!isVoid && next === `</${name}>`) {
+      // elemento com conteúdo simples abre e fecha na mesma linha
+      lines.push(`${pad}${tk}${next}`);
+      i++;
+      continue;
+    }
+    lines.push(pad + tk);
+    if (!isVoid) depth++;
+  }
+  return lines.join('\n');
+}
+
 
 function apiTable(title: string, rows: ApiRow[], cols: string[]): string {
   const head = cols.map((c) => `<th>${c}</th>`).join('');
@@ -707,7 +1028,7 @@ FenixUI.setTokens({
   `;
   const paint = (): void => {
     const cs = getComputedStyle(document.documentElement);
-    const names = ['--fx-color-primary', '--fx-color-secondary', '--fx-color-success', '--fx-color-warning', '--fx-color-danger', '--fx-color-info', '--fx-surface', '--fx-surface-background', '--fx-text-default', '--fx-border-default'];
+    const names = ['--fx-color-primary', '--fx-color-secondary', '--fx-color-success', '--fx-color-warning', '--fx-color-danger', '--fx-color-info', '--fx-surface-surface', '--fx-surface-background', '--fx-text-default', '--fx-border-default'];
     document.getElementById('swatches')!.innerHTML = names
       .map((n) => {
         const v = cs.getPropertyValue(n).trim();
@@ -865,7 +1186,7 @@ function setupCustomBuilder(): void {
 /** Repinta apenas os swatches sem reconstruir a página (usado durante o preview). */
 function renderThemingSwatchesOnly(container: HTMLElement): void {
   const cs = getComputedStyle(document.documentElement);
-  const names = ['--fx-color-primary', '--fx-color-secondary', '--fx-color-success', '--fx-color-warning', '--fx-color-danger', '--fx-color-info', '--fx-surface', '--fx-surface-background', '--fx-text-default', '--fx-border-default'];
+  const names = ['--fx-color-primary', '--fx-color-secondary', '--fx-color-success', '--fx-color-warning', '--fx-color-danger', '--fx-color-info', '--fx-surface-surface', '--fx-surface-background', '--fx-text-default', '--fx-border-default'];
   container.innerHTML = names
     .map((n) => {
       const v = cs.getPropertyValue(n).trim();
@@ -939,6 +1260,8 @@ function renderComponentPage(doc: ComponentDoc): void {
     ${codeBlock(`<${doc.tag}>…</${doc.tag}>`)}
     <h3>Todas as variantes</h3>
     <div class="demo"><div class="demo-stage">${doc.variantsHtml!()}</div></div>
+    <h3>Código das variantes</h3>
+    ${codeBlock([doc.imports.join('\n'), '', formatHtml(doc.variantsHtml!())].join('\n'))}
     ${apiTable('Atributos / Propriedades', doc.attributes, ['Nome', 'Tipo', 'Padrão', 'Descrição'])}
     ${doc.events ? apiTable('Eventos', doc.events, ['Evento', 'Tipo', 'Padrão', 'Descrição']) : ''}
     ${doc.slots ? apiTable('Slots', doc.slots, ['Slot', 'Tipo', 'Padrão', 'Descrição']) : ''}
@@ -950,10 +1273,11 @@ function renderComponentPage(doc: ComponentDoc): void {
     stage.innerHTML = doc.demoHtml(currentAttrs(doc));
     if (codeEl) {
       // Atributos booleanos não têm valor: `disabled=""` vira apenas `disabled`.
-      codeEl.textContent = stage.innerHTML.replace(
+      const clean = stage.innerHTML.replace(
         /(\s(?:disabled|loading|checked|readonly|full|round))=""/g,
         '$1',
       );
+      codeEl.textContent = formatHtml(clean);
     }
   };
   main.querySelectorAll('fx-select[data-attr], fx-switch[data-attr]').forEach((el) =>

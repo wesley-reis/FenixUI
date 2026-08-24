@@ -1,4 +1,4 @@
-import { FxElement } from '../../core/base';
+﻿import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 
@@ -60,9 +60,9 @@ export class FxButton extends FxElement {
     :host([variant='warning']) .btn { background: var(--fx-color-warning); }
     :host([variant='danger']) .btn { background: var(--fx-color-danger); }
     :host([variant='ghost']) .btn { background: transparent; color: var(--fx-text-default); }
-    :host([variant='ghost']) .btn:hover { background: var(--fx-surface-hover); filter: none; }
+    :host([variant='ghost']) .btn:hover { background: var(--fx-surface-surface-hover); filter: none; }
     :host([variant='outline']) .btn { background: transparent; color: var(--fx-color-primary); border-color: var(--fx-color-primary); }
-    :host([variant='outline']) .btn:hover { background: var(--fx-surface-hover); filter: none; }
+    :host([variant='outline']) .btn:hover { background: var(--fx-surface-surface-hover); filter: none; }
 
     /* Ícone e spinner */
     .btn__icon { display: inline-flex; }
@@ -87,7 +87,7 @@ export class FxButton extends FxElement {
       pointer-events: none;
     }
 
-    /* Efeito ripple (estilo PrimeVue). Desative com effect.ripple: '0' no preset. */
+    /* Efeito ripple (). Desative com effect.ripple: '0' no preset. */
     .btn {
       position: relative;
       overflow: hidden;
@@ -185,7 +185,7 @@ export class FxButton extends FxElement {
   }
 
   /**
-   * Efeito ripple estilo PrimeVue: cria um círculo que expande do ponto
+   * Efeito ripple : cria um círculo que expande do ponto
    * de clique e desaparece. Respeita o token `effect.ripple` ('0' desativa)
    * e `prefers-reduced-motion` (via CSS).
    */

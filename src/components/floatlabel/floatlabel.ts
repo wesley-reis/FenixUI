@@ -1,181 +1,330 @@
-﻿import { FxElement } from '../../core/base';
-import { css } from '../../core/css';
-import { defineElement } from '../../core/define';
+﻿import { FxElement } from "../../core/base";
+import { css } from "../../core/css";
+import { defineElement } from "../../core/define";
 
+/**
+ * Rótulo flutuante .
+ *
+ * Envolve um campo de formulário (fx-input, fx-select, fx-multiselect,
+ * fx-datepicker, ...) + um <label>. A label se comporta como placeholder
+ * quando o campo está vazio e "sobe" quando o campo é focado, contém valor
+ * ou abre dropdown.
+ *
+ *  - variant="on"   (padrão): label sobre a borda superior
+ *  - variant="in"   : label como placeholder interno, sobe ao focar/valor
+ *  - variant="over" : label estática acima do campo
+ *
+ *  - error / invalid: label + borda em vermelho, mensagem menor abaixo.
+ *  - success / valid: label + borda em verde.
+ *
+ * A label do light DOM é MOVIDA para dentro do Shadow DOM (como `.flabel`),
+ * usando classes de shadow (não `::slotted`), o que é confiável mesmo com
+ * componentes aninhados que possuem shadow root próprio.
+ */
 export class FxFloatlabel extends FxElement {
-  static override get observedAttributes(): string[] {
-    return ['variant', 'error', 'invalid', 'success', 'valid', 'active'];
-  }
+	static override get observedAttributes(): string[] {
+		return ["variant", "error", "invalid", "success", "valid"];
+	}
+	// 'active' NÃO entra em observedAttributes: togglá-lo apenas atualiza CSS
+	// via :host([active]), sem re-render destrutivo (mantém o foco do campo).
 
-  static override styles = css`
-    :host {
-      display: inline-block;
-      position: relative;
-      font-family: var(--fx-font-family);
-      font-size: var(--fx-font-size);
-      vertical-align: middle;
-    }
-    .wrapper {
-      position: relative;
-      display: inline-block;
-      width: 100%;
-    }
+	static override styles = css`
+		:host {
+			display: inline-block;
+			position: relative;
+			font-family: var(--fx-font-family);
+			font-size: var(--fx-font-size);
+			vertical-align: middle;
+		}
+		.wrapper {
+			position: relative;
+			display: inline-block;
+			width: 100%;
+		}
+		/* Caixa do campo: referência de posicionamento da label flutuante
+       (isolada da mensagem de erro, que cresce o wrapper). */
+		.field-box {
+			position: relative;
+			display: inline-block;
+			width: 100%;
+		}
+		:host([variant="in"]) .field-box {
+			padding-top: var(--fx-space-xs, 6px);
+		}
 
-    ::slotted(label) {
-      position: absolute;
-      left: var(--fx-space-md, 12px);
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: var(--fx-font-size, 14px);
-      font-weight: var(--fx-font-weight, 400);
-      color: var(--fx-text-muted, #94a3b8);
-      pointer-events: none;
-      transition:
-        top var(--fx-motion-duration-normal, 180ms) var(--fx-motion-easing, ease-in-out),
-        transform var(--fx-motion-duration-normal, 180ms) var(--fx-motion-easing, ease-in-out),
-        font-size var(--fx-motion-duration-normal, 180ms) var(--fx-motion-easing, ease-in-out),
-        color var(--fx-motion-duration-normal, 180ms) var(--fx-motion-easing, ease-in-out);
-      background-color: var(--fx-surface, #fff);
-      padding: 0 4px;
-      line-height: 1;
-      border-radius: 2px;
-      z-index: 2;
-    }
+		/* ---- label base (variant="on", padrão): sobre a borda superior ---- */
+		.flabel {
+			position: absolute;
+			left: var(--fx-space-md, 12px);
+			top: 0;
+			transform: translateY(-50%);
+			font-size: calc(var(--fx-font-size, 14px) - 3px);
+			font-weight: 600;
+			color: var(--fx-text-muted, #94a3b8);
+			background-color: var(--fx-surface-background, #fff);
+			padding: 0 4px;
+			line-height: 1;
+			border-radius: 2px;
+			pointer-events: none;
+			z-index: 2;
+			white-space: nowrap;
+			transition:
+				top var(--fx-motion-duration-normal, 180ms)
+					var(--fx-motion-easing, ease-in-out),
+				transform var(--fx-motion-duration-normal, 180ms)
+					var(--fx-motion-easing, ease-in-out),
+				font-size var(--fx-motion-duration-normal, 180ms)
+					var(--fx-motion-easing, ease-in-out),
+				color var(--fx-motion-duration-normal, 180ms)
+					var(--fx-motion-easing, ease-in-out);
+		}
+		:host([active]) .flabel {
+			color: var(--fx-color-primary, #4f46e5);
+		}
 
-    :host([variant='over']) {
-      margin-top: 18px;
-    }
-    :host([variant='over']) ::slotted(label) {
-      top: -18px;
-      transform: none;
-      font-size: calc(var(--fx-font-size, 14px) - 3px);
-      font-weight: 600;
-      background: transparent;
-      padding: 0;
-    }
+		/* ---- variant="in": label como placeholder dentro, sobe ao focar/valor ---- */
+		:host([variant="in"]) .flabel {
+			top: 50%;
+			transform: translateY(-50%);
+			font-size: var(--fx-font-size, 14px);
+			font-weight: var(--fx-font-weight, 400);
+			background: transparent;
+			padding: 0;
+		}
+		:host([variant="in"][active]) .flabel {
+			top: 0;
+			transform: translateY(-50%);
+			font-size: calc(var(--fx-font-size, 14px) - 3px);
+			font-weight: 600;
+			background-color: var(--fx-surface-background, #fff);
+			padding: 0 5px;
+			color: var(--fx-color-primary, #4f46e5);
+		}
 
-    :host([variant='in']) ::slotted(label) {
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: var(--fx-font-size, 14px);
-      font-weight: var(--fx-font-weight, 400);
-    }
-    :host([variant='in'][active]) ::slotted(label),
-    :host([variant='in']:focus-within) ::slotted(label) {
-      top: 10px;
-      transform: translateY(0);
-      font-size: calc(var(--fx-font-size, 14px) - 3px);
-      font-weight: 600;
-    }
+		/* ---- variant="over": label estática ACIMA do campo (fora, em fluxo) ---- */
+		:host([variant="over"]) {
+			display: block;
+		}
+		:host([variant="over"]) .flabel {
+			position: static;
+			display: block;
+			margin-bottom: var(--fx-space-xs, 4px);
+			background: transparent;
+			padding: 0;
+			font-size: calc(var(--fx-font-size, 14px) - 3px);
+			font-weight: 600;
+			white-space: normal;
+		}
 
-    :host([active]) ::slotted(label),
-    :host(:focus-within) ::slotted(label) {
-      top: 0;
-      transform: translateY(-50%);
-      font-size: calc(var(--fx-font-size, 14px) - 3px);
-      font-weight: 600;
-    }
+		/* ---- estados de erro / sucesso ---- */
+		:host([error]) .flabel,
+		:host([invalid]) .flabel {
+			color: var(--fx-color-danger, #dc2626);
+		}
+		:host([success]) .flabel,
+		:host([valid]) .flabel {
+			color: var(--fx-color-success, #10b981);
+		}
 
-    :host(:focus-within) ::slotted(label) {
-      color: var(--fx-color-primary, #4f46e5);
-    }
+		/* ---- mensagem de erro sob o campo (fonte menor) ---- */
+		.error-message {
+			display: none;
+			margin-top: var(--fx-space-xs, 4px);
+			margin-left: var(--fx-space-md, 12px);
+			font-size: calc(var(--fx-font-size, 14px) - 3px);
+			font-weight: 500;
+			color: var(--fx-color-danger, #dc2626);
+			line-height: 1.2;
+		}
+		:host([error]) .error-message,
+		:host([invalid]) .error-message {
+			display: block;
+		}
+	`;
+	private targetControl: HTMLElement | null = null;
+	private observer: MutationObserver | null = null;
+	private listenersReady = false;
 
-    :host([error]) ::slotted(label),
-    :host([invalid]) ::slotted(label) {
-      color: var(--fx-color-danger, #dc2626);
-    }
+	protected render(): void {
+		const control = this.findControl();
+		const label = this.findLabel();
+		const originalLabel = label as HTMLElement | null;
+		const labelText = originalLabel
+			? originalLabel.textContent?.replace(/\s+/g, " ").trim()
+			: "";
+		const labelFor = originalLabel
+			? originalLabel.getAttribute("for") || ""
+			: "";
+		const isOver = this.getAttribute("variant") === "over";
 
-    .error-message {
-      display: none;
-      margin-top: 4px;
-      font-size: calc(var(--fx-font-size, 14px) - 3px);
-      color: var(--fx-color-danger, #dc2626);
-    }
-    :host([error]) .error-message,
-    :host([invalid]) .error-message { display: block; }
-  `;
-
-  private targetControl: HTMLElement | null = null;
-  private observer: MutationObserver | null = null;
-
-  protected override render(): void {
-    this.setTemplate(`
+		this.setTemplate(`
       <div class="wrapper" part="wrapper">
-        <slot></slot>
+        ${isOver ? `<label class="flabel" part="label" for="${labelFor}">${labelText}</label>` : ""}
+        <div class="field-box" part="field">
+          <slot></slot>
+          ${isOver ? "" : `<label class="flabel" part="label" for="${labelFor}">${labelText}</label>`}
+        </div>
+        <div class="error-message" part="error"></div>
       </div>
     `);
 
-    this.attachEvents();
-  }
+		// Esconde a label original do light DOM (a renderizada no shadow assume o papel).
+		if (originalLabel) originalLabel.setAttribute("hidden", "");
 
-  override disconnectedCallback(): void {
-    super.disconnectedCallback();
-    this.observer?.disconnect();
-  }
+		this.attachEvents();
+		this.syncControlReference(control);
+		this.syncState();
+		this.applyError();
+	}
 
-  private attachEvents(): void {
-    const slot = this.root.querySelector('slot');
-    if (!slot) return;
+	protected override disconnectedCallback(): void {
+		super.disconnectedCallback();
+		this.observer?.disconnect();
+	}
 
-    const syncTarget = (): void => {
-      const nodes = slot.assignedElements();
-      const control = nodes.find((n) => n.tagName.toLowerCase() !== 'label') as HTMLElement | undefined;
-      if (control !== this.targetControl) {
-        this.targetControl = control ?? null;
-        this.observeControl();
-      }
-      this.updateState();
-    };
+	/** Campo de controle = qualquer filho direto que não seja label. */
+	private findControl(): HTMLElement | null {
+		return (
+			(Array.from(this.children).find(
+				(n) => n.tagName.toLowerCase() !== "label",
+			) as HTMLElement) ?? null
+		);
+	}
 
-    slot.addEventListener('slotchange', syncTarget);
-    syncTarget();
+	/** Label = filho direto <label>. */
+	private findLabel(): HTMLElement | null {
+		return (
+			(Array.from(this.children).find(
+				(n) => n.tagName.toLowerCase() === "label",
+			) as HTMLElement) ?? null
+		);
+	}
 
-    this.addEventListener('focusin', () => this.updateState());
-    this.addEventListener('focusout', () => setTimeout(() => this.updateState(), 50));
-    this.addEventListener('input', () => this.updateState());
-    this.addEventListener('change', () => this.updateState());
-  }
+	private attachEvents(): void {
+		const slot = this.root.querySelector("slot");
+		if (slot) {
+			slot.addEventListener("slotchange", () => {
+				// Se o usuário trocar o controle/label em tempo de execução, re-sincroniza.
+				const control = this.findControl();
+				this.syncControlReference(control);
+				this.syncState();
+				this.applyError();
+			});
+		}
 
-  private observeControl(): void {
-    this.observer?.disconnect();
-    if (!this.targetControl) return;
+		if (this.listenersReady) return;
+		this.listenersReady = true;
 
-    this.observer = new MutationObserver(() => this.updateState());
-    this.observer.observe(this.targetControl, {
-      attributes: true,
-      attributeFilter: ['value', 'values', 'start', 'end', 'open'],
-    });
-  }
+		this.addEventListener("focusin", () => this.syncState());
+		this.addEventListener("focusout", () =>
+			setTimeout(() => this.syncState(), 60),
+		);
+		this.addEventListener("input", () => this.syncState());
+		this.addEventListener("change", () => this.syncState());
+	}
 
-  private updateState(): void {
-    if (!this.targetControl) {
-      this.removeAttribute('active');
-      return;
-    }
+	/** Observa mudanças de atributos do controle (value, open, values...). */
+	private syncControlReference(
+		control: HTMLElement | null = this.targetControl,
+	): void {
+		if (control !== this.targetControl) {
+			this.observer?.disconnect();
+			this.observer = null;
+			this.targetControl = control;
+			if (control) {
+				this.observer = new MutationObserver(() => this.syncState());
+				this.observer.observe(control, {
+					attributes: true,
+					attributeFilter: ["value", "values", "start", "end", "open"],
+				});
+			}
+		}
+	}
 
-    const c = this.targetControl as any;
-    const hasValue = Boolean(
-      (typeof c.value === 'string' && c.value.trim() !== '') ||
-      (Array.isArray(c.values) && c.values.length > 0) ||
-      (c.getAttribute && (c.getAttribute('value') || c.getAttribute('values') || c.getAttribute('start')))
-    );
+	private syncState(): void {
+		if (this.targetControl && !this.targetControl.isConnected) {
+			this.targetControl = null;
+			this.observer?.disconnect();
+			this.observer = null;
+		}
 
-    const isOpen = c.hasAttribute && c.hasAttribute('open');
-    const isFocused = this.matches(':focus-within') || (this.shadowRoot?.activeElement != null);
+		if (!this.targetControl) {
+			this.removeAttribute("active");
+			this.removeAttribute("focus");
+			return;
+		}
 
-    if (hasValue || isOpen || isFocused) {
-      this.setAttribute('active', '');
-    } else {
-      this.removeAttribute('active');
-    }
-  }
+		const c = this.targetControl as any;
+		const attrValue = c.getAttribute
+			? (c.getAttribute("value") ?? "").trim()
+			: "";
+		const attrValues = c.getAttribute
+			? (c.getAttribute("values") ?? "").trim()
+			: "";
+		const hasValue = Boolean(
+			(typeof c.value === "string" && c.value.trim() !== "") ||
+			(Array.isArray(c.values) && c.values.length > 0) ||
+			attrValue !== "" ||
+			attrValues !== "" ||
+			(c.hasAttribute &&
+				(c.hasAttribute("open") || c.hasAttribute("start"))),
+		);
+
+		const focused = this.isFocusedInside();
+		if (hasValue || focused) {
+			this.setAttribute("active", "");
+			if (focused) this.setAttribute("focus", "");
+			else this.removeAttribute("focus");
+		} else {
+			this.removeAttribute("active");
+			this.removeAttribute("focus");
+		}
+	}
+
+	private applyError(): void {
+		const hasError = this.hasAttr("error") || this.hasAttr("invalid");
+		const errMsg = this.root.querySelector(
+			".error-message",
+		) as HTMLElement | null;
+		if (errMsg) {
+			errMsg.textContent = hasError
+				? this.getAttribute("error-text")?.trim() || "Valor inválido"
+				: "";
+		}
+
+		// Espelha o estado no controle interno para que a borda também fique vermelha/verde.
+		if (
+			this.targetControl &&
+			typeof this.targetControl.setAttribute === "function"
+		) {
+			const t = this.targetControl;
+			if (hasError) {
+				t.setAttribute("error", "");
+				t.removeAttribute("success");
+			} else if (this.hasAttr("success") || this.hasAttr("valid")) {
+				t.setAttribute("success", "");
+				t.removeAttribute("error");
+			} else {
+				t.removeAttribute("error");
+				t.removeAttribute("success");
+			}
+		}
+	}
+
+	private isWithin(activeEl: Element): boolean {
+		let current: Element | null = activeEl;
+		while (current && current !== this) {
+			current = current.parentElement;
+		}
+		return current === this;
+	}
+
+	private isFocusedInside(): boolean {
+		const activeEl = (document as Document).activeElement;
+		return Boolean(activeEl && this.isWithin(activeEl));
+	}
 }
 
 export function defineFxFloatlabel(): typeof FxFloatlabel {
-  return defineElement('fx-floatlabel', FxFloatlabel);
+	return defineElement("fx-floatlabel", FxFloatlabel);
 }
-
-
-
-
-

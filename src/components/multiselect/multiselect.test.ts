@@ -88,7 +88,7 @@ describe('fx-multiselect', () => {
     expect(header.textContent).toContain('Limpar tudo');
     (header.querySelector('.clear-all') as HTMLElement).click();
     expect(el.values).toEqual([]);
-    // Painel permanece aberto (comportamento PrimeVue) para nova seleção.
+    // Painel permanece aberto para nova seleção.
     expect(el.hasAttribute('open')).toBe(true);
   });
 });

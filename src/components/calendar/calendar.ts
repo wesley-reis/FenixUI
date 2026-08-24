@@ -1,4 +1,4 @@
-import { FxElement } from '../../core/base';
+﻿import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 
@@ -11,7 +11,7 @@ import { defineElement } from '../../core/define';
  * - min/max="YYYY | YYYY-MM | YYYY-MM-DD" → limites por ano, mês ou dia
  * - locale (padrão pt-BR), disabled
  *
- * Navegação estilo PrimeVue: clique no cabeçalho (mês) → grade de meses;
+ * Navegação : clique no cabeçalho (mês) → grade de meses;
  * clique no ano → grade de anos; ‹ › navegam conforme a visualização.
  *
  * Evento: `change` (composed):
@@ -71,7 +71,7 @@ export class FxCalendar extends FxElement {
       border-radius: var(--fx-radius-sm);
       padding: var(--fx-space-3xs, 4px) var(--fx-space-xs);
     }
-    .nav:hover, .title:hover { background: var(--fx-surface-hover); }
+    .nav:hover, .title:hover { background: var(--fx-surface-surface-hover); }
     .title { font-weight: var(--fx-font-weight); text-transform: capitalize; flex: 1; }
     .grid {
       display: grid;

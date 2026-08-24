@@ -1,4 +1,4 @@
-import { FxElement } from '../../core/base';
+﻿import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 
@@ -42,7 +42,7 @@ export class FxDatepicker extends FxElement {
       min-height: var(--fx-size-md, 40px);
       min-width: 150px;
       padding: var(--fx-space-xs) var(--fx-space-md);
-      background-color: var(--fx-surface);
+      background-color: var(--fx-surface-background);
       border: 1px solid var(--fx-border-default);
       border-radius: var(--fx-radius-md);
       cursor: pointer;
@@ -147,7 +147,7 @@ export class FxDatepicker extends FxElement {
       width: 38px;
       font: inherit;
       color: var(--fx-text-default);
-      background: var(--fx-surface);
+      background: var(--fx-surface-background);
       border: 1px solid var(--fx-border-default);
       border-radius: var(--fx-radius-sm);
       padding: 2px 2px;
@@ -163,7 +163,7 @@ export class FxDatepicker extends FxElement {
       border-color: var(--fx-color-primary);
       box-shadow: var(--fx-effect-focus-ring, none);
     }
-    :host([disabled]) .field { opacity: 0.55; cursor: not-allowed; background: var(--fx-surface-hover); }
+    :host([disabled]) .field { opacity: 0.55; cursor: not-allowed; background: var(--fx-surface-surface-hover); }
     :host([disabled]) .display { cursor: not-allowed; }
     :host([free-text]) .display { cursor: text; }
     :host([free-text]) .display.invalid { border-bottom: 2px solid var(--fx-color-danger); }

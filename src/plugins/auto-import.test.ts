@@ -6,16 +6,17 @@ import {
 } from './auto-import';
 
 describe('auto-import (plugin)', () => {
-  it('mapa cobre todos os componentes', () => {
-    expect(Object.keys(fenixComponentMap)).toEqual([
-      'fx-button',
-      'fx-badge',
-      'fx-spinner',
-      'fx-select',
-      'fx-multiselect',
-      'fx-input',
-      'fx-switch',
-    ]);
+  it('mapa cobre todos os componentes', async () => {
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const dirs = fs
+      .readdirSync(path.resolve(__dirname, '../components'), { withFileTypes: true })
+      .filter((d) => d.isDirectory())
+      .map((d) => 'fx-' + d.name)
+      .sort();
+    expect(Object.keys(fenixComponentMap).sort()).toEqual(
+      [...dirs, 'fx-tab-panel', 'fx-dropdown-item'].sort(),
+    );
   });
 
   it('injeta imports para as tags usadas', () => {

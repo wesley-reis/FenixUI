@@ -1,9 +1,9 @@
-import { FxElement } from '../../core/base';
+﻿import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 
 /**
- * <fx-multiselect> — Seleção múltipla estilo PrimeVue.
+ * <fx-multiselect> — Seleção múltipla .
  *
  * Dropdown customizado com painel (overlay), checkbox por item, pesquisa
  * opcional e ação de limpar. Opções via <option> nativos no light DOM.
@@ -32,7 +32,7 @@ export class FxMultiselect extends FxElement {
       padding: var(--fx-space-xs) var(--fx-space-md);
       font: inherit;
       color: var(--fx-text-default);
-      background-color: var(--fx-surface);
+      background-color: var(--fx-surface-background);
       border: 1px solid var(--fx-border-default);
       border-radius: var(--fx-radius-md);
       cursor: pointer;
@@ -125,7 +125,7 @@ export class FxMultiselect extends FxElement {
     }
     :host([open]) .caret { transform: rotate(180deg); }
 
-    /* Painel (overlay estilo PrimeVue) */
+    /* Painel (overlay ) */
     .panel {
       position: absolute;
       top: calc(100% + 4px);
@@ -151,7 +151,7 @@ export class FxMultiselect extends FxElement {
       gap: var(--fx-space-sm);
       padding: var(--fx-space-xs) var(--fx-space-md);
       border-bottom: 1px solid var(--fx-border-default);
-      background: var(--fx-surface-hover);
+      background: var(--fx-surface-surface-hover);
     }
     .count { font-size: calc(var(--fx-font-size) - 2px); color: var(--fx-text-muted); }
     .clear-all {
@@ -227,7 +227,7 @@ export class FxMultiselect extends FxElement {
     }
     .opt[aria-selected='true'] .box::after { content: '✓'; }
     .empty { padding: var(--fx-space-md); color: var(--fx-text-muted); text-align: center; }
-    :host([disabled]) .trigger { opacity: 0.55; cursor: not-allowed; background: var(--fx-surface-hover); }
+    :host([disabled]) .trigger { opacity: 0.55; cursor: not-allowed; background: var(--fx-surface-surface-hover); }
   `;
 
   static override get observedAttributes(): string[] {

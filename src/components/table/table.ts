@@ -1,4 +1,4 @@
-import { FxElement } from '../../core/base';
+﻿import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 
@@ -30,7 +30,7 @@ export class FxTable extends FxElement {
     th {
       text-align: left;
       padding: var(--fx-space-sm) var(--fx-space-md);
-      background: var(--fx-surface);
+      background: var(--fx-surface-background);
       border-bottom: 2px solid var(--fx-border-default);
       white-space: nowrap;
       user-select: none;
@@ -58,7 +58,7 @@ export class FxTable extends FxElement {
     }
     tbody tr { cursor: pointer; transition: background-color var(--fx-motion-duration-fast) var(--fx-motion-easing); }
     tbody tr:hover { background: color-mix(in srgb, var(--fx-color-primary) 8%, transparent); }
-    :host([striped]) tbody tr:nth-child(even) { background: var(--fx-surface); }
+    :host([striped]) tbody tr:nth-child(even) { background: var(--fx-surface-background); }
     :host([striped]) tbody tr:hover { background: color-mix(in srgb, var(--fx-color-primary) 8%, transparent); }
     .empty { text-align: center; padding: var(--fx-space-xl); color: var(--fx-text-muted); }
     .pager {
@@ -75,7 +75,7 @@ export class FxTable extends FxElement {
       font: inherit;
       font-size: calc(var(--fx-font-size) - 2px);
       color: var(--fx-text-default);
-      background: var(--fx-surface);
+      background: var(--fx-surface-background);
       border: 1px solid var(--fx-border-default);
       border-radius: var(--fx-radius-sm);
       padding: var(--fx-space-3xs, 4px) var(--fx-space-sm);

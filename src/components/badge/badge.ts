@@ -1,4 +1,4 @@
-import { FxElement } from '../../core/base';
+﻿import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 
@@ -24,7 +24,7 @@ export class FxBadge extends FxElement {
       padding: var(--fx-space-xs) var(--fx-space-sm);
       border-radius: var(--fx-radius-full);
       border: 1px solid var(--fx-border-default);
-      background: var(--fx-surface);
+      background: var(--fx-surface-background);
       color: var(--fx-text-muted);
       white-space: nowrap;
     }
