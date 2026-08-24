@@ -2,8 +2,8 @@
  * Teste de integração da documentação: monta o DOM do index.html,
  * carrega o app da doc e valida a renderização de cada página.
  */
-import { describe, it, expect, beforeEach } from 'vitest';
-import { applyPreset } from '../core/presets';
+import { describe, it, expect, beforeEach } from "vitest";
+import { applyPreset } from "../core/presets";
 
 document.body.innerHTML = `
   <select id="preset-select"></select>
@@ -12,124 +12,194 @@ document.body.innerHTML = `
   <main id="main"></main>
 `;
 
-await import('../docs/app');
+await import("../docs/app");
 
-const main = () => document.getElementById('main')!;
+const main = () => document.getElementById("main")!;
 
 function navigate(route: string): void {
-  location.hash = `#/${route}`;
-  window.dispatchEvent(new Event('hashchange'));
+	location.hash = `#/${route}`;
+	window.dispatchEvent(new Event("hashchange"));
 }
 
-describe('docs app', () => {
-  beforeEach(() => {
-    navigate('introduction');
-  });
+describe("docs app", () => {
+	beforeEach(() => {
+		navigate("introduction");
+	});
 
-  it('constrói a sidebar com todos os componentes', () => {
-    const links = [...document.querySelectorAll('#sidebar a')].map((a) => a.getAttribute('href'));
-    expect(links).toContain('#/fx-button');
-    expect(links).toContain('#/fx-badge');
-    expect(links).toContain('#/fx-select');
-    expect(links).toContain('#/fx-input');
-    expect(links).toContain('#/fx-switch');
-    expect(links).toContain('#/fx-multiselect');
-    expect(links).toContain('#/fx-spinner');
-    expect(links).toContain('#/theming');
-  });
+	it("constrói a sidebar com todos os componentes", () => {
+		const links = [...document.querySelectorAll("#sidebar a")].map((a) =>
+			a.getAttribute("href"),
+		);
+		expect(links).toContain("#/fx-button");
+		expect(links).toContain("#/fx-badge");
+		expect(links).toContain("#/fx-select");
+		expect(links).toContain("#/fx-input");
+		expect(links).toContain("#/fx-switch");
+		expect(links).toContain("#/fx-multiselect");
+		expect(links).toContain("#/fx-spinner");
+		expect(links).toContain("#/theming");
+	});
 
-  it('página do button renderiza playground com fx-button ao vivo', () => {
-    navigate('fx-button');
-    expect(main().querySelector('#stage fx-button')).toBeTruthy();
-  });
+	it("página do button renderiza playground com fx-button ao vivo", () => {
+		navigate("fx-button");
+		expect(main().querySelector("#stage fx-button")).toBeTruthy();
+	});
 
-  it('página do badge renderiza playground com fx-badge ao vivo', () => {
-    navigate('fx-badge');
-    expect(main().querySelector('#stage fx-badge')).toBeTruthy();
-  });
+	it("página do badge renderiza playground com fx-badge ao vivo", () => {
+		navigate("fx-badge");
+		expect(main().querySelector("#stage fx-badge")).toBeTruthy();
+	});
 
-  it('página do spinner renderiza playground com fx-spinner ao vivo', () => {
-    navigate('fx-spinner');
-    const spinner = main().querySelector('#stage fx-spinner') as HTMLElement;
-    expect(spinner).toBeTruthy();
-    expect(spinner.shadowRoot?.querySelector('.spinner')).toBeTruthy();
-  });
+	it("página do spinner renderiza playground com fx-spinner ao vivo", () => {
+		navigate("fx-spinner");
+		const spinner = main().querySelector("#stage fx-spinner") as HTMLElement;
+		expect(spinner).toBeTruthy();
+		expect(spinner.shadowRoot?.querySelector(".spinner")).toBeTruthy();
+	});
 
-  it('controles do playground (fx-select) atualizam atributos ao vivo', () => {
-    navigate('fx-button');
-    const select = main().querySelector('fx-select[data-attr="variant"]') as any;
-    select.value = 'danger';
-    select.dispatchEvent(new Event('change'));
-    const btn = main().querySelector('#stage fx-button')!;
-    expect(btn.getAttribute('variant')).toBe('danger');
-  });
+	it("controles do playground (fx-select) atualizam atributos ao vivo", () => {
+		navigate("fx-button");
+		const select = main().querySelector(
+			'fx-select[data-attr="variant"]',
+		) as any;
+		select.value = "danger";
+		select.dispatchEvent(new Event("change"));
+		const btn = main().querySelector("#stage fx-button")!;
+		expect(btn.getAttribute("variant")).toBe("danger");
+	});
 
-  it('página do floatlabel: label vive no shadow e a variante muda pelo controle', () => {
-    navigate('fx-floatlabel');
-    const fl = main().querySelector('#stage fx-floatlabel') as HTMLElement;
-    expect(fl).toBeTruthy();
-    const flabel = fl.shadowRoot?.querySelector('.flabel') as HTMLElement | null;
-    expect(flabel).toBeTruthy();
-    expect(flabel?.textContent).toBe('Nome de usuário');
-    // O CSS do shadow posiciona a label absolutamente sobre a borda.
-    // (jsdom não computa estilos de Shadow DOM, então validamos a regra no stylesheet.)
-    expect((fl.constructor as any).styles).toMatch(/\.flabel\s*\{[^}]*position:\s*absolute/s);
+	it("página do floatlabel: label vive no shadow e a variante muda pelo controle", () => {
+		navigate("fx-floatlabel");
+		const fl = main().querySelector("#stage fx-floatlabel") as HTMLElement;
+		expect(fl).toBeTruthy();
+		const flabel = fl.shadowRoot?.querySelector(
+			".flabel",
+		) as HTMLElement | null;
+		expect(flabel).toBeTruthy();
+		expect(flabel?.textContent).toBe("Nome de usuário");
+		// O CSS do shadow posiciona a label absolutamente sobre a borda.
+		// (jsdom não computa estilos de Shadow DOM, então validamos a regra no stylesheet.)
+		expect((fl.constructor as any).styles).toMatch(
+			/\.flabel\s*\{[^}]*position:\s*absolute/s,
+		);
 
-    // Trocar a variante no controle atualiza o atributo do componente.
-    const sel = main().querySelector('fx-select[data-attr="variant"]') as any;
-    sel.value = 'over';
-    sel.dispatchEvent(new Event('change'));
-    const fl2 = main().querySelector('#stage fx-floatlabel') as HTMLElement;
-    expect(fl2.getAttribute('variant')).toBe('over');
-    expect(fl2.shadowRoot?.querySelector('.flabel')).toBeTruthy();
-  });
+		// Trocar a variante no controle atualiza o atributo do componente.
+		const sel = main().querySelector('fx-select[data-attr="variant"]') as any;
+		sel.value = "over";
+		sel.dispatchEvent(new Event("change"));
+		const fl2 = main().querySelector("#stage fx-floatlabel") as HTMLElement;
+		expect(fl2.getAttribute("variant")).toBe("over");
+		expect(fl2.shadowRoot?.querySelector(".flabel")).toBeTruthy();
+	});
 
-  it('página de temas renderiza preview com input e select do tema ativo', () => {
-    navigate('theming');
-    expect(main().querySelector('.demo-stage fx-input')).toBeTruthy();
-    expect(main().querySelector('.demo-stage fx-select')).toBeTruthy();
-  });
+	it("página de temas renderiza preview com input e select do tema ativo", () => {
+		navigate("theming");
+		expect(main().querySelector(".demo-stage fx-input")).toBeTruthy();
+		expect(main().querySelector(".demo-stage fx-select")).toBeTruthy();
+	});
 
-  it('página de temas NÃO sobrescreve o preset ativo ao navegar', () => {
-    applyPreset('seiya', 'light');
-    navigate('theming');
-    expect(document.documentElement.style.getPropertyValue('--fx-color-primary')).toBe('#e11d48');
-    // ...e ao sair e voltar, também permanece
-    navigate('introduction');
-    navigate('theming');
-    expect(document.documentElement.style.getPropertyValue('--fx-color-primary')).toBe('#e11d48');
-  });
+	it("página de temas NÃO sobrescreve o preset ativo ao navegar", () => {
+		applyPreset("seiya", "light");
+		navigate("theming");
+		expect(
+			document.documentElement.style.getPropertyValue("--fx-color-primary"),
+		).toBe("#e11d48");
+		// ...e ao sair e voltar, também permanece
+		navigate("introduction");
+		navigate("theming");
+		expect(
+			document.documentElement.style.getPropertyValue("--fx-color-primary"),
+		).toBe("#e11d48");
+	});
 
-  it('página de temas lista presets dos cavaleiros e pinta swatches', () => {
-    navigate('theming');
-    expect(document.getElementById('swatches')!.children.length).toBeGreaterThan(0);
-    const opts = [...document.querySelectorAll('#th-preset option')].map((o) => o.getAttribute('value'));
-    expect(opts).toContain('seiya');
-  });
+	it("página de temas lista presets dos cavaleiros e pinta swatches", () => {
+		navigate("theming");
+		expect(
+			document.getElementById("swatches")!.children.length,
+		).toBeGreaterThan(0);
+		const opts = [...document.querySelectorAll("#th-preset option")].map(
+			(o) => o.getAttribute("value"),
+		);
+		expect(opts).toContain("seiya");
+	});
 
-  it.each([
-    'fx-textarea', 'fx-dialog', 'fx-tooltip', 'fx-tabs',
-    'fx-progress', 'fx-skeleton', 'fx-alert', 'fx-dropdown',
-    'fx-pagination', 'fx-autocomplete', 'fx-table',
-  ])('página %s renderiza playground ao vivo', (route) => {
-    navigate(route);
-    expect(main().querySelector(`#stage ${route}`)).toBeTruthy();
-  });
+	it("playground do drawer: clique no botão ABRE e ✕ fecha o painel (fluxo real)", async () => {
+		location.hash = "";
+		main().innerHTML = "";
+		navigate("fx-drawer");
+		await new Promise((r) => setTimeout(r, 0));
+		const openBtn = [...main().querySelectorAll("fx-button")].find((b) =>
+			(b.textContent || "").toUpperCase().includes("ABRIR DRAWER"),
+		) as HTMLElement;
+		expect(openBtn).toBeTruthy();
+		openBtn.click();
+		await new Promise((r) => setTimeout(r, 0));
+		const drawer = main().querySelector("#drw-demo") as HTMLElement & {
+			shadowRoot: ShadowRoot;
+		};
+		expect(drawer.hasAttribute("open")).toBe(true);
+		const close = drawer.shadowRoot.querySelector(
+			".close",
+		) as HTMLButtonElement;
+		close.click();
+		await new Promise((r) => setTimeout(r, 0));
+		expect(drawer.hasAttribute("open")).toBe(false);
+	});
 
-  it('página do toast: botões disparam a API FenixToast', () => {
-    navigate('fx-toast');
-    const btns = main().querySelectorAll('#stage fx-button');
-    expect(btns.length).toBeGreaterThanOrEqual(4);
-    // A API imperativa está disponível globalmente
-    expect((window as any).FenixToast).toBeTruthy();
-  });
+	it.each([
+		"fx-textarea",
+		"fx-dialog",
+		"fx-tooltip",
+		"fx-tabs",
+		"fx-progress",
+		"fx-skeleton",
+		"fx-alert",
+		"fx-dropdown",
+		"fx-pagination",
+		"fx-autocomplete",
+		"fx-table",
+	])("página %s renderiza playground ao vivo", (route) => {
+		navigate(route);
+		expect(main().querySelector(`#stage ${route}`)).toBeTruthy();
+	});
 
-  it('página da table exibe os dados fictícios no primeiro render', async () => {
-    navigate('fx-table');
-    const table = main().querySelector('#stage fx-table') as any;
-    expect(table).toBeTruthy();
-    await new Promise((r) => setTimeout(r, 0));
-    expect(table.data.length).toBeGreaterThan(0);
-    expect(table.shadowRoot!.querySelectorAll('tbody tr').length).toBeGreaterThan(0);
-  });
+	it("página do toast: botões disparam a API FenixToast", () => {
+		navigate("fx-toast");
+		const btns = main().querySelectorAll("#stage fx-button");
+		expect(btns.length).toBeGreaterThanOrEqual(4);
+		// A API imperativa está disponível globalmente
+		expect((window as any).FenixToast).toBeTruthy();
+	});
+
+	it("página da table exibe os dados fictícios no primeiro render", async () => {
+		navigate("fx-table");
+		const table = main().querySelector("#stage fx-table") as any;
+		expect(table).toBeTruthy();
+		await new Promise((r) => setTimeout(r, 0));
+		expect(table.data.length).toBeGreaterThan(0);
+		expect(
+			table.shadowRoot!.querySelectorAll("tbody tr").length,
+		).toBeGreaterThan(0);
+	});
+
+	it("playground do drawer: clique no botão ABRE e ✕ fecha o painel (fluxo real)", async () => {
+		navigate("fx-drawer");
+		await new Promise((r) => setTimeout(r, 0));
+		const openBtn = [...main().querySelectorAll("fx-button")].find((b) =>
+			(b.textContent || "").toUpperCase().includes("ABRIR DRAWER"),
+		) as HTMLElement;
+		expect(openBtn).toBeTruthy();
+		openBtn.click();
+		await new Promise((r) => setTimeout(r, 0));
+		const drawer = main().querySelector("#drw-demo") as HTMLElement & {
+			shadowRoot: ShadowRoot;
+		};
+		expect(drawer.hasAttribute("open")).toBe(true);
+		const close = drawer.shadowRoot.querySelector(
+			".close",
+		) as HTMLButtonElement;
+		close.click();
+		await new Promise((r) => setTimeout(r, 0));
+		expect(drawer.hasAttribute("open")).toBe(false);
+	});
 });

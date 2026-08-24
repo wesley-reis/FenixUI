@@ -40,6 +40,8 @@ export class FxDrawer extends FxElement {
       flex-direction: column;
       overflow: auto;
     }
+    :host(:not([open])) .panel { display: none; }
+    :host([open]) .panel { display: flex; }
     /* left / right — altura total, largura mínima fixa e expansível */
     :host([position='left']) .panel,
     :host(:not([position])) .panel,

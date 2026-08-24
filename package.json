@@ -1,11 +1,12 @@
 {
   "name": "@fenix-ui/fenix-ui",
   "version": "0.1.0",
-  "description": "FenixUI â€” Design System Web nativo (Web Components + Shadow DOM + Design Tokens) com tree-shaking por componente.",
+  "description": "FenixUI Design System Web nativo (Web Components + Shadow DOM + Design Tokens) com tree-shaking por componente.",
   "type": "module",
   "license": "MIT",
   "files": [
-    "dist"
+    "dist",
+    "README.md"
   ],
   "main": "./dist/index.js",
   "module": "./dist/index.js",

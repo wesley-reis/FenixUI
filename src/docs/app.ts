@@ -1,7 +1,7 @@
 ﻿/**
  * Documentação interativa do FenixUI.
  *
- * SPA sem framework (hash routing) no 
+ * SPA sem framework (hash routing) no
  *  - navegação lateral por componente;
  *  - playground por componente com controles ao vivo;
  *  - tabelas de API (atributos, slots, eventos);
@@ -33,6 +33,7 @@ import '../components/alert';
 import '../components/dropdown';
 import '../components/pagination';
 import '../components/autocomplete';
+import '../components/drawer';
 import { fenixComponentMap } from '../plugins/auto-import';
 import { applyPreset, listPresets, defineCustomPreset, type FenixPreset } from '../core/presets';
 import { FenixUI } from '../core/theme';
@@ -655,7 +656,7 @@ const components: ComponentDoc[] = [
     imports: ["import '@fenix-ui/fenix-ui/skeleton';"],
     demoHtml: (a) => `<fx-skeleton ${a}></fx-skeleton>`,
     variantsHtml: () =>
-      `<h4>Texto</h4><fx-skeleton variant="text"></fx-skeleton><div style="display:flex;gap:12px;align-items:center;margin-top:8px"><fx-skeleton variant="circle" width="40px" height="40px"></fx-skeleton><div style="flex:1"><fx-skeleton variant="text"></fx-skeleton><fx-skeleton variant="text"></fx-skeleton></div></div><h4>Múltiplas linhas</h4><fx-skeleton variant="text" lines="3"></fx-skeleton><h4>Bloco</h4><fx-skeleton width="100%" height="120px"></fx-skeleton>`,
+      `<h4>Texto</h4><fx-skeleton variant="text"><br/>></fx-skeleton><div style="display:flex;gap:12px;align-items:center;margin-top:8px"><fx-skeleton variant="circle" width="40px" height="40px"></fx-skeleton><div style="flex:1"><fx-skeleton variant="text"></fx-skeleton><fx-skeleton variant="text"></fx-skeleton></div></div><br/><h4>Múltiplas linhas</h4><fx-skeleton variant="text" lines="3"></fx-skeleton><h4>Bloco</h4><fx-skeleton width="100%" height="120px"></fx-skeleton>`,
     controls: [
       { kind: 'select', attr: 'variant', label: 'Variante', options: ['text', 'circle', 'rect'], value: 'text' },
       { kind: 'text', attr: 'width', label: 'Largura', value: '100%' },
@@ -695,21 +696,24 @@ const components: ComponentDoc[] = [
     group: 'Feedback',
     lead: 'Painel deslizante sobre a página com overlay desfocado. Posição left/right/top/bottom, tamanho mínimo fixo e expansível via CSS, header com título e botão fechar, conteúdo livre por slot.',
     imports: ["import '@fenix-ui/fenix-ui/drawer';"],
-    demoHtml: (a) =>
-      `<fx-drawer ${a}><p>Conteúdo <strong>livre</strong>: formulários, filtros, listas…</p><fx-input placeholder="Filtro"></fx-input></fx-drawer>`,
+    demoHtml: (a) => {
+      const m = /position="([a-z]+)"/.exec(a);
+      const pos = m ? m[1] : 'right';
+      const isOpen = /open/.test(a);
+      const rest = a.replace(/ position="[a-z]+"/g, '').replace(/(^| )open(="")?( |$)/g, ' ').trim();
+      const drawer = `<fx-drawer id="drw-demo" position="${pos}"${isOpen ? ' open' : ''}${rest ? ' ' + rest : ''}><p style="margin:0 0 12px">Conteúdo <strong>livre</strong>: formulários, filtros, listas…</p></fx-drawer>`;
+      const btn = isOpen ? '' : `<fx-button data-fx-open="drw-demo">Abrir drawer (${pos})</fx-button>`;
+      return drawer + btn;
+    },
     variantsHtml: () => {
-      const body = '<p style=\"padding:0;margin:0 0 8px\">Conteúdo do drawer.</p>';
-      return [
-        `<h4>Left</h4><fx-drawer open position=\"left\" title=\"Filtros\">${body}</fx-drawer>`,
-        `<h4>Right (padrão)</h4><fx-drawer open position=\"right\" title=\"Detalhes\">${body}</fx-drawer>`,
-        `<h4>Top</h4><div style=\"height:220px;position:relative;overflow:hidden\"><fx-drawer open position=\"top\" title=\"Notificações\">${body}</fx-drawer></div>`,
-        `<h4>Bottom</h4><div style=\"height:220px;position:relative;overflow:hidden\"><fx-drawer open position=\"bottom\" title=\"Carrinho\">${body}</fx-drawer></div>`,
-      ].join('');
+      const body = '<p style="padding:0;margin:0 0 8px">Conteúdo do drawer.</p>';
+      const mk = (id: string, pos: string, title: string) =>
+        `<fx-drawer id="${id}" position="${pos}" title="${title}">${body}</fx-drawer><fx-button size="sm" data-fx-open="${id}">${pos.toUpperCase()}</fx-button>`;
+      return `<div style="display:flex;gap:12px;flex-wrap:wrap">${mk('drw-l', 'left', 'Filtros')}${mk('drw-r', 'right', 'Detalhes')}${mk('drw-t', 'top', 'Notificações')}${mk('drw-b', 'bottom', 'Carrinho')}</div>`;
     },
     controls: [
       { kind: 'select', attr: 'position', label: 'Posição', options: ['right', 'left', 'top', 'bottom'], value: 'right' },
       { kind: 'text', attr: 'title', label: 'Título', value: 'Meu painel' },
-      { kind: 'toggle', attr: 'open', label: 'Aberto', on: true },
     ],
     attributes: [
       { name: 'open', type: 'boolean', default: 'false', desc: 'Exibe o drawer.' },
@@ -1424,6 +1428,18 @@ export default defineConfig({
 /* ------------------------------------------------------------------ */
 /* Bootstrap                                                           */
 /* ------------------------------------------------------------------ */
+
+/** Eventos de ação globais da doc (funciona dentro de shadow DOM e no jsdom). */
+document.addEventListener('click', (e: MouseEvent) => {
+  const path = 'composedPath' in e ? e.composedPath() as Element[] : [];
+  const opener = (path.find((n) => n instanceof Element && n.hasAttribute?.('data-fx-open')) ??
+    (e.target as Element)?.closest?.('[data-fx-open')) as HTMLElement | undefined;
+  if (opener) {
+    const id = opener.getAttribute('data-fx-open')!;
+    const drawer = document.getElementById(id);
+    if (drawer) drawer.setAttribute('open', '');
+  }
+});
 
 applyPreset('fenix', 'light');
 setupHeader();
