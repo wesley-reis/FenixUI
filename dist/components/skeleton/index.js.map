@@ -1,0 +1,1 @@
+{"version":3,"file":"index.js","sources":["../../../src/components/skeleton/index.ts"],"sourcesContent":["import { FxSkeleton, defineFxSkeleton } from './skeleton';\n\nexport { FxSkeleton };\n\n\ndefineFxSkeleton();\n\ndeclare global {\n  interface HTMLElementTagNameMap {\n    'fx-skeleton': FxSkeleton;\n  }\n}\n\r\n\r\n"],"names":[],"mappings":";;AAKA,iBAAA;"}

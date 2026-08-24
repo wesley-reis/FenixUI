@@ -1,0 +1,1 @@
+{"version":3,"file":"index.d.ts","sourceRoot":"","sources":["../../../src/components/textarea/index.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,UAAU,EAAoB,MAAM,YAAY,CAAC;AAG1D,OAAO,EAAE,UAAU,EAAE,CAAC;AAOtB,OAAO,CAAC,MAAM,CAAC;IACb,UAAU,qBAAqB;QAC7B,aAAa,EAAE,UAAU,CAAC;KAC3B;CACF"}

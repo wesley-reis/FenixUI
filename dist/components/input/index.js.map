@@ -1,0 +1,1 @@
+{"version":3,"file":"index.js","sources":["../../../src/components/input/index.ts"],"sourcesContent":["import { defineFxInput } from './input';\n\n// Reexporta a classe para uso programático (instanceof, herança).\nexport { FxInput } from './input';\n\n// Auto-registro ao importar o subpath `@fenix-ui/fenix-ui/input`.\ndefineFxInput();\n"],"names":[],"mappings":";;AAMA,cAAA;"}

@@ -1,0 +1,1 @@
+{"version":3,"file":"index.js","sources":["../../../src/components/toast/index.ts"],"sourcesContent":["import { FxToast, FenixToast, defineFxToast } from './toast';\n\nexport { FxToast, FenixToast };\n\n\ndefineFxToast();\n\ndeclare global {\n  interface HTMLElementTagNameMap {\n    'fx-toast': FxToast;\n  }\n}\n\r\n\r\n"],"names":[],"mappings":";;AAKA,cAAA;"}

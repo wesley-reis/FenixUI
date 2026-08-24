@@ -1,0 +1,1 @@
+{"version":3,"file":"index.js","sources":["../../../src/components/dialog/index.ts"],"sourcesContent":["import { FxDialog, defineFxDialog } from './dialog';\n\nexport { FxDialog };\n\n\ndefineFxDialog();\n\ndeclare global {\n  interface HTMLElementTagNameMap {\n    'fx-dialog': FxDialog;\n  }\n}\n\r\n\r\n"],"names":[],"mappings":";;AAKA,eAAA;"}

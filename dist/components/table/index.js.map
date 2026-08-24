@@ -1,0 +1,1 @@
+{"version":3,"file":"index.js","sources":["../../../src/components/table/index.ts"],"sourcesContent":["import { defineFxTable } from './table';\n\nexport { FxTable } from './table';\n\ndefineFxTable();\n"],"names":[],"mappings":";;AAIA,cAAA;"}

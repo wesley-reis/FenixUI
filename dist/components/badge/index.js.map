@@ -1,0 +1,1 @@
+{"version":3,"file":"index.js","sources":["../../../src/components/badge/index.ts"],"sourcesContent":["import { defineFxBadge } from './badge';\n\n// Reexporta a classe para uso programático (instanceof, herança).\nexport { FxBadge } from './badge';\n\n// Auto-registro ao importar o subpath `@fenix-ui/fenix-ui/badge`.\ndefineFxBadge();"],"names":[],"mappings":";;AAMA,cAAA;"}

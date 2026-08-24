@@ -1,0 +1,1 @@
+{"version":3,"file":"index.js","sources":["../../../src/components/radio/index.ts"],"sourcesContent":["import { defineFxRadio } from './radio';\n\n// Reexporta a classe para uso programático (instanceof, herança).\nexport { FxRadio } from './radio';\n\n// Auto-registro ao importar o subpath `@fenix-ui/fenix-ui/radio`.\ndefineFxRadio();\n"],"names":[],"mappings":";;AAMA,cAAA;"}

@@ -1,0 +1,1 @@
+{"version":3,"file":"index.js","sources":["../../../src/components/drawer/index.ts"],"sourcesContent":["import { FxDrawer, defineFxDrawer } from './drawer';\n\nexport { FxDrawer };\n\ndefineFxDrawer();\n\ndeclare global {\n  interface HTMLElementTagNameMap {\n    'fx-drawer': FxDrawer;\n  }\n}"],"names":[],"mappings":";;AAIA,eAAA;"}

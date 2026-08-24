@@ -1,0 +1,1 @@
+{"version":3,"file":"index.js","sources":["../../../src/components/alert/index.ts"],"sourcesContent":["import { FxAlert, defineFxAlert } from './alert';\n\nexport { FxAlert };\n\n\ndefineFxAlert();\n\ndeclare global {\n  interface HTMLElementTagNameMap {\n    'fx-alert': FxAlert;\n  }\n}\n\r\n"],"names":[],"mappings":";;AAKA,cAAA;"}

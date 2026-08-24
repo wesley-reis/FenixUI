@@ -1,0 +1,1 @@
+{"version":3,"file":"index.js","sources":["../../../src/components/progress/index.ts"],"sourcesContent":["import { FxProgress, defineFxProgress } from './progress';\n\nexport { FxProgress };\n\n\ndefineFxProgress();\n\ndeclare global {\n  interface HTMLElementTagNameMap {\n    'fx-progress': FxProgress;\n  }\n}\n\r\n\r\n"],"names":[],"mappings":";;AAKA,iBAAA;"}
