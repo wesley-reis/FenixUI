@@ -71,6 +71,7 @@ interface ComponentDoc {
   attributes: ApiRow[];
   events?: ApiRow[];
   slots?: ApiRow[];
+  cssVars?: ApiRow[];
 }
 
 const esc = (s: string): string =>
@@ -689,6 +690,43 @@ const components: ComponentDoc[] = [
     events: [{ name: 'dismiss', type: 'CustomEvent<void>', desc: 'Ao fechar o alerta.' }],
   },
   {
+    tag: 'fx-drawer',
+    title: 'Drawer',
+    group: 'Feedback',
+    lead: 'Painel deslizante sobre a página com overlay desfocado. Posição left/right/top/bottom, tamanho mínimo fixo e expansível via CSS, header com título e botão fechar, conteúdo livre por slot.',
+    imports: ["import '@fenix-ui/fenix-ui/drawer';"],
+    demoHtml: (a) =>
+      `<fx-drawer ${a}><p>Conteúdo <strong>livre</strong>: formulários, filtros, listas…</p><fx-input placeholder="Filtro"></fx-input></fx-drawer>`,
+    variantsHtml: () => {
+      const body = '<p style=\"padding:0;margin:0 0 8px\">Conteúdo do drawer.</p>';
+      return [
+        `<h4>Left</h4><fx-drawer open position=\"left\" title=\"Filtros\">${body}</fx-drawer>`,
+        `<h4>Right (padrão)</h4><fx-drawer open position=\"right\" title=\"Detalhes\">${body}</fx-drawer>`,
+        `<h4>Top</h4><div style=\"height:220px;position:relative;overflow:hidden\"><fx-drawer open position=\"top\" title=\"Notificações\">${body}</fx-drawer></div>`,
+        `<h4>Bottom</h4><div style=\"height:220px;position:relative;overflow:hidden\"><fx-drawer open position=\"bottom\" title=\"Carrinho\">${body}</fx-drawer></div>`,
+      ].join('');
+    },
+    controls: [
+      { kind: 'select', attr: 'position', label: 'Posição', options: ['right', 'left', 'top', 'bottom'], value: 'right' },
+      { kind: 'text', attr: 'title', label: 'Título', value: 'Meu painel' },
+      { kind: 'toggle', attr: 'open', label: 'Aberto', on: true },
+    ],
+    attributes: [
+      { name: 'open', type: 'boolean', default: 'false', desc: 'Exibe o drawer.' },
+      { name: 'position', type: `'left' | 'right' | 'top' | 'bottom'`, default: "'right'", desc: 'Lado de origem. Left/right ocupam a altura total; top/bottom a largura total.' },
+      { name: 'title', type: 'string', default: "''", desc: 'Título no cabeçalho (com botão fechar).' },
+    ],
+    cssVars: [
+      { name: '--fx-drawer-width', default: '360px', desc: 'Largura nos modos left/right (mín. 300px, máx. 90vw).' },
+      { name: '--fx-drawer-height', default: '280px', desc: 'Altura nos modos top/bottom (mín. 180px, máx. 85vh).' },
+    ],
+    events: [
+      { name: 'open', type: 'Event', desc: 'Ao abrir.' },
+      { name: 'close', type: `CustomEvent`, desc: 'Fechar por ✕, clique no overlay ou ESC.' },
+    ],
+    slots: [{ name: 'padrão', desc: 'Conteúdo livre do painel.' }],
+  },
+  {
     tag: 'fx-dropdown',
     title: 'Dropdown',
     group: 'Navegação',
@@ -1277,6 +1315,7 @@ function renderComponentPage(doc: ComponentDoc): void {
     ${apiTable('Atributos / Propriedades', doc.attributes, ['Nome', 'Tipo', 'Padrão', 'Descrição'])}
     ${doc.events ? apiTable('Eventos', doc.events, ['Evento', 'Tipo', 'Padrão', 'Descrição']) : ''}
     ${doc.slots ? apiTable('Slots', doc.slots, ['Slot', 'Tipo', 'Padrão', 'Descrição']) : ''}
+    ${doc.cssVars ? apiTable('Variáveis CSS', doc.cssVars, ['Variável', 'Tipo', 'Padrão', 'Descrição']) : ''}
   `;
 
   const stage = main.querySelector<HTMLDivElement>('#stage')!;

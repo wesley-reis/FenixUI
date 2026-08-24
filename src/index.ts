@@ -37,5 +37,6 @@ export * from './components/progress';
 export * from './components/skeleton';
 export * from './components/alert';
 export * from './components/dropdown';
+export * from './components/drawer';
 export * from './components/pagination';
 export * from './components/autocomplete';

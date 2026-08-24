@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+﻿import { describe, it, expect } from 'vitest';
 import {
   transformSource,
   shouldTransform,
@@ -24,13 +24,13 @@ describe('auto-import (plugin)', () => {
     const out = transformSource(code);
     expect(out).toContain("import '@fenix-ui/fenix-ui/button';");
     expect(out).toContain("import '@fenix-ui/fenix-ui/select';");
-    // Injeção após o último import existente.
+    // InjeÃ§Ã£o apÃ³s o Ãºltimo import existente.
     expect(out.indexOf("import '@fenix-ui/fenix-ui/button';")).toBeGreaterThan(
       code.indexOf("'./x'"),
     );
   });
 
-  it('não duplica import já existente', () => {
+  it('nÃ£o duplica import jÃ¡ existente', () => {
     const code = `import '@fenix-ui/fenix-ui/button';\nconst t = '<fx-button>Ok</fx-button>';`;
     expect(transformSource(code)).toBe(code);
   });
@@ -40,7 +40,7 @@ describe('auto-import (plugin)', () => {
     expect(transformSource(code)).toBe(code);
   });
 
-  it('sem import prévio: injeta no topo', () => {
+  it('sem import prÃ©vio: injeta no topo', () => {
     const out = transformSource(`const a = 1;\nconst b = '<fx-badge>x</fx-badge>';`);
     expect(out.startsWith("import '@fenix-ui/fenix-ui/badge';\n")).toBe(true);
   });

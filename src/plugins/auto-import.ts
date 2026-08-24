@@ -19,6 +19,7 @@ export const fenixComponentMap: Record<string, string> = {
   'fx-floatlabel': '@fenix-ui/fenix-ui/floatlabel',
   'fx-textarea': '@fenix-ui/fenix-ui/textarea',
   'fx-dialog': '@fenix-ui/fenix-ui/dialog',
+  'fx-drawer': '@fenix-ui/fenix-ui/drawer',
   'fx-toast': '@fenix-ui/fenix-ui/toast',
   'fx-tooltip': '@fenix-ui/fenix-ui/tooltip',
   'fx-tabs': '@fenix-ui/fenix-ui/tabs',
@@ -28,7 +29,7 @@ export const fenixComponentMap: Record<string, string> = {
   'fx-alert': '@fenix-ui/fenix-ui/alert',
   'fx-dropdown': '@fenix-ui/fenix-ui/dropdown',
   'fx-dropdown-item': '@fenix-ui/fenix-ui/dropdown',
-  'fx-pagination': '@fenix-ui/fenix-ui/pagination',
+    'fx-pagination': '@fenix-ui/fenix-ui/pagination',
   'fx-autocomplete': '@fenix-ui/fenix-ui/autocomplete',
 };
 
