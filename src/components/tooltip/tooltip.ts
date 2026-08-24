@@ -56,7 +56,7 @@ export class FxTooltip extends FxElement {
     :host([position='bottom']) .bubble::after { top: auto; bottom: 100%; border-top-color: transparent; border-bottom-color: var(--fx-text-default, #1e293b); }
     /* left */
     :host([position='left']) .bubble {
-      right: calc(100% + 6px); left: auto; top: 50%; transform: translateY(-50%);
+      right: calc(100% + 6px); left: auto; top: 50%; bottom: auto; transform: translateY(-50%);
     }
     :host([position='left']) .bubble::after {
       top: 50%; left: 100%; transform: translateY(-50%);
@@ -64,7 +64,7 @@ export class FxTooltip extends FxElement {
     }
     /* right */
     :host([position='right']) .bubble {
-      right: auto; left: calc(100% + 6px); top: 50%; transform: translateY(-50%);
+      right: auto; left: calc(100% + 6px); top: 50%; bottom: auto; transform: translateY(-50%);
     }
     :host([position='right']) .bubble::after {
       top: 50%; left: auto; right: 100%; transform: translateY(-50%);

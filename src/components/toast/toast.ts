@@ -19,6 +19,14 @@ const KIND_COLOR: Record<ToastKind, string> = {
   warning: 'var(--fx-color-warning, #f59e0b)',
 };
 
+/** Ícone exibido no lugar da bolinha, conforme a variante. */
+const KIND_ICON: Record<ToastKind, string> = {
+  success: '✓',
+  error: '✕',
+  warning: '!',
+  info: 'i',
+};
+
 const CARD_CSS = `
 :host { display: contents; }
 .card {
@@ -36,7 +44,15 @@ const CARD_CSS = `
 }
 @keyframes fx-toast-in { from { opacity: 0; transform: translateY(-6px); } }
 .card.leaving { opacity: 0; transition: opacity .2s ease; }
-.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--kind); margin-top: 6px; flex: none; }
+.icon {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--kind);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700;
+  flex: none; margin-top: 2px;
+  user-select: none;
+}
 .body { flex: 1; min-width: 0; }
 .title { font-weight: 600; font-size: 14px; }
 .msg { font-size: calc(var(--fx-font-size, 14px) - 2px); color: var(--fx-text-muted, #64748b); margin-top: 2px; word-break: break-word; white-space: pre-line; }
@@ -95,7 +111,7 @@ export class FxToast extends HTMLElement {
     this.shadowRoot!.innerHTML = `
       <style>${CARD_CSS}</style>
       <div class="card" style="--kind:${color}" role="status" part="card">
-        <span class="dot"></span>
+        <span class="icon">${KIND_ICON[kind] ?? KIND_ICON.info}</span>
         <div class="body">
           ${title ? '<div class="title"></div>' : ''}
           ${msg ? '<div class="msg"></div>' : ''}
