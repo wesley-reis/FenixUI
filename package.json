@@ -149,7 +149,8 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "publish": "npm publish"
   },
   "devDependencies": {
     "@types/node": "^22.7.4",
