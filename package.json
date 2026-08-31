@@ -9,8 +9,9 @@
     "dist",
     "README.md"
   ],
-  "publishConfig": {
-    "access": "public"
+    "publishConfig": {
+    "access": "public",
+    "tag": "latest"
   },
 
   "main": "./dist/index.js",
@@ -154,7 +155,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "publish": "npm publish --access public"
+    "publish": "npm publish --access public --tag latest"
   },
   "devDependencies": {
     "@types/node": "^22.7.4",

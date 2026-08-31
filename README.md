@@ -18,7 +18,7 @@ import { FenixUI } from '@wrrdev/fenix-ui';  // API de tema/tokens (índice)
 FenixUI.theme('dark');
 ```
 
-> 📦 Publicado no npm como [`@wrrdev/fenix-ui`](https://www.npmjs.com/package/@wrrdev/fenix-ui) — **v1.0.0**, acesso público (use `--access public` na primeira publicação de escopo).
+> 📦 Publicado no npm como [`@wrrdev/fenix-ui`](https://www.npmjs.com/package/@wrrdev/fenix-ui) — **v1.0.1**, acesso público (use `--access public` na primeira publicação de escopo).
 > Subpaths disponíveis: `./theme`, `./tokens`, `./button`, `./badge`, `./spinner`, `./select`, `./input`, `./switch`, `./textarea`, `./checkbox`, `./radio`, `./calendar`, `./datepicker`, `./multiselect`, `./table`, `./floatlabel`, `./dialog`, `./toast`, `./tooltip`, `./tabs`, `./progress`, `./skeleton`, `./alert`, `./drawer`, `./dropdown`, `./sidebar`, `./pagination`, `./autocomplete`, `./auto-import` e o curinga `./components/*`.
 
 ## Arquitetura (por que tree-shaking de verdade)
@@ -73,10 +73,10 @@ Carregue o bundle **UMD** único: ele registra todos os componentes e expõe os 
 
 ```html
 <!-- jsDelivr (recomendado) — link direto para uso -->
-<script src="https://cdn.jsdelivr.net/npm/@wrrdev/fenix-ui@1.0.0/dist/fenix-ui.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js"></script>
 
 <!-- alternativa: unpkg -->
-<!-- <script src="https://unpkg.com/@wrrdev/fenix-ui@1.0.0/dist/fenix-ui.umd.min.js"></script> -->
+<!-- <script src="https://unpkg.com/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js"></script> -->
 
 <!-- ou a última versão publicada -->
 <script src="https://cdn.jsdelivr.net/npm/@wrrdev/fenix-ui/dist/fenix-ui.umd.min.js"></script>
@@ -95,9 +95,9 @@ Carregue o bundle **UMD** único: ele registra todos os componentes e expõe os 
 <fx-toast></fx-toast>
 
 <!--
-  🔗 Links diretos para CDN (versão 1.0.0):
-  • https://cdn.jsdelivr.net/npm/@wrrdev/fenix-ui@1.0.0/dist/fenix-ui.umd.min.js
-  • https://unpkg.com/@wrrdev/fenix-ui@1.0.0/dist/fenix-ui.umd.min.js
+  🔗 Links diretos para CDN (versão 1.0.1):
+  • https://cdn.jsdelivr.net/npm/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js
+  • https://unpkg.com/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js
 -->
 ```
 
