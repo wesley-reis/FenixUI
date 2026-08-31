@@ -3,7 +3,7 @@
  *
  * Ao importar este agregador, todos os componentes são registrados (bundle
  * "tudo-em-um"). Para consumo com TREE-SHAKING, prefira importar apenas o
- * subpath que deseja, ex.: `@fenix-ui/fenix-ui/button`.
+ * subpath que deseja, ex.: `@wrrdev/fenix-ui/button`.
  */
 
 // core

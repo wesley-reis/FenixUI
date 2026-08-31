@@ -4,39 +4,39 @@
  * também no build do cliente via plugin.
  */
 export const fenixComponentMap: Record<string, string> = {
-  'fx-button': '@fenix-ui/fenix-ui/button',
-  'fx-badge': '@fenix-ui/fenix-ui/badge',
-  'fx-spinner': '@fenix-ui/fenix-ui/spinner',
-  'fx-select': '@fenix-ui/fenix-ui/select',
-  'fx-multiselect': '@fenix-ui/fenix-ui/multiselect',
-  'fx-input': '@fenix-ui/fenix-ui/input',
-  'fx-switch': '@fenix-ui/fenix-ui/switch',
-  'fx-calendar': '@fenix-ui/fenix-ui/calendar',
-  'fx-datepicker': '@fenix-ui/fenix-ui/datepicker',
-  'fx-checkbox': '@fenix-ui/fenix-ui/checkbox',
-  'fx-radio': '@fenix-ui/fenix-ui/radio',
-  'fx-table': '@fenix-ui/fenix-ui/table',
-  'fx-floatlabel': '@fenix-ui/fenix-ui/floatlabel',
-  'fx-textarea': '@fenix-ui/fenix-ui/textarea',
-  'fx-dialog': '@fenix-ui/fenix-ui/dialog',
-  'fx-drawer': '@fenix-ui/fenix-ui/drawer',
-  'fx-toast': '@fenix-ui/fenix-ui/toast',
-  'fx-tooltip': '@fenix-ui/fenix-ui/tooltip',
-  'fx-tabs': '@fenix-ui/fenix-ui/tabs',
-  'fx-tab-panel': '@fenix-ui/fenix-ui/tabs',
-  'fx-progress': '@fenix-ui/fenix-ui/progress',
-  'fx-skeleton': '@fenix-ui/fenix-ui/skeleton',
-  'fx-alert': '@fenix-ui/fenix-ui/alert',
-  'fx-dropdown': '@fenix-ui/fenix-ui/dropdown',
-  'fx-dropdown-item': '@fenix-ui/fenix-ui/dropdown',
-    'fx-pagination': '@fenix-ui/fenix-ui/pagination',
-  'fx-autocomplete': '@fenix-ui/fenix-ui/autocomplete',
+  'fx-button': '@wrrdev/fenix-ui/button',
+  'fx-badge': '@wrrdev/fenix-ui/badge',
+  'fx-spinner': '@wrrdev/fenix-ui/spinner',
+  'fx-select': '@wrrdev/fenix-ui/select',
+  'fx-multiselect': '@wrrdev/fenix-ui/multiselect',
+  'fx-input': '@wrrdev/fenix-ui/input',
+  'fx-switch': '@wrrdev/fenix-ui/switch',
+  'fx-calendar': '@wrrdev/fenix-ui/calendar',
+  'fx-datepicker': '@wrrdev/fenix-ui/datepicker',
+  'fx-checkbox': '@wrrdev/fenix-ui/checkbox',
+  'fx-radio': '@wrrdev/fenix-ui/radio',
+  'fx-table': '@wrrdev/fenix-ui/table',
+  'fx-floatlabel': '@wrrdev/fenix-ui/floatlabel',
+  'fx-textarea': '@wrrdev/fenix-ui/textarea',
+  'fx-dialog': '@wrrdev/fenix-ui/dialog',
+  'fx-drawer': '@wrrdev/fenix-ui/drawer',
+  'fx-toast': '@wrrdev/fenix-ui/toast',
+  'fx-tooltip': '@wrrdev/fenix-ui/tooltip',
+  'fx-tabs': '@wrrdev/fenix-ui/tabs',
+  'fx-tab-panel': '@wrrdev/fenix-ui/tabs',
+  'fx-progress': '@wrrdev/fenix-ui/progress',
+  'fx-skeleton': '@wrrdev/fenix-ui/skeleton',
+  'fx-alert': '@wrrdev/fenix-ui/alert',
+  'fx-dropdown': '@wrrdev/fenix-ui/dropdown',
+  'fx-dropdown-item': '@wrrdev/fenix-ui/dropdown',
+    'fx-pagination': '@wrrdev/fenix-ui/pagination',
+  'fx-autocomplete': '@wrrdev/fenix-ui/autocomplete',
 };
 
 const TAG_RE = /<(fx-[a-z][a-z-]*)(?=[\s/>])/g;
 
 export interface AutoImportOptions {
-  /** Prefixo do pacote (padrão '@fenix-ui/fenix-ui'). */
+  /** Prefixo do pacote (padrão '@wrrdev/fenix-ui'). */
   packageName?: string;
 }
 
@@ -45,10 +45,10 @@ export interface AutoImportOptions {
  * que ainda não foi importado. Retorna o código transformado ou o original.
  */
 export function transformSource(code: string, options: AutoImportOptions = {}): string {
-  const pkg = options.packageName ?? '@fenix-ui/fenix-ui';
+  const pkg = options.packageName ?? '@wrrdev/fenix-ui';
   // Subpaths do mapa são reescritos quando um pacote custom é informado.
   const resolve = (sub: string): string =>
-    pkg === '@fenix-ui/fenix-ui' ? sub : sub.replace('@fenix-ui/fenix-ui', pkg);
+    pkg === '@wrrdev/fenix-ui' ? sub : sub.replace('@wrrdev/fenix-ui', pkg);
 
   // Componentes usados e ainda não importados explicitamente.
   const needed = new Set<string>();

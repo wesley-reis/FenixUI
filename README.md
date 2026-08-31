@@ -25,8 +25,8 @@ o core compartilhado — nunca a biblioteca inteira:
 
 ```ts
 // O cliente compila apenas Button + core (~9 kB não-minificado).
-import '@fenix-ui/fenix-ui/button';
-import { FenixUI } from '@fenix-ui/fenix-ui/theme';
+import '@wrrdev/fenix-ui/button';
+import { FenixUI } from '@wrrdev/fenix-ui/theme';
 
 FenixUI.theme('dark');
 ```
@@ -39,8 +39,8 @@ FenixUI.theme('dark');
 ### npm + bundler (recomendado — tree-shaking automático)
 
 ```ts
-import '@fenix-ui/fenix-ui/button';
-import '@fenix-ui/fenix-ui/badge';
+import '@wrrdev/fenix-ui/button';
+import '@wrrdev/fenix-ui/badge';
 
 const el = document.createElement('fx-button');
 el.setAttribute('variant', 'primary');

@@ -7,7 +7,7 @@
  * o que é usado).
  *
  * Uso no projeto do cliente (vite.config.ts):
- *   import { FenixAutoImport } from '@fenix-ui/fenix-ui/auto-import';
+ *   import { FenixAutoImport } from '@wrrdev/fenix-ui/auto-import';
  *   export default { plugins: [FenixAutoImport()] };
  */
 import {

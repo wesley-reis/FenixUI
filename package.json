@@ -1,14 +1,18 @@
 {
-  "name": "@fenix-ui/fenix-ui",
+  "name": "@wrrdev/fenix-ui",
   "version": "1.0.0",
   "description": "FenixUI Design System Web nativo (Web Components + Shadow DOM + Design Tokens) com tree-shaking por componente.",
   "type": "module",
   "license": "ISC",
   "keywords":["UI", "UX", "Componentes", "Fenix", "FenixUI"],
-  "files": [
-    "dist/index.js",
+    "files": [
+    "dist",
     "README.md"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
+
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -150,7 +154,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "publish": "npm publish"
+    "publish": "npm publish --access public"
   },
   "devDependencies": {
     "@types/node": "^22.7.4",

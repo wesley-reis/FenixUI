@@ -22,16 +22,16 @@ describe('auto-import (plugin)', () => {
   it('injeta imports para as tags usadas', () => {
     const code = `import { something } from './x';\nexport const tpl = '<fx-button>Ok</fx-button><fx-select></fx-select>';`;
     const out = transformSource(code);
-    expect(out).toContain("import '@fenix-ui/fenix-ui/button';");
-    expect(out).toContain("import '@fenix-ui/fenix-ui/select';");
+    expect(out).toContain("import '@wrrdev/fenix-ui/button';");
+    expect(out).toContain("import '@wrrdev/fenix-ui/select';");
     // InjeÃ§Ã£o apÃ³s o Ãºltimo import existente.
-    expect(out.indexOf("import '@fenix-ui/fenix-ui/button';")).toBeGreaterThan(
+    expect(out.indexOf("import '@wrrdev/fenix-ui/button';")).toBeGreaterThan(
       code.indexOf("'./x'"),
     );
   });
 
   it('nÃ£o duplica import jÃ¡ existente', () => {
-    const code = `import '@fenix-ui/fenix-ui/button';\nconst t = '<fx-button>Ok</fx-button>';`;
+    const code = `import '@wrrdev/fenix-ui/button';\nconst t = '<fx-button>Ok</fx-button>';`;
     expect(transformSource(code)).toBe(code);
   });
 
@@ -42,14 +42,14 @@ describe('auto-import (plugin)', () => {
 
   it('sem import prÃ©vio: injeta no topo', () => {
     const out = transformSource(`const a = 1;\nconst b = '<fx-badge>x</fx-badge>';`);
-    expect(out.startsWith("import '@fenix-ui/fenix-ui/badge';\n")).toBe(true);
+    expect(out.startsWith("import '@wrrdev/fenix-ui/badge';\n")).toBe(true);
   });
 
   it('.vue: injeta dentro do bloco script', () => {
     const out = transformSource(
       `<template><fx-spinner /></template>\n<script setup lang="ts">\nconst a = 1;\n</script>`,
     );
-    expect(out.indexOf("import '@fenix-ui/fenix-ui/spinner';")).toBeGreaterThan(
+    expect(out.indexOf("import '@wrrdev/fenix-ui/spinner';")).toBeGreaterThan(
       out.indexOf('<script'),
     );
     expect(out.indexOf("import '@fenix-ui")).toBeLessThan(out.indexOf('const a'));

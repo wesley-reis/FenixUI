@@ -4,7 +4,7 @@
 export { FxTextarea };
 
 
-// Auto-registro: basta importar o subpath `@fenix-ui/fenix-ui/textarea`
+// Auto-registro: basta importar o subpath `@wrrdev/fenix-ui/textarea`
 // para que o componente seja definido no CustomElementRegistry.
 defineFxTextarea();
 

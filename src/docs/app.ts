@@ -92,7 +92,7 @@ const components: ComponentDoc[] = [
 		title: "Button",
 		group: "Formulário",
 		lead: "Botão acionável com variantes semânticas, tamanhos, ícone via slot e estado de carregamento integrado.",
-		imports: ["import '@fenix-ui/fenix-ui/button';"],
+		imports: ["import '@wrrdev/fenix-ui/button';"],
 		demoHtml: (a) => `<fx-button ${a}>Confirmar ação</fx-button>`,
 		variantsHtml: () =>
 			buttonVariants
@@ -182,7 +182,7 @@ const components: ComponentDoc[] = [
 		title: "Badge",
 		group: "Exibição",
 		lead: "Rótulo compacto para status, contadores e destaques. Suporta formato arredondado para números.",
-		imports: ["import '@fenix-ui/fenix-ui/badge';"],
+		imports: ["import '@wrrdev/fenix-ui/badge';"],
 		demoHtml: (a) => `<fx-badge ${a}>Novo</fx-badge>`,
 		variantsHtml: () =>
 			badgeVariants
@@ -219,7 +219,7 @@ const components: ComponentDoc[] = [
 		title: "Select",
 		group: "Formulário",
 		lead: "Dropdown customizado com hover/seleção na cor do tema, busca e limpeza. Escreva <option> nativos como filhos — são espelhados automaticamente.",
-		imports: ["import '@fenix-ui/fenix-ui/select';"],
+		imports: ["import '@wrrdev/fenix-ui/select';"],
 		demoHtml: (a) =>
 			`<fx-select ${a}>\n  <option value="sp">São Paulo</option>\n  <option value="rj">Rio de Janeiro</option>\n  <option value="mg">Minas Gerais</option>\n  <option value="ba">Bahia</option>\n  <option value="pr">Paraná</option>\n</fx-select>`,
 		variantsHtml: () =>
@@ -322,7 +322,7 @@ const components: ComponentDoc[] = [
 		title: "Input",
 		group: "Formulário",
 		lead: "Campo de texto (text, number, email, password, search…) estilizado com os tokens do tema. O anel de foco é controlado pelo token effect.focus-ring do preset.",
-		imports: ["import '@fenix-ui/fenix-ui/input';"],
+		imports: ["import '@wrrdev/fenix-ui/input';"],
 		demoHtml: (a) => `<fx-input ${a}></fx-input>`,
 		variantsHtml: () =>
 			["text", "number", "email", "password", "search"]
@@ -426,7 +426,7 @@ const components: ComponentDoc[] = [
 		title: "Multiselect",
 		group: "Formulário",
 		lead: "Seleção múltipla com chips, pesquisa e limpeza — dropdown customizado (componente separado do fx-select). Escreva <option> nativos como filhos.",
-		imports: ["import '@fenix-ui/fenix-ui/multiselect';"],
+		imports: ["import '@wrrdev/fenix-ui/multiselect';"],
 		demoHtml: (a) =>
 			`<fx-multiselect ${a} placeholder="Estados">\n  <option value="sp">São Paulo</option>\n  <option value="rj">Rio de Janeiro</option>\n  <option value="mg">Minas Gerais</option>\n  <option value="ba">Bahia</option>\n</fx-multiselect>`,
 		variantsHtml: () =>
@@ -528,7 +528,7 @@ const components: ComponentDoc[] = [
 		title: "Switch",
 		group: "Formulário",
 		lead: 'Interruptor ligado/desligado com role="switch". O texto do slot é o rótulo clicável e o anel de foco respeita o token effect.focus-ring.',
-		imports: ["import '@fenix-ui/fenix-ui/switch';"],
+		imports: ["import '@wrrdev/fenix-ui/switch';"],
 		demoHtml: (a) => `<fx-switch ${a}>Notificações</fx-switch>`,
 		variantsHtml: () => `<fx-switch>Interruptor</fx-switch>`,
 		controls: [
@@ -576,7 +576,7 @@ const components: ComponentDoc[] = [
 		title: "Calendar",
 		group: "Exibição",
 		lead: 'Calendário com seleção simples, por período (início/fim) ou múltiplas datas. Clique no mês para escolher meses, no ano para escolher anos, e limite o período com min/max — incluindo ano ("2026") e mês ("2026-03").',
-		imports: ["import '@fenix-ui/fenix-ui/calendar';"],
+		imports: ["import '@wrrdev/fenix-ui/calendar';"],
 		demoHtml: (a) => `<fx-calendar ${a}></fx-calendar>`,
 		variantsHtml: () =>
 			`<fx-calendar mode="single" value="2026-08-15"></fx-calendar>\n       <fx-calendar mode="range" start="2026-08-10" end="2026-08-20"></fx-calendar>\n       <fx-calendar mode="multiple" values="2026-08-05,2026-08-12,2026-08-25"></fx-calendar>`,
@@ -651,7 +651,7 @@ const components: ComponentDoc[] = [
 		title: "Datepicker",
 		group: "Formulário",
 		lead: "Campo de data com ícone de calendário: o calendário abre em um popover ao clicar no input e a(s) data(s) selecionada(s) aparecem nele. Suporta data simples, múltiplas datas e período, herdando min/max do calendário.",
-		imports: ["import '@fenix-ui/fenix-ui/datepicker';"],
+		imports: ["import '@wrrdev/fenix-ui/datepicker';"],
 		demoHtml: (a) => `<fx-datepicker ${a}></fx-datepicker>`,
 		variantsHtml: () =>
 			`<fx-datepicker placeholder="Data única" value="2026-08-15"></fx-datepicker>
@@ -781,7 +781,7 @@ const components: ComponentDoc[] = [
 		title: "Checkbox",
 		group: "Formulário",
 		lead: "Caixa de seleção com estado indeterminado. Clique ou use Espaço/Enter; emite change composto.",
-		imports: ["import '@fenix-ui/fenix-ui/checkbox';"],
+		imports: ["import '@wrrdev/fenix-ui/checkbox';"],
 		demoHtml: (a) => `<fx-checkbox ${a}>Aceito os termos</fx-checkbox>`,
 		variantsHtml: () =>
 			["sm", "md", "lg"]
@@ -838,7 +838,7 @@ const components: ComponentDoc[] = [
 		title: "Spinner",
 		group: "Feedback",
 		lead: "Indicador de carregamento animado que herda automaticamente a cor primária do tema ativo.",
-		imports: ["import '@fenix-ui/fenix-ui/spinner';"],
+		imports: ["import '@wrrdev/fenix-ui/spinner';"],
 		demoHtml: (a) => `<fx-spinner ${a}></fx-spinner>`,
 		variantsHtml: () => `<fx-spinner></fx-spinner>`,
 		controls: [
@@ -864,7 +864,7 @@ const components: ComponentDoc[] = [
 		title: "Radio",
 		group: "Formulário",
 		lead: "Botão de opção. Radios com o mesmo `name` formam um grupo de seleção exclusiva.",
-		imports: ["import '@fenix-ui/fenix-ui/radio';"],
+		imports: ["import '@wrrdev/fenix-ui/radio';"],
 		demoHtml: (a) =>
 			`<fx-radio ${a} name="gender">Masculino</fx-radio><fx-radio ${a} name="gender">Feminino</fx-radio>`,
 		variantsHtml: () =>
@@ -921,7 +921,7 @@ const components: ComponentDoc[] = [
 		title: "Table",
 		group: "Exibição",
 		lead: "Tabela estilo DataTable com ordenação, filtro no header, paginação e clique na linha. Colunas declaradas como <fx-column> dentro do componente.",
-		imports: ["import '@fenix-ui/fenix-ui/table';"],
+		imports: ["import '@wrrdev/fenix-ui/table';"],
 		demoHtml: (a) => {
 			const data = [
 				{
@@ -1160,7 +1160,7 @@ const components: ComponentDoc[] = [
 		title: "FloatLabel",
 		group: "Formulário",
 		lead: "Rótulo flutuante  comporta-se como placeholder quando vazio e sobe para o topo do campo ao focar, abrir ou preencher valor.",
-		imports: ["import '@fenix-ui/fenix-ui/floatlabel';"],
+		imports: ["import '@wrrdev/fenix-ui/floatlabel';"],
 		demoHtml: (a) =>
 			`<fx-floatlabel ${a}><fx-input id="demo-fl-input"></fx-input><label for="demo-fl-input">Nome de usuário</label></fx-floatlabel>`,
 		variantsHtml: () =>
@@ -1218,7 +1218,7 @@ const components: ComponentDoc[] = [
 		title: "Textarea",
 		group: "Formulário",
 		lead: "Campo de texto multilinha com validação visual e tamanhos padronizados.",
-		imports: ["import '@fenix-ui/fenix-ui/textarea';"],
+		imports: ["import '@wrrdev/fenix-ui/textarea';"],
 		demoHtml: (a) =>
 			`<fx-textarea ${a} placeholder="Descreva sua necessidade..."></fx-textarea>`,
 		variantsHtml: () =>
@@ -1285,7 +1285,7 @@ const components: ComponentDoc[] = [
 		title: "Dialog",
 		group: "Feedback",
 		lead: "Janela modal com overlay, título e fechamento por ESC/clique fora. Controle o estado pelo atributo open.",
-		imports: ["import '@fenix-ui/fenix-ui/dialog';"],
+		imports: ["import '@wrrdev/fenix-ui/dialog';"],
 		demoHtml: () =>
 			`<fx-dialog id="dlg-demo" heading="Confirmar exclusão" size="md"><p style="margin:0">Tem certeza que deseja excluir este registro?</p><div slot="footer" style="display:flex;gap:8px;justify-content:flex-end"><fx-button size="sm" variant="outline" onclick="document.getElementById('dlg-demo').removeAttribute('open')">Cancelar</fx-button><fx-button size="sm" variant="danger" onclick="document.getElementById('dlg-demo').removeAttribute('open')">Excluir</fx-button></div></fx-dialog><fx-button onclick="document.getElementById('dlg-demo').setAttribute('open','')">Abrir dialog</fx-button>`,
 		variantsHtml: () => {
@@ -1340,7 +1340,7 @@ const components: ComponentDoc[] = [
 		title: "Toast",
 		group: "Feedback",
 		lead: "Notificações flutuantes imperativas com posição e tempo de exibição configuráveis.",
-		imports: ["import '@fenix-ui/fenix-ui/toast';"],
+		imports: ["import '@wrrdev/fenix-ui/toast';"],
 		demoHtml: (a) => {
 			const pos = /position="([^"]+)"/.exec(a)?.[1] ?? "top-right";
 			const dur = /duration="([^"]+)"/.exec(a)?.[1] ?? "4000";
@@ -1417,7 +1417,7 @@ const components: ComponentDoc[] = [
 		title: "Tooltip",
 		group: "Feedback",
 		lead: "Dica contextual que aparece ao passar o mouse ou focar no elemento filho.",
-		imports: ["import '@fenix-ui/fenix-ui/tooltip';"],
+		imports: ["import '@wrrdev/fenix-ui/tooltip';"],
 		demoHtml: (a) =>
 			`<fx-tooltip ${a}><fx-button size="sm">Passe o mouse</fx-button></fx-tooltip>`,
 		variantsHtml: () =>
@@ -1457,7 +1457,7 @@ const components: ComponentDoc[] = [
 		title: "Tabs",
 		group: "Navegação",
 		lead: 'Navegação por abas: <fx-tab tab="id"> para títulos e <fx-tab-panel tab="id"> para conteúdo (dentro ou logo após o fx-tabs).',
-		imports: ["import '@fenix-ui/fenix-ui/tabs';"],
+		imports: ["import '@wrrdev/fenix-ui/tabs';"],
 		demoHtml: (a) =>
 			`<fx-tabs ${a}><fx-tab tab="perfil">Perfil</fx-tab><fx-tab tab="seguranca">Segurança</fx-tab><fx-tab tab="notificacoes">Notificações</fx-tab><fx-tab-panel tab="perfil"><p style="margin:8px 0">Dados do perfil do usuário.</p></fx-tab-panel><fx-tab-panel tab="seguranca"><p style="margin:8px 0">Senha e autenticação em dois fatores.</p></fx-tab-panel><fx-tab-panel tab="notificacoes"><p style="margin:8px 0">Preferências de notificação.</p></fx-tab-panel></fx-tabs>`,
 		variantsHtml: () => {
@@ -1500,7 +1500,7 @@ const components: ComponentDoc[] = [
 		title: "Progress",
 		group: "Feedback",
 		lead: "Indicador de progresso determinado ou indeterminado, com variantes semânticas.",
-		imports: ["import '@fenix-ui/fenix-ui/progress';"],
+		imports: ["import '@wrrdev/fenix-ui/progress';"],
 		demoHtml: (a) => `<fx-progress ${a}></fx-progress>`,
 		variantsHtml: () =>
 			`<h4>Determinado</h4><fx-progress value="30"></fx-progress><fx-progress value="65"></fx-progress><h4>Com rótulo e variantes</h4><fx-progress value="80" label="Upload" variant="success"></fx-progress><fx-progress value="45" label="Processando" variant="warning"></fx-progress>`,
@@ -1554,7 +1554,7 @@ const components: ComponentDoc[] = [
 		title: "Skeleton",
 		group: "Feedback",
 		lead: "Placeholder animado para carregamento: texto, círculo, retângulo ou múltiplas linhas.",
-		imports: ["import '@fenix-ui/fenix-ui/skeleton';"],
+		imports: ["import '@wrrdev/fenix-ui/skeleton';"],
 		demoHtml: (a) => `<fx-skeleton ${a}></fx-skeleton>`,
 		variantsHtml: () =>
 			`<h4>Texto</h4><fx-skeleton variant="text"><br/></fx-skeleton><div style="display:flex;gap:12px;align-items:center;margin-top:8px"><fx-skeleton variant="circle" width="40px" height="40px"></fx-skeleton><div style="flex:1"><fx-skeleton variant="text"></fx-skeleton><fx-skeleton variant="text"></fx-skeleton></div></div><br/><h4>Múltiplas linhas</h4><fx-skeleton variant="text" lines="3"></fx-skeleton><h4>Bloco</h4><fx-skeleton width="100%" height="120px"></fx-skeleton>`,
@@ -1596,7 +1596,7 @@ const components: ComponentDoc[] = [
 		title: "Alert",
 		group: "Feedback",
 		lead: "Aviso inline com variantes semânticas, título opcional e possibilidade de dispensar.",
-		imports: ["import '@fenix-ui/fenix-ui/alert';"],
+		imports: ["import '@wrrdev/fenix-ui/alert';"],
 		demoHtml: (a) =>
 			`<fx-alert ${a}>Operação concluída com sucesso.</fx-alert>`,
 		variantsHtml: () =>
@@ -1644,7 +1644,7 @@ const components: ComponentDoc[] = [
 		title: "Drawer",
 		group: "Feedback",
 		lead: "Painel deslizante sobre a página com overlay desfocado e abertura/fechamento animado deslizando da borda configurada por position. Posição left/right/top/bottom, tamanho mínimo fixo e expansível via CSS, header com título e botão fechar, conteúdo livre por slot.",
-		imports: ["import '@fenix-ui/fenix-ui/drawer';"],
+		imports: ["import '@wrrdev/fenix-ui/drawer';"],
 		demoHtml: (a) => {
 			const m = /position="([a-z]+)"/.exec(a);
 			const pos = m ? m[1] : "right";
@@ -1723,7 +1723,7 @@ const components: ComponentDoc[] = [
 		title: "Dropdown",
 		group: "Navegação",
 		lead: 'Menu de ações disparado por botão. Itens como <fx-dropdown-item value="...">.',
-		imports: ["import '@fenix-ui/fenix-ui/dropdown';"],
+		imports: ["import '@wrrdev/fenix-ui/dropdown';"],
 		demoHtml: (a) =>
 			`<fx-dropdown ${a}><fx-dropdown-item value="edit">Editar</fx-dropdown-item><fx-dropdown-item value="dup">Duplicar</fx-dropdown-item><fx-dropdown-item value="del">Excluir</fx-dropdown-item></fx-dropdown>`,
 		variantsHtml: () =>
@@ -1776,7 +1776,7 @@ const components: ComponentDoc[] = [
 		title: "Pagination",
 		group: "Navegação",
 		lead: "Paginação standalone com seletor de itens por página e alinhamento configurável.",
-		imports: ["import '@fenix-ui/fenix-ui/pagination';"],
+		imports: ["import '@wrrdev/fenix-ui/pagination';"],
 		demoHtml: (a) => `<fx-pagination ${a}></fx-pagination>`,
 		variantsHtml: () =>
 			`<h4>Alinhamentos</h4><fx-pagination total="120" rows="10" page="1" position="left"></fx-pagination><fx-pagination total="120" rows="10" page="3" position="center"></fx-pagination><fx-pagination total="120" rows="10" page="7" position="right"></fx-pagination>`,
@@ -1837,7 +1837,7 @@ const components: ComponentDoc[] = [
 		title: "Autocomplete",
 		group: "Formulário",
 		lead: "Campo de busca com sugestões filtradas conforme digitação (source local).",
-		imports: ["import '@fenix-ui/fenix-ui/autocomplete';"],
+		imports: ["import '@wrrdev/fenix-ui/autocomplete';"],
 		demoHtml: (a) =>
 			`<fx-autocomplete ${a} source='["Brasil","Argentina","Chile","Colômbia","Peru","Uruguai"]' placeholder="Digite um país..."></fx-autocomplete>`,
 		variantsHtml: () =>
@@ -2015,9 +2015,9 @@ function renderIntro(): void {
     qualquer framework (ou sem nenhum). Cada componente é importável isoladamente, então o bundle do
     cliente contém apenas o que ele usa.</p>
     <h3>Instalação</h3>
-    ${codeBlock('npm install @fenix-ui/fenix-ui')}
+    ${codeBlock('npm install @wrrdev/fenix-ui')}
     <h3>Uso básico</h3>
-    ${codeBlock("import '@fenix-ui/fenix-ui/button';\nimport { FenixUI } from '@fenix-ui/fenix-ui';\n\nFenixUI.theme('dark');")}
+    ${codeBlock("import '@wrrdev/fenix-ui/button';\nimport { FenixUI } from '@wrrdev/fenix-ui';\n\nFenixUI.theme('dark');")}
     <h3>Componentes</h3>
     <div class="demo"><div class="demo-stage">
       <fx-button variant="primary">Button</fx-button>
@@ -2046,7 +2046,7 @@ function renderTheming(): void {
       <label>Preset: <fx-select id="th-preset">${presetsList}</fx-select></label>
       <label>Modo: <fx-select id="th-mode"><option value="light">light</option><option value="dark">dark</option></fx-select></label>
     </div></div>
-    ${codeBlock(`import { applyPreset } from '@fenix-ui/fenix-ui';
+    ${codeBlock(`import { applyPreset } from '@wrrdev/fenix-ui';
 
 // Presets disponíveis:
 applyPreset('fenix',  'light'); // padrão (indigo)
@@ -2060,7 +2060,7 @@ applyPreset('aiolia', 'dark');  // âmbar/dourado`)}
     <h4>Usar um tema como base e mudar só o que quiser</h4>
     <p>O preset define o ponto de partida; depois, sobrescreva apenas os tokens desejados
     (merge profundo — nada do que não for informado é alterado):</p>
-    ${codeBlock(`import { applyPreset, FenixUI } from '@fenix-ui/fenix-ui';
+    ${codeBlock(`import { applyPreset, FenixUI } from '@wrrdev/fenix-ui';
 
 // Base Shiryu (teal)…
 applyPreset('shiryu', 'dark');
@@ -2170,7 +2170,7 @@ FenixUI.setTokens({
       </div>
     </div>
     ${codeBlock(
-      "// Usando o preset baixado na sua aplicação:\nimport { defineCustomPreset, applyPreset } from '@fenix-ui/fenix-ui';\nimport meuTema from './meu-tema.fenix-preset.json';\n\ndefineCustomPreset(meuTema.name, meuTema.label, meuTema.tokens);\napplyPreset('meu-tema', 'dark');",
+      "// Usando o preset baixado na sua aplicação:\nimport { defineCustomPreset, applyPreset } from '@wrrdev/fenix-ui';\nimport meuTema from './meu-tema.fenix-preset.json';\n\ndefineCustomPreset(meuTema.name, meuTema.label, meuTema.tokens);\napplyPreset('meu-tema', 'dark');",
     )}
   `;
   const paint = (): void => {
@@ -2461,12 +2461,12 @@ function renderAutoImport(): void {
     tree-shaking: só entra no bundle o que é usado.</p>
 
     <h3>1. Instale o pacote</h3>
-    <pre><code>npm i @fenix-ui/fenix-ui</code></pre>
+    <pre><code>npm i @wrrdev/fenix-ui</code></pre>
 
     <h3>2. Adicione o plugin no build</h3>
     <p>Vite (<code>vite.config.ts</code>):</p>
     <pre><code>import { defineConfig } from 'vite';
-import { FenixAutoImport } from '@fenix-ui/fenix-ui/auto-import';
+import { FenixAutoImport } from '@wrrdev/fenix-ui/auto-import';
 
 export default defineConfig({
   plugins: [FenixAutoImport()],
@@ -2480,13 +2480,13 @@ export default defineConfig({
 &lt;/fx-select&gt;
 
 // O plugin gera automaticamente:
-// import '@fenix-ui/fenix-ui/button';
-// import '@fenix-ui/fenix-ui/select';</code></pre>
+// import '@wrrdev/fenix-ui/button';
+// import '@wrrdev/fenix-ui/select';</code></pre>
 
     <div class="note">
       <strong>Como funciona:</strong> o plugin percorre seus arquivos (.ts, .js, .tsx, .jsx,
       .vue, .html, .svelte) procurando tags <code>fx-*</code> conhecidas e injeta
-      <code>import '@fenix-ui/fenix-ui/&lt;componente&gt;'</code> após os imports existentes.
+      <code>import '@wrrdev/fenix-ui/&lt;componente&gt;'</code> após os imports existentes.
       Se você já importou um subpath manualmente, ele não duplica. Arquivos em
       <code>node_modules</code>, <code>.d.ts</code> e CSS são ignorados.
     </div>

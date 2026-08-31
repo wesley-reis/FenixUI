@@ -5,7 +5,7 @@
  */
 export declare const fenixComponentMap: Record<string, string>;
 export interface AutoImportOptions {
-    /** Prefixo do pacote (padrão '@fenix-ui/fenix-ui'). */
+    /** Prefixo do pacote (padrão '@wrrdev/fenix-ui'). */
     packageName?: string;
 }
 /**
