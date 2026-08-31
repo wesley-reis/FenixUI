@@ -172,7 +172,7 @@
     "build:esm": "vite build --config vite.config.ts",
     "build:types": "tsc -p tsconfig.build.json",
     "build:cdn": "vite build --config vite.cdn.config.ts",
-    "build:docs": "vite build --config vite.docs.config.ts",
+    "build:docs": "vite build --config vite.docs.config.ts && node -e \"require('fs').writeFileSync('docs-dist/.nojekyll', '')\"",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
