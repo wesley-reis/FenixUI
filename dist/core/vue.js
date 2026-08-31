@@ -2,4 +2,4 @@ const FX_VUE_TYPES = true;
 export {
   FX_VUE_TYPES
 };
-//# sourceMappingURL=fenix-ui.esm.js.map
+//# sourceMappingURL=vue.js.map

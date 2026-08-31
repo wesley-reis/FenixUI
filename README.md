@@ -18,8 +18,8 @@ import { FenixUI } from '@wrrdev/fenix-ui';  // API de tema/tokens (índice)
 FenixUI.theme('dark');
 ```
 
-> 📦 npm: [`@wrrdev/fenix-ui`](https://www.npmjs.com/package/@wrrdev/fenix-ui) — **v1.0.4**, acesso público.
-> Subpaths disponíveis: `./theme`, `./tokens`, `./jsx`, `./button`, `./badge`, `./spinner`, `./select`, `./input`, `./switch`, `./textarea`, `./checkbox`, `./radio`, `./calendar`, `./datepicker`, `./multiselect`, `./table`, `./floatlabel`, `./dialog`, `./toast`, `./tooltip`, `./tabs`, `./progress`, `./skeleton`, `./alert`, `./drawer`, `./dropdown`, `./sidebar`, `./pagination`, `./autocomplete`, `./auto-import` e o curinga `./components/*`.
+> 📦 npm: [`@wrrdev/fenix-ui`](https://www.npmjs.com/package/@wrrdev/fenix-ui) — **v1.0.5**, acesso público.
+> Subpaths disponíveis: `./theme`, `./tokens`, `./jsx`, `./vue`, `./button`, `./badge`, `./spinner`, `./select`, `./input`, `./switch`, `./textarea`, `./checkbox`, `./radio`, `./calendar`, `./datepicker`, `./multiselect`, `./table`, `./floatlabel`, `./dialog`, `./toast`, `./tooltip`, `./tabs`, `./progress`, `./skeleton`, `./alert`, `./drawer`, `./dropdown`, `./sidebar`, `./pagination`, `./autocomplete`, `./auto-import` e o curinga `./components/*`.
 
 
 ## Consumo
@@ -65,7 +65,7 @@ Carregue o bundle **UMD** único: ele registra todos os componentes e expõe os 
 <fx-toast></fx-toast>
 
 <!--
-  🔗 Links diretos para CDN (versão 1.0.4):
+  🔗 Links diretos para CDN (versão 1.0.5):
   • https://cdn.jsdelivr.net/npm/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js
   • https://unpkg.com/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js
 -->
@@ -165,6 +165,30 @@ FenixUI.resetTheme();
 Os tokens viram CSS Custom Properties (`--fx-color-primary`, `--fx-radius-md`, …) no `:root`,
 atravessando o Shadow DOM. Todo componente reage automaticamente.
 
+### Configuração completa (`FenixUI.configure`)
+
+Alternativa a chamar `theme()`/`setTokens()` separadamente — define tema e tokens numa chamada só:
+
+```ts
+import { FenixUI } from '@wrrdev/fenix-ui';
+
+FenixUI.configure({
+  theme: 'light',                 // 'light' | 'dark'
+  tokens: {
+    color: {
+      primary: '#0d9488',         // sobrescreve apenas o primary (merge profundo)
+    },
+    effect: {
+      ripple: '1',                // '0' desativa o ripple do fx-button
+      'focus-ring': 'none',       // campos sem anel de foco/sobra
+    },
+  },
+});
+```
+
+Grupos de tokens disponíveis: `color`, `surface`, `text`, `border`, `font`, `space`,
+`radius`, `size`, `shadow`, `motion`, `effect` e `z` (veja `@wrrdev/fenix-ui/tokens`).
+
 ### Presets prontos (temas padrão)
 
 O FenixUI já vem com temas prontos — **não é preciso definir nada**. Basta aplicar:
@@ -224,6 +248,36 @@ import '@wrrdev/fenix-ui'; // registra componentes + habilita as tipagens JSX
 
 Se o autocomplete ainda não aparecer, garanta que o `tsconfig` do seu projeto tem
 `"moduleResolution": "bundler"` (ou `"node16"`/`"nodenext"`) para resolver os `exports` do pacote.
+
+#### Vue 3 (templates SFC / Volar)
+
+No Vue, o autocomplete dos atributos `fx-*` nos templates é habilitado por um módulo próprio.
+Importe o subpath `./vue` **uma única vez** no `main.ts`:
+
+```ts
+import '@wrrdev/fenix-ui/vue'; // habilita autocomplete de fx-* nos templates SFC
+```
+
+Requisitos:
+
+- `vue` ≥ 3.5 (usa `IntrinsicElementAttributes`);
+- Volar / vue-tsc (já incluído no `@vue/language-tools` usado pelo VS Code + Volar);
+- no `tsconfig`, `"moduleResolution": "bundler"`.
+
+Com isso o editor mostra as propriedades de cada componente (`variant`, `size`, `loading`, …)
+nos templates. Para além do autocomplete, **validar** valores inválidos (ex.: `variant="foo"`),
+ative o modo estrito do Volar no `tsconfig.json`:
+
+```jsonc
+{
+  "vueCompilerOptions": {
+    "strictTemplates": true
+  }
+}
+```
+
+> Sem `strictTemplates`, o Vue não reporta atributos desconhecidos de elementos nativos
+> (comportamento padrão do Volar) — mas o autocomplete das propriedades continua funcionando.
 
 ## Componentes (fase 1)
 

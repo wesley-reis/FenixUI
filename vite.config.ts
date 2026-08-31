@@ -21,7 +21,11 @@ export default defineConfig({
     target: 'es2020',
     emptyOutDir: true,
     rollupOptions: {
-      input: [here + 'src/index.ts', here + 'src/plugins/index.ts'],
+      input: [
+        here + 'src/index.ts',
+        here + 'src/plugins/index.ts',
+        here + 'src/core/vue.ts',
+      ],
       // O Vite define `false` por padrão; com preserveModules isso é inválido.
       preserveEntrySignatures: 'strict',
       output: [

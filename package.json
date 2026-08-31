@@ -1,19 +1,24 @@
 {
   "name": "@wrrdev/fenix-ui",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "FenixUI Design System Web nativo (Web Components + Shadow DOM + Design Tokens) com tree-shaking por componente.",
   "type": "module",
   "license": "ISC",
-  "keywords":["UI", "UX", "Componentes", "Fenix", "FenixUI"],
-    "files": [
+  "keywords": [
+    "UI",
+    "UX",
+    "Componentes",
+    "Fenix",
+    "FenixUI"
+  ],
+  "files": [
     "dist",
     "README.md"
   ],
-    "publishConfig": {
+  "publishConfig": {
     "access": "public",
     "tag": "latest"
   },
-
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -143,6 +148,10 @@
       "types": "./dist/core/jsx.d.ts",
       "import": "./dist/core/jsx.js"
     },
+    "./vue": {
+      "types": "./dist/core/vue.d.ts",
+      "import": "./dist/core/vue.js"
+    },
     "./components/*": {
       "types": "./dist/components/*/index.d.ts",
       "import": "./dist/components/*/index.js"
@@ -163,11 +172,14 @@
     "publish": "npm publish --access public --tag latest"
   },
   "devDependencies": {
+    "@babel/types": "^8.0.4",
     "@types/node": "^22.7.4",
     "jsdom": "^25.0.1",
     "typescript": "^5.6.2",
     "vite": "^5.4.8",
-    "vitest": "^2.1.2"
+    "vitest": "^2.1.2",
+    "vue": "^3.5.13",
+    "vue-tsc": "^3.0.4"
   },
   "dependencies": {
     "postcss": "^8.5.26"
