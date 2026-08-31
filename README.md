@@ -19,7 +19,7 @@ FenixUI.theme('dark');
 ```
 
 > 📦 npm: [`@wrrdev/fenix-ui`](https://www.npmjs.com/package/@wrrdev/fenix-ui) — **v1.0.3**, acesso público.
-> Subpaths disponíveis: `./theme`, `./tokens`, `./button`, `./badge`, `./spinner`, `./select`, `./input`, `./switch`, `./textarea`, `./checkbox`, `./radio`, `./calendar`, `./datepicker`, `./multiselect`, `./table`, `./floatlabel`, `./dialog`, `./toast`, `./tooltip`, `./tabs`, `./progress`, `./skeleton`, `./alert`, `./drawer`, `./dropdown`, `./sidebar`, `./pagination`, `./autocomplete`, `./auto-import` e o curinga `./components/*`.
+> Subpaths disponíveis: `./theme`, `./tokens`, `./jsx`, `./button`, `./badge`, `./spinner`, `./select`, `./input`, `./switch`, `./textarea`, `./checkbox`, `./radio`, `./calendar`, `./datepicker`, `./multiselect`, `./table`, `./floatlabel`, `./dialog`, `./toast`, `./tooltip`, `./tabs`, `./progress`, `./skeleton`, `./alert`, `./drawer`, `./dropdown`, `./sidebar`, `./pagination`, `./autocomplete`, `./auto-import` e o curinga `./components/*`.
 
 
 ## Consumo
@@ -164,6 +164,66 @@ FenixUI.resetTheme();
 
 Os tokens viram CSS Custom Properties (`--fx-color-primary`, `--fx-radius-md`, …) no `:root`,
 atravessando o Shadow DOM. Todo componente reage automaticamente.
+
+### Presets prontos (temas padrão)
+
+O FenixUI já vem com temas prontos — **não é preciso definir nada**. Basta aplicar:
+
+```ts
+import { applyPreset } from '@wrrdev/fenix-ui';
+
+applyPreset('seiya');          // aplica o preset Seiya em modo claro
+applyPreset('shiryu', 'dark'); // preset + modo escuro
+```
+
+Presets disponíveis: `fenix` (padrão), `seiya`, `shiryu`, `hyoga`, `shun`, `ikki`, `aiolia`.
+
+```ts
+import { listPresets } from '@wrrdev/fenix-ui';
+
+listPresets(); // [{ name, label, tokens }, ...] — inclui os presets customizados
+```
+
+**Criando seu próprio preset** (fica registrado junto aos padrões):
+
+```ts
+import { defineCustomPreset, applyPreset } from '@wrrdev/fenix-ui';
+
+defineCustomPreset('minha-marca', 'Minha Marca', {
+  color: { primary: '#7c3aed', secondary: '#a78bfa' },
+  radius: { md: '14px' },
+});
+
+applyPreset('minha-marca'); // ✅ disponível como qualquer preset nativo
+```
+
+**Sobrescrevendo apenas uma config de um preset** (merge profundo — o restante herda):
+
+```ts
+import { applyPreset, FenixUI } from '@wrrdev/fenix-ui';
+
+applyPreset('shiryu', 'dark');                          // aplica o tema base
+FenixUI.setTokens({ color: { primary: '#0ea5e9' } });   // sobrescreve só o primary
+```
+
+> Presets sobrescrevem **apenas** os tokens informados — o restante herda do tema base (claro/escuro).
+
+### Tipagem / autocomplete no TypeScript
+
+A partir da v1.x, importar a lib (ou o subpath `@wrrdev/fenix-ui/jsx`) habilita no TypeScript:
+
+- **autocomplete + validação de atributos** de `fx-*` em TSX/JSX (React, Preact, Vue JSX);
+- tipos nomeados por componente (`FxButtonProps`, `FxInputProps`, …) e uniões (`FxSize`, `FxButtonVariant`, …);
+- tipagem imperativa de `document.createElement('fx-button')` via `HTMLElementTagNameMap`.
+
+```tsx
+import '@wrrdev/fenix-ui'; // registra componentes + habilita as tipagens JSX
+
+<fx-button variant="primary" size="lg" loading>Salvar</fx-button>
+```
+
+Se o autocomplete ainda não aparecer, garanta que o `tsconfig` do seu projeto tem
+`"moduleResolution": "bundler"` (ou `"node16"`/`"nodenext"`) para resolver os `exports` do pacote.
 
 ## Componentes (fase 1)
 

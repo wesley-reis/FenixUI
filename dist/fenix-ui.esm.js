@@ -266,6 +266,7 @@ function defineElement(tag, ctor) {
   }
   return customElements.get(tag) ?? ctor;
 }
+const FX_JSX_TYPES = true;
 const _FxButton = class _FxButton extends FxElement {
   constructor() {
     super(...arguments);
@@ -4419,6 +4420,7 @@ function defineFxAutocomplete() {
 }
 defineFxAutocomplete();
 export {
+  FX_JSX_TYPES,
   FenixToast,
   FenixUI,
   FxAlert,

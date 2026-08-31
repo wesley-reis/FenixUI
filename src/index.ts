@@ -14,6 +14,10 @@ export * from './core/css';
 export * from './core/base';
 export * from './core/define';
 
+// tipagens JSX/HTML (autocomplete + validação de atributos fx-* em TSX/Vue JSX)
+export * from './core/types';
+export * from './core/jsx';
+
 // componentes
 export * from './components/button';
 export * from './components/badge';

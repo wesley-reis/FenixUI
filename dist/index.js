@@ -4,6 +4,7 @@ import { applyPreset, defineCustomPreset, listPresets, themePresets } from "./co
 import { css, kebabToCamel } from "./core/css.js";
 import { FxElement } from "./core/base.js";
 import { defineElement } from "./core/define.js";
+import { FX_JSX_TYPES } from "./core/jsx.js";
 import "./components/button/index.js";
 import "./components/badge/index.js";
 import "./components/spinner/index.js";
@@ -55,6 +56,7 @@ import { FxTable } from "./components/table/table.js";
 import { FxTextarea } from "./components/textarea/textarea.js";
 import { FxTooltip } from "./components/tooltip/tooltip.js";
 export {
+  FX_JSX_TYPES,
   FenixToast,
   FenixUI,
   FxAlert,

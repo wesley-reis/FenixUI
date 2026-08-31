@@ -11,6 +11,8 @@ export * from './core/presets';
 export * from './core/css';
 export * from './core/base';
 export * from './core/define';
+export * from './core/types';
+export * from './core/jsx';
 export * from './components/button';
 export * from './components/badge';
 export * from './components/spinner';
