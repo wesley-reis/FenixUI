@@ -6,4 +6,5 @@ playwright-report
 test-results
 *.log
 *.txt
+docs-dist
 *.test.ts

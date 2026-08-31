@@ -1,9 +1,17 @@
 {
   "name": "@wrrdev/fenix-ui",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "FenixUI Design System Web nativo (Web Components + Shadow DOM + Design Tokens) com tree-shaking por componente.",
   "type": "module",
   "license": "ISC",
+  "homepage": "https://wesley-reis.github.io/FenixUI/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wesley-reis/FenixUI.git"
+  },
+  "bugs": {
+    "url": "https://github.com/wesley-reis/FenixUI/issues"
+  },
   "keywords": [
     "UI",
     "UX",
@@ -164,6 +172,7 @@
     "build:esm": "vite build --config vite.config.ts",
     "build:types": "tsc -p tsconfig.build.json",
     "build:cdn": "vite build --config vite.cdn.config.ts",
+    "build:docs": "vite build --config vite.docs.config.ts",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
