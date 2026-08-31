@@ -9,7 +9,7 @@ Independente de framework: funciona em Vue, React, Angular, Svelte, HTML puro, J
 npm i @wrrdev/fenix-ui
 ```
 
-O pacote expõe **subpaths** por componente — importe apenas o que usa e o bundler aplica tree-shaking de verdade (veja [Arquitetura](#arquitetura-por-que-tree-shaking-de-verdade)):
+O pacote expõe **subpaths** por componente — importe apenas o que usa e o bundler aplica tree-shaking automático:
 
 ```ts
 import '@wrrdev/fenix-ui/button';            // registra <fx-button>
@@ -18,39 +18,9 @@ import { FenixUI } from '@wrrdev/fenix-ui';  // API de tema/tokens (índice)
 FenixUI.theme('dark');
 ```
 
-> 📦 Publicado no npm como [`@wrrdev/fenix-ui`](https://www.npmjs.com/package/@wrrdev/fenix-ui) — **v1.0.1**, acesso público (use `--access public` na primeira publicação de escopo).
+> 📦 npm: [`@wrrdev/fenix-ui`](https://www.npmjs.com/package/@wrrdev/fenix-ui) — **v1.0.3**, acesso público.
 > Subpaths disponíveis: `./theme`, `./tokens`, `./button`, `./badge`, `./spinner`, `./select`, `./input`, `./switch`, `./textarea`, `./checkbox`, `./radio`, `./calendar`, `./datepicker`, `./multiselect`, `./table`, `./floatlabel`, `./dialog`, `./toast`, `./tooltip`, `./tabs`, `./progress`, `./skeleton`, `./alert`, `./drawer`, `./dropdown`, `./sidebar`, `./pagination`, `./autocomplete`, `./auto-import` e o curinga `./components/*`.
 
-## Arquitetura (por que tree-shaking de verdade)
-
-```
-src/
-├── core/                  # NÚCLEO compartilhado
-│   ├── tokens.ts          # Design Tokens (claro/escuro) → var(--fx-*)
-│   ├── theme.ts           # API global: FenixUI.configure/theme/setTokens/resetTheme
-│   ├── base.ts            # FxElement: classe-base (Shadow DOM + render)
-│   ├── define.ts          # registro seguro no CustomElementRegistry
-│   └── css.ts             # helpers CSS
-└── components/
-    ├── button/            # cada componente importa APENAS o core
-    ├── badge/
-    └── spinner/
-```
-
-O build usa **Rollup `preserveModules`**: o `dist/` espelha o `src/`, um arquivo por módulo.
-Quando o cliente importa apenas um componente, o bundler dele puxa **somente** esse módulo +
-o core compartilhado — nunca a biblioteca inteira:
-
-```ts
-// O cliente compila apenas Button + core (~9 kB não-minificado).
-import '@wrrdev/fenix-ui/button';
-import { FenixUI } from '@wrrdev/fenix-ui/theme';
-
-FenixUI.theme('dark');
-```
-
-> Verificação real: bundle de consumidor contendo apenas `fx-button` e o core;
-> `fx-badge`/`fx-spinner` ficaram **fora** do output do cliente.
 
 ## Consumo
 
@@ -95,7 +65,7 @@ Carregue o bundle **UMD** único: ele registra todos os componentes e expõe os 
 <fx-toast></fx-toast>
 
 <!--
-  🔗 Links diretos para CDN (versão 1.0.1):
+  🔗 Links diretos para CDN (versão 1.0.3):
   • https://cdn.jsdelivr.net/npm/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js
   • https://unpkg.com/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js
 -->
@@ -223,19 +193,8 @@ FenixUI.setTokens({
 });
 ```
 
-Presets sobrescrevem **apenas** os tokens informados — o restante herda do tema
-base (claro/escuro) via deep merge (`deepMerge`).
+Presets sobrescrevem **apenas** os tokens informados — o restante herda do tema base (claro/escuro).
 
-## Scripts
 
-| Comando              | Ação                                                        |
-|----------------------|-------------------------------------------------------------|
-| `npm run dev`        | Playground local (`index.html`)                             |
-| `npm run test`       | Testes unitários (Vitest + jsdom)                           |
-| `npm run typecheck`  | TypeScript estrito                                          |
-| `npm run build`      | ESM modular + `.d.ts` + bundle CDN UMD                      |
-
-## Convenções
-
-- Elemento: `fx-{component}` · Token: `--fx-{grupo}-{chave}` · Tema: `light | dark`
-- Sem dependência de Tailwind/Vue/React; reset interno mínimo; acessibilidade desde a primeira implementação.
+> 📏 Convenções: elemento `fx-{component}` · token `--fx-{grupo}-{chave}` · tema `light | dark`
+> Sem dependência de Tailwind/Vue/React; acessibilidade desde a primeira implementação.
