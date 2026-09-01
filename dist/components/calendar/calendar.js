@@ -21,7 +21,18 @@ const _FxCalendar = class _FxCalendar extends FxElement {
     this.pickEnd = null;
   }
   static get observedAttributes() {
-    return ["value", "start", "end", "min", "max", "range", "mode", "values", "locale", "disabled"];
+    return [
+      "value",
+      "start",
+      "end",
+      "min",
+      "max",
+      "range",
+      "mode",
+      "values",
+      "locale",
+      "disabled"
+    ];
   }
   /** Modo de seleção: 'single' | 'range' | 'multiple'. */
   get mode() {
@@ -89,7 +100,11 @@ const _FxCalendar = class _FxCalendar extends FxElement {
     return key(date.getFullYear(), date.getMonth() + 1, date.getDate());
   }
   keyToDate(k) {
-    return new Date(Math.floor(k / 1e4), Math.floor(k / 100) % 100 - 1, k % 100);
+    return new Date(
+      Math.floor(k / 1e4),
+      Math.floor(k / 100) % 100 - 1,
+      k % 100
+    );
   }
   iso(k) {
     const d = this.keyToDate(k);
@@ -98,7 +113,9 @@ const _FxCalendar = class _FxCalendar extends FxElement {
   }
   /** Seleção atual para pintura (chaves). */
   selection() {
-    const multi = new Set(this.values.map((iso) => parseBound(iso)?.lo ?? 0).filter(Boolean));
+    const multi = new Set(
+      this.values.map((iso) => parseBound(iso)?.lo ?? 0).filter(Boolean)
+    );
     if (this.mode === "range") {
       let s = this.pickStart;
       let e = this.pickEnd;
@@ -122,13 +139,31 @@ const _FxCalendar = class _FxCalendar extends FxElement {
       };
       this.setAttribute("start", detail.start);
       this.setAttribute("end", detail.end);
-      this.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail }));
+      this.dispatchEvent(
+        new CustomEvent("change", {
+          bubbles: true,
+          composed: true,
+          detail
+        })
+      );
     } else if (this.mode === "multiple") {
       const values = this.values;
-      this.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail: { values } }));
+      this.dispatchEvent(
+        new CustomEvent("change", {
+          bubbles: true,
+          composed: true,
+          detail: { values }
+        })
+      );
     } else {
       const value = this.getAttr("value");
-      this.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail: { value } }));
+      this.dispatchEvent(
+        new CustomEvent("change", {
+          bubbles: true,
+          composed: true,
+          detail: { value }
+        })
+      );
     }
   }
   pickDay(k) {
@@ -141,7 +176,8 @@ const _FxCalendar = class _FxCalendar extends FxElement {
         this.render();
         return;
       }
-      if (k < this.pickStart) [this.pickStart, this.pickEnd] = [k, this.pickStart];
+      if (k < this.pickStart)
+        [this.pickStart, this.pickEnd] = [k, this.pickStart];
       else this.pickEnd = k;
       this.emit();
     } else if (this.mode === "multiple") {
@@ -173,7 +209,10 @@ const _FxCalendar = class _FxCalendar extends FxElement {
     const sel = this.selection();
     const loc = this.locale();
     const titles = {
-      days: this.fmt({ month: "long", year: "numeric" }, new Date(this.cursor.y, this.cursor.m, 1)),
+      days: this.fmt(
+        { month: "long", year: "numeric" },
+        new Date(this.cursor.y, this.cursor.m, 1)
+      ),
       months: String(this.cursor.y),
       years: `${Math.floor(this.cursor.y / 12) * 12} – ${Math.floor(this.cursor.y / 12) * 12 + 11}`
     };
@@ -207,7 +246,10 @@ const _FxCalendar = class _FxCalendar extends FxElement {
       <div class="grid ${this.view}">${cells}</div>
     `);
     this.root.querySelectorAll("[data-nav]").forEach(
-      (b) => b.addEventListener("click", () => this.navigate(Number(b.dataset.nav)))
+      (b) => b.addEventListener(
+        "click",
+        () => this.navigate(Number(b.dataset.nav))
+      )
     );
     const gotoBtn = this.root.querySelector("[data-goto]");
     gotoBtn?.addEventListener("click", () => {
@@ -215,7 +257,10 @@ const _FxCalendar = class _FxCalendar extends FxElement {
       this.render();
     });
     this.root.querySelectorAll("[data-day]").forEach(
-      (b) => b.addEventListener("click", () => this.pickDay(Number(b.dataset.day)))
+      (b) => b.addEventListener(
+        "click",
+        () => this.pickDay(Number(b.dataset.day))
+      )
     );
     this.root.querySelectorAll("[data-month]").forEach(
       (b) => b.addEventListener("click", () => {
@@ -246,95 +291,148 @@ const _FxCalendar = class _FxCalendar extends FxElement {
       const k = key(y, m + 1, d);
       const isSel = sel.single === k || sel.start === k || sel.end === k || sel.multi.has(k);
       const inRange = sel.start !== null && sel.end !== null && k > sel.start && k < sel.end;
-      const cls = ["cell", isSel ? "sel" : "", inRange ? "in-range" : "", k === todayK ? "today" : ""].filter(Boolean).join(" ");
+      const cls = [
+        "cell",
+        isSel ? "sel" : "",
+        inRange ? "in-range" : "",
+        k === todayK ? "today" : ""
+      ].filter(Boolean).join(" ");
       html += `<button type="button" class="${cls}" data-day="${k}" ${this.dayDisabled(y, m, d) ? "disabled" : ""}>${d}</button>`;
     }
     return html;
   }
 };
 _FxCalendar.styles = css`
-    :host {
-      display: inline-block;
-      font-family: var(--fx-font-family);
-      font-size: var(--fx-font-size);
-      color: var(--fx-text-default);
-      background: var(--fx-surface-background);
-      border: 1px solid var(--fx-border-default);
-      border-radius: var(--fx-radius-md);
-      box-shadow: var(--fx-shadow-sm);
-      padding: var(--fx-space-sm);
-      user-select: none;
-    }
-    :host([disabled]) { opacity: 0.55; pointer-events: none; }
-    .head {
+		:host {
+			display: inline-block;
+			font-family: var(--fx-font-family);
+			font-size: var(--fx-font-size);
+			color: var(--fx-text-default);
+			background: var(--fx-surface-background);
+			border: 1px solid var(--fx-border-default);
+			border-radius: var(--fx-radius-md);
+			box-shadow: var(--fx-shadow-sm);
+			padding: var(--fx-space-sm);
+			user-select: none;
+		}
+		:host([disabled]) {
+			opacity: 0.55;
+			pointer-events: none;
+		}
+		.head {
+			display: flex;
+			height: 48px;
+			align-items: center;
+			justify-content: space-between;
+			gap: var(--fx-space-xs);
+			margin-bottom: var(--fx-space-xs);
+			border-bottom: 1px solid var(--fx-border-default);
+		}
+
+		.title {
+			min-width: 24px;
+			border: none;
+			background: none;
+			color: var(--fx-text-default);
+			cursor: pointer;
+			font: inherit;
+			border-radius: var(--fx-radius-sm);
+		}
+    .nav {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: var(--fx-space-xs);
-      margin-bottom: var(--fx-space-xs);
-    }
-    .nav,
-    .title {
-      border: none;
-      background: none;
-      color: var(--fx-text-default);
-      cursor: pointer;
-      font: inherit;
-      border-radius: var(--fx-radius-sm);
-      padding: var(--fx-space-3xs, 4px) var(--fx-space-xs);
-    }
-    .nav:hover, .title:hover { background: var(--fx-surface-surface-hover); }
-    .title { font-weight: var(--fx-font-weight); text-transform: capitalize; flex: 1; }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(7, 34px);
-      gap: 2px;
-    }
-    .grid.months, .grid.years { grid-template-columns: repeat(4, minmax(52px, 1fr)); }
-    .wd {
-      text-align: center;
-      color: var(--fx-text-muted);
-      font-size: calc(var(--fx-font-size) - 2px);
-      padding: var(--fx-space-3xs, 4px) 0;
-      text-transform: capitalize;
-    }
-    .cell {
-      position: relative;
-      border: none;
-      background: none;
-      font: inherit;
-      color: var(--fx-text-default);
-      height: 32px;
-      border-radius: var(--fx-radius-sm);
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
       justify-content: center;
+      font-size: 20px;
+      border: none;
+			background: none;
+			color: var(--fx-text-muted);
+			cursor: pointer;
+			border-radius: var(--fx-radius-sm);
     }
-    .cell:hover { background: color-mix(in srgb, var(--fx-color-primary) 12%, transparent); }
-    .cell.muted { color: var(--fx-text-disabled); }
-    .cell.today::after {
-      content: '';
-      position: absolute;
-      bottom: 3px;
-      width: 4px;
-      height: 4px;
-      border-radius: var(--fx-radius-full);
-      background: var(--fx-color-primary);
-    }
-    .cell.sel {
-      background: var(--fx-color-primary);
-      color: #fff;
-      font-weight: var(--fx-font-weight);
-    }
-    .cell.sel::after { background: #fff; }
-    .cell.in-range {
-      background: color-mix(in srgb, var(--fx-color-primary) 16%, transparent);
-      border-radius: 0;
-    }
-    .grid.months .cell, .grid.years .cell { height: 40px; }
-    .cell[disabled] { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
-  `;
+		.nav:hover,
+		.title:hover {
+			background: var(--fx-surface-surface-hover);
+		}
+		.title {
+    	padding: var(--fx-space-3xs, 4px) var(--fx-space-xs);
+			font-weight: var(--fx-font-weight);
+			text-transform: capitalize;
+			flex: 1;
+		}
+		.grid {
+			display: grid;
+			grid-template-columns: repeat(7, 34px);
+			gap: 2px;
+		}
+		.grid.months,
+		.grid.years {
+			grid-template-columns: repeat(4, minmax(52px, 1fr));
+		}
+		.wd {
+			text-align: center;
+			color: var(--fx-text-muted);
+			font-size: calc(var(--fx-font-size) - 2px);
+			padding: var(--fx-space-3xs, 4px) 0;
+			text-transform: capitalize;
+		}
+		.cell {
+			position: relative;
+			border: none;
+			background: none;
+			font: inherit;
+			color: var(--fx-text-default);
+			height: 32px;
+			border-radius: var(--fx-radius-sm);
+			cursor: pointer;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+		}
+		.cell:hover {
+			background: color-mix(
+				in srgb,
+				var(--fx-color-primary) 12%,
+				transparent
+			);
+		}
+		.cell.muted {
+			color: var(--fx-text-disabled);
+		}
+		.cell.today::after {
+			content: "";
+			position: absolute;
+			bottom: 3px;
+			width: 4px;
+			height: 4px;
+			border-radius: var(--fx-radius-full);
+			background: var(--fx-color-primary);
+		}
+		.cell.sel {
+			background: var(--fx-color-primary);
+			color: #fff;
+			font-weight: var(--fx-font-weight);
+		}
+		.cell.sel::after {
+			background: #fff;
+		}
+		.cell.in-range {
+			background: color-mix(
+				in srgb,
+				var(--fx-color-primary) 16%,
+				transparent
+			);
+			border-radius: 0;
+		}
+		.grid.months .cell,
+		.grid.years .cell {
+			height: 40px;
+		}
+		.cell[disabled] {
+			opacity: 0.35;
+			cursor: not-allowed;
+			pointer-events: none;
+		}
+	`;
 let FxCalendar = _FxCalendar;
 function defineFxCalendar() {
   return defineElement("fx-calendar", FxCalendar);

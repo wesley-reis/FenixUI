@@ -33,6 +33,9 @@ import '../components/alert';
 import '../components/dropdown';
 import '../components/pagination';
 import '../components/autocomplete';
+import "../components/knob";
+import "../components/orderlist";
+import "../components/picklist";
 import '../components/drawer';
 import { fenixComponentMap } from '../plugins/auto-import';
 import { applyPreset, listPresets, defineCustomPreset, type FenixPreset } from '../core/presets';
@@ -1891,11 +1894,460 @@ const components: ComponentDoc[] = [
 			},
 		],
 	},
+	{
+		tag: "fx-knob",
+		title: "Knob",
+		group: "Formulário",
+		lead: "Controle giratório circular para ajuste de valor. Similar ao Knob do PrimeVue, permite arrastar com o mouse ou usar as setas do teclado. Exibe arco de progresso com valor central configurável via valueTemplate.",
+		imports: ["import '@wrrdev/fenix-ui/knob';"],
+		demoHtml: (a) => `<fx-knob ${a}></fx-knob>`,
+		variantsHtml: () =>
+			`<div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">
+				<fx-knob value="25" size="sm"></fx-knob>
+				<fx-knob value="50"></fx-knob>
+				<fx-knob value="75" size="lg"></fx-knob>
+			</div>
+			<h4>Cores personalizadas</h4>
+			<div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">
+				<fx-knob value="60" value-color="#10b981" range-color="#d1fae5"></fx-knob>
+				<fx-knob value="45" value-color="#f59e0b" range-color="#fef3c7"></fx-knob>
+				<fx-knob value="80" value-color="#f43f5e" range-color="#ffe4e6"></fx-knob>
+			</div>
+			<h4>Templates</h4>
+			<div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">
+				<fx-knob value="70" value-template="{value}%"></fx-knob>
+				<fx-knob value="3" value-template="{value}/10" min="0" max="10"></fx-knob>
+				<fx-knob value="1250" value-template="R$ {value}" min="0" max="5000" step="50"></fx-knob>
+			</div>`,
+		controls: [
+			{ kind: "text", attr: "value", label: "Valor", value: "50" },
+			{ kind: "text", attr: "min", label: "Mínimo", value: "0" },
+			{ kind: "text", attr: "max", label: "Máximo", value: "100" },
+			{ kind: "text", attr: "step", label: "Step", value: "1" },
+			{
+				kind: "select",
+				attr: "size",
+				label: "Tamanho",
+				options: ["sm", "md", "lg"],
+				value: "md",
+			},
+			{
+				kind: "text",
+				attr: "stroke-width",
+				label: "Largura do traço",
+				value: "8",
+			},
+			{
+				kind: "text",
+				attr: "value-color",
+				label: "Cor do valor",
+				hint: "ex.: #10b981",
+			},
+			{
+				kind: "text",
+				attr: "range-color",
+				label: "Cor do range",
+				hint: "ex.: #e2e8f0",
+			},
+			{
+				kind: "text",
+				attr: "value-template",
+				label: "Template",
+				value: "{value}",
+			},
+			{ kind: "toggle", attr: "readonly", label: "Somente leitura" },
+			{ kind: "toggle", attr: "disabled", label: "Desabilitado" },
+		],
+		attributes: [
+			{
+				name: "value",
+				type: "number",
+				default: "0",
+				desc: "Valor atual do knob.",
+			},
+			{
+				name: "min",
+				type: "number",
+				default: "0",
+				desc: "Valor mínimo permitido.",
+			},
+			{
+				name: "max",
+				type: "number",
+				default: "100",
+				desc: "Valor máximo permitido.",
+			},
+			{
+				name: "step",
+				type: "number",
+				default: "1",
+				desc: "Incremento/decremento do valor.",
+			},
+			{
+				name: "size",
+				type: "'sm' | 'md' | 'lg'",
+				default: "'md'",
+				desc: "Tamanho do knob (60px | 100px | 140px).",
+			},
+			{
+				name: "stroke-width",
+				type: "number",
+				default: "8",
+				desc: "Largura do traço do arco circular.",
+			},
+			{
+				name: "value-color",
+				type: "string",
+				default: "var(--fx-color-primary)",
+				desc: "Cor do arco de valor (CSS color).",
+			},
+			{
+				name: "range-color",
+				type: "string",
+				default: "var(--fx-border-default)",
+				desc: "Cor do arco de fundo/range (CSS color).",
+			},
+			{
+				name: "value-template",
+				type: "string",
+				default: "'{value}'",
+				desc: "Template de exibição do valor. Use {value} como placeholder.",
+			},
+			{
+				name: "readonly",
+				type: "boolean",
+				default: "false",
+				desc: "Impede alteração do valor, mas mantém foco.",
+			},
+			{
+				name: "disabled",
+				type: "boolean",
+				default: "false",
+				desc: "Desabilita completamente o controle.",
+			},
+		],
+		events: [
+			{
+				name: "change",
+				type: `CustomEvent<{ value: number }>`,
+				desc: "Emitido quando o valor é alterado (arrastar, teclado ou programação).",
+			},
+		],
+		cssVars: [
+			{
+				name: "--_size",
+				default: "100px (md) | 60px (sm) | 140px (lg)",
+				desc: "Dimensão total do knob.",
+			},
+			{
+				name: "--_stroke-width",
+				default: "8px",
+				desc: "Largura do traço (sobrescrita por stroke-width).",
+			},
+			{
+				name: "--_value-color",
+				default: "var(--fx-color-primary)",
+				desc: "Cor do arco de valor.",
+			},
+			{
+				name: "--_range-color",
+				default: "var(--fx-border-default)",
+				desc: "Cor do arco de fundo.",
+			},
+		],
+	},
+	{
+		tag: "fx-orderlist",
+		title: "OrderList",
+		group: "Dados",
+		lead: "Lista ordenável com controles para mover itens, filtro, seleção, drag-and-drop e templates customizados.",
+		imports: [
+			'import { defineFxOrderList } from "@wrrdev/fenix-ui/orderlist";',
+			"defineFxOrderList();",
+		],
+		demoHtml: (a) =>
+			`<fx-orderlist ${a} data='[{"id":1,"label":"Item A"},{"id":2,"label":"Item B"},{"id":3,"label":"Item C"},{"id":4,"label":"Item D"}]' data-key="id"></fx-orderlist>`,
+		variantsHtml: () =>
+			`<div style="display:flex;flex-direction:column;gap:24px;max-width:400px">
+				<div><strong>Básico</strong><fx-orderlist data='[{"label":"Home"},{"label":"Sobre"},{"label":"Contato"}]'></fx-orderlist></div>
+				<div><strong>Com filtro</strong><fx-orderlist filter data='[{"label":"Apple"},{"label":"Banana"},{"label":"Cherry"},{"label":"Date"}]'></fx-orderlist></div>
+				<div><strong>Com seleção</strong><fx-orderlist selection-mode="multiple" data='[{"label":"Tarefa 1"},{"label":"Tarefa 2"},{"label":"Tarefa 3"}]'></fx-orderlist></div>
+				<div><strong>Com seleção</strong><fx-orderlist selection-mode="multiple" show-select-all=true data='[{"label":"Tarefa 1"},{"label":"Tarefa 2"},{"label":"Tarefa 3"}]'></fx-orderlist></div>
+				<div><strong>Drag-and-drop</strong><fx-orderlist dragdrop data='[{"label":"Opção 1"},{"label":"Opção 2"},{"label":"Opção 3"}]'></fx-orderlist></div>
+				<div><strong>Striped</strong><fx-orderlist striped data='[{"label":"Linha 1"},{"label":"Linha 2"},{"label":"Linha 3"}]'></fx-orderlist></div>
+			</div>`,
+		controls: [
+			{ kind: "toggle", attr: "filter", label: "Filtro", on: false },
+			{ kind: "toggle", attr: "dragdrop", label: "Drag & Drop", on: false },
+			{ kind: "toggle", attr: "striped", label: "Striped", on: false },
+			{
+				kind: "select",
+				attr: "selection-mode",
+				label: "Seleção",
+				options: ["", "single", "multiple"],
+				value: "",
+			},
+			{
+				kind: "toggle",
+				attr: "show-select-all",
+				label: "Selecionar Todos",
+				on: false,
+			},
+			{
+				kind: "text",
+				attr: "filter-placeholder",
+				label: "Placeholder",
+				hint: "Buscar...",
+			},
+		],
+		attributes: [
+			{
+				name: "data",
+				type: "string",
+				default: "[]",
+				desc: "JSON array de itens.",
+			},
+			{
+				name: "data-key",
+				type: "string",
+				default: "''",
+				desc: "Chave única dos itens.",
+			},
+			{
+				name: "filter",
+				type: "boolean",
+				default: "false",
+				desc: "Exibe campo de filtro.",
+			},
+			{
+				name: "filter-by",
+				type: "string",
+				default: "'label'",
+				desc: "Campos para filtrar (separados por vírgula).",
+			},
+			{
+				name: "filter-placeholder",
+				type: "string",
+				default: "'Buscar...'",
+				desc: "Placeholder do filtro.",
+			},
+			{
+				name: "dragdrop",
+				type: "boolean",
+				default: "false",
+				desc: "Permite arrastar para reordenar.",
+			},
+			{
+				name: "striped",
+				type: "boolean",
+				default: "false",
+				desc: "Linhas alternadas.",
+			},
+			{
+				name: "selection-mode",
+				type: "'single' | 'multiple'",
+				default: "''",
+				desc: "Modo de seleção.",
+			},
+			{
+				name: "show-select-all",
+				type: "boolean",
+				default: "false",
+				desc: "Exibe botão para selecionar todos (apenas com selection-mode=multiple).",
+			},
+		],
+		events: [
+			{
+				name: "reorder",
+				type: "CustomEvent<{ items: OrderListItem[] }>",
+				desc: "Ao reordenar itens.",
+			},
+			{
+				name: "selection-change",
+				type: "CustomEvent<{ selection: OrderListItem[] }>",
+				desc: "Ao mudar seleção.",
+			},
+		],
+	},
+	{
+		tag: "fx-picklist",
+		title: "PickList",
+		group: "Dados",
+		lead: "Duas listas para transferir itens entre origem e destino com filtro, seleção múltipla e templates customizados.",
+		imports: [
+			'import { defineFxPickList } from "@wrrdev/fenix-ui/picklist";',
+			"defineFxPickList();",
+		],
+		demoHtml: (a) =>
+			`<style>.picklist-demo{width:100%}</style><fx-picklist class="picklist-demo" ${a} source-label="Disponíveis" target-label="Selecionados" source='[{"id":1,"label":"Apple"},{"id":2,"label":"Banana"},{"id":3,"label":"Cherry"},{"id":4,"label":"Date"}]' target='[]' source-key="id"></fx-picklist>`,
+		variantsHtml: () =>
+			`<div style="display:flex;flex-direction:column;gap:24px">
+				<div><strong>Básico</strong><fx-picklist source-label="Origem" target-label="Destino" source='[{"label":"A"},{"label":"B"},{"label":"C"}]' target='[]'></fx-picklist></div>
+				<div><strong>Com filtro</strong><fx-picklist filter source-label="Disponíveis" target-label="Selecionados" source='[{"label":"Apple"},{"label":"Banana"},{"label":"Cherry"}]' target='[]'></fx-picklist></div>
+				<div><strong>Com seleção</strong><fx-picklist selection-mode="multiple" source-label="Origem" target-label="Destino" source='[{"label":"Item 1"},{"label":"Item 2"}]' target='[]'></fx-picklist></div>
+				<div><strong>Com seleção</strong><fx-picklist selection-mode="multiple" show-select-all=true source-label="Origem" target-label="Destino" source='[{"label":"Item 1"},{"label":"Item 2"}]' target='[]'></fx-picklist></div>
+
+				</div>`,
+		controls: [
+			{ kind: "toggle", attr: "filter", label: "Filtro", on: false },
+			{
+				kind: "select",
+				attr: "selection-mode",
+				label: "Seleção",
+				options: ["", "single", "multiple"],
+				value: "",
+			},
+			{
+				kind: "toggle",
+				attr: "show-select-all",
+				label: "Selecionar Todos",
+				on: false,
+			},
+			{
+				kind: "text",
+				attr: "source-label",
+				label: "Label Origem",
+				hint: "Disponíveis",
+			},
+			{
+				kind: "text",
+				attr: "target-label",
+				label: "Label Destino",
+				hint: "Selecionados",
+			},
+		],
+		attributes: [
+			{
+				name: "source",
+				type: "string",
+				default: "[]",
+				desc: "JSON array de itens da origem.",
+			},
+			{
+				name: "target",
+				type: "string",
+				default: "[]",
+				desc: "JSON array de itens do destino.",
+			},
+			{
+				name: "source-key",
+				type: "string",
+				default: "''",
+				desc: "Chave única dos itens da origem.",
+			},
+			{
+				name: "target-key",
+				type: "string",
+				default: "''",
+				desc: "Chave única dos itens do destino.",
+			},
+			{
+				name: "filter",
+				type: "boolean",
+				default: "false",
+				desc: "Exibe campo de filtro em ambas as listas.",
+			},
+			{
+				name: "filter-by",
+				type: "string",
+				default: "'label'",
+				desc: "Campos para filtrar (separados por vírgula).",
+			},
+			{
+				name: "source-label",
+				type: "string",
+				default: "'Source'",
+				desc: "Título da lista de origem.",
+			},
+			{
+				name: "target-label",
+				type: "string",
+				default: "'Target'",
+				desc: "Título da lista de destino.",
+			},
+			{
+				name: "selection-mode",
+				type: "'single' | 'multiple'",
+				default: "''",
+				desc: "Modo de seleção.",
+			},
+			{
+				name: "show-select-all",
+				type: "boolean",
+				default: "false",
+				desc: "Exibe barra 'Selecionar Todos' em ambas as listas (requer selection-mode=\"multiple\").",
+			},
+			{
+				name: "striped",
+				type: "boolean",
+				default: "false",
+				desc: "Linhas alternadas.",
+			},
+		],
+		events: [
+			{
+				name: "move-to-target",
+				type: "CustomEvent<{ items: PickListItem[] }>",
+				desc: "Ao mover itens para destino.",
+			},
+			{
+				name: "move-to-source",
+				type: "CustomEvent<{ items: PickListItem[] }>",
+				desc: "Ao mover itens para origem.",
+			},
+			{
+				name: "selection-change-source",
+				type: "CustomEvent<{ selection: PickListItem[] }>",
+				desc: "Ao mudar seleção na origem.",
+			},
+			{
+				name: "selection-change-target",
+				type: "CustomEvent<{ selection: PickListItem[] }>",
+				desc: "Ao mudar seleção no destino.",
+			},
+		],
+	},
 ];
 
 /* ------------------------------------------------------------------ */
 /* Helpers de renderização                                             */
 /* ------------------------------------------------------------------ */
+
+/**
+ * Re-inicializa componentes que precisam de parse de JSON via JavaScript.
+ * Quando o innerHTML é definido, o connectedCallback é chamado, mas pode haver
+ * race conditions com o parse de atributos JSON. Esta função força a re-inicialização.
+ */
+function initDataComponents(container: HTMLElement): void {
+  // OrderList - re-inicializa com dados do atributo 'data'
+  container.querySelectorAll('fx-orderlist').forEach((el) => {
+    const dataAttr = el.getAttribute('data');
+    if (dataAttr) {
+      try {
+        const data = JSON.parse(dataAttr);
+        (el as any).data = data;
+      } catch { /* ignora parse inválido */ }
+    }
+  });
+
+  // PickList - re-inicializa com dados dos atributos 'source' e 'target'
+  container.querySelectorAll('fx-picklist').forEach((el) => {
+    const sourceAttr = el.getAttribute('source');
+    const targetAttr = el.getAttribute('target');
+    if (sourceAttr) {
+      try {
+        const source = JSON.parse(sourceAttr);
+        (el as any).source = source;
+      } catch { /* ignora parse inválido */ }
+    }
+    if (targetAttr) {
+      try {
+        const target = JSON.parse(targetAttr);
+        (el as any).target = target;
+      } catch { /* ignora parse inválido */ }
+    }
+  });
+}
 
 function codeBlock(code: string): string {
   return `<div class="code-block"><pre><code>${esc(code)}</code></pre><button class="copy-btn">Copiar</button></div>`;
@@ -2393,12 +2845,12 @@ function buildSidebar(): void {
 }
 
 function renderComponentPage(doc: ComponentDoc): void {
-  const main = document.getElementById('main')!;
-  main.innerHTML = `
+	const main = document.getElementById("main")!;
+	main.innerHTML = `
     <h2>&lt;${doc.tag}&gt;</h2>
     <p class="lead">${doc.lead}</p>
     <h3>Importação (tree-shakeable)</h3>
-    ${codeBlock(doc.imports.join('\n'))}
+    ${codeBlock(doc.imports.join("\n"))}
     <h3>Playground</h3>
     <div class="demo">
       <div class="demo-stage" id="stage"></div>
@@ -2408,34 +2860,38 @@ function renderComponentPage(doc: ComponentDoc): void {
     <h3>Todas as variantes</h3>
     <div class="demo"><div class="demo-stage">${doc.variantsHtml!()}</div></div>
     <h3>Código das variantes</h3>
-    ${codeBlock([doc.imports.join('\n'), '', formatHtml(doc.variantsHtml!())].join('\n'))}
-    ${apiTable('Atributos / Propriedades', doc.attributes, ['Nome', 'Tipo', 'Padrão', 'Descrição'])}
-    ${doc.events ? apiTable('Eventos', doc.events, ['Evento', 'Tipo', 'Padrão', 'Descrição']) : ''}
-    ${doc.slots ? apiTable('Slots', doc.slots, ['Slot', 'Tipo', 'Padrão', 'Descrição']) : ''}
-    ${doc.cssVars ? apiTable('Variáveis CSS', doc.cssVars, ['Variável', 'Tipo', 'Padrão', 'Descrição']) : ''}
+    ${codeBlock([doc.imports.join("\n"), "", formatHtml(doc.variantsHtml!())].join("\n"))}
+    ${apiTable("Atributos / Propriedades", doc.attributes, ["Nome", "Tipo", "Padrão", "Descrição"])}
+    ${doc.events ? apiTable("Eventos", doc.events, ["Evento", "Tipo", "Padrão", "Descrição"]) : ""}
+    ${doc.slots ? apiTable("Slots", doc.slots, ["Slot", "Tipo", "Padrão", "Descrição"]) : ""}
+    ${doc.cssVars ? apiTable("Variáveis CSS", doc.cssVars, ["Variável", "Tipo", "Padrão", "Descrição"]) : ""}
   `;
 
-  const stage = main.querySelector<HTMLDivElement>('#stage')!;
-  const codeEl = main.querySelectorAll('.code-block')[1]?.querySelector('code');
-  const refresh = (): void => {
-    stage.innerHTML = doc.demoHtml(currentAttrs(doc));
-    if (codeEl) {
-      // Atributos booleanos não têm valor: `disabled=""` vira apenas `disabled`.
-      const clean = stage.innerHTML.replace(
-        /(\s(?:disabled|loading|checked|readonly|full|round))=""/g,
-        '$1',
-      );
-      codeEl.textContent = formatHtml(clean);
-    }
-  };
-  main.querySelectorAll('fx-select[data-attr], fx-switch[data-attr]').forEach((el) =>
-    el.addEventListener('change', refresh),
-  );
-  main.querySelectorAll('fx-input[data-attr]').forEach((el) =>
-    el.addEventListener('input', refresh),
-  );
-  refresh();
-  wireCopyButtons(main);
+	const stage = main.querySelector<HTMLDivElement>("#stage")!;
+	const codeEl = main
+		.querySelectorAll(".code-block")[1]
+		?.querySelector("code");
+	const refresh = (): void => {
+		stage.innerHTML = doc.demoHtml(currentAttrs(doc));
+		// Re-inicializa componentes que precisam de parse de JSON via JS
+		initDataComponents(stage);
+		if (codeEl) {
+			// Atributos booleanos não têm valor: `disabled=""` vira apenas `disabled`.
+			const clean = stage.innerHTML.replace(
+				/(\s(?:disabled|loading|checked|readonly|full|round))=""/g,
+				"$1",
+			);
+			codeEl.textContent = formatHtml(clean);
+		}
+	};;
+	main
+		.querySelectorAll("fx-select[data-attr], fx-switch[data-attr]")
+		.forEach((el) => el.addEventListener("change", refresh));
+	main
+		.querySelectorAll("fx-input[data-attr]")
+		.forEach((el) => el.addEventListener("input", refresh));
+	refresh();
+	wireCopyButtons(main);
 }
 
 function renderRoute(): void {

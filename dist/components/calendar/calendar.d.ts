@@ -8,8 +8,8 @@ export declare class FxCalendar extends FxElement {
     private pickStart;
     private pickEnd;
     /** Modo de seleção: 'single' | 'range' | 'multiple'. */
-    get mode(): 'single' | 'range' | 'multiple';
-    set mode(m: 'single' | 'range' | 'multiple');
+    get mode(): "single" | "range" | "multiple";
+    set mode(m: "single" | "range" | "multiple");
     get range(): boolean;
     set range(value: boolean);
     /** Datas selecionadas no modo multiple (CSV no atributo). */

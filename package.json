@@ -136,6 +136,18 @@
       "types": "./dist/components/autocomplete/index.d.ts",
       "import": "./dist/components/autocomplete/index.js"
     },
+    "./knob": {
+      "types": "./dist/components/knob/index.d.ts",
+      "import": "./dist/components/knob/index.js"
+    },
+    "./orderlist": {
+      "types": "./dist/components/orderlist/index.d.ts",
+      "import": "./dist/components/orderlist/index.js"
+    },
+    "./picklist": {
+      "types": "./dist/components/picklist/index.d.ts",
+      "import": "./dist/components/picklist/index.js"
+    },
     "./table": {
       "types": "./dist/components/table/index.d.ts",
       "import": "./dist/components/table/index.js"

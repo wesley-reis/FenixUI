@@ -32,6 +32,9 @@ import '../components/alert';
 import '../components/dropdown';
 import '../components/pagination';
 import '../components/autocomplete';
+import '../components/knob';
+import '../components/orderlist';
+import '../components/picklist';
 import '../components/drawer';
 export declare function formatHtml(src: string): string;
 //# sourceMappingURL=app.d.ts.map

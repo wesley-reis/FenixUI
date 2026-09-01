@@ -1488,7 +1488,18 @@ const _FxCalendar = class _FxCalendar extends FxElement {
     this.pickEnd = null;
   }
   static get observedAttributes() {
-    return ["value", "start", "end", "min", "max", "range", "mode", "values", "locale", "disabled"];
+    return [
+      "value",
+      "start",
+      "end",
+      "min",
+      "max",
+      "range",
+      "mode",
+      "values",
+      "locale",
+      "disabled"
+    ];
   }
   /** Modo de seleção: 'single' | 'range' | 'multiple'. */
   get mode() {
@@ -1556,7 +1567,11 @@ const _FxCalendar = class _FxCalendar extends FxElement {
     return key(date.getFullYear(), date.getMonth() + 1, date.getDate());
   }
   keyToDate(k) {
-    return new Date(Math.floor(k / 1e4), Math.floor(k / 100) % 100 - 1, k % 100);
+    return new Date(
+      Math.floor(k / 1e4),
+      Math.floor(k / 100) % 100 - 1,
+      k % 100
+    );
   }
   iso(k) {
     const d = this.keyToDate(k);
@@ -1565,7 +1580,9 @@ const _FxCalendar = class _FxCalendar extends FxElement {
   }
   /** Seleção atual para pintura (chaves). */
   selection() {
-    const multi = new Set(this.values.map((iso) => parseBound(iso)?.lo ?? 0).filter(Boolean));
+    const multi = new Set(
+      this.values.map((iso) => parseBound(iso)?.lo ?? 0).filter(Boolean)
+    );
     if (this.mode === "range") {
       let s = this.pickStart;
       let e = this.pickEnd;
@@ -1589,13 +1606,31 @@ const _FxCalendar = class _FxCalendar extends FxElement {
       };
       this.setAttribute("start", detail.start);
       this.setAttribute("end", detail.end);
-      this.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail }));
+      this.dispatchEvent(
+        new CustomEvent("change", {
+          bubbles: true,
+          composed: true,
+          detail
+        })
+      );
     } else if (this.mode === "multiple") {
       const values = this.values;
-      this.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail: { values } }));
+      this.dispatchEvent(
+        new CustomEvent("change", {
+          bubbles: true,
+          composed: true,
+          detail: { values }
+        })
+      );
     } else {
       const value = this.getAttr("value");
-      this.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail: { value } }));
+      this.dispatchEvent(
+        new CustomEvent("change", {
+          bubbles: true,
+          composed: true,
+          detail: { value }
+        })
+      );
     }
   }
   pickDay(k) {
@@ -1608,7 +1643,8 @@ const _FxCalendar = class _FxCalendar extends FxElement {
         this.render();
         return;
       }
-      if (k < this.pickStart) [this.pickStart, this.pickEnd] = [k, this.pickStart];
+      if (k < this.pickStart)
+        [this.pickStart, this.pickEnd] = [k, this.pickStart];
       else this.pickEnd = k;
       this.emit();
     } else if (this.mode === "multiple") {
@@ -1640,7 +1676,10 @@ const _FxCalendar = class _FxCalendar extends FxElement {
     const sel = this.selection();
     const loc = this.locale();
     const titles = {
-      days: this.fmt({ month: "long", year: "numeric" }, new Date(this.cursor.y, this.cursor.m, 1)),
+      days: this.fmt(
+        { month: "long", year: "numeric" },
+        new Date(this.cursor.y, this.cursor.m, 1)
+      ),
       months: String(this.cursor.y),
       years: `${Math.floor(this.cursor.y / 12) * 12} – ${Math.floor(this.cursor.y / 12) * 12 + 11}`
     };
@@ -1674,7 +1713,10 @@ const _FxCalendar = class _FxCalendar extends FxElement {
       <div class="grid ${this.view}">${cells}</div>
     `);
     this.root.querySelectorAll("[data-nav]").forEach(
-      (b) => b.addEventListener("click", () => this.navigate(Number(b.dataset.nav)))
+      (b) => b.addEventListener(
+        "click",
+        () => this.navigate(Number(b.dataset.nav))
+      )
     );
     const gotoBtn = this.root.querySelector("[data-goto]");
     gotoBtn?.addEventListener("click", () => {
@@ -1682,7 +1724,10 @@ const _FxCalendar = class _FxCalendar extends FxElement {
       this.render();
     });
     this.root.querySelectorAll("[data-day]").forEach(
-      (b) => b.addEventListener("click", () => this.pickDay(Number(b.dataset.day)))
+      (b) => b.addEventListener(
+        "click",
+        () => this.pickDay(Number(b.dataset.day))
+      )
     );
     this.root.querySelectorAll("[data-month]").forEach(
       (b) => b.addEventListener("click", () => {
@@ -1713,95 +1758,148 @@ const _FxCalendar = class _FxCalendar extends FxElement {
       const k = key(y, m + 1, d);
       const isSel = sel.single === k || sel.start === k || sel.end === k || sel.multi.has(k);
       const inRange = sel.start !== null && sel.end !== null && k > sel.start && k < sel.end;
-      const cls = ["cell", isSel ? "sel" : "", inRange ? "in-range" : "", k === todayK ? "today" : ""].filter(Boolean).join(" ");
+      const cls = [
+        "cell",
+        isSel ? "sel" : "",
+        inRange ? "in-range" : "",
+        k === todayK ? "today" : ""
+      ].filter(Boolean).join(" ");
       html += `<button type="button" class="${cls}" data-day="${k}" ${this.dayDisabled(y, m, d) ? "disabled" : ""}>${d}</button>`;
     }
     return html;
   }
 };
 _FxCalendar.styles = css`
-    :host {
-      display: inline-block;
-      font-family: var(--fx-font-family);
-      font-size: var(--fx-font-size);
-      color: var(--fx-text-default);
-      background: var(--fx-surface-background);
-      border: 1px solid var(--fx-border-default);
-      border-radius: var(--fx-radius-md);
-      box-shadow: var(--fx-shadow-sm);
-      padding: var(--fx-space-sm);
-      user-select: none;
-    }
-    :host([disabled]) { opacity: 0.55; pointer-events: none; }
-    .head {
+		:host {
+			display: inline-block;
+			font-family: var(--fx-font-family);
+			font-size: var(--fx-font-size);
+			color: var(--fx-text-default);
+			background: var(--fx-surface-background);
+			border: 1px solid var(--fx-border-default);
+			border-radius: var(--fx-radius-md);
+			box-shadow: var(--fx-shadow-sm);
+			padding: var(--fx-space-sm);
+			user-select: none;
+		}
+		:host([disabled]) {
+			opacity: 0.55;
+			pointer-events: none;
+		}
+		.head {
+			display: flex;
+			height: 48px;
+			align-items: center;
+			justify-content: space-between;
+			gap: var(--fx-space-xs);
+			margin-bottom: var(--fx-space-xs);
+			border-bottom: 1px solid var(--fx-border-default);
+		}
+
+		.title {
+			min-width: 24px;
+			border: none;
+			background: none;
+			color: var(--fx-text-default);
+			cursor: pointer;
+			font: inherit;
+			border-radius: var(--fx-radius-sm);
+		}
+    .nav {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: var(--fx-space-xs);
-      margin-bottom: var(--fx-space-xs);
-    }
-    .nav,
-    .title {
-      border: none;
-      background: none;
-      color: var(--fx-text-default);
-      cursor: pointer;
-      font: inherit;
-      border-radius: var(--fx-radius-sm);
-      padding: var(--fx-space-3xs, 4px) var(--fx-space-xs);
-    }
-    .nav:hover, .title:hover { background: var(--fx-surface-surface-hover); }
-    .title { font-weight: var(--fx-font-weight); text-transform: capitalize; flex: 1; }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(7, 34px);
-      gap: 2px;
-    }
-    .grid.months, .grid.years { grid-template-columns: repeat(4, minmax(52px, 1fr)); }
-    .wd {
-      text-align: center;
-      color: var(--fx-text-muted);
-      font-size: calc(var(--fx-font-size) - 2px);
-      padding: var(--fx-space-3xs, 4px) 0;
-      text-transform: capitalize;
-    }
-    .cell {
-      position: relative;
-      border: none;
-      background: none;
-      font: inherit;
-      color: var(--fx-text-default);
-      height: 32px;
-      border-radius: var(--fx-radius-sm);
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
       justify-content: center;
+      font-size: 20px;
+      border: none;
+			background: none;
+			color: var(--fx-text-muted);
+			cursor: pointer;
+			border-radius: var(--fx-radius-sm);
     }
-    .cell:hover { background: color-mix(in srgb, var(--fx-color-primary) 12%, transparent); }
-    .cell.muted { color: var(--fx-text-disabled); }
-    .cell.today::after {
-      content: '';
-      position: absolute;
-      bottom: 3px;
-      width: 4px;
-      height: 4px;
-      border-radius: var(--fx-radius-full);
-      background: var(--fx-color-primary);
-    }
-    .cell.sel {
-      background: var(--fx-color-primary);
-      color: #fff;
-      font-weight: var(--fx-font-weight);
-    }
-    .cell.sel::after { background: #fff; }
-    .cell.in-range {
-      background: color-mix(in srgb, var(--fx-color-primary) 16%, transparent);
-      border-radius: 0;
-    }
-    .grid.months .cell, .grid.years .cell { height: 40px; }
-    .cell[disabled] { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
-  `;
+		.nav:hover,
+		.title:hover {
+			background: var(--fx-surface-surface-hover);
+		}
+		.title {
+    	padding: var(--fx-space-3xs, 4px) var(--fx-space-xs);
+			font-weight: var(--fx-font-weight);
+			text-transform: capitalize;
+			flex: 1;
+		}
+		.grid {
+			display: grid;
+			grid-template-columns: repeat(7, 34px);
+			gap: 2px;
+		}
+		.grid.months,
+		.grid.years {
+			grid-template-columns: repeat(4, minmax(52px, 1fr));
+		}
+		.wd {
+			text-align: center;
+			color: var(--fx-text-muted);
+			font-size: calc(var(--fx-font-size) - 2px);
+			padding: var(--fx-space-3xs, 4px) 0;
+			text-transform: capitalize;
+		}
+		.cell {
+			position: relative;
+			border: none;
+			background: none;
+			font: inherit;
+			color: var(--fx-text-default);
+			height: 32px;
+			border-radius: var(--fx-radius-sm);
+			cursor: pointer;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+		}
+		.cell:hover {
+			background: color-mix(
+				in srgb,
+				var(--fx-color-primary) 12%,
+				transparent
+			);
+		}
+		.cell.muted {
+			color: var(--fx-text-disabled);
+		}
+		.cell.today::after {
+			content: "";
+			position: absolute;
+			bottom: 3px;
+			width: 4px;
+			height: 4px;
+			border-radius: var(--fx-radius-full);
+			background: var(--fx-color-primary);
+		}
+		.cell.sel {
+			background: var(--fx-color-primary);
+			color: #fff;
+			font-weight: var(--fx-font-weight);
+		}
+		.cell.sel::after {
+			background: #fff;
+		}
+		.cell.in-range {
+			background: color-mix(
+				in srgb,
+				var(--fx-color-primary) 16%,
+				transparent
+			);
+			border-radius: 0;
+		}
+		.grid.months .cell,
+		.grid.years .cell {
+			height: 40px;
+		}
+		.cell[disabled] {
+			opacity: 0.35;
+			cursor: not-allowed;
+			pointer-events: none;
+		}
+	`;
 let FxCalendar = _FxCalendar;
 function defineFxCalendar() {
   return defineElement("fx-calendar", FxCalendar);
@@ -4419,6 +4517,1432 @@ function defineFxAutocomplete() {
   return defineElement("fx-autocomplete", FxAutocomplete);
 }
 defineFxAutocomplete();
+const _FxKnob = class _FxKnob extends FxElement {
+  constructor() {
+    super(...arguments);
+    this._isDragging = false;
+    this._startY = 0;
+    this._startValue = 0;
+    this._onMouseMove = (e) => {
+      if (!this._isDragging) return;
+      const deltaY = this._startY - e.clientY;
+      const sensitivity = (this.max - this.min) / 100;
+      this.emitChange(this._startValue + deltaY * sensitivity);
+    };
+    this._onMouseUp = () => {
+      this._isDragging = false;
+      document.removeEventListener("mousemove", this._onMouseMove);
+      document.removeEventListener("mouseup", this._onMouseUp);
+    };
+  }
+  static get observedAttributes() {
+    return [
+      "value",
+      "min",
+      "max",
+      "step",
+      "size",
+      "stroke-width",
+      "value-color",
+      "range-color",
+      "readonly",
+      "disabled",
+      "value-template"
+    ];
+  }
+  get value() {
+    return this.clampValue(Number(this.getAttr("value", "0")) || 0);
+  }
+  set value(v) {
+    if (this.readonly || this.disabled) return;
+    const clamped = this.clampValue(v);
+    const current = this.clampValue(Number(this.getAttr("value", "0")) || 0);
+    if (clamped !== current) {
+      this.setAttribute("value", String(clamped));
+      this.dispatchEvent(
+        new CustomEvent("change", {
+          bubbles: true,
+          composed: true,
+          detail: { value: clamped }
+        })
+      );
+    }
+  }
+  get min() {
+    return Number(this.getAttr("min", "0")) || 0;
+  }
+  set min(v) {
+    this.setAttribute("min", String(v));
+  }
+  get max() {
+    return Number(this.getAttr("max", "100")) || 100;
+  }
+  set max(v) {
+    this.setAttribute("max", String(v));
+  }
+  get step() {
+    return Number(this.getAttr("step", "1")) || 1;
+  }
+  set step(v) {
+    this.setAttribute("step", String(v));
+  }
+  get size() {
+    const s = this.getAttr("size", "md");
+    return s === "sm" || s === "lg" ? s : "md";
+  }
+  set size(v) {
+    this.setAttribute("size", v);
+  }
+  get strokeWidth() {
+    return Number(this.getAttr("stroke-width", "8")) || 8;
+  }
+  set strokeWidth(v) {
+    this.setAttribute("stroke-width", String(v));
+  }
+  get valueColor() {
+    return this.getAttr("value-color", "");
+  }
+  set valueColor(v) {
+    this.setAttribute("value-color", v);
+  }
+  get rangeColor() {
+    return this.getAttr("range-color", "");
+  }
+  set rangeColor(v) {
+    this.setAttribute("range-color", v);
+  }
+  get readonly() {
+    return this.hasAttr("readonly");
+  }
+  set readonly(v) {
+    this.toggleAttr("readonly", Boolean(v));
+  }
+  get disabled() {
+    return this.hasAttr("disabled");
+  }
+  set disabled(v) {
+    this.toggleAttr("disabled", Boolean(v));
+  }
+  get valueTemplate() {
+    return this.getAttr("value-template", "{value}");
+  }
+  set valueTemplate(v) {
+    this.setAttribute("value-template", v);
+  }
+  render() {
+    const min = this.min;
+    const max = this.max;
+    const value = this.clampValue(this.value);
+    const range = max - min;
+    const pct = range > 0 ? (value - min) / range : 0;
+    const sizeNum = this.getSizeNum();
+    const strokeW = this.strokeWidth;
+    const radius = (sizeNum - strokeW) / 2;
+    const circumference = 2 * Math.PI * radius;
+    const offset = circumference * (1 - pct);
+    const valueColorStyle = this.valueColor ? `--_value-color: ${this.valueColor};` : "";
+    const rangeColorStyle = this.rangeColor ? `--_range-color: ${this.rangeColor};` : "";
+    const displayValue = this.valueTemplate.replace("{value}", String(Math.round(value)));
+    this.setTemplate(`
+      <div class="knob" part="knob" tabindex="${this.disabled ? "-1" : "0"}"
+        role="slider" aria-valuenow="${value}" aria-valuemin="${min}" aria-valuemax="${max}"
+        aria-readonly="${this.readonly}" aria-disabled="${this.disabled}"
+        style="${valueColorStyle}${rangeColorStyle}">
+        <svg viewBox="0 0 ${sizeNum} ${sizeNum}" part="svg">
+          <circle class="track" part="track"
+            cx="${sizeNum / 2}" cy="${sizeNum / 2}" r="${radius}" />
+          <circle class="value" part="value"
+            cx="${sizeNum / 2}" cy="${sizeNum / 2}" r="${radius}"
+            stroke-dasharray="${circumference}"
+            stroke-dashoffset="${offset}" />
+        </svg>
+        <div class="label" part="label">${displayValue}</div>
+      </div>
+    `);
+    this.attachListeners();
+  }
+  getSizeNum() {
+    const s = this.size;
+    if (s === "sm") return 60;
+    if (s === "lg") return 140;
+    return 100;
+  }
+  clampValue(v) {
+    const min = this.min;
+    const max = this.max;
+    const step = this.step;
+    let clamped = Math.min(max, Math.max(min, v));
+    if (step > 0) {
+      clamped = Math.round((clamped - min) / step) * step + min;
+      clamped = Math.min(max, Math.max(min, clamped));
+    }
+    return clamped;
+  }
+  emitChange(newValue) {
+    const clamped = this.clampValue(newValue);
+    if (clamped !== this.value) {
+      this.value = clamped;
+      this.dispatchEvent(
+        new CustomEvent("change", {
+          bubbles: true,
+          composed: true,
+          detail: { value: clamped }
+        })
+      );
+    }
+  }
+  attachListeners() {
+    const knob = this.root.querySelector(".knob");
+    if (!knob) return;
+    knob.addEventListener("mousedown", (e) => {
+      if (this.readonly || this.disabled) return;
+      e.preventDefault();
+      this._isDragging = true;
+      this._startY = e.clientY;
+      this._startValue = this.value;
+      knob.focus();
+      document.addEventListener("mousemove", this._onMouseMove);
+      document.addEventListener("mouseup", this._onMouseUp);
+    });
+    knob.addEventListener("touchstart", (e) => {
+      if (this.readonly || this.disabled) return;
+      e.preventDefault();
+      this._isDragging = true;
+      this._startY = e.touches[0].clientY;
+      this._startValue = this.value;
+      knob.focus();
+    }, { passive: false });
+    knob.addEventListener("touchmove", (e) => {
+      if (!this._isDragging || this.readonly || this.disabled) return;
+      e.preventDefault();
+      const deltaY = this._startY - e.touches[0].clientY;
+      const sensitivity = (this.max - this.min) / 100;
+      this.emitChange(this._startValue + deltaY * sensitivity);
+    }, { passive: false });
+    knob.addEventListener("touchend", () => {
+      this._isDragging = false;
+    });
+    knob.addEventListener("keydown", (e) => {
+      if (this.readonly || this.disabled) return;
+      const step = this.step;
+      switch (e.key) {
+        case "ArrowUp":
+        case "ArrowRight":
+          e.preventDefault();
+          this.emitChange(this.value + step);
+          break;
+        case "ArrowDown":
+        case "ArrowLeft":
+          e.preventDefault();
+          this.emitChange(this.value - step);
+          break;
+        case "Home":
+          e.preventDefault();
+          this.emitChange(this.min);
+          break;
+        case "End":
+          e.preventDefault();
+          this.emitChange(this.max);
+          break;
+        case "PageUp":
+          e.preventDefault();
+          this.emitChange(this.value + step * 10);
+          break;
+        case "PageDown":
+          e.preventDefault();
+          this.emitChange(this.value - step * 10);
+          break;
+      }
+    });
+  }
+  disconnectedCallback() {
+    document.removeEventListener("mousemove", this._onMouseMove);
+    document.removeEventListener("mouseup", this._onMouseUp);
+    super.disconnectedCallback();
+  }
+};
+_FxKnob.styles = css`
+    :host {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--fx-font-family);
+      font-size: var(--fx-font-size);
+      --_size: 100px;
+      --_stroke-width: 8px;
+      --_value-color: var(--fx-color-primary);
+      --_range-color: var(--fx-border-default);
+    }
+    :host([size='sm']) { --_size: 60px; }
+    :host([size='lg']) { --_size: 140px; }
+    .knob {
+      position: relative;
+      width: var(--_size);
+      height: var(--_size);
+      cursor: pointer;
+      user-select: none;
+      touch-action: none;
+    }
+    :host([readonly]) .knob,
+    :host([disabled]) .knob {
+      cursor: default;
+      pointer-events: none;
+    }
+    :host([disabled]) .knob {
+      opacity: 0.55;
+    }
+    svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+    .track {
+      fill: none;
+      stroke: var(--_range-color);
+      stroke-width: var(--_stroke-width);
+    }
+    .value {
+      fill: none;
+      stroke: var(--_value-color);
+      stroke-width: var(--_stroke-width);
+      stroke-linecap: round;
+      transition: stroke-dashoffset var(--fx-motion-duration-fast) var(--fx-motion-easing);
+    }
+    .label {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: var(--fx-text-default);
+      pointer-events: none;
+    }
+    :host([size='sm']) .label { font-size: 11px; }
+    :host([size='md']) .label { font-size: 14px; }
+    :host([size='lg']) .label { font-size: 18px; }
+    .knob:focus-visible {
+      outline: none;
+    }
+    .knob:focus-visible svg {
+      filter: drop-shadow(var(--fx-effect-focus-ring, 0 0 0 3px color-mix(in srgb, var(--fx-color-primary) 22%, transparent)));
+    }
+  `;
+let FxKnob = _FxKnob;
+function defineFxKnob() {
+  return defineElement("fx-knob", FxKnob);
+}
+defineFxKnob();
+const _FxOrderList = class _FxOrderList extends FxElement {
+  constructor() {
+    super(...arguments);
+    this._data = [];
+    this._filteredData = null;
+    this._selection = [];
+    this._filterValue = "";
+    this._draggedIndex = null;
+    this._optionTemplate = null;
+  }
+  static get observedAttributes() {
+    return [
+      "data",
+      "data-key",
+      "filter",
+      "filter-by",
+      "filter-placeholder",
+      "breakpoint",
+      "controls-location",
+      "dragdrop",
+      "striped",
+      "selection-mode"
+    ];
+  }
+  set data(value) {
+    this._data = value;
+    this._filteredData = null;
+    this.render();
+  }
+  get data() {
+    return this._data;
+  }
+  set selection(value) {
+    this._selection = value;
+    this.render();
+  }
+  get selection() {
+    return this._selection;
+  }
+  get dataKey() {
+    return this.getAttr("data-key", "");
+  }
+  set dataKey(v) {
+    this.setAttribute("data-key", v);
+  }
+  get filter() {
+    return this.hasAttr("filter");
+  }
+  set filter(v) {
+    this.toggleAttr("filter", v);
+  }
+  get filterBy() {
+    return this.getAttr("filter-by", "label");
+  }
+  set filterBy(v) {
+    this.setAttribute("filter-by", v);
+  }
+  get filterPlaceholder() {
+    return this.getAttr("filter-placeholder", "Buscar...");
+  }
+  set filterPlaceholder(v) {
+    this.setAttribute("filter-placeholder", v);
+  }
+  get breakpoint() {
+    return this.getAttr("breakpoint", "960px");
+  }
+  set breakpoint(v) {
+    this.setAttribute("breakpoint", v);
+  }
+  get dragdrop() {
+    return this.hasAttr("dragdrop");
+  }
+  set dragdrop(v) {
+    this.toggleAttr("dragdrop", v);
+  }
+  get striped() {
+    return this.hasAttr("striped");
+  }
+  set striped(v) {
+    this.toggleAttr("striped", v);
+  }
+  get selectionMode() {
+    const s = this.getAttr("selection-mode", "");
+    return s === "single" || s === "multiple" ? s : "";
+  }
+  set selectionMode(v) {
+    this.setAttribute("selection-mode", v);
+  }
+  get filterValue() {
+    return this._filterValue;
+  }
+  set filterValue(v) {
+    this._filterValue = v;
+    this._applyFilter();
+    this.render();
+  }
+  setOptionTemplate(template) {
+    this._optionTemplate = template;
+    this.render();
+  }
+  connectedCallback() {
+    this._parseDataAttribute();
+    super.connectedCallback();
+  }
+  attributeChangedCallback() {
+    if (this.getAttr("data", "") !== "") {
+      this._parseDataAttribute();
+    }
+    super.attributeChangedCallback();
+  }
+  _parseDataAttribute() {
+    const dataAttr = this.getAttr("data", "");
+    if (dataAttr) {
+      try {
+        this._data = JSON.parse(dataAttr);
+        this._filteredData = null;
+      } catch {
+        this._data = [];
+      }
+    }
+  }
+  _applyFilter() {
+    if (!this._filterValue) {
+      this._filteredData = null;
+      return;
+    }
+    const filterFields = this.filterBy.split(",").map((f) => f.trim());
+    this._filteredData = this._data.filter((item) => {
+      return filterFields.some((field) => {
+        const value = item[field];
+        if (value == null) return false;
+        return String(value).toLowerCase().includes(this._filterValue.toLowerCase());
+      });
+    });
+  }
+  _getDisplayData() {
+    return this._filteredData || this._data;
+  }
+  _getItemKey(item, index) {
+    if (this.dataKey && item[this.dataKey] != null) {
+      return String(item[this.dataKey]);
+    }
+    if (item["id"] != null) return String(item["id"]);
+    if (item["key"] != null) return String(item["key"]);
+    if (item["label"] != null) return String(item["label"]);
+    if (item["name"] != null) return String(item["name"]);
+    if (item["value"] != null) return String(item["value"]);
+    return String(index);
+  }
+  _getItemLabel(item) {
+    const fields = ["label", "name", "title", "text", "value"];
+    for (const field of fields) {
+      if (item[field] != null) {
+        return String(item[field]);
+      }
+    }
+    return JSON.stringify(item);
+  }
+  _isSelected(item) {
+    return this._selection.some((s) => this._getItemKey(s, -1) === this._getItemKey(item, -1));
+  }
+  _moveItem(fromIndex, toIndex) {
+    const actualFrom = this._getActualIndex(fromIndex);
+    const actualTo = this._getActualIndex(toIndex);
+    if (actualFrom === -1 || actualTo === -1) return;
+    const item = this._data.splice(actualFrom, 1)[0];
+    this._data.splice(actualTo, 0, item);
+    this._applyFilter();
+    this.render();
+    this._emitReorder();
+  }
+  _getActualIndex(displayIndex) {
+    if (this._filteredData) {
+      const item = this._filteredData[displayIndex];
+      return this._data.findIndex((d) => this._getItemKey(d, -1) === this._getItemKey(item, -1));
+    }
+    return displayIndex;
+  }
+  _emitReorder() {
+    this.dispatchEvent(new CustomEvent("reorder", {
+      bubbles: true,
+      composed: true,
+      detail: { items: [...this._data] }
+    }));
+  }
+  _emitSelectionChange() {
+    this.dispatchEvent(new CustomEvent("selection-change", {
+      bubbles: true,
+      composed: true,
+      detail: { selection: [...this._selection] }
+    }));
+  }
+  _toggleSelection(item) {
+    if (!this.selectionMode) return;
+    const key2 = this._getItemKey(item, -1);
+    const index = this._selection.findIndex((s) => this._getItemKey(s, -1) === key2);
+    if (index >= 0) {
+      this._selection.splice(index, 1);
+    } else if (this.selectionMode === "multiple") {
+      this._selection.push(item);
+    } else {
+      this._selection = [item];
+    }
+    this._emitSelectionChange();
+    this.render();
+  }
+  render() {
+    const displayData = this._getDisplayData();
+    const hasSelection = this.selectionMode;
+    this.setTemplate(`
+      <div class="container" part="container">
+        ${this.filter ? `
+          <div class="filter-wrapper" part="filter-wrapper">
+            <input type="text" class="filter-input" part="filter-input"
+              placeholder="${this.filterPlaceholder}"
+              value="${esc$1(this._filterValue)}"
+              aria-label="Filtrar lista" />
+          </div>
+        ` : ""}
+        <div class="list-wrapper" part="list-wrapper">
+          <ul class="list" part="list" role="listbox"
+            aria-multiselectable="${this.selectionMode === "multiple"}"
+            tabindex="0">
+            ${displayData.length === 0 ? `
+              <li class="empty-message" part="empty-message">
+                ${this.filter ? "Nenhum resultado encontrado" : "Nenhum item disponivel"}
+              </li>
+            ` : displayData.map((item, index) => {
+      const key2 = this._getItemKey(item, index);
+      const label = this._getItemLabel(item);
+      const isSelected = this._isSelected(item);
+      const content = this._optionTemplate ? this._optionTemplate(item) : esc$1(label);
+      return `
+                <li class="list-item${isSelected ? " selected" : ""}" part="list-item"
+                  data-index="${index}" data-key="${esc$1(key2)}"
+                  role="option" aria-selected="${isSelected}"
+                  ${this.dragdrop ? 'draggable="true"' : ""}
+                  tabindex="0">
+                  ${this.dragdrop ? '<span class="drag-handle" part="drag-handle" aria-label="Arrastar">::</span>' : ""}
+                  ${hasSelection ? `
+                    <input type="checkbox" class="checkbox" part="checkbox"
+                      ${isSelected ? "checked" : ""}
+                      aria-label="Selecionar ${esc$1(label)}" />
+                  ` : ""}
+                  <span class="item-content" part="item-content">${content}</span>
+                </li>
+              `;
+    }).join("")}
+          </ul>
+        </div>
+        <div class="controls" part="controls">
+          <div class="controls-row">
+            <button class="control-btn" data-action="top" part="control-btn" aria-label="Mover para o inicio" title="Inicio">|&lt;</button>
+            <button class="control-btn" data-action="up" part="control-btn" aria-label="Mover para cima" title="Cima">^</button>
+          </div>
+          <div class="controls-row">
+            <button class="control-btn" data-action="down" part="control-btn" aria-label="Mover para baixo" title="Baixo">v</button>
+            <button class="control-btn" data-action="bottom" part="control-btn" aria-label="Mover para o fim" title="Fim">&gt;|</button>
+          </div>
+        </div>
+      </div>
+    `);
+    this._attachListeners();
+  }
+  _attachListeners() {
+    const filterInput = this.root.querySelector(".filter-input");
+    if (filterInput) {
+      filterInput.addEventListener("input", (e) => {
+        this.filterValue = e.target.value;
+      });
+    }
+    const list = this.root.querySelector(".list");
+    if (!list) return;
+    list.addEventListener("click", (e) => {
+      const target = e.target;
+      const itemEl = target.closest(".list-item");
+      if (!itemEl) return;
+      if (target.classList.contains("checkbox")) {
+        e.stopPropagation();
+        const index2 = Number(itemEl.dataset.index);
+        const item2 = this._getDisplayData()[index2];
+        this._toggleSelection(item2);
+        return;
+      }
+      const index = Number(itemEl.dataset.index);
+      const item = this._getDisplayData()[index];
+      this._toggleSelection(item);
+    });
+    list.addEventListener("keydown", (e) => {
+      const target = e.target;
+      if (!target.classList.contains("list-item")) return;
+      const items = Array.from(list.querySelectorAll(".list-item"));
+      const currentIndex = items.indexOf(target);
+      switch (e.key) {
+        case "ArrowUp":
+          e.preventDefault();
+          if (currentIndex > 0) {
+            items[currentIndex - 1].focus();
+          }
+          break;
+        case "ArrowDown":
+          e.preventDefault();
+          if (currentIndex < items.length - 1) {
+            items[currentIndex + 1].focus();
+          }
+          break;
+        case "Home":
+          e.preventDefault();
+          items[0]?.focus();
+          break;
+        case "End":
+          e.preventDefault();
+          items[items.length - 1]?.focus();
+          break;
+        case " ":
+        case "Enter":
+          if (this.selectionMode) {
+            e.preventDefault();
+            const index = Number(target.dataset.index);
+            const item = this._getDisplayData()[index];
+            this._toggleSelection(item);
+          }
+          break;
+      }
+    });
+    if (this.dragdrop) {
+      this._attachDragAndDrop(list);
+    }
+    const buttons = this.root.querySelectorAll(".control-btn");
+    buttons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const action = btn.dataset.action;
+        this._handleMoveAction(action);
+      });
+    });
+    this._updateControlsState();
+  }
+  _attachDragAndDrop(list) {
+    let dragOverElement = null;
+    list.addEventListener("dragstart", (e) => {
+      const target = e.target;
+      if (!target.classList.contains("list-item")) return;
+      this._draggedIndex = Number(target.dataset.index);
+      target.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    list.addEventListener("dragend", (e) => {
+      const target = e.target;
+      target.classList.remove("dragging");
+      this._draggedIndex = null;
+      list.querySelectorAll(".drag-over").forEach((el) => el.classList.remove("drag-over"));
+    });
+    list.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      const target = e.target.closest(".list-item");
+      if (!target || target.classList.contains("dragging")) return;
+      if (dragOverElement) {
+        dragOverElement.classList.remove("drag-over");
+      }
+      target.classList.add("drag-over");
+      dragOverElement = target;
+    });
+    list.addEventListener("drop", (e) => {
+      e.preventDefault();
+      if (this._draggedIndex === null) return;
+      const target = e.target.closest(".list-item");
+      if (!target) return;
+      const toIndex = Number(target.dataset.index);
+      target.classList.remove("drag-over");
+      dragOverElement = null;
+      this._moveItem(this._draggedIndex, toIndex);
+    });
+  }
+  _handleMoveAction(action) {
+    if (!this._selection.length) return;
+    const displayData = this._getDisplayData();
+    const selectedIndices = this._selection.map((s) => displayData.findIndex((d) => this._getItemKey(d, -1) === this._getItemKey(s, -1))).filter((i) => i >= 0).sort((a, b) => a - b);
+    if (selectedIndices.length === 0) return;
+    switch (action) {
+      case "top":
+        this._moveSelectedTo(selectedIndices, 0);
+        break;
+      case "up":
+        if (selectedIndices[0] > 0) {
+          this._moveSelectedBy(selectedIndices, -1);
+        }
+        break;
+      case "down":
+        if (selectedIndices[selectedIndices.length - 1] < displayData.length - 1) {
+          this._moveSelectedBy(selectedIndices, 1);
+        }
+        break;
+      case "bottom":
+        this._moveSelectedTo(selectedIndices, displayData.length - 1);
+        break;
+    }
+  }
+  _moveSelectedTo(indices, targetIndex) {
+    const items = indices.map((i) => this._data[this._getActualIndex(i)]);
+    const actualIndices = indices.map((i) => this._getActualIndex(i)).sort((a, b) => b - a);
+    actualIndices.forEach((i) => this._data.splice(i, 1));
+    const actualTarget = this._getActualIndex(targetIndex);
+    this._data.splice(actualTarget, 0, ...items);
+    this._applyFilter();
+    this.render();
+    this._emitReorder();
+  }
+  _moveSelectedBy(indices, delta) {
+    const firstIndex = indices[0] + delta;
+    const lastIndex = indices[indices.length - 1] + delta;
+    if (firstIndex < 0 || lastIndex >= this._getDisplayData().length) return;
+    const items = indices.map((i) => {
+      const actualIdx = this._getActualIndex(i);
+      return { item: this._data[actualIdx], originalIndex: actualIdx };
+    });
+    items.sort((a, b) => b.originalIndex - a.originalIndex);
+    items.forEach(({ originalIndex }) => this._data.splice(originalIndex, 1));
+    const newFirstActual = this._getActualIndex(firstIndex);
+    const sortedItems = items.map(({ item }) => item).reverse();
+    this._data.splice(newFirstActual, 0, ...sortedItems);
+    this._applyFilter();
+    this.render();
+    this._emitReorder();
+  }
+  _updateControlsState() {
+    const displayData = this._getDisplayData();
+    const selectedIndices = this._selection.map((s) => displayData.findIndex((d) => this._getItemKey(d, -1) === this._getItemKey(s, -1))).filter((i) => i >= 0);
+    const buttons = this.root.querySelectorAll(".control-btn");
+    buttons.forEach((btn) => {
+      const action = btn.dataset.action;
+      let disabled = selectedIndices.length === 0;
+      if (!disabled) {
+        switch (action) {
+          case "top":
+          case "up":
+            disabled = selectedIndices[0] === 0;
+            break;
+          case "bottom":
+          case "down":
+            disabled = selectedIndices[selectedIndices.length - 1] === displayData.length - 1;
+            break;
+        }
+      }
+      btn.disabled = disabled;
+    });
+  }
+};
+_FxOrderList.styles = css`
+    :host {
+      display: block;
+      font-family: var(--fx-font-family);
+      font-size: var(--fx-font-size);
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: var(--fx-space-md);
+    }
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: var(--fx-space-xs);
+    }
+    .controls-row {
+      display: flex;
+      gap: var(--fx-space-xs);
+    }
+    .list-wrapper {
+      flex: 1;
+    }
+    .filter-wrapper {
+      margin-bottom: var(--fx-space-sm);
+    }
+    .filter-input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: var(--fx-space-sm) var(--fx-space-md);
+      border: 1px solid var(--fx-border-default);
+      border-radius: var(--fx-radius-md);
+      font-family: inherit;
+      font-size: inherit;
+      color: var(--fx-text-default);
+      background: var(--fx-surface-background);
+      transition: border-color var(--fx-motion-duration-fast) var(--fx-motion-easing);
+    }
+    .filter-input:focus {
+      outline: none;
+      border-color: var(--fx-color-primary);
+      box-shadow: var(--fx-effect-focus-ring, none);
+    }
+    .filter-input::placeholder {
+      color: var(--fx-text-muted);
+    }
+    .list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      border: 1px solid var(--fx-border-default);
+      border-radius: var(--fx-radius-md);
+      overflow: hidden;
+    }
+    :host([striped]) .list-item:nth-child(even) {
+      background: var(--fx-surface-surface);
+    }
+    .list-item {
+      display: flex;
+      align-items: center;
+      gap: var(--fx-space-sm);
+      padding: var(--fx-space-sm) var(--fx-space-md);
+      background: var(--fx-surface-background);
+      border-bottom: 1px solid var(--fx-border-default);
+      cursor: pointer;
+      user-select: none;
+      transition: background-color var(--fx-motion-duration-fast) var(--fx-motion-easing);
+    }
+    .list-item:last-child {
+      border-bottom: none;
+    }
+    .list-item:hover {
+      background: var(--fx-surface-surface-hover);
+    }
+    .list-item.selected {
+      background: color-mix(in srgb, var(--fx-color-primary) 10%, transparent);
+    }
+    .list-item:focus-visible {
+      outline: none;
+      background: color-mix(in srgb, var(--fx-color-primary) 15%, transparent);
+    }
+    .list-item.dragging {
+      opacity: 0.5;
+    }
+    .list-item.drag-over {
+      border-top: 2px solid var(--fx-color-primary);
+    }
+    .drag-handle {
+      color: var(--fx-text-muted);
+      cursor: grab;
+      flex-shrink: 0;
+    }
+    .drag-handle:active {
+      cursor: grabbing;
+    }
+    .item-content {
+      flex: 1;
+    }
+    .checkbox {
+      flex-shrink: 0;
+    }
+    .empty-message {
+      padding: var(--fx-space-lg);
+      text-align: center;
+      color: var(--fx-text-muted);
+    }
+    button.control-btn {
+      padding: var(--fx-space-sm);
+      border: 1px solid var(--fx-border-default);
+      border-radius: var(--fx-radius-sm);
+      background: var(--fx-surface-background);
+      color: var(--fx-text-default);
+      cursor: pointer;
+      font-size: 12px;
+      line-height: 1;
+      transition: all var(--fx-motion-duration-fast) var(--fx-motion-easing);
+    }
+    button.control-btn:hover:not(:disabled) {
+      background: var(--fx-surface-surface-hover);
+      border-color: var(--fx-border-hover);
+    }
+    button.control-btn:focus-visible {
+      outline: none;
+      box-shadow: var(--fx-effect-focus-ring, none);
+    }
+    button.control-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  `;
+let FxOrderList = _FxOrderList;
+function esc$1(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function defineFxOrderList() {
+  return defineElement("fx-orderlist", FxOrderList);
+}
+const _FxPickList = class _FxPickList extends FxElement {
+  constructor() {
+    super(...arguments);
+    this._source = [];
+    this._filteredSource = null;
+    this._target = [];
+    this._filteredTarget = null;
+    this._sourceSelection = [];
+    this._targetSelection = [];
+    this._sourceFilterValue = "";
+    this._targetFilterValue = "";
+    this._optionTemplate = null;
+  }
+  static get observedAttributes() {
+    return [
+      "source",
+      "target",
+      "source-key",
+      "target-key",
+      "filter",
+      "filter-by",
+      "filter-placeholder",
+      "dragdrop",
+      "striped",
+      "selection-mode",
+      "source-label",
+      "target-label"
+    ];
+  }
+  set source(value) {
+    this._source = value;
+    this._filteredSource = null;
+    this.render();
+  }
+  get source() {
+    return this._source;
+  }
+  set target(value) {
+    this._target = value;
+    this._filteredTarget = null;
+    this.render();
+  }
+  get target() {
+    return this._target;
+  }
+  set sourceSelection(value) {
+    this._sourceSelection = value;
+    this.render();
+  }
+  get sourceSelection() {
+    return this._sourceSelection;
+  }
+  set targetSelection(value) {
+    this._targetSelection = value;
+    this.render();
+  }
+  get targetSelection() {
+    return this._targetSelection;
+  }
+  get sourceKey() {
+    return this.getAttr("source-key", "");
+  }
+  set sourceKey(v) {
+    this.setAttribute("source-key", v);
+  }
+  get targetKey() {
+    return this.getAttr("target-key", "");
+  }
+  set targetKey(v) {
+    this.setAttribute("target-key", v);
+  }
+  get filter() {
+    return this.hasAttr("filter");
+  }
+  set filter(v) {
+    this.toggleAttr("filter", v);
+  }
+  get filterBy() {
+    return this.getAttr("filter-by", "label");
+  }
+  set filterBy(v) {
+    this.setAttribute("filter-by", v);
+  }
+  get filterPlaceholder() {
+    return this.getAttr("filter-placeholder", "Buscar...");
+  }
+  set filterPlaceholder(v) {
+    this.setAttribute("filter-placeholder", v);
+  }
+  get dragdrop() {
+    return this.hasAttr("dragdrop");
+  }
+  set dragdrop(v) {
+    this.toggleAttr("dragdrop", v);
+  }
+  get striped() {
+    return this.hasAttr("striped");
+  }
+  set striped(v) {
+    this.toggleAttr("striped", v);
+  }
+  get selectionMode() {
+    const s = this.getAttr("selection-mode", "");
+    return s === "single" || s === "multiple" ? s : "";
+  }
+  set selectionMode(v) {
+    this.setAttribute("selection-mode", v);
+  }
+  get sourceLabel() {
+    return this.getAttr("source-label", "Disponíveis");
+  }
+  set sourceLabel(v) {
+    this.setAttribute("source-label", v);
+  }
+  get targetLabel() {
+    return this.getAttr("target-label", "Selecionados");
+  }
+  set targetLabel(v) {
+    this.setAttribute("target-label", v);
+  }
+  get sourceFilterValue() {
+    return this._sourceFilterValue;
+  }
+  set sourceFilterValue(v) {
+    this._sourceFilterValue = v;
+    this._applySourceFilter();
+    this.render();
+  }
+  get targetFilterValue() {
+    return this._targetFilterValue;
+  }
+  set targetFilterValue(v) {
+    this._targetFilterValue = v;
+    this._applyTargetFilter();
+    this.render();
+  }
+  setOptionTemplate(template) {
+    this._optionTemplate = template;
+    this.render();
+  }
+  connectedCallback() {
+    this._parseSourceAttribute();
+    this._parseTargetAttribute();
+    super.connectedCallback();
+  }
+  attributeChangedCallback() {
+    if (this.getAttr("source", "") !== "") {
+      this._parseSourceAttribute();
+    }
+    if (this.getAttr("target", "") !== "") {
+      this._parseTargetAttribute();
+    }
+    super.attributeChangedCallback();
+  }
+  _parseSourceAttribute() {
+    const dataAttr = this.getAttr("source", "");
+    if (dataAttr) {
+      try {
+        this._source = JSON.parse(dataAttr);
+        this._filteredSource = null;
+      } catch {
+        this._source = [];
+      }
+    }
+  }
+  _parseTargetAttribute() {
+    const dataAttr = this.getAttr("target", "");
+    if (dataAttr) {
+      try {
+        this._target = JSON.parse(dataAttr);
+        this._filteredTarget = null;
+      } catch {
+        this._target = [];
+      }
+    }
+  }
+  _applySourceFilter() {
+    if (!this._sourceFilterValue) {
+      this._filteredSource = null;
+      return;
+    }
+    const filterFields = this.filterBy.split(",").map((f) => f.trim());
+    this._filteredSource = this._source.filter((item) => {
+      return filterFields.some((field) => {
+        const value = item[field];
+        if (value == null) return false;
+        return String(value).toLowerCase().includes(this._sourceFilterValue.toLowerCase());
+      });
+    });
+  }
+  _applyTargetFilter() {
+    if (!this._targetFilterValue) {
+      this._filteredTarget = null;
+      return;
+    }
+    const filterFields = this.filterBy.split(",").map((f) => f.trim());
+    this._filteredTarget = this._target.filter((item) => {
+      return filterFields.some((field) => {
+        const value = item[field];
+        if (value == null) return false;
+        return String(value).toLowerCase().includes(this._targetFilterValue.toLowerCase());
+      });
+    });
+  }
+  _getDisplaySource() {
+    return this._filteredSource || this._source;
+  }
+  _getDisplayTarget() {
+    return this._filteredTarget || this._target;
+  }
+  _getItemKey(item, index, isSource) {
+    const keyField = isSource ? this.sourceKey : this.targetKey;
+    if (keyField && item[keyField] != null) {
+      return String(item[keyField]);
+    }
+    if (item["id"] != null) return String(item["id"]);
+    if (item["key"] != null) return String(item["key"]);
+    if (item["label"] != null) return String(item["label"]);
+    if (item["name"] != null) return String(item["name"]);
+    if (item["value"] != null) return String(item["value"]);
+    return String(index);
+  }
+  _getItemLabel(item) {
+    const fields = ["label", "name", "title", "text", "value"];
+    for (const field of fields) {
+      if (item[field] != null) {
+        return String(item[field]);
+      }
+    }
+    return JSON.stringify(item);
+  }
+  _isSourceSelected(item, index) {
+    return this._sourceSelection.some((s) => this._getItemKey(s, -1, true) === this._getItemKey(item, index, true));
+  }
+  _isTargetSelected(item, index) {
+    return this._targetSelection.some((s) => this._getItemKey(s, -1, false) === this._getItemKey(item, index, false));
+  }
+  _emitMoveToTarget() {
+    this.dispatchEvent(new CustomEvent("move-to-target", {
+      bubbles: true,
+      composed: true,
+      detail: { items: [...this._sourceSelection], source: [...this._source], target: [...this._target] }
+    }));
+  }
+  _emitMoveToSource() {
+    this.dispatchEvent(new CustomEvent("move-to-source", {
+      bubbles: true,
+      composed: true,
+      detail: { items: [...this._targetSelection], source: [...this._source], target: [...this._target] }
+    }));
+  }
+  _emitSelectionChangeSource() {
+    this.dispatchEvent(new CustomEvent("selection-change-source", {
+      bubbles: true,
+      composed: true,
+      detail: { selection: [...this._sourceSelection] }
+    }));
+  }
+  _emitSelectionChangeTarget() {
+    this.dispatchEvent(new CustomEvent("selection-change-target", {
+      bubbles: true,
+      composed: true,
+      detail: { selection: [...this._targetSelection] }
+    }));
+  }
+  render() {
+    const dSrc = this._getDisplaySource();
+    const dTgt = this._getDisplayTarget();
+    const hasSel = this.selectionMode;
+    const srcItems = dSrc.length === 0 ? `<li class="empty-message">${this.filter ? "Nenhum resultado" : "Nenhum item"}</li>` : dSrc.map((item, i) => `<li class="list-item${this._isSourceSelected(item, i) ? " selected" : ""}" data-index="${i}" data-list="source" tabindex="0">${hasSel ? '<input type="checkbox" class="checkbox"' + (this._isSourceSelected(item, i) ? " checked" : "") + " />" : ""}<span class="item-content">${this._optionTemplate ? this._optionTemplate(item) : esc(this._getItemLabel(item))}</span></li>`).join("");
+    const tgtItems = dTgt.length === 0 ? `<li class="empty-message">${this.filter ? "Nenhum resultado" : "Nenhum selecionado"}</li>` : dTgt.map((item, i) => `<li class="list-item${this._isTargetSelected(item, i) ? " selected" : ""}" data-index="${i}" data-list="target" tabindex="0">${hasSel ? '<input type="checkbox" class="checkbox"' + (this._isTargetSelected(item, i) ? " checked" : "") + " />" : ""}<span class="item-content">${this._optionTemplate ? this._optionTemplate(item) : esc(this._getItemLabel(item))}</span></li>`).join("");
+    this.setTemplate(`<div class="container"><div class="list-container"><div class="list-label">${esc(this.sourceLabel)} (${this._source.length})</div>${this.filter ? '<div class="filter-wrapper"><input type="text" class="filter-input source-filter" placeholder="' + this.filterPlaceholder + '" value="' + esc(this._sourceFilterValue) + '" /></div>' : ""}<div class="list-wrapper"><ul class="list source-list" role="listbox" tabindex="0">${srcItems}</ul></div></div><div class="controls"><button class="control-btn" data-action="move-target" title="Mover para destino">&gt;</button><button class="control-btn" data-action="move-all-target" title="Mover todos">&gt;&gt;</button><button class="control-btn" data-action="move-source" title="Mover para origem">&lt;</button><button class="control-btn" data-action="move-all-source" title="Mover todos">&lt;&lt;</button></div><div class="list-container"><div class="list-label">${esc(this.targetLabel)} (${this._target.length})</div>${this.filter ? '<div class="filter-wrapper"><input type="text" class="filter-input target-filter" placeholder="' + this.filterPlaceholder + '" value="' + esc(this._targetFilterValue) + '" /></div>' : ""}<div class="list-wrapper"><ul class="list target-list" role="listbox" tabindex="0">${tgtItems}</ul></div></div></div>`);
+    this._attachListeners();
+  }
+  _attachListeners() {
+    const srcFilter = this.root.querySelector(".source-filter");
+    if (srcFilter) srcFilter.addEventListener("input", (e) => {
+      this.sourceFilterValue = e.target.value;
+    });
+    const tgtFilter = this.root.querySelector(".target-filter");
+    if (tgtFilter) tgtFilter.addEventListener("input", (e) => {
+      this.targetFilterValue = e.target.value;
+    });
+    this.root.querySelectorAll(".list").forEach((list) => {
+      list.addEventListener("click", (e) => {
+        const t = e.target;
+        const el = t.closest(".list-item");
+        if (!el) return;
+        const isSrc = el.dataset.list === "source";
+        const idx = Number(el.dataset.index);
+        const item = (isSrc ? this._getDisplaySource() : this._getDisplayTarget())[idx];
+        if (isSrc) this._toggleSourceSelection(item, idx);
+        else this._toggleTargetSelection(item, idx);
+      });
+    });
+    this.root.querySelectorAll(".control-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        switch (btn.dataset.action) {
+          case "move-target":
+            this._moveToTarget();
+            break;
+          case "move-all-target":
+            this._moveAllToTarget();
+            break;
+          case "move-source":
+            this._moveToSource();
+            break;
+          case "move-all-source":
+            this._moveAllToSource();
+            break;
+        }
+      });
+    });
+    this._updateControlsState();
+  }
+  _updateControlsState() {
+    this.root.querySelectorAll(".control-btn").forEach((btn) => {
+      const a = btn.dataset.action;
+      btn.disabled = a === "move-target" && this._sourceSelection.length === 0 || a === "move-all-target" && this._source.length === 0 || a === "move-source" && this._targetSelection.length === 0 || a === "move-all-source" && this._target.length === 0;
+    });
+  }
+  _moveToTarget() {
+    if (!this._sourceSelection.length) return;
+    const items = [...this._sourceSelection];
+    this._source = this._source.filter((s) => !items.some((i) => this._getItemKey(i, -1, true) === this._getItemKey(s, -1, true)));
+    this._target = [...this._target, ...items];
+    this._sourceSelection = [];
+    this._filteredSource = null;
+    this._filteredTarget = null;
+    this.render();
+    this._emitMoveToTarget();
+  }
+  _moveToSource() {
+    if (!this._targetSelection.length) return;
+    const items = [...this._targetSelection];
+    this._target = this._target.filter((t) => !items.some((i) => this._getItemKey(i, -1, false) === this._getItemKey(t, -1, false)));
+    this._source = [...this._source, ...items];
+    this._targetSelection = [];
+    this._filteredSource = null;
+    this._filteredTarget = null;
+    this.render();
+    this._emitMoveToSource();
+  }
+  _moveAllToTarget() {
+    const items = [...this._source];
+    this._source = [];
+    this._target = [...this._target, ...items];
+    this._sourceSelection = [];
+    this._filteredSource = null;
+    this._filteredTarget = null;
+    this.render();
+    this._emitMoveToTarget();
+  }
+  _moveAllToSource() {
+    const items = [...this._target];
+    this._target = [];
+    this._source = [...this._source, ...items];
+    this._targetSelection = [];
+    this._filteredSource = null;
+    this._filteredTarget = null;
+    this.render();
+    this._emitMoveToSource();
+  }
+  _toggleSourceSelection(item, index) {
+    if (!this.selectionMode) return;
+    const key2 = this._getItemKey(item, index, true);
+    const idx = this._sourceSelection.findIndex((s) => this._getItemKey(s, -1, true) === key2);
+    if (idx >= 0) {
+      this._sourceSelection.splice(idx, 1);
+    } else if (this.selectionMode === "multiple") {
+      this._sourceSelection.push(item);
+    } else {
+      this._sourceSelection = [item];
+    }
+    this._emitSelectionChangeSource();
+    this.render();
+  }
+  _toggleTargetSelection(item, index) {
+    if (!this.selectionMode) return;
+    const key2 = this._getItemKey(item, index, false);
+    const idx = this._targetSelection.findIndex((s) => this._getItemKey(s, -1, false) === key2);
+    if (idx >= 0) {
+      this._targetSelection.splice(idx, 1);
+    } else if (this.selectionMode === "multiple") {
+      this._targetSelection.push(item);
+    } else {
+      this._targetSelection = [item];
+    }
+    this._emitSelectionChangeTarget();
+    this.render();
+  }
+};
+_FxPickList.styles = css`
+    :host {
+      display: block;
+      font-family: var(--fx-font-family);
+      font-size: var(--fx-font-size);
+    }
+    .container {
+      display: flex;
+      gap: var(--fx-space-md);
+      align-items: stretch;
+    }
+    .list-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: var(--fx-space-sm);
+    }
+    .list-label {
+      font-weight: 600;
+      color: var(--fx-text-default);
+      font-size: calc(var(--fx-font-size) - 1px);
+    }
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: var(--fx-space-xs);
+      justify-content: center;
+    }
+    .list-wrapper {
+      flex: 1;
+    }
+    .filter-wrapper {
+      margin-bottom: var(--fx-space-sm);
+    }
+    .filter-input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: var(--fx-space-sm) var(--fx-space-md);
+      border: 1px solid var(--fx-border-default);
+      border-radius: var(--fx-radius-md);
+      font-family: inherit;
+      font-size: inherit;
+      color: var(--fx-text-default);
+      background: var(--fx-surface-background);
+      transition: border-color var(--fx-motion-duration-fast) var(--fx-motion-easing);
+    }
+    .filter-input:focus {
+      outline: none;
+      border-color: var(--fx-color-primary);
+      box-shadow: var(--fx-effect-focus-ring, none);
+    }
+    .filter-input::placeholder {
+      color: var(--fx-text-muted);
+    }
+    .list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      border: 1px solid var(--fx-border-default);
+      border-radius: var(--fx-radius-md);
+      overflow: hidden;
+      min-height: 150px;
+    }
+    :host([striped]) .list-item:nth-child(even) {
+      background: var(--fx-surface-surface);
+    }
+    .list-item {
+      display: flex;
+      align-items: center;
+      gap: var(--fx-space-sm);
+      padding: var(--fx-space-sm) var(--fx-space-md);
+      background: var(--fx-surface-background);
+      border-bottom: 1px solid var(--fx-border-default);
+      cursor: pointer;
+      user-select: none;
+      transition: background-color var(--fx-motion-duration-fast) var(--fx-motion-easing);
+    }
+    .list-item:last-child {
+      border-bottom: none;
+    }
+    .list-item:hover {
+      background: var(--fx-surface-surface-hover);
+    }
+    .list-item.selected {
+      background: color-mix(in srgb, var(--fx-color-primary) 10%, transparent);
+    }
+    .list-item:focus-visible {
+      outline: none;
+      background: color-mix(in srgb, var(--fx-color-primary) 15%, transparent);
+    }
+    .checkbox {
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .item-content {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .empty-message {
+      padding: var(--fx-space-md);
+      text-align: center;
+      color: var(--fx-text-muted);
+      font-style: italic;
+    }
+    .control-btn {
+      padding: var(--fx-space-sm);
+      border: 1px solid var(--fx-border-default);
+      border-radius: var(--fx-radius-md);
+      background: var(--fx-surface-background);
+      color: var(--fx-text-default);
+      cursor: pointer;
+      font-size: calc(var(--fx-font-size) + 2px);
+      transition: all var(--fx-motion-duration-fast) var(--fx-motion-easing);
+    }
+    .control-btn:hover:not(:disabled) {
+      background: var(--fx-surface-surface-hover);
+      border-color: var(--fx-color-primary);
+      color: var(--fx-color-primary);
+    }
+    .control-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  `;
+let FxPickList = _FxPickList;
+function esc(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function defineFxPickList() {
+  return defineElement("fx-picklist", FxPickList);
+}
 export {
   FX_JSX_TYPES,
   FenixToast,
@@ -4437,8 +5961,11 @@ export {
   FxElement,
   FxFloatlabel,
   FxInput,
+  FxKnob,
   FxMultiselect,
+  FxOrderList,
   FxPagination,
+  FxPickList,
   FxProgress,
   FxRadio,
   FxSelect,
@@ -4461,6 +5988,8 @@ export {
   defaultTokens,
   defineCustomPreset,
   defineElement,
+  defineFxOrderList,
+  defineFxPickList,
   kebabToCamel,
   lightTokens,
   listPresets,

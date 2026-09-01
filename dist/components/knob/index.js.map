@@ -1,0 +1,1 @@
+{"version":3,"file":"index.js","sources":["../../../src/components/knob/index.ts"],"sourcesContent":["import { FxKnob, defineFxKnob } from './knob';\r\n\r\nexport { FxKnob };\r\n\r\ndefineFxKnob();\r\n\r\ndeclare global {\r\n  interface HTMLElementTagNameMap {\r\n    'fx-knob': FxKnob;\r\n  }\r\n}"],"names":[],"mappings":";;AAIA,aAAA;"}

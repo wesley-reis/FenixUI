@@ -44,3 +44,6 @@ export * from './components/dropdown';
 export * from './components/drawer';
 export * from './components/pagination';
 export * from './components/autocomplete';
+export * from './components/knob';
+export * from './components/orderlist';
+export * from './components/picklist';
