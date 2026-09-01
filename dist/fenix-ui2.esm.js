@@ -4007,7 +4007,7 @@ const _FxDropdown = class _FxDropdown extends FxElement {
         ${label} ▾
       </span>
       <div class="panel" role="menu" part="panel">
-        ${items.length ? items.map((i) => `<div class="item-slot"><slot name="_${i.getAttribute("value") ?? ""}"></slot></div>`) : '<div class="empty">Nenhuma ação</div>'}
+        ${items.length ? "" : '<div class="empty">Nenhuma ação</div>'}
         <slot></slot>
       </div>
     `);

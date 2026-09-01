@@ -62,6 +62,92 @@
       /* Badge de versão em tom translúcido sobre o header */
       header fx-badge { --fx-color-warning: rgba(255, 255, 255, .22); --fx-text-default: #fff; }
 
+      /* ---------- Search Box ---------- */
+      .search-box {
+        position: relative;
+        display: flex;
+        align-items: center;
+        min-width: 220px;
+        max-width: 280px;
+      }
+      .search-icon {
+        position: absolute;
+        left: 10px;
+        width: 16px;
+        height: 16px;
+        color: rgba(255, 255, 255, .6);
+        pointer-events: none;
+        z-index: 1;
+      }
+      .search-box input {
+        width: 100%;
+        padding: 8px 12px 8px 34px;
+        font: inherit;
+        font-size: .875rem;
+        border: 1px solid rgba(255, 255, 255, .35);
+        border-radius: var(--fx-radius-sm);
+        background: rgba(255, 255, 255, .12);
+        color: #fff;
+        outline: none;
+        transition: all .2s ease;
+      }
+      .search-box input::placeholder { color: rgba(255, 255, 255, .5); }
+      .search-box input:focus {
+        background: rgba(255, 255, 255, .2);
+        border-color: rgba(255, 255, 255, .55);
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, .1);
+      }
+      .search-results {
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        right: 0;
+        background: var(--fx-surface-background);
+        border: 1px solid var(--fx-border-default);
+        border-radius: var(--fx-radius-md);
+        box-shadow: var(--fx-shadow-lg);
+        max-height: 320px;
+        overflow-y: auto;
+        display: none;
+        z-index: 100;
+      }
+      .search-results.active { display: block; }
+      .search-results:empty { display: none; }
+      .search-result-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        cursor: pointer;
+        color: var(--fx-text-default);
+        border-bottom: 1px solid var(--fx-border-default);
+        transition: background .15s ease;
+      }
+      .search-result-item:last-child { border-bottom: none; }
+      .search-result-item:hover,
+      .search-result-item.active {
+        background: color-mix(in srgb, var(--fx-color-primary) 10%, var(--fx-surface-background));
+      }
+      .search-result-item .tag-name {
+        font-family: ui-monospace, Consolas, monospace;
+        font-size: .85rem;
+        font-weight: 600;
+        color: var(--fx-color-primary);
+      }
+      .search-result-item .component-title {
+        font-size: .8rem;
+        color: var(--fx-text-muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .search-results .no-results {
+        padding: 16px;
+        text-align: center;
+        color: var(--fx-text-muted);
+        font-size: .85rem;
+      }
+
       header .logo-link {
         display: inline-flex; align-items: center; gap: .6rem;
         text-decoration: none; color: #fff;
@@ -223,6 +309,14 @@
       </a>
       <fx-badge id="version-badge" variant="warning" round></fx-badge>
       <div class="spacer"></div>
+      <div class="search-box" id="search-box">
+        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="search-input" placeholder="Buscar componente..." autocomplete="off" />
+        <div class="search-results" id="search-results"></div>
+      </div>
       <button id="mode-toggle" aria-label="Alternar tema" title="Alternar tema">
         <!-- Ícone de Lua (modo escuro) -->
         <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"

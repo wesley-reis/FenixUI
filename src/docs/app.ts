@@ -542,6 +542,122 @@ function syncHeaderControls(preset: string, mode: 'light' | 'dark'): void {
   if (thPreset) thPreset.value = preset;
 }
 
+/* ------------------------------------------------------------------ */
+/* Search com Autocomplete                                            */
+/* ------------------------------------------------------------------ */
+
+function setupSearch(): void {
+  const searchBox = document.getElementById('search-box') as HTMLElement;
+  const searchInput = document.getElementById('search-input') as HTMLInputElement;
+  const searchResults = document.getElementById('search-results') as HTMLElement;
+
+  if (!searchBox || !searchInput || !searchResults) return;
+
+  // Mapeia componentes para busca: { tag, title, group }
+  const searchableItems = components.map((c) => ({
+    tag: c.tag,
+    title: c.title,
+    group: c.group,
+  }));
+
+  let activeIndex = -1;
+
+  function renderResults(query: string): void {
+    const normalizedQuery = query.toLowerCase().trim();
+    if (!normalizedQuery) {
+      searchResults.classList.remove('active');
+      searchResults.innerHTML = '';
+      activeIndex = -1;
+      return;
+    }
+
+    const matches = searchableItems.filter(
+      (item) =>
+        item.tag.toLowerCase().includes(normalizedQuery) ||
+        item.title.toLowerCase().includes(normalizedQuery) ||
+        item.group.toLowerCase().includes(normalizedQuery),
+    );
+
+    if (matches.length === 0) {
+      searchResults.innerHTML = '<div class="no-results">Nenhum componente encontrado</div>';
+      searchResults.classList.add('active');
+      activeIndex = -1;
+      return;
+    }
+
+    searchResults.innerHTML = matches
+      .map(
+        (item, idx) => `
+        <div class="search-result-item" data-tag="${item.tag}" data-index="${idx}">
+          <span class="tag-name">&lt;${item.tag}&gt;</span>
+          <span class="component-title">${item.title}</span>
+        </div>
+      `,
+      )
+      .join('');
+    searchResults.classList.add('active');
+    activeIndex = -1;
+  }
+
+  function navigateTo(tag: string): void {
+    searchInput.value = '';
+    searchResults.classList.remove('active');
+    searchResults.innerHTML = '';
+    window.location.hash = `#/${tag}`;
+  }
+
+  // Input event
+  searchInput.addEventListener('input', () => {
+    renderResults(searchInput.value);
+  });
+
+  // Keyboard navigation
+  searchInput.addEventListener('keydown', (e) => {
+    const items = searchResults.querySelectorAll('.search-result-item');
+    if (!items.length) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      activeIndex = Math.min(activeIndex + 1, items.length - 1);
+      items.forEach((el, i) => el.classList.toggle('active', i === activeIndex));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      activeIndex = Math.max(activeIndex - 1, 0);
+      items.forEach((el, i) => el.classList.toggle('active', i === activeIndex));
+    } else if (e.key === 'Enter' && activeIndex >= 0) {
+      e.preventDefault();
+      const activeItem = items[activeIndex] as HTMLElement;
+      const tag = activeItem.dataset.tag;
+      if (tag) navigateTo(tag);
+    } else if (e.key === 'Escape') {
+      searchResults.classList.remove('active');
+      searchInput.blur();
+    }
+  });
+
+  // Click on result
+  searchResults.addEventListener('click', (e) => {
+    const target = (e.target as HTMLElement).closest('.search-result-item') as HTMLElement;
+    if (target?.dataset.tag) {
+      navigateTo(target.dataset.tag);
+    }
+  });
+
+  // Close on outside click
+  document.addEventListener('click', (e) => {
+    if (!searchBox.contains(e.target as Node)) {
+      searchResults.classList.remove('active');
+    }
+  });
+
+  // Focus: show all if has value
+  searchInput.addEventListener('focus', () => {
+    if (searchInput.value.trim()) {
+      renderResults(searchInput.value);
+    }
+  });
+}
+
 function setupHeader(): void {
   // Versão dinâmica lida do package.json em build (injetada via `define`).
   const versionBadge = document.getElementById('version-badge');
@@ -830,6 +946,7 @@ document.addEventListener('click', (e: MouseEvent) => {
 
 applyPreset('fenix', 'light');
 setupHeader();
+setupSearch();
 buildSidebar();
 
 /** Promise resolvida quando o render da rota atual finaliza — útil para testes. */
