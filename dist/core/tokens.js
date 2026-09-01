@@ -1,8 +1,8 @@
 const lightTokens = {
   color: {
-    primary: "#C72703",
-    secondary: "#f43f5e",
-    success: "#10b981",
+    primary: "#c2410c",
+    secondary: "#991B1B",
+    success: "#10b972",
     warning: "#f59e0b",
     danger: "#f43f5e",
     info: "#0ea5e9"
@@ -13,7 +13,7 @@ const lightTokens = {
     "surface-hover": "#eef2f7"
   },
   text: {
-    default: "#0f172a",
+    default: "#10182c",
     muted: "#64748b",
     disabled: "#94a3b8"
   },

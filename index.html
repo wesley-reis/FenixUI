@@ -9,7 +9,7 @@
       :root {
         /* A logo é a referência de escala: a altura do header deriva dela. */
         --doc-logo-h: 34px;
-        --doc-header-h: calc(var(--doc-logo-h) + 26px);
+        --doc-header-h: calc(var(--doc-logo-h) + 16px);
         --doc-sidebar-w: 250px;
         font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
       }
@@ -37,22 +37,40 @@
         color: #fff; cursor: pointer;
       }
       header select option { color: var(--fx-text-default); background: var(--fx-surface); }
-      /* O próprio design system pinta o botão do header via tokens:
-         dentro do shadow do fx-button, as cores passam a ser brancas. */
-      header fx-button#mode-toggle {
-        --fx-color-primary: #ffffff;
-        --fx-color-secondary: #ffffff;
-        --fx-text-default: #ffffff;
-        --fx-surface-hover: rgba(255, 255, 255, .18);
-        --fx-border-default: rgba(255, 255, 255, .5);
+      /* Botão de toggle do tema (lua/sol) */
+      #mode-toggle {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 40px; height: 40px; padding: 0;
+        border: 1px solid rgba(255, 255, 255, .45);
+        border-radius: var(--fx-radius-sm);
+        background: rgba(255, 255, 255, .14);
+        color: #fff; cursor: pointer;
+        transition: background .2s, transform .2s;
+        flex: none;
+      }
+      #mode-toggle:hover {
+        background: rgba(255, 255, 255, .24);
+        transform: scale(1.05);
+      }
+      #mode-toggle svg {
+        width: 20px; height: 20px;
+        transition: transform .3s ease;
+      }
+      #mode-toggle:hover svg {
+        transform: rotate(15deg);
       }
       /* Badge de versão em tom translúcido sobre o header */
       header fx-badge { --fx-color-warning: rgba(255, 255, 255, .22); --fx-text-default: #fff; }
 
-      header .logo-link { display: inline-flex; align-items: center; gap: .6rem; text-decoration: none; color: #fff; }
+      header .logo-link {
+        display: inline-flex; align-items: center; gap: .6rem;
+        text-decoration: none; color: #fff;
+        height: 100%; padding:0;
+      }
       header .logo {
-        height: var(--doc-logo-h); width: auto; display: block;
-        border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
+        height: 100%; width: auto; display: block;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
+        object-fit: contain;
       }
       header .brand {
         font-size: 1.05rem; font-weight: 700; letter-spacing: -.02em;
@@ -185,13 +203,38 @@
   </head>
   <body>
     <header>
-      <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Abrir menu" aria-expanded="false">☰</button>
+      <div class="bar-black" style="    background: black;
+                width: 64px;
+                height: 100%;
+                margin: -20px;
+                padding-left: 20px;">
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Abrir menu" aria-expanded="false">☰</button>
+      </div>
       <a class="logo-link" href="#/introduction">
         <img class="logo" src="/src/assets/images/logo-fenix-ui.jpg" alt="FenixUI" />
       </a>
       <fx-badge id="version-badge" variant="warning" round></fx-badge>
       <div class="spacer"></div>
-      <fx-button id="mode-toggle" variant="ghost">🌙 Modo escuro</fx-button>
+      <button id="mode-toggle" aria-label="Alternar tema" title="Alternar tema">
+        <!-- Ícone de Lua (modo escuro) -->
+        <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+        <!-- Ícone de Sol (modo claro) - oculto por padrão -->
+        <svg id="icon-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+      </button>
     </header>
     <div class="sidebar-overlay" id="sidebar-overlay"></div>
 

@@ -529,8 +529,13 @@ let currentMode: 'light' | 'dark' = 'light';
 function syncHeaderControls(preset: string, mode: 'light' | 'dark'): void {
   currentPreset = preset;
   currentMode = mode;
-  document.getElementById('mode-toggle')!.textContent =
-    mode === 'dark' ? '☀️ Modo claro' : '🌙 Modo escuro';
+  // Alterna ícones SVG: lua (modo escuro) / sol (modo claro)
+  const moonIcon = document.getElementById('icon-moon') as SVGElement | null;
+  const sunIcon = document.getElementById('icon-sun') as SVGElement | null;
+  if (moonIcon && sunIcon) {
+    moonIcon.style.display = mode === 'dark' ? 'none' : 'block';
+    sunIcon.style.display = mode === 'dark' ? 'block' : 'none';
+  }
   const thMode = document.getElementById('th-mode') as HTMLSelectElement | null;
   if (thMode) thMode.value = mode;
   const thPreset = document.getElementById('th-preset') as HTMLSelectElement | null;

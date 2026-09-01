@@ -28,7 +28,7 @@ export const lightTokens: FenixTokens = {
 	color: {
 		primary: "#c2410c",
 		secondary: "#991B1B",
-		success: "#10b981",
+		success: "#10b972",
 		warning: "#f59e0b",
 		danger: "#f43f5e",
 		info: "#0ea5e9",
