@@ -1,7 +1,7 @@
 const lightTokens = {
   color: {
-    primary: "#4f46e5",
-    secondary: "#8b5cf6",
+    primary: "#C72703",
+    secondary: "#f43f5e",
     success: "#10b981",
     warning: "#f59e0b",
     danger: "#f43f5e",

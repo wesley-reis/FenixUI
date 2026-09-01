@@ -31,9 +31,11 @@ import "./components/drawer/index.js";
 import "./components/pagination/index.js";
 import "./components/autocomplete/index.js";
 import "./components/knob/index.js";
-import { FxOrderList, defineFxOrderList } from "./components/orderlist/orderlist.js";
-import { FxPickList, defineFxPickList } from "./components/picklist/picklist.js";
+import "./components/orderlist/index.js";
+import "./components/picklist/index.js";
+import "./components/accordion/index.js";
 import { FenixToast, FxToast } from "./components/toast/toast.js";
+import { FxAccordion, FxAccordionPanel } from "./components/accordion/accordion.js";
 import { FxAlert } from "./components/alert/alert.js";
 import { FxAutocomplete } from "./components/autocomplete/autocomplete.js";
 import { FxBadge } from "./components/badge/badge.js";
@@ -48,7 +50,9 @@ import { FxFloatlabel } from "./components/floatlabel/floatlabel.js";
 import { FxInput } from "./components/input/input.js";
 import { FxKnob } from "./components/knob/knob.js";
 import { FxMultiselect } from "./components/multiselect/multiselect.js";
+import { FxOrderList } from "./components/orderlist/orderlist.js";
 import { FxPagination } from "./components/pagination/pagination.js";
+import { FxPickList } from "./components/picklist/picklist.js";
 import { FxProgress } from "./components/progress/progress.js";
 import { FxRadio } from "./components/radio/radio.js";
 import { FxSelect } from "./components/select/select.js";
@@ -63,6 +67,8 @@ export {
   FX_JSX_TYPES,
   FenixToast,
   FenixUI,
+  FxAccordion,
+  FxAccordionPanel,
   FxAlert,
   FxAutocomplete,
   FxBadge,
@@ -104,8 +110,6 @@ export {
   defaultTokens,
   defineCustomPreset,
   defineElement,
-  defineFxOrderList,
-  defineFxPickList,
   kebabToCamel,
   lightTokens,
   listPresets,
