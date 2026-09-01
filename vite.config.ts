@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import { fileURLToPath } from 'node:url';
+import { readFileSync } from 'node:fs';
 
 const here = fileURLToPath(new URL('.', import.meta.url));
 
@@ -14,6 +15,12 @@ const here = fileURLToPath(new URL('.', import.meta.url));
  * único arquivo no consumo por bundler simples.
  */
 export default defineConfig({
+  /** Versão lida do package.json — usada pelo badge do header da doc em dev. */
+  define: {
+    __APP_VERSION__: JSON.stringify(
+      JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')).version,
+    ),
+  },
   build: {
     outDir: 'dist',
     sourcemap: true,

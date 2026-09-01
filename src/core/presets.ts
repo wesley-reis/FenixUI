@@ -45,6 +45,9 @@ export const themePresets = {
 				danger: "#be123c",
 			},
 			radius: { sm: "6px", md: "10px", lg: "16px" },
+			effect: {
+				"focus-ring": "none",
+			},
 		},
 	}),
 	shiryu: register({
@@ -114,6 +117,9 @@ export const themePresets = {
 				info: "#84cc16",
 			},
 			radius: { sm: "6px", md: "12px", lg: "20px" },
+			effect: {
+				"focus-ring": "none",
+			},
 		},
 	}),
 } as const;

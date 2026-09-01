@@ -3,13 +3,13 @@ export interface OrderListItem {
     [key: string]: unknown;
 }
 /**
- * <fx-orderlist> - Componente para ordenar uma coleção de itens.
+ * <fx-orderlist> - Componente para ordenar uma colecao de itens.
  *
- * Permite reordenar itens arrastando ou usando botões de controle.
- * Suporta filtro, seleção, checkbox e templates customizados.
+ * Permite reordenar itens arrastando ou usando botoes de controle.
+ * Suporta filtro, selecao, checkbox e templates customizados.
  *
  * Atributos: data, data-key, filter, filter-by, filter-placeholder, breakpoint,
- * dragdrop, selection-mode, striped.
+ * dragdrop, selection-mode, striped, show-select-all.
  * Evento: `reorder` (composed, detail: { items }).
  * Evento: `selection-change` (composed, detail: { selection }).
  */
@@ -39,10 +39,13 @@ export declare class FxOrderList extends FxElement {
     set striped(v: boolean);
     get selectionMode(): string;
     set selectionMode(v: string);
+    get showSelectAll(): boolean;
+    set showSelectAll(v: boolean);
     get filterValue(): string;
     set filterValue(v: string);
     private _filterValue;
     private _draggedIndex;
+    private _listenersAttached;
     private _optionTemplate;
     setOptionTemplate(template: (item: OrderListItem) => string): void;
     protected connectedCallback(): void;
@@ -58,12 +61,17 @@ export declare class FxOrderList extends FxElement {
     private _emitReorder;
     private _emitSelectionChange;
     private _toggleSelection;
+    private _selectAll;
+    private _deselectAll;
+    private _toggleSelectAll;
     protected render(): void;
     private _attachListeners;
-    private _attachDragAndDrop;
+    private _attachItemListeners;
+    private _updateListDisplay;
     private _handleMoveAction;
-    private _moveSelectedTo;
-    private _moveSelectedBy;
+    private _moveSelectedToStart;
+    private _moveSelectedToEnd;
+    private _moveSelectedByOne;
     private _updateControlsState;
 }
 export declare function defineFxOrderList(): typeof FxOrderList;

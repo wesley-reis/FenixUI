@@ -4,11 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FenixUI — Documentação</title>
+    <link rel="icon" type="image/jpeg" href="/src/assets/images/icon-fenix-ui.jpg" />
     <style>
       :root {
+        /* A logo é a referência de escala: a altura do header deriva dela. */
+        --doc-logo-h: 34px;
+        --doc-header-h: calc(var(--doc-logo-h) + 16px);
         --doc-sidebar-w: 250px;
-        --doc-header-h: 60px;
         font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+      }
+      @media (max-width: 767px) {
+        :root { --doc-logo-h: 26px; }
       }
       * { box-sizing: border-box; }
       body { margin: 0; background: var(--fx-surface-background); color: var(--fx-text-default); transition: background .25s; }
@@ -24,7 +30,6 @@
         z-index: calc(var(--fx-z-dropdown, 1000) + 10);
         transition: background .25s;
       }
-      header h1 { font-size: 1.1rem; margin: 0; letter-spacing: -.02em; }
       header .spacer { flex: 1; }
       header select {
         font: inherit; padding: .4rem .7rem; border-radius: var(--fx-radius-sm);
@@ -32,24 +37,69 @@
         color: #fff; cursor: pointer;
       }
       header select option { color: var(--fx-text-default); background: var(--fx-surface); }
-      /* O próprio design system pinta o botão do header via tokens:
-         dentro do shadow do fx-button, as cores passam a ser brancas. */
-      header fx-button#mode-toggle {
-        --fx-color-primary: #ffffff;
-        --fx-color-secondary: #ffffff;
-        --fx-text-default: #ffffff;
-        --fx-surface-hover: rgba(255, 255, 255, .18);
-        --fx-border-default: rgba(255, 255, 255, .5);
+      /* Botão de toggle do tema (lua/sol) */
+      #mode-toggle {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 40px; height: 40px; padding: 0;
+        border: 1px solid rgba(255, 255, 255, .45);
+        border-radius: var(--fx-radius-sm);
+        background: rgba(255, 255, 255, .14);
+        color: #fff; cursor: pointer;
+        transition: background .2s, transform .2s;
+        flex: none;
+      }
+      #mode-toggle:hover {
+        background: rgba(255, 255, 255, .24);
+        transform: scale(1.05);
+      }
+      #mode-toggle svg {
+        width: 20px; height: 20px;
+        transition: transform .3s ease;
+      }
+      #mode-toggle:hover svg {
+        transform: rotate(15deg);
       }
       /* Badge de versão em tom translúcido sobre o header */
       header fx-badge { --fx-color-warning: rgba(255, 255, 255, .22); --fx-text-default: #fff; }
+
+      header .logo-link {
+        display: inline-flex; align-items: center; gap: .6rem;
+        text-decoration: none; color: #fff;
+        height: 100%; padding:0;
+      }
+      header .logo {
+        height: 100%; width: auto; display: block;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
+        object-fit: contain;
+      }
+      header .brand {
+        font-size: 1.05rem; font-weight: 700; letter-spacing: -.02em;
+        display: inline-flex; align-items: center; gap: .55rem;
+      }
+
+      /* ---------- Hamburger (somente mobile) ---------- */
+      .sidebar-toggle {
+        display: none;
+        width: 40px; height: 40px; margin-left: -.25rem;
+        border: 1px solid rgba(255, 255, 255, .45); border-radius: var(--fx-radius-sm);
+        background: rgba(255, 255, 255, .14); color: #fff;
+        font-size: 1.15rem; line-height: 1; cursor: pointer;
+        align-items: center; justify-content: center; flex: none;
+      }
+      .sidebar-toggle:hover { background: rgba(255, 255, 255, .24); }
+      .sidebar-overlay {
+        display: none; position: fixed; inset: var(--doc-header-h) 0 0 0;
+        background: rgba(2, 6, 23, .5); z-index: calc(var(--fx-z-dropdown, 1000) + 8);
+        backdrop-filter: blur(2px);
+      }
 
       /* ---------- Layout ---------- */
       aside {
         position: fixed; top: var(--doc-header-h); bottom: 0; left: 0;
         width: var(--doc-sidebar-w); overflow-y: auto;
         border-right: 1px solid var(--fx-border-default);
-        background: var(--fx-surface); padding: 1rem .75rem;
+        background: var(--fx-surface-background); padding: 1rem .75rem;
+        transition: transform .25s var(--fx-motion-easing, ease), background .25s;
       }
       aside .group { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em;
         color: var(--fx-text-muted); margin: 1rem .5rem .35rem; }
@@ -61,6 +111,24 @@
       aside a.active { background: color-mix(in srgb, var(--fx-color-primary) 14%, transparent);
         color: var(--fx-color-primary); font-weight: 600; }
       main { margin-left: var(--doc-sidebar-w); padding: calc(var(--doc-header-h) + 2rem) 2.5rem 4rem; max-width: 980px; }
+
+      /* ---------- Mobile (<768px): sidebar vira drawer ---------- */
+      @media (max-width: 767px) {
+        .sidebar-toggle { display: inline-flex; }
+        aside {
+          transform: translateX(-105%);
+          box-shadow: var(--fx-shadow-lg);
+          width: min(280px, 82vw);
+          z-index: calc(var(--fx-z-dropdown, 1000) + 9);
+        }
+        body.sidebar-open aside { transform: translateX(0); }
+        body.sidebar-open .sidebar-overlay { display: block; }
+        main { margin-left: 0; padding: calc(var(--doc-header-h) + 1.25rem) 1rem 3rem; }
+        main h2 { font-size: 1.35rem; }
+      }
+      @media (min-width: 768px) and (max-width: 1023px) {
+        main { margin-left: var(--doc-sidebar-w); padding: calc(var(--doc-header-h) + 1.5rem) 1.5rem 3rem; }
+      }
 
       /* ---------- Conteúdo ---------- */
       main h2 { font-size: 1.65rem; margin: 0 0 .35rem; letter-spacing: -.03em; }
@@ -78,6 +146,35 @@
         border-top: 1px dashed var(--fx-border-default); font-size: .85rem; }
       .demo-controls label { display: inline-flex; align-items: center; gap: .45rem; cursor: pointer; }
       .demo-controls select { font: inherit; padding: .15rem .4rem; }
+      .demo-controls {
+        background: color-mix(in srgb, var(--fx-surface-hover) 45%, transparent);
+      }
+
+      /* ---------- Cards de exemplo: modelo + código em par ---------- */
+      .examples { display: flex; flex-direction: column; gap: 1.25rem; margin-bottom: 2rem; }
+      .example-card {
+        border: 1px solid var(--fx-border-default); border-radius: var(--fx-radius-md);
+        background: var(--fx-surface);
+        transition: box-shadow .2s var(--fx-motion-easing, ease), border-color .2s var(--fx-motion-easing, ease);
+      }
+      .example-card:hover {
+        box-shadow: var(--fx-shadow-md);
+        border-color: color-mix(in srgb, var(--fx-color-primary) 35%, var(--fx-border-default));
+      }
+      .example-title {
+        padding: .7rem 1.1rem .4rem; font-weight: 700;
+        color: color-mix(in srgb, var(--fx-color-primary) 80%, var(--fx-text-default));
+        text-transform: uppercase; letter-spacing: .06em; font-size: .74rem;
+      }
+      .example-stage {
+        padding: 1.4rem 1.1rem; display: flex; flex-wrap: wrap; gap: .8rem; align-items: center;
+        background:
+          repeating-conic-gradient(color-mix(in srgb, var(--fx-border-default) 30%, transparent) 0% 25%, transparent 0% 50%)
+          0 0 / 18px 18px;
+      }
+      .example-code { margin: 0 !important; border-top: 1px dashed var(--fx-border-default); }
+      .example-code pre { border: none; border-radius: 0; background: color-mix(in srgb, var(--fx-surface-hover) 60%, transparent); }
+      .example-code .copy-btn { opacity: 1; }
       .code-block { position: relative; margin: 0 0 1.8rem; }
       .code-block pre {
         margin: 0; background: var(--fx-surface-hover); border: 1px solid var(--fx-border-default);
@@ -106,11 +203,40 @@
   </head>
   <body>
     <header>
-      <h1>FenixUI</h1>
-      <fx-badge variant="warning" round>v0.1.0</fx-badge>
+      <div class="bar-black" style="    background: black;
+                width: 64px;
+                height: 100%;
+                margin: -20px;
+                padding-left: 20px;">
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Abrir menu" aria-expanded="false">☰</button>
+      </div>
+      <a class="logo-link" href="#/introduction">
+        <img class="logo" src="/src/assets/images/logo-fenix-ui.jpg" alt="FenixUI" />
+      </a>
+      <fx-badge id="version-badge" variant="warning" round></fx-badge>
       <div class="spacer"></div>
-      <fx-button id="mode-toggle" variant="ghost">🌙 Modo escuro</fx-button>
+      <button id="mode-toggle" aria-label="Alternar tema" title="Alternar tema">
+        <!-- Ícone de Lua (modo escuro) -->
+        <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+        <!-- Ícone de Sol (modo claro) - oculto por padrão -->
+        <svg id="icon-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+      </button>
     </header>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
     <aside id="sidebar"></aside>
     <main id="main"></main>

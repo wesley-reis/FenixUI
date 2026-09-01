@@ -48,6 +48,8 @@ export declare class FxPickList extends FxElement {
     set striped(v: boolean);
     get selectionMode(): string;
     set selectionMode(v: string);
+    get showSelectAll(): boolean;
+    set showSelectAll(v: boolean);
     get sourceLabel(): string;
     set sourceLabel(v: string);
     get targetLabel(): string;
@@ -58,6 +60,7 @@ export declare class FxPickList extends FxElement {
     get targetFilterValue(): string;
     set targetFilterValue(v: string);
     private _targetFilterValue;
+    private _filterListenersAttached;
     private _optionTemplate;
     setOptionTemplate(template: (item: PickListItem) => string): void;
     protected connectedCallback(): void;
@@ -78,6 +81,14 @@ export declare class FxPickList extends FxElement {
     private _emitSelectionChangeTarget;
     protected render(): void;
     private _attachListeners;
+    private _handleSelectAll;
+    /**
+     * Atualiza a selecao visual in-place (classes e checkboxes dos itens existentes),
+     * sem recriar o DOM — mantendo referencias de elementos validas durante cliques.
+     */
+    private _updateSelectionDisplay;
+    /** Sincroniza as barras "Selecionar Todos" (checkbox + contador) sem re-render completo. */
+    private _updateSelectAllBars;
     private _updateControlsState;
     private _moveToTarget;
     private _moveToSource;
@@ -85,6 +96,7 @@ export declare class FxPickList extends FxElement {
     private _moveAllToSource;
     private _toggleSourceSelection;
     private _toggleTargetSelection;
+    private _updateListDisplay;
 }
 export declare function defineFxPickList(): typeof FxPickList;
 //# sourceMappingURL=picklist.d.ts.map

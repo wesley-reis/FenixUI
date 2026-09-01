@@ -1,7 +1,11 @@
 import { defineConfig } from 'vite';
 import { fileURLToPath } from 'node:url';
+import { readFileSync } from 'node:fs';
 
 const here = fileURLToPath(new URL('.', import.meta.url));
+
+/** Versão lida do package.json — injetada em `__APP_VERSION__` (badge do header). */
+const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as { version: string };
 
 /**
  * Build de produção da página de documentação.
@@ -14,6 +18,9 @@ const here = fileURLToPath(new URL('.', import.meta.url));
  */
 export default defineConfig({
   base: '/FenixUI/',
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
+  },
   build: {
     outDir: 'docs-dist',
     emptyOutDir: true,

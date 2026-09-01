@@ -12,6 +12,7 @@ const _FxPickList = class _FxPickList extends FxElement {
     this._targetSelection = [];
     this._sourceFilterValue = "";
     this._targetFilterValue = "";
+    this._filterListenersAttached = false;
     this._optionTemplate = null;
   }
   static get observedAttributes() {
@@ -26,6 +27,7 @@ const _FxPickList = class _FxPickList extends FxElement {
       "dragdrop",
       "striped",
       "selection-mode",
+      "show-select-all",
       "source-label",
       "target-label"
     ];
@@ -109,6 +111,12 @@ const _FxPickList = class _FxPickList extends FxElement {
   set selectionMode(v) {
     this.setAttribute("selection-mode", v);
   }
+  get showSelectAll() {
+    return this.hasAttr("show-select-all");
+  }
+  set showSelectAll(v) {
+    this.toggleAttr("show-select-all", v);
+  }
   get sourceLabel() {
     return this.getAttr("source-label", "Disponíveis");
   }
@@ -127,7 +135,7 @@ const _FxPickList = class _FxPickList extends FxElement {
   set sourceFilterValue(v) {
     this._sourceFilterValue = v;
     this._applySourceFilter();
-    this.render();
+    this._updateListDisplay();
   }
   get targetFilterValue() {
     return this._targetFilterValue;
@@ -135,7 +143,7 @@ const _FxPickList = class _FxPickList extends FxElement {
   set targetFilterValue(v) {
     this._targetFilterValue = v;
     this._applyTargetFilter();
-    this.render();
+    this._updateListDisplay();
   }
   setOptionTemplate(template) {
     this._optionTemplate = template;
@@ -270,23 +278,49 @@ const _FxPickList = class _FxPickList extends FxElement {
     const dSrc = this._getDisplaySource();
     const dTgt = this._getDisplayTarget();
     const hasSel = this.selectionMode;
+    const showAll = hasSel === "multiple" && this.showSelectAll;
     const srcItems = dSrc.length === 0 ? `<li class="empty-message">${this.filter ? "Nenhum resultado" : "Nenhum item"}</li>` : dSrc.map((item, i) => `<li class="list-item${this._isSourceSelected(item, i) ? " selected" : ""}" data-index="${i}" data-list="source" tabindex="0">${hasSel ? '<input type="checkbox" class="checkbox"' + (this._isSourceSelected(item, i) ? " checked" : "") + " />" : ""}<span class="item-content">${this._optionTemplate ? this._optionTemplate(item) : esc(this._getItemLabel(item))}</span></li>`).join("");
     const tgtItems = dTgt.length === 0 ? `<li class="empty-message">${this.filter ? "Nenhum resultado" : "Nenhum selecionado"}</li>` : dTgt.map((item, i) => `<li class="list-item${this._isTargetSelected(item, i) ? " selected" : ""}" data-index="${i}" data-list="target" tabindex="0">${hasSel ? '<input type="checkbox" class="checkbox"' + (this._isTargetSelected(item, i) ? " checked" : "") + " />" : ""}<span class="item-content">${this._optionTemplate ? this._optionTemplate(item) : esc(this._getItemLabel(item))}</span></li>`).join("");
-    this.setTemplate(`<div class="container"><div class="list-container"><div class="list-label">${esc(this.sourceLabel)} (${this._source.length})</div>${this.filter ? '<div class="filter-wrapper"><input type="text" class="filter-input source-filter" placeholder="' + this.filterPlaceholder + '" value="' + esc(this._sourceFilterValue) + '" /></div>' : ""}<div class="list-wrapper"><ul class="list source-list" role="listbox" tabindex="0">${srcItems}</ul></div></div><div class="controls"><button class="control-btn" data-action="move-target" title="Mover para destino">&gt;</button><button class="control-btn" data-action="move-all-target" title="Mover todos">&gt;&gt;</button><button class="control-btn" data-action="move-source" title="Mover para origem">&lt;</button><button class="control-btn" data-action="move-all-source" title="Mover todos">&lt;&lt;</button></div><div class="list-container"><div class="list-label">${esc(this.targetLabel)} (${this._target.length})</div>${this.filter ? '<div class="filter-wrapper"><input type="text" class="filter-input target-filter" placeholder="' + this.filterPlaceholder + '" value="' + esc(this._targetFilterValue) + '" /></div>' : ""}<div class="list-wrapper"><ul class="list target-list" role="listbox" tabindex="0">${tgtItems}</ul></div></div></div>`);
+    const srcAllBar = showAll ? `<div class="select-all-bar" part="select-all-bar"><label><input type="checkbox" class="select-all-checkbox" data-list="source" ${this._sourceSelection.length > 0 && this._sourceSelection.length === this._source.length ? "checked" : ""} aria-label="Selecionar todos da origem" /> Selecionar Todos</label><span class="selection-count">${this._sourceSelection.length} selecionado(s)</span></div>` : "";
+    const tgtAllBar = showAll ? `<div class="select-all-bar" part="select-all-bar"><label><input type="checkbox" class="select-all-checkbox" data-list="target" ${this._targetSelection.length > 0 && this._targetSelection.length === this._target.length ? "checked" : ""} aria-label="Selecionar todos do destino" /> Selecionar Todos</label><span class="selection-count">${this._targetSelection.length} selecionado(s)</span></div>` : "";
+    this.setTemplate(`<div class="container"><div class="list-container"><div class="list-label">${esc(this.sourceLabel)} (${this._source.length})</div>${this.filter ? '<div class="filter-wrapper"><input type="text" class="filter-input source-filter" placeholder="' + this.filterPlaceholder + '" value="' + esc(this._sourceFilterValue) + '" /></div>' : ""}${srcAllBar}<div class="list-wrapper"><ul class="list source-list" role="listbox" tabindex="0">${srcItems}</ul></div></div><div class="controls"><div class="control-group"><button class="control-btn" data-action="move-all-target" part="control-btn" aria-label="Mover todos para destino"><span class="control-btn-icon">»</span></button><button class="control-btn" data-action="move-target" part="control-btn" aria-label="Mover para destino"><span class="control-btn-icon">→</span></button></div><div class="control-group"><button class="control-btn" data-action="move-source" part="control-btn" aria-label="Mover para origem"><span class="control-btn-icon">←</span></button><button class="control-btn" data-action="move-all-source" part="control-btn" aria-label="Mover todos para origem"><span class="control-btn-icon">«</span></button></div></div><div class="list-container"><div class="list-label">${esc(this.targetLabel)} (${this._target.length})</div>${this.filter ? '<div class="filter-wrapper"><input type="text" class="filter-input target-filter" placeholder="' + this.filterPlaceholder + '" value="' + esc(this._targetFilterValue) + '" /></div>' : ""}${tgtAllBar}<div class="list-wrapper"><ul class="list target-list" role="listbox" tabindex="0">${tgtItems}</ul></div></div></div>`);
     this._attachListeners();
   }
   _attachListeners() {
-    const srcFilter = this.root.querySelector(".source-filter");
-    if (srcFilter) srcFilter.addEventListener("input", (e) => {
-      this.sourceFilterValue = e.target.value;
-    });
-    const tgtFilter = this.root.querySelector(".target-filter");
-    if (tgtFilter) tgtFilter.addEventListener("input", (e) => {
-      this.targetFilterValue = e.target.value;
-    });
-    this.root.querySelectorAll(".list").forEach((list) => {
-      list.addEventListener("click", (e) => {
+    if (!this._filterListenersAttached) {
+      this._filterListenersAttached = true;
+      this.root.addEventListener("input", (e) => {
         const t = e.target;
+        if (t.classList.contains("select-all-checkbox")) {
+          this._handleSelectAll(t);
+          return;
+        }
+        if (t.classList.contains("source-filter")) {
+          this.sourceFilterValue = t.value;
+        } else if (t.classList.contains("target-filter")) {
+          this.targetFilterValue = t.value;
+        }
+      });
+      this.root.addEventListener("click", (e) => {
+        const t = e.target;
+        const btn = t.closest(".control-btn");
+        if (btn) {
+          switch (btn.dataset.action) {
+            case "move-target":
+              this._moveToTarget();
+              break;
+            case "move-all-target":
+              this._moveAllToTarget();
+              break;
+            case "move-source":
+              this._moveToSource();
+              break;
+            case "move-all-source":
+              this._moveAllToSource();
+              break;
+          }
+          return;
+        }
         const el = t.closest(".list-item");
         if (!el) return;
         const isSrc = el.dataset.list === "source";
@@ -295,26 +329,54 @@ const _FxPickList = class _FxPickList extends FxElement {
         if (isSrc) this._toggleSourceSelection(item, idx);
         else this._toggleTargetSelection(item, idx);
       });
-    });
-    this.root.querySelectorAll(".control-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        switch (btn.dataset.action) {
-          case "move-target":
-            this._moveToTarget();
-            break;
-          case "move-all-target":
-            this._moveAllToTarget();
-            break;
-          case "move-source":
-            this._moveToSource();
-            break;
-          case "move-all-source":
-            this._moveAllToSource();
-            break;
-        }
-      });
-    });
+    }
     this._updateControlsState();
+  }
+  _handleSelectAll(checkbox) {
+    const isSrc = checkbox.dataset.list === "source";
+    if (isSrc) {
+      this._sourceSelection = checkbox.checked ? [...this._getDisplaySource()] : [];
+      this._emitSelectionChangeSource();
+    } else {
+      this._targetSelection = checkbox.checked ? [...this._getDisplayTarget()] : [];
+      this._emitSelectionChangeTarget();
+    }
+    this._updateSelectionDisplay();
+    this._updateControlsState();
+  }
+  /**
+   * Atualiza a selecao visual in-place (classes e checkboxes dos itens existentes),
+   * sem recriar o DOM — mantendo referencias de elementos validas durante cliques.
+   */
+  _updateSelectionDisplay() {
+    const updateList = (listSel, isSelFn, getData) => {
+      if (!listSel) return;
+      listSel.querySelectorAll(".list-item").forEach((el) => {
+        const idx = Number(el.dataset.index);
+        const selected = isSelFn(getData()[idx], idx);
+        el.classList.toggle("selected", selected);
+        el.setAttribute("aria-selected", String(selected));
+        const cb = el.querySelector(".checkbox");
+        if (cb) cb.checked = selected;
+      });
+    };
+    updateList(this.root.querySelector(".source-list"), (it, i) => this._isSourceSelected(it, i), () => this._getDisplaySource());
+    updateList(this.root.querySelector(".target-list"), (it, i) => this._isTargetSelected(it, i), () => this._getDisplayTarget());
+    this._updateSelectAllBars();
+  }
+  /** Sincroniza as barras "Selecionar Todos" (checkbox + contador) sem re-render completo. */
+  _updateSelectAllBars() {
+    if (!(this.selectionMode === "multiple" && this.showSelectAll)) return;
+    const bars = [
+      { el: this.root.querySelector('.select-all-checkbox[data-list="source"]'), total: this._source.length, sel: this._sourceSelection.length },
+      { el: this.root.querySelector('.select-all-checkbox[data-list="target"]'), total: this._target.length, sel: this._targetSelection.length }
+    ];
+    bars.forEach(({ el, total, sel }) => {
+      if (!el) return;
+      el.checked = total > 0 && sel === total;
+      const count = el.closest(".select-all-bar")?.querySelector(".selection-count");
+      if (count) count.textContent = `${sel} selecionado(s)`;
+    });
   }
   _updateControlsState() {
     this.root.querySelectorAll(".control-btn").forEach((btn) => {
@@ -330,7 +392,8 @@ const _FxPickList = class _FxPickList extends FxElement {
     this._sourceSelection = [];
     this._filteredSource = null;
     this._filteredTarget = null;
-    this.render();
+    this._updateListDisplay();
+    this._updateControlsState();
     this._emitMoveToTarget();
   }
   _moveToSource() {
@@ -341,7 +404,8 @@ const _FxPickList = class _FxPickList extends FxElement {
     this._targetSelection = [];
     this._filteredSource = null;
     this._filteredTarget = null;
-    this.render();
+    this._updateListDisplay();
+    this._updateControlsState();
     this._emitMoveToSource();
   }
   _moveAllToTarget() {
@@ -351,7 +415,8 @@ const _FxPickList = class _FxPickList extends FxElement {
     this._sourceSelection = [];
     this._filteredSource = null;
     this._filteredTarget = null;
-    this.render();
+    this._updateListDisplay();
+    this._updateControlsState();
     this._emitMoveToTarget();
   }
   _moveAllToSource() {
@@ -361,36 +426,60 @@ const _FxPickList = class _FxPickList extends FxElement {
     this._targetSelection = [];
     this._filteredSource = null;
     this._filteredTarget = null;
-    this.render();
+    this._updateListDisplay();
+    this._updateControlsState();
     this._emitMoveToSource();
   }
   _toggleSourceSelection(item, index) {
-    if (!this.selectionMode) return;
+    const mode = this.selectionMode || "single";
     const key = this._getItemKey(item, index, true);
     const idx = this._sourceSelection.findIndex((s) => this._getItemKey(s, -1, true) === key);
     if (idx >= 0) {
       this._sourceSelection.splice(idx, 1);
-    } else if (this.selectionMode === "multiple") {
+    } else if (mode === "multiple") {
       this._sourceSelection.push(item);
     } else {
       this._sourceSelection = [item];
     }
     this._emitSelectionChangeSource();
-    this.render();
+    this._updateSelectionDisplay();
+    this._updateControlsState();
   }
   _toggleTargetSelection(item, index) {
-    if (!this.selectionMode) return;
+    const mode = this.selectionMode || "single";
     const key = this._getItemKey(item, index, false);
     const idx = this._targetSelection.findIndex((s) => this._getItemKey(s, -1, false) === key);
     if (idx >= 0) {
       this._targetSelection.splice(idx, 1);
-    } else if (this.selectionMode === "multiple") {
+    } else if (mode === "multiple") {
       this._targetSelection.push(item);
     } else {
       this._targetSelection = [item];
     }
     this._emitSelectionChangeTarget();
-    this.render();
+    this._updateSelectionDisplay();
+    this._updateControlsState();
+  }
+  _updateListDisplay() {
+    const srcWrapper = this.root.querySelector(".source-list")?.parentElement;
+    const tgtWrapper = this.root.querySelector(".target-list")?.parentElement;
+    const srcLabel = this.root.querySelector(".list-container:first-of-type .list-label");
+    const tgtLabel = this.root.querySelector(".list-container:last-of-type .list-label");
+    if (!srcWrapper || !tgtWrapper) {
+      this.render();
+      return;
+    }
+    const dSrc = this._getDisplaySource();
+    const dTgt = this._getDisplayTarget();
+    const hasSel = this.selectionMode;
+    const srcItems = dSrc.length === 0 ? `<li class="empty-message" part="empty-message">${this.filter ? "Nenhum resultado" : "Nenhum item"}</li>` : dSrc.map((item, i) => `<li class="list-item${this._isSourceSelected(item, i) ? " selected" : ""}" part="list-item" data-index="${i}" data-list="source" role="option" aria-selected="${this._isSourceSelected(item, i)}" tabindex="0">${hasSel ? '<input type="checkbox" class="checkbox" part="checkbox"' + (this._isSourceSelected(item, i) ? " checked" : "") + " />" : ""}<span class="item-content" part="item-content">${this._optionTemplate ? this._optionTemplate(item) : esc(this._getItemLabel(item))}</span></li>`).join("");
+    const tgtItems = dTgt.length === 0 ? `<li class="empty-message" part="empty-message">${this.filter ? "Nenhum resultado" : "Nenhum selecionado"}</li>` : dTgt.map((item, i) => `<li class="list-item${this._isTargetSelected(item, i) ? " selected" : ""}" part="list-item" data-index="${i}" data-list="target" role="option" aria-selected="${this._isTargetSelected(item, i)}" tabindex="0">${hasSel ? '<input type="checkbox" class="checkbox" part="checkbox"' + (this._isTargetSelected(item, i) ? " checked" : "") + " />" : ""}<span class="item-content" part="item-content">${this._optionTemplate ? this._optionTemplate(item) : esc(this._getItemLabel(item))}</span></li>`).join("");
+    srcWrapper.innerHTML = `<ul class="list source-list" role="listbox" tabindex="0">${srcItems}</ul>`;
+    tgtWrapper.innerHTML = `<ul class="list target-list" role="listbox" tabindex="0">${tgtItems}</ul>`;
+    if (srcLabel) srcLabel.textContent = `${this.sourceLabel} (${this._source.length})`;
+    if (tgtLabel) tgtLabel.textContent = `${this.targetLabel} (${this._target.length})`;
+    this._updateSelectAllBars();
+    this._attachListeners();
   }
 };
 _FxPickList.styles = css`
@@ -398,95 +487,173 @@ _FxPickList.styles = css`
       display: block;
       font-family: var(--fx-font-family);
       font-size: var(--fx-font-size);
+      --picklist-primary: var(--fx-color-primary, #3b82f6);
+      --picklist-border: var(--fx-border-default, #e2e8f0);
+      --picklist-bg: var(--fx-surface-background, #ffffff);
+      --picklist-bg-hover: var(--fx-surface-surface-hover, #f1f5f9);
+      --picklist-text: var(--fx-text-default, #1e293b);
+      --picklist-text-muted: var(--fx-text-muted, #64748b);
+      --picklist-radius: var(--fx-radius-md, 8px);
+      --picklist-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      --picklist-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
+    * { box-sizing: border-box; }
     .container {
       display: flex;
-      gap: var(--fx-space-md);
+      gap: var(--fx-space-sm, 8px);
       align-items: stretch;
     }
     .list-container {
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: var(--fx-space-sm);
+      gap: var(--fx-space-sm, 8px);
+      min-width: 0;
     }
     .list-label {
       font-weight: 600;
-      color: var(--fx-text-default);
+      color: var(--picklist-text);
       font-size: calc(var(--fx-font-size) - 1px);
+    }
+    .select-all-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--fx-space-sm, 10px) var(--fx-space-md, 14px);
+      background: linear-gradient(135deg, var(--picklist-bg), var(--picklist-bg-hover));
+      border: 1px solid var(--picklist-border);
+      border-radius: var(--picklist-radius);
+      font-size: 0.9em;
+      font-weight: 500;
+    }
+    .select-all-bar label {
+      display: flex;
+      align-items: center;
+      gap: var(--fx-space-sm, 10px);
+      cursor: pointer;
+      user-select: none;
+      color: var(--picklist-text);
+    }
+    .select-all-bar input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--picklist-primary);
+      cursor: pointer;
+    }
+    .selection-count {
+      font-size: 0.85em;
+      color: var(--picklist-primary);
+      background: color-mix(in srgb, var(--picklist-primary) 12%, transparent);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 600;
     }
     .controls {
       display: flex;
       flex-direction: column;
-      gap: var(--fx-space-xs);
+      gap: 4px;
       justify-content: center;
+      padding: var(--fx-space-xs, 6px);
+      background: var(--picklist-bg);
+      border: 1px solid var(--picklist-border);
+      border-radius: var(--picklist-radius);
+      box-shadow: var(--picklist-shadow);
+      height: fit-content;
+      position: sticky;
+      top: 0;
+      align-self: center;
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .control-group + .control-group {
+      margin-top: 4px;
+      padding-top: 6px;
+      border-top: 1px solid var(--picklist-border);
     }
     .list-wrapper {
       flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: var(--fx-space-sm, 8px);
     }
     .filter-wrapper {
-      margin-bottom: var(--fx-space-sm);
+      margin-bottom: var(--fx-space-xs, 4px);
     }
     .filter-input {
       width: 100%;
       box-sizing: border-box;
-      padding: var(--fx-space-sm) var(--fx-space-md);
-      border: 1px solid var(--fx-border-default);
-      border-radius: var(--fx-radius-md);
+      padding: var(--fx-space-sm, 10px) var(--fx-space-md, 14px);
+      padding-left: 42px;
+      border: 1.5px solid var(--picklist-border);
+      border-radius: var(--picklist-radius);
       font-family: inherit;
       font-size: inherit;
-      color: var(--fx-text-default);
-      background: var(--fx-surface-background);
-      transition: border-color var(--fx-motion-duration-fast) var(--fx-motion-easing);
+      color: var(--picklist-text);
+      background: var(--picklist-bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E") no-repeat 14px center;
+      transition: var(--picklist-transition);
     }
     .filter-input:focus {
       outline: none;
-      border-color: var(--fx-color-primary);
-      box-shadow: var(--fx-effect-focus-ring, none);
+      border-color: var(--picklist-primary);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--picklist-primary) 20%, transparent);
     }
     .filter-input::placeholder {
-      color: var(--fx-text-muted);
+      color: var(--picklist-text-muted);
     }
     .list {
       list-style: none;
       margin: 0;
       padding: 0;
-      border: 1px solid var(--fx-border-default);
-      border-radius: var(--fx-radius-md);
+      border: 1px solid var(--picklist-border);
+      border-radius: var(--picklist-radius);
       overflow: hidden;
-      min-height: 150px;
+      box-shadow: var(--picklist-shadow);
+      min-height: 200px;
+      max-height: 450px;
+      overflow-y: auto;
+      flex: 1;
     }
+    .list::-webkit-scrollbar { width: 6px; }
+    .list::-webkit-scrollbar-track { background: transparent; }
+    .list::-webkit-scrollbar-thumb { background: var(--picklist-border); border-radius: 3px; }
+    .list::-webkit-scrollbar-thumb:hover { background: var(--picklist-text-muted); }
     :host([striped]) .list-item:nth-child(even) {
-      background: var(--fx-surface-surface);
+      background: var(--fx-surface-surface, #f8fafc);
     }
     .list-item {
       display: flex;
       align-items: center;
-      gap: var(--fx-space-sm);
-      padding: var(--fx-space-sm) var(--fx-space-md);
-      background: var(--fx-surface-background);
-      border-bottom: 1px solid var(--fx-border-default);
+      gap: var(--fx-space-sm, 10px);
+      padding: var(--fx-space-sm, 10px) var(--fx-space-md, 14px);
+      background: var(--picklist-bg);
+      border-bottom: 1px solid var(--picklist-border);
       cursor: pointer;
       user-select: none;
-      transition: background-color var(--fx-motion-duration-fast) var(--fx-motion-easing);
+      transition: var(--picklist-transition);
     }
-    .list-item:last-child {
-      border-bottom: none;
-    }
-    .list-item:hover {
-      background: var(--fx-surface-surface-hover);
-    }
+    .list-item:last-child { border-bottom: none; }
+    .list-item:hover { background: var(--picklist-bg-hover); }
     .list-item.selected {
-      background: color-mix(in srgb, var(--fx-color-primary) 10%, transparent);
+      background: color-mix(in srgb, var(--picklist-primary) 8%, transparent);
+      border-left: 3px solid var(--picklist-primary);
+      padding-left: 11px;
     }
     .list-item:focus-visible {
       outline: none;
-      background: color-mix(in srgb, var(--fx-color-primary) 15%, transparent);
+      background: color-mix(in srgb, var(--picklist-primary) 15%, transparent);
     }
     .checkbox {
-      cursor: pointer;
       flex-shrink: 0;
+      width: 18px;
+      height: 18px;
+      accent-color: var(--picklist-primary);
+      cursor: pointer;
+      transition: var(--picklist-transition);
     }
+    .checkbox:hover { transform: scale(1.1); }
     .item-content {
       flex: 1;
       min-width: 0;
@@ -495,30 +662,78 @@ _FxPickList.styles = css`
       white-space: nowrap;
     }
     .empty-message {
-      padding: var(--fx-space-md);
+      padding: var(--fx-space-xl, 32px);
       text-align: center;
-      color: var(--fx-text-muted);
+      color: var(--picklist-text-muted);
       font-style: italic;
     }
-    .control-btn {
-      padding: var(--fx-space-sm);
-      border: 1px solid var(--fx-border-default);
-      border-radius: var(--fx-radius-md);
-      background: var(--fx-surface-background);
-      color: var(--fx-text-default);
+    button.control-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 42px;
+      height: 38px;
+      padding: 0;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--picklist-text-muted);
       cursor: pointer;
-      font-size: calc(var(--fx-font-size) + 2px);
-      transition: all var(--fx-motion-duration-fast) var(--fx-motion-easing);
+      font-size: 16px;
+      line-height: 1;
+      transition: var(--picklist-transition);
+      position: relative;
     }
-    .control-btn:hover:not(:disabled) {
-      background: var(--fx-surface-surface-hover);
-      border-color: var(--fx-color-primary);
-      color: var(--fx-color-primary);
+    button.control-btn:hover:not(:disabled) {
+      background: var(--picklist-bg-hover);
+      color: var(--picklist-primary);
+      transform: scale(1.1);
     }
-    .control-btn:disabled {
-      opacity: 0.5;
+    button.control-btn:active:not(:disabled) {
+      transform: scale(0.92);
+      background: color-mix(in srgb, var(--picklist-primary) 15%, transparent);
+    }
+    button.control-btn:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--picklist-primary) 30%, transparent);
+    }
+    button.control-btn:disabled {
+      opacity: 0.3;
       cursor: not-allowed;
+      transform: none;
     }
+    .control-btn-icon { font-size: 18px; line-height: 1; }
+
+    button.control-btn:hover::after {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    @media (max-width: 640px) {
+      .container { flex-direction: column; }
+      .controls {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        position: relative;
+      }
+      .control-group { flex-direction: row; }
+      .control-group + .control-group {
+        margin-top: 0;
+        margin-left: 4px;
+        padding-top: 0;
+        padding-left: 4px;
+        border-top: none;
+        border-left: 1px solid var(--picklist-border);
+      }
+      button.control-btn { width: 44px; height: 40px; }
+      button.control-btn::after { display: none; }
+      .list { max-height: 300px; min-height: 150px; }
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-10px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    .list-item { animation: slideIn 0.2s ease-out; }
   `;
 let FxPickList = _FxPickList;
 function esc(s) {

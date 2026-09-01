@@ -9,6 +9,7 @@ const _FxOrderList = class _FxOrderList extends FxElement {
     this._selection = [];
     this._filterValue = "";
     this._draggedIndex = null;
+    this._listenersAttached = false;
     this._optionTemplate = null;
   }
   static get observedAttributes() {
@@ -22,7 +23,8 @@ const _FxOrderList = class _FxOrderList extends FxElement {
       "controls-location",
       "dragdrop",
       "striped",
-      "selection-mode"
+      "selection-mode",
+      "show-select-all"
     ];
   }
   set data(value) {
@@ -89,13 +91,19 @@ const _FxOrderList = class _FxOrderList extends FxElement {
   set selectionMode(v) {
     this.setAttribute("selection-mode", v);
   }
+  get showSelectAll() {
+    return this.hasAttr("show-select-all");
+  }
+  set showSelectAll(v) {
+    this.toggleAttr("show-select-all", v);
+  }
   get filterValue() {
     return this._filterValue;
   }
   set filterValue(v) {
     this._filterValue = v;
     this._applyFilter();
-    this.render();
+    this._updateListDisplay();
   }
   setOptionTemplate(template) {
     this._optionTemplate = template;
@@ -169,7 +177,8 @@ const _FxOrderList = class _FxOrderList extends FxElement {
     const item = this._data.splice(actualFrom, 1)[0];
     this._data.splice(actualTo, 0, item);
     this._applyFilter();
-    this.render();
+    this._updateListDisplay();
+    this._updateControlsState();
     this._emitReorder();
   }
   _getActualIndex(displayIndex) {
@@ -194,7 +203,6 @@ const _FxOrderList = class _FxOrderList extends FxElement {
     }));
   }
   _toggleSelection(item) {
-    if (!this.selectionMode) return;
     const key = this._getItemKey(item, -1);
     const index = this._selection.findIndex((s) => this._getItemKey(s, -1) === key);
     if (index >= 0) {
@@ -205,11 +213,35 @@ const _FxOrderList = class _FxOrderList extends FxElement {
       this._selection = [item];
     }
     this._emitSelectionChange();
-    this.render();
+    this._updateListDisplay();
+    this._updateControlsState();
+  }
+  _selectAll() {
+    const displayData = this._getDisplayData();
+    this._selection = [...displayData];
+    this._emitSelectionChange();
+    this._updateListDisplay();
+    this._updateControlsState();
+  }
+  _deselectAll() {
+    this._selection = [];
+    this._emitSelectionChange();
+    this._updateListDisplay();
+    this._updateControlsState();
+  }
+  _toggleSelectAll() {
+    const displayData = this._getDisplayData();
+    if (this._selection.length === displayData.length) {
+      this._deselectAll();
+    } else {
+      this._selectAll();
+    }
   }
   render() {
     const displayData = this._getDisplayData();
     const hasSelection = this.selectionMode;
+    const hasMultipleSelection = this.selectionMode === "multiple";
+    const allSelected = hasMultipleSelection && displayData.length > 0 && this._selection.length === displayData.length;
     this.setTemplate(`
       <div class="container" part="container">
         ${this.filter ? `
@@ -220,150 +252,121 @@ const _FxOrderList = class _FxOrderList extends FxElement {
               aria-label="Filtrar lista" />
           </div>
         ` : ""}
-        <div class="list-wrapper" part="list-wrapper">
-          <ul class="list" part="list" role="listbox"
-            aria-multiselectable="${this.selectionMode === "multiple"}"
-            tabindex="0">
-            ${displayData.length === 0 ? `
-              <li class="empty-message" part="empty-message">
-                ${this.filter ? "Nenhum resultado encontrado" : "Nenhum item disponivel"}
-              </li>
-            ` : displayData.map((item, index) => {
+        <div class="main-row" part="main-row">
+          <div class="controls-bar" part="controls-bar">
+            <div class="control-group">
+              <button class="control-btn" data-action="top" part="control-btn" aria-label="Mover para o inicio">
+                <span class="control-btn-icon">«</span>
+              </button>
+              <button class="control-btn" data-action="up" part="control-btn" aria-label="Mover para cima">
+                <span class="control-btn-icon">↑</span>
+              </button>
+            </div>
+            <div class="control-group">
+              <button class="control-btn" data-action="down" part="control-btn" aria-label="Mover para baixo">
+                <span class="control-btn-icon">↓</span>
+              </button>
+              <button class="control-btn" data-action="bottom" part="control-btn" aria-label="Mover para o fim">
+                <span class="control-btn-icon">»</span>
+              </button>
+            </div>
+          </div>
+          <div class="list-wrapper" part="list-wrapper">
+            ${hasMultipleSelection && this.showSelectAll ? `
+              <div class="select-all-bar" part="select-all-bar">
+                <label>
+                  <input type="checkbox" class="select-all-checkbox"
+                    ${allSelected ? "checked" : ""}
+                    aria-label="Selecionar todos" />
+                  Selecionar Todos
+                </label>
+                <span class="selection-count">${this._selection.length} selecionado(s)</span>
+              </div>
+            ` : ""}
+            <ul class="list" part="list" role="listbox"
+              aria-multiselectable="${hasMultipleSelection}"
+              tabindex="0">
+              ${displayData.length === 0 ? `
+                <li class="empty-message" part="empty-message">
+                  ${this.filter ? "Nenhum resultado encontrado" : "Nenhum item disponivel"}
+                </li>
+              ` : displayData.map((item, index) => {
       const key = this._getItemKey(item, index);
       const label = this._getItemLabel(item);
       const isSelected = this._isSelected(item);
       const content = this._optionTemplate ? this._optionTemplate(item) : esc(label);
       return `
-                <li class="list-item${isSelected ? " selected" : ""}" part="list-item"
-                  data-index="${index}" data-key="${esc(key)}"
-                  role="option" aria-selected="${isSelected}"
-                  ${this.dragdrop ? 'draggable="true"' : ""}
-                  tabindex="0">
-                  ${this.dragdrop ? '<span class="drag-handle" part="drag-handle" aria-label="Arrastar">::</span>' : ""}
-                  ${hasSelection ? `
-                    <input type="checkbox" class="checkbox" part="checkbox"
-                      ${isSelected ? "checked" : ""}
-                      aria-label="Selecionar ${esc(label)}" />
-                  ` : ""}
-                  <span class="item-content" part="item-content">${content}</span>
-                </li>
-              `;
+                  <li class="list-item${isSelected ? " selected" : ""}" part="list-item"
+                    data-index="${index}" data-key="${esc(key)}"
+                    role="option" aria-selected="${isSelected}"
+                    ${this.dragdrop ? 'draggable="true"' : ""}
+                    tabindex="0">
+                    ${this.dragdrop ? '<span class="drag-handle" part="drag-handle" aria-label="Arrastar">⋮⋮</span>' : ""}
+                    ${hasSelection ? `
+                      <input type="checkbox" class="checkbox" part="checkbox"
+                        ${isSelected ? "checked" : ""}
+                        aria-label="Selecionar ${esc(label)}" />
+                    ` : ""}
+                    <span class="item-content" part="item-content">${content}</span>
+                  </li>
+                `;
     }).join("")}
-          </ul>
-        </div>
-        <div class="controls" part="controls">
-          <div class="controls-row">
-            <button class="control-btn" data-action="top" part="control-btn" aria-label="Mover para o inicio" title="Inicio">|&lt;</button>
-            <button class="control-btn" data-action="up" part="control-btn" aria-label="Mover para cima" title="Cima">^</button>
-          </div>
-          <div class="controls-row">
-            <button class="control-btn" data-action="down" part="control-btn" aria-label="Mover para baixo" title="Baixo">v</button>
-            <button class="control-btn" data-action="bottom" part="control-btn" aria-label="Mover para o fim" title="Fim">&gt;|</button>
+            </ul>
           </div>
         </div>
       </div>
     `);
     this._attachListeners();
-  }
-  _attachListeners() {
-    const filterInput = this.root.querySelector(".filter-input");
-    if (filterInput) {
-      filterInput.addEventListener("input", (e) => {
-        this.filterValue = e.target.value;
-      });
-    }
-    const list = this.root.querySelector(".list");
-    if (!list) return;
-    list.addEventListener("click", (e) => {
-      const target = e.target;
-      const itemEl = target.closest(".list-item");
-      if (!itemEl) return;
-      if (target.classList.contains("checkbox")) {
-        e.stopPropagation();
-        const index2 = Number(itemEl.dataset.index);
-        const item2 = this._getDisplayData()[index2];
-        this._toggleSelection(item2);
-        return;
-      }
-      const index = Number(itemEl.dataset.index);
-      const item = this._getDisplayData()[index];
-      this._toggleSelection(item);
-    });
-    list.addEventListener("keydown", (e) => {
-      const target = e.target;
-      if (!target.classList.contains("list-item")) return;
-      const items = Array.from(list.querySelectorAll(".list-item"));
-      const currentIndex = items.indexOf(target);
-      switch (e.key) {
-        case "ArrowUp":
-          e.preventDefault();
-          if (currentIndex > 0) {
-            items[currentIndex - 1].focus();
-          }
-          break;
-        case "ArrowDown":
-          e.preventDefault();
-          if (currentIndex < items.length - 1) {
-            items[currentIndex + 1].focus();
-          }
-          break;
-        case "Home":
-          e.preventDefault();
-          items[0]?.focus();
-          break;
-        case "End":
-          e.preventDefault();
-          items[items.length - 1]?.focus();
-          break;
-        case " ":
-        case "Enter":
-          if (this.selectionMode) {
-            e.preventDefault();
-            const index = Number(target.dataset.index);
-            const item = this._getDisplayData()[index];
-            this._toggleSelection(item);
-          }
-          break;
-      }
-    });
-    if (this.dragdrop) {
-      this._attachDragAndDrop(list);
-    }
-    const buttons = this.root.querySelectorAll(".control-btn");
-    buttons.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const action = btn.dataset.action;
-        this._handleMoveAction(action);
-      });
-    });
+    this._attachItemListeners(this.root.querySelector(".list"));
     this._updateControlsState();
   }
-  _attachDragAndDrop(list) {
-    let dragOverElement = null;
-    list.addEventListener("dragstart", (e) => {
+  _attachListeners() {
+    if (this._listenersAttached) return;
+    this._listenersAttached = true;
+    const root = this.root;
+    root.addEventListener("input", (e) => {
+      const t = e.target;
+      if (t.classList.contains("filter-input")) {
+        this.filterValue = t.value;
+      }
+    });
+    root.addEventListener("change", (e) => {
+      const t = e.target;
+      if (t.classList.contains("select-all-checkbox")) {
+        this._toggleSelectAll();
+      }
+    });
+    root.addEventListener("click", (e) => {
       const target = e.target;
-      if (!target.classList.contains("list-item")) return;
+      const btn = target.closest(".control-btn");
+      if (btn) {
+        this._handleMoveAction(btn.dataset.action);
+      }
+    });
+    let dragOverElement = null;
+    root.addEventListener("dragstart", (e) => {
+      const target = e.target.closest(".list-item");
+      if (!target) return;
       this._draggedIndex = Number(target.dataset.index);
       target.classList.add("dragging");
       e.dataTransfer.effectAllowed = "move";
     });
-    list.addEventListener("dragend", (e) => {
+    root.addEventListener("dragend", (e) => {
       const target = e.target;
       target.classList.remove("dragging");
       this._draggedIndex = null;
-      list.querySelectorAll(".drag-over").forEach((el) => el.classList.remove("drag-over"));
+      root.querySelectorAll(".drag-over").forEach((el) => el.classList.remove("drag-over"));
+      dragOverElement = null;
     });
-    list.addEventListener("dragover", (e) => {
+    root.addEventListener("dragover", (e) => {
       e.preventDefault();
       const target = e.target.closest(".list-item");
       if (!target || target.classList.contains("dragging")) return;
-      if (dragOverElement) {
-        dragOverElement.classList.remove("drag-over");
-      }
+      if (dragOverElement) dragOverElement.classList.remove("drag-over");
       target.classList.add("drag-over");
       dragOverElement = target;
     });
-    list.addEventListener("drop", (e) => {
+    root.addEventListener("drop", (e) => {
       e.preventDefault();
       if (this._draggedIndex === null) return;
       const target = e.target.closest(".list-item");
@@ -372,7 +375,105 @@ const _FxOrderList = class _FxOrderList extends FxElement {
       target.classList.remove("drag-over");
       dragOverElement = null;
       this._moveItem(this._draggedIndex, toIndex);
+      this._draggedIndex = null;
     });
+    this._updateControlsState();
+  }
+  _attachItemListeners(list) {
+    if (!list) return;
+    list.addEventListener("click", (e) => {
+      const target = e.target;
+      const itemEl = target.closest(".list-item");
+      if (!itemEl) return;
+      if (target.classList.contains("checkbox")) {
+        e.stopPropagation();
+        const idxC = Number(itemEl.dataset.index);
+        this._toggleSelection(this._getDisplayData()[idxC]);
+        return;
+      }
+      const idxI = Number(itemEl.dataset.index);
+      this._toggleSelection(this._getDisplayData()[idxI]);
+    });
+    list.addEventListener("keydown", (e) => {
+      const target = e.target;
+      if (!target.classList.contains("list-item")) return;
+      const items = Array.from(list.querySelectorAll(".list-item"));
+      const currentIndex = items.indexOf(target);
+      const ke = e;
+      switch (ke.key) {
+        case "ArrowUp":
+          e.preventDefault();
+          if (currentIndex > 0) items[currentIndex - 1].focus();
+          break;
+        case "ArrowDown":
+          e.preventDefault();
+          if (currentIndex < items.length - 1) items[currentIndex + 1].focus();
+          break;
+        case " ":
+        case "Enter":
+          e.preventDefault();
+          if (this.selectionMode) {
+            const index = Number(target.dataset.index);
+            this._toggleSelection(this._getDisplayData()[index]);
+          }
+          break;
+      }
+    });
+  }
+  _updateListDisplay() {
+    const listWrapper = this.root.querySelector(".list-wrapper");
+    if (!listWrapper) {
+      this.render();
+      return;
+    }
+    const displayData = this._getDisplayData();
+    const hasSelection = this.selectionMode;
+    const hasMultipleSelection = this.selectionMode === "multiple";
+    const allSelected = hasMultipleSelection && displayData.length > 0 && this._selection.length === displayData.length;
+    listWrapper.innerHTML = `
+      ${hasMultipleSelection && this.showSelectAll ? `
+        <div class="select-all-bar" part="select-all-bar">
+          <label>
+            <input type="checkbox" class="select-all-checkbox"
+              ${allSelected ? "checked" : ""}
+              aria-label="Selecionar todos" />
+            Selecionar Todos
+          </label>
+          <span class="selection-count">${this._selection.length} selecionado(s)</span>
+        </div>
+      ` : ""}
+      <ul class="list" part="list" role="listbox"
+        aria-multiselectable="${hasMultipleSelection}"
+        tabindex="0">
+        ${displayData.length === 0 ? `
+          <li class="empty-message" part="empty-message">
+            ${this.filter ? "Nenhum resultado encontrado" : "Nenhum item disponivel"}
+          </li>
+        ` : displayData.map((item, index) => {
+      const key = this._getItemKey(item, index);
+      const label = this._getItemLabel(item);
+      const isSelected = this._isSelected(item);
+      const content = this._optionTemplate ? this._optionTemplate(item) : esc(label);
+      return `
+            <li class="list-item${isSelected ? " selected" : ""}" part="list-item"
+              data-index="${index}" data-key="${esc(key)}"
+              role="option" aria-selected="${isSelected}"
+              ${this.dragdrop ? 'draggable="true"' : ""}
+              tabindex="0">
+              ${this.dragdrop ? '<span class="drag-handle" part="drag-handle" aria-label="Arrastar">⋮⋮</span>' : ""}
+              ${hasSelection ? `
+                <input type="checkbox" class="checkbox" part="checkbox"
+                  ${isSelected ? "checked" : ""}
+                  aria-label="Selecionar ${esc(label)}" />
+              ` : ""}
+              <span class="item-content" part="item-content">${content}</span>
+            </li>
+          `;
+    }).join("")}
+            </ul>
+    `;
+    this._attachListeners();
+    this._attachItemListeners(this.root.querySelector(".list"));
   }
   _handleMoveAction(action) {
     if (!this._selection.length) return;
@@ -381,48 +482,74 @@ const _FxOrderList = class _FxOrderList extends FxElement {
     if (selectedIndices.length === 0) return;
     switch (action) {
       case "top":
-        this._moveSelectedTo(selectedIndices, 0);
+        this._moveSelectedToStart(selectedIndices);
         break;
       case "up":
-        if (selectedIndices[0] > 0) {
-          this._moveSelectedBy(selectedIndices, -1);
-        }
+        this._moveSelectedByOne(selectedIndices, -1);
         break;
       case "down":
-        if (selectedIndices[selectedIndices.length - 1] < displayData.length - 1) {
-          this._moveSelectedBy(selectedIndices, 1);
-        }
+        this._moveSelectedByOne(selectedIndices, 1);
         break;
       case "bottom":
-        this._moveSelectedTo(selectedIndices, displayData.length - 1);
+        this._moveSelectedToEnd(selectedIndices);
         break;
     }
   }
-  _moveSelectedTo(indices, targetIndex) {
-    const items = indices.map((i) => this._data[this._getActualIndex(i)]);
-    const actualIndices = indices.map((i) => this._getActualIndex(i)).sort((a, b) => b - a);
-    actualIndices.forEach((i) => this._data.splice(i, 1));
-    const actualTarget = this._getActualIndex(targetIndex);
-    this._data.splice(actualTarget, 0, ...items);
+  _moveSelectedToStart(indices) {
+    const items = [];
+    const actualIndices = [];
+    for (const idx of indices) {
+      const actualIdx = this._getActualIndex(idx);
+      items.push(this._data[actualIdx]);
+      actualIndices.push(actualIdx);
+    }
+    actualIndices.sort((a, b) => b - a).forEach((i) => this._data.splice(i, 1));
+    const insertIdx = this._getActualIndex(0);
+    this._data.splice(insertIdx, 0, ...items);
     this._applyFilter();
-    this.render();
+    this._updateListDisplay();
+    this._updateControlsState();
     this._emitReorder();
   }
-  _moveSelectedBy(indices, delta) {
-    const firstIndex = indices[0] + delta;
-    const lastIndex = indices[indices.length - 1] + delta;
-    if (firstIndex < 0 || lastIndex >= this._getDisplayData().length) return;
-    const items = indices.map((i) => {
-      const actualIdx = this._getActualIndex(i);
-      return { item: this._data[actualIdx], originalIndex: actualIdx };
-    });
-    items.sort((a, b) => b.originalIndex - a.originalIndex);
-    items.forEach(({ originalIndex }) => this._data.splice(originalIndex, 1));
-    const newFirstActual = this._getActualIndex(firstIndex);
-    const sortedItems = items.map(({ item }) => item).reverse();
-    this._data.splice(newFirstActual, 0, ...sortedItems);
+  _moveSelectedToEnd(indices) {
+    const items = [];
+    const actualIndices = [];
+    for (const idx of indices) {
+      const actualIdx = this._getActualIndex(idx);
+      items.push(this._data[actualIdx]);
+      actualIndices.push(actualIdx);
+    }
+    actualIndices.sort((a, b) => b - a).forEach((i) => this._data.splice(i, 1));
+    const displayData = this._getDisplayData();
+    const insertIdx = this._getActualIndex(displayData.length - 1);
+    this._data.splice(insertIdx + 1, 0, ...items);
     this._applyFilter();
-    this.render();
+    this._updateListDisplay();
+    this._updateControlsState();
+    this._emitReorder();
+  }
+  _moveSelectedByOne(indices, delta) {
+    const displayData = this._getDisplayData();
+    if (displayData.length === 0) return;
+    const actualIndices = indices.map((idx) => this._getActualIndex(idx)).filter((idx) => idx >= 0).sort((a, b) => a - b);
+    if (actualIndices.length === 0) return;
+    if (delta < 0 && actualIndices[0] <= 0) return;
+    if (delta > 0 && actualIndices[actualIndices.length - 1] >= this._data.length - 1) return;
+    const selectedItems = actualIndices.map((idx) => this._data[idx]);
+    for (let i = actualIndices.length - 1; i >= 0; i--) {
+      this._data.splice(actualIndices[i], 1);
+    }
+    let insertIndex;
+    if (delta < 0) {
+      insertIndex = actualIndices[0] - 1;
+    } else {
+      insertIndex = actualIndices[actualIndices.length - 1] - actualIndices.length + 1 + 1;
+    }
+    insertIndex = Math.max(0, Math.min(insertIndex, this._data.length));
+    this._data.splice(insertIndex, 0, ...selectedItems);
+    this._applyFilter();
+    this._updateListDisplay();
+    this._updateControlsState();
     this._emitReorder();
   }
   _updateControlsState() {
@@ -449,135 +576,82 @@ const _FxOrderList = class _FxOrderList extends FxElement {
   }
 };
 _FxOrderList.styles = css`
+
     :host {
       display: block;
       font-family: var(--fx-font-family);
       font-size: var(--fx-font-size);
+      --orderlist-primary: var(--fx-color-primary, #3b82f6);
+      --orderlist-border: var(--fx-border-default, #e2e8f0);
+      --orderlist-bg: var(--fx-surface-background, #ffffff);
+      --orderlist-bg-hover: var(--fx-surface-surface-hover, #f1f5f9);
+      --orderlist-text: var(--fx-text-default, #1e293b);
+      --orderlist-text-muted: var(--fx-text-muted, #64748b);
+      --orderlist-radius: var(--fx-radius-md, 8px);
+      --orderlist-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      --orderlist-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .container {
+    * { box-sizing: border-box; }
+    .container { display: flex; flex-direction: column; gap: var(--fx-space-md, 16px); }
+    .list-wrapper { display: flex; flex-direction: column; gap: var(--fx-space-sm, 8px); flex: 1; min-width: 0; }
+    .select-all-bar { display: flex; align-items: center; justify-content: space-between; padding: var(--fx-space-sm, 10px) var(--fx-space-md, 14px); background: linear-gradient(135deg, var(--orderlist-bg), var(--orderlist-bg-hover)); border: 1px solid var(--orderlist-border); border-radius: var(--orderlist-radius); font-size: 0.9em; font-weight: 500; }
+    .select-all-bar label { display: flex; align-items: center; gap: var(--fx-space-sm, 10px); cursor: pointer; user-select: none; color: var(--orderlist-text); }
+    .select-all-bar input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--orderlist-primary); cursor: pointer; }
+    .filter-wrapper { margin-bottom: var(--fx-space-xs, 4px); }
+    .filter-input { width: 100%; padding: var(--fx-space-sm, 10px) var(--fx-space-md, 14px); padding-left: 42px; border: 1.5px solid var(--orderlist-border); border-radius: var(--orderlist-radius); font-family: inherit; font-size: inherit; color: var(--orderlist-text); background: var(--orderlist-bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E") no-repeat 14px center; transition: var(--orderlist-transition); }
+    .filter-input:focus { outline: none; border-color: var(--orderlist-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--orderlist-primary) 20%, transparent); }
+    .filter-input::placeholder { color: var(--orderlist-text-muted); }
+    .main-row { display: flex; align-items: stretch; gap: var(--fx-space-sm, 8px); }
+    .list { list-style: none; margin: 0; padding: 0; border: 1px solid var(--orderlist-border); border-radius: var(--orderlist-radius); overflow: hidden; box-shadow: var(--orderlist-shadow); max-height: 450px; overflow-y: auto; flex: 1; }
+    .list::-webkit-scrollbar { width: 6px; }
+    .list::-webkit-scrollbar-track { background: transparent; }
+    .list::-webkit-scrollbar-thumb { background: var(--orderlist-border); border-radius: 3px; }
+    .list::-webkit-scrollbar-thumb:hover { background: var(--orderlist-text-muted); }
+    .selection-count { font-size: 0.85em; color: var(--orderlist-primary); background: color-mix(in srgb, var(--orderlist-primary) 12%, transparent); padding: 4px 12px; border-radius: 20px; font-weight: 600; }
+    :host([striped]) .list-item:nth-child(even) { background: var(--fx-surface-surface, #f8fafc); }
+    .list-item { display: flex; align-items: center; gap: var(--fx-space-sm, 10px); padding: var(--fx-space-sm, 10px) var(--fx-space-md, 14px); background: var(--orderlist-bg); border-bottom: 1px solid var(--orderlist-border); cursor: pointer; user-select: none; transition: var(--orderlist-transition); }
+    .list-item:last-child { border-bottom: none; }
+    .list-item:hover { background: var(--orderlist-bg-hover); }
+    .list-item.selected { background: color-mix(in srgb, var(--orderlist-primary) 8%, transparent); border-left: 3px solid var(--orderlist-primary); padding-left: 11px; }
+    .list-item:focus-visible { outline: none; background: color-mix(in srgb, var(--orderlist-primary) 15%, transparent); }
+    .list-item.dragging { opacity: 0.5; background: var(--orderlist-bg-hover); }
+    .list-item.drag-over { border-top: 2px solid var(--orderlist-primary); }
+    .drag-handle { color: var(--orderlist-text-muted); cursor: grab; flex-shrink: 0; font-size: 1.2em; opacity: 0.6; transition: var(--orderlist-transition); }
+    .drag-handle:hover { opacity: 1; }
+    .drag-handle:active { cursor: grabbing; }
+    .item-content { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .checkbox { flex-shrink: 0; width: 18px; height: 18px; accent-color: var(--orderlist-primary); cursor: pointer; transition: var(--orderlist-transition); }
+    .checkbox:hover { transform: scale(1.1); }
+    .empty-message { padding: var(--fx-space-xl, 32px); text-align: center; color: var(--orderlist-text-muted); font-style: italic; }
+    .controls-bar {
       display: flex;
       flex-direction: column;
-      gap: var(--fx-space-md);
+      gap: 4px;
+      padding: var(--fx-space-xs, 6px);
+      background: var(--orderlist-bg);
+      border: 1px solid var(--orderlist-border);
+      border-radius: var(--orderlist-radius);
+      box-shadow: var(--orderlist-shadow);
+      height: fit-content;
+      position: sticky;
+      top: 0;
+      align-self: flex-start;
     }
-    .controls {
-      display: flex;
-      flex-direction: column;
-      gap: var(--fx-space-xs);
-    }
-    .controls-row {
-      display: flex;
-      gap: var(--fx-space-xs);
-    }
-    .list-wrapper {
-      flex: 1;
-    }
-    .filter-wrapper {
-      margin-bottom: var(--fx-space-sm);
-    }
-    .filter-input {
-      width: 100%;
-      box-sizing: border-box;
-      padding: var(--fx-space-sm) var(--fx-space-md);
-      border: 1px solid var(--fx-border-default);
-      border-radius: var(--fx-radius-md);
-      font-family: inherit;
-      font-size: inherit;
-      color: var(--fx-text-default);
-      background: var(--fx-surface-background);
-      transition: border-color var(--fx-motion-duration-fast) var(--fx-motion-easing);
-    }
-    .filter-input:focus {
-      outline: none;
-      border-color: var(--fx-color-primary);
-      box-shadow: var(--fx-effect-focus-ring, none);
-    }
-    .filter-input::placeholder {
-      color: var(--fx-text-muted);
-    }
-    .list {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      border: 1px solid var(--fx-border-default);
-      border-radius: var(--fx-radius-md);
-      overflow: hidden;
-    }
-    :host([striped]) .list-item:nth-child(even) {
-      background: var(--fx-surface-surface);
-    }
-    .list-item {
-      display: flex;
-      align-items: center;
-      gap: var(--fx-space-sm);
-      padding: var(--fx-space-sm) var(--fx-space-md);
-      background: var(--fx-surface-background);
-      border-bottom: 1px solid var(--fx-border-default);
-      cursor: pointer;
-      user-select: none;
-      transition: background-color var(--fx-motion-duration-fast) var(--fx-motion-easing);
-    }
-    .list-item:last-child {
-      border-bottom: none;
-    }
-    .list-item:hover {
-      background: var(--fx-surface-surface-hover);
-    }
-    .list-item.selected {
-      background: color-mix(in srgb, var(--fx-color-primary) 10%, transparent);
-    }
-    .list-item:focus-visible {
-      outline: none;
-      background: color-mix(in srgb, var(--fx-color-primary) 15%, transparent);
-    }
-    .list-item.dragging {
-      opacity: 0.5;
-    }
-    .list-item.drag-over {
-      border-top: 2px solid var(--fx-color-primary);
-    }
-    .drag-handle {
-      color: var(--fx-text-muted);
-      cursor: grab;
-      flex-shrink: 0;
-    }
-    .drag-handle:active {
-      cursor: grabbing;
-    }
-    .item-content {
-      flex: 1;
-    }
-    .checkbox {
-      flex-shrink: 0;
-    }
-    .empty-message {
-      padding: var(--fx-space-lg);
-      text-align: center;
-      color: var(--fx-text-muted);
-    }
-    button.control-btn {
-      padding: var(--fx-space-sm);
-      border: 1px solid var(--fx-border-default);
-      border-radius: var(--fx-radius-sm);
-      background: var(--fx-surface-background);
-      color: var(--fx-text-default);
-      cursor: pointer;
-      font-size: 12px;
-      line-height: 1;
-      transition: all var(--fx-motion-duration-fast) var(--fx-motion-easing);
-    }
-    button.control-btn:hover:not(:disabled) {
-      background: var(--fx-surface-surface-hover);
-      border-color: var(--fx-border-hover);
-    }
-    button.control-btn:focus-visible {
-      outline: none;
-      box-shadow: var(--fx-effect-focus-ring, none);
-    }
-    button.control-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-  `;
+    .control-group { display: flex; flex-direction: column; gap: 3px; }
+    .control-group + .control-group { margin-top: 4px; padding-top: 6px; border-top: 1px solid var(--orderlist-border); }
+    button.control-btn { display: flex; align-items: center; justify-content: center; width: 42px; height: 38px; padding: 0; border: none; border-radius: 8px; background: transparent; color: var(--orderlist-text-muted); cursor: pointer; font-size: 16px; line-height: 1; transition: var(--orderlist-transition); position: relative; }
+    button.control-btn:hover:not(:disabled) { background: var(--orderlist-bg-hover); color: var(--orderlist-primary); transform: scale(1.1); }
+    button.control-btn:active:not(:disabled) { transform: scale(0.92); background: color-mix(in srgb, var(--orderlist-primary) 15%, transparent); }
+    button.control-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--orderlist-primary) 30%, transparent); }
+    button.control-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+    .control-btn-icon { font-size: 18px; line-height: 1; }
+    /* Tooltip nos botoes */
+    button.control-btn:hover::after { opacity: 1; transform: translateY(-50%) translateX(0); }
+    @media (max-width: 640px) { .main-row { flex-direction: column; } .controls-bar { flex-direction: row; flex-wrap: wrap; justify-content: center; position: relative; } .control-group { flex-direction: row; } .control-group + .control-group { margin-top: 0; margin-left: 4px; padding-top: 0; padding-left: 4px; border-top: none; border-left: 1px solid var(--orderlist-border); } button.control-btn { width: 44px; height: 40px; } button.control-btn::after { display: none; } .list { max-height: 300px; } }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+    .list-item { animation: slideIn 0.2s ease-out; }
+    @media (prefers-color-scheme: light) { :host { --orderlist-border: #334155; --orderlist-bg: #1e293b; --orderlist-bg-hover: #334155; --orderlist-text: #f1f5f9; --orderlist-text-muted: #94a3b8; --orderlist-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); } }
+    `;
 let FxOrderList = _FxOrderList;
 function esc(s) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
