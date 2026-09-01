@@ -47,3 +47,4 @@ export * from './components/autocomplete';
 export * from './components/knob';
 export * from './components/orderlist';
 export * from './components/picklist';
+export * from './components/accordion';
