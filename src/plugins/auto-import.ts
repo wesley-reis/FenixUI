@@ -29,8 +29,14 @@ export const fenixComponentMap: Record<string, string> = {
   'fx-alert': '@wrrdev/fenix-ui/alert',
   'fx-dropdown': '@wrrdev/fenix-ui/dropdown',
   'fx-dropdown-item': '@wrrdev/fenix-ui/dropdown',
-    'fx-pagination': '@wrrdev/fenix-ui/pagination',
+  'fx-pagination': '@wrrdev/fenix-ui/pagination',
   'fx-autocomplete': '@wrrdev/fenix-ui/autocomplete',
+  'fx-knob': '@wrrdev/fenix-ui/knob',
+  'fx-accordion': '@wrrdev/fenix-ui/accordion',
+  'fx-accordion-panel': '@wrrdev/fenix-ui/accordion',
+  'fx-orderlist': '@wrrdev/fenix-ui/orderlist',
+  'fx-picklist': '@wrrdev/fenix-ui/picklist',
+  'fx-column': '@wrrdev/fenix-ui/table',
 };
 
 const TAG_RE = /<(fx-[a-z][a-z-]*)(?=[\s/>])/g;

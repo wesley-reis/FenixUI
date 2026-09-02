@@ -15,7 +15,7 @@ describe('auto-import (plugin)', () => {
       .map((d) => 'fx-' + d.name)
       .sort();
     expect(Object.keys(fenixComponentMap).sort()).toEqual(
-      [...dirs, 'fx-tab-panel', 'fx-dropdown-item'].sort(),
+      [...dirs, 'fx-tab-panel', 'fx-accordion-panel', 'fx-dropdown-item', 'fx-column'].sort(),
     );
   });
 
