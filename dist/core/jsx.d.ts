@@ -14,7 +14,7 @@
 import type { FxElementProps, FxSize } from './types';
 /** Marcador de runtime: permite `import '@wrrdev/fenix-ui/jsx'` como side-effect import. */
 export declare const FX_JSX_TYPES: true;
-export type FxButtonVariant = 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'ghost' | 'outline';
+export type FxButtonVariant = 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info' | 'ghost' | 'outline';
 export type FxBadgeVariant = 'default' | 'primary' | 'success' | 'warning' | 'danger' | 'info';
 export type FxAlertVariant = 'info' | 'success' | 'warning' | 'danger';
 export type FxProgressVariant = 'primary' | 'success' | 'warning' | 'danger';

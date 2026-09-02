@@ -18,9 +18,14 @@ export class FxAccordionPanel extends FxElement {
       font-family: var(--fx-font-family);
       font-size: var(--fx-font-size);
       color: var(--fx-text-default);
+    }
+    /* A borda fica no wrapper interno (nao no :host): regras do documento
+       externo (ex.: preflight do Tailwind com border-width: 0) vencem as
+       regras :host do shadow tree, o que apagaria a linha divisoria. */
+    .panel {
       border-bottom: 1px solid var(--fx-border-default);
     }
-    :host(:last-child) { border-bottom: none; }
+    :host(:last-child) .panel { border-bottom: none; }
     :host([disabled]) { opacity: 0.6; pointer-events: none; }
     .header {
       display: flex;
@@ -138,22 +143,24 @@ export class FxAccordionPanel extends FxElement {
 
   protected override render(): void {
     this.setTemplate(`
-      <button type="button" class="header" part="header" role="button"
-        aria-expanded="${this.expanded}"
-        ${this.disabled ? 'aria-disabled="true"' : ''}>
-        <span class="header-text" part="header-text">
-          <slot name="header">${this.header}</slot>
-        </span>
-        <span class="chevron" part="chevron" aria-hidden="true">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="6 9 12 15 18 9"></polyline>
-          </svg>
-        </span>
-      </button>
-      <div class="content" part="content" role="region">
-        <div class="content-inner">
-          <div class="content-pad" part="content-pad"><slot></slot></div>
+      <div class="panel" part="panel">
+        <button type="button" class="header" part="header" role="button"
+          aria-expanded="${this.expanded}"
+          ${this.disabled ? 'aria-disabled="true"' : ''}>
+          <span class="header-text" part="header-text">
+            <slot name="header">${this.header}</slot>
+          </span>
+          <span class="chevron" part="chevron" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </span>
+        </button>
+        <div class="content" part="content" role="region">
+          <div class="content-inner">
+            <div class="content-pad" part="content-pad"><slot></slot></div>
+          </div>
         </div>
       </div>
     `);

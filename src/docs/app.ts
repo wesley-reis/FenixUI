@@ -944,6 +944,8 @@ const orderList = ref([
     <code>plugins/fenix-ui.client.ts</code>:</p>
     ${codeBlock(`import { defineNuxtPlugin } from '#app';
 import '@wrrdev/fenix-ui';
+import { applyPreset } from '@wrrdev/fenix-ui';
+applyPreset('fenix', 'light');
 import '@wrrdev/fenix-ui/vue';
 import { defineFxTooltipDirective } from '@wrrdev/fenix-ui/tooltip';
 defineFxTooltipDirective();

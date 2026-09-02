@@ -131,6 +131,7 @@ _FxButton.styles = css`
     :host([variant='success']) .btn { background: var(--fx-color-success); }
     :host([variant='warning']) .btn { background: var(--fx-color-warning); }
     :host([variant='danger']) .btn { background: var(--fx-color-danger); }
+    :host([variant='info']) .btn { background: var(--fx-color-info); }
     :host([variant='ghost']) .btn { background: transparent; color: var(--fx-text-default); }
     :host([variant='ghost']) .btn:hover { background: var(--fx-surface-surface-hover); filter: none; }
     :host([variant='outline']) .btn { background: transparent; color: var(--fx-color-primary); border-color: var(--fx-color-primary); }

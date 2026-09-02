@@ -18,7 +18,7 @@ import type { FxElementProps, FxSize } from './types';
 export const FX_JSX_TYPES = true as const;
 
 /* Uniões auxiliares (variants, enums) */
-export type FxButtonVariant = 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'ghost' | 'outline';
+export type FxButtonVariant = 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info' | 'ghost' | 'outline';
 export type FxBadgeVariant = 'default' | 'primary' | 'success' | 'warning' | 'danger' | 'info';
 export type FxAlertVariant = 'info' | 'success' | 'warning' | 'danger';
 export type FxProgressVariant = 'primary' | 'success' | 'warning' | 'danger';

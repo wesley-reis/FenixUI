@@ -1,6 +1,6 @@
 {
   "name": "@wrrdev/fenix-ui",
-  "version": "1.0.8",
+  "version": "1.0.10",
   "description": "FenixUI Design System Web nativo (Web Components + Shadow DOM + Design Tokens) com tree-shaking por componente.",
   "type": "module",
   "license": "ISC",
@@ -30,7 +30,7 @@
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
-    "scripts": {
+  "scripts": {
     "dev": "vite",
     "build": "npm run prepack && npm run build:esm && npm run build:types && npm run build:cdn",
     "build:esm": "vite build --config vite.config.ts",
