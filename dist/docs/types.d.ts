@@ -31,5 +31,17 @@ export interface ComponentDoc {
     events?: ApiRow[];
     slots?: ApiRow[];
     cssVars?: ApiRow[];
+    directiveInfo?: {
+        name: string;
+        description: string;
+        attributes: {
+            name: string;
+            type: string;
+            required?: boolean;
+            default?: string;
+            description: string;
+        }[];
+        examples: string[];
+    };
 }
 //# sourceMappingURL=types.d.ts.map

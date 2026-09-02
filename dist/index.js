@@ -63,6 +63,7 @@ import { FxTabPanel, FxTabs } from "./components/tabs/tabs.js";
 import { FxTable } from "./components/table/table.js";
 import { FxTextarea } from "./components/textarea/textarea.js";
 import { FxTooltip } from "./components/tooltip/tooltip.js";
+import { defineFxTooltipDirective, destroyFxTooltipDirective } from "./components/tooltip/directive.js";
 export {
   FX_JSX_TYPES,
   FenixToast,
@@ -110,6 +111,8 @@ export {
   defaultTokens,
   defineCustomPreset,
   defineElement,
+  defineFxTooltipDirective,
+  destroyFxTooltipDirective,
   kebabToCamel,
   lightTokens,
   listPresets,

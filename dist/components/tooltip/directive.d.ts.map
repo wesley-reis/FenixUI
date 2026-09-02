@@ -1,0 +1,1 @@
+{"version":3,"file":"directive.d.ts","sourceRoot":"","sources":["../../../src/components/tooltip/directive.ts"],"names":[],"mappings":"AAAA;;;;;;;;;;;;GAYG;AAEH,MAAM,WAAW,eAAe;IAC9B,QAAQ,EAAE,KAAK,GAAG,QAAQ,GAAG,MAAM,GAAG,OAAO,CAAC;IAC9C,IAAI,EAAE,OAAO,CAAC;CACf;AAkTD;;;;;;;GAOG;AACH,wBAAgB,wBAAwB,IAAI,IAAI,CAS/C;AAED;;GAEG;AACH,wBAAgB,yBAAyB,IAAI,IAAI,CAEhD"}

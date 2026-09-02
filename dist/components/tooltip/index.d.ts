@@ -1,5 +1,6 @@
 import { FxTooltip } from './tooltip';
-export { FxTooltip };
+import { defineFxTooltipDirective, destroyFxTooltipDirective } from './directive';
+export { FxTooltip, defineFxTooltipDirective, destroyFxTooltipDirective };
 declare global {
     interface HTMLElementTagNameMap {
         'fx-tooltip': FxTooltip;
