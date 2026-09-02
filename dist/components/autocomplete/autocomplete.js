@@ -26,6 +26,11 @@ const _FxAutocomplete = class _FxAutocomplete extends FxElement {
       return [];
     }
   }
+  /** Setter necessário para o Vue (patchDOMProp seta `source` como
+   *  propriedade, pois o getter existe no prototype). */
+  set source(value) {
+    this.setAttribute("source", typeof value === "string" ? value : JSON.stringify(value));
+  }
   render() {
     const placeholder = this.getAttr("placeholder");
     this.setTemplate(`

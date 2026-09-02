@@ -145,6 +145,10 @@ export class FxTabPanel extends FxElement {
   }
 
   get tab(): string { return this.getAttr('tab'); }
+  /** Setter necessário: o Vue (patchDOMProp) seta `tab` como PROPRIEDADE
+   *  (pois o getter existe no prototype) — sem ele o atributo nunca é
+   *  aplicado e o painel nunca é exibido. */
+  set tab(value: string) { this.setAttribute('tab', value); }
 
   get visible(): boolean { return !this.hasAttr('hidden'); }
   set visible(value: boolean) { this.toggleAttr('hidden', !value); }

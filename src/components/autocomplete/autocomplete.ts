@@ -86,13 +86,18 @@ export class FxAutocomplete extends FxElement {
   get value(): string { return this.getAttr('value'); }
   set value(v: string) { this.setAttribute('value', v); }
 
-  private get source(): string[] {
+  get source(): string[] {
     try {
       const raw = JSON.parse(this.getAttr('source', '[]'));
       return Array.isArray(raw) ? raw.map(String) : [];
     } catch {
       return [];
     }
+  }
+  /** Setter necessário para o Vue (patchDOMProp seta `source` como
+   *  propriedade, pois o getter existe no prototype). */
+  set source(value: string | string[]) {
+    this.setAttribute('source', typeof value === 'string' ? value : JSON.stringify(value));
   }
 
   protected override render(): void {
