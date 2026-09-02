@@ -700,8 +700,9 @@ function setupHeader(): void {
 
 function buildSidebar(): void {
   const groups = new Map<string, { id: string; title: string }[]>();
-  groups.set('Guia', [
+    groups.set('Guia', [
     { id: 'introduction', title: 'Introdução' },
+    { id: 'vue3', title: 'Vue 3 / Nuxt' },
     { id: 'auto-import', title: 'Auto Import' },
     { id: 'theming', title: 'Temas' },
   ]);
@@ -861,10 +862,95 @@ async function renderRoute(): Promise<void> {
     // Import lazy + aguarda o render completo antes de resolver a rota.
     await componentLoaders[route]?.();
     await renderComponentPage(doc);
-  }
+    }
   else if (route === 'theming') await renderTheming();
   else if (route === 'auto-import') renderAutoImport();
+  else if (route === 'vue3') renderVue3();
   else await renderIntro();
+}
+
+async function renderVue3(): Promise<void> {
+  const main = document.getElementById('main')!;
+  await Promise.all(['fx-button', 'fx-tooltip', 'fx-badge'].map((t) => componentLoaders[t]?.()));
+  await Promise.all(['fx-button', 'fx-tooltip', 'fx-badge'].map((t) => customElements.whenDefined(t)));
+  main.innerHTML = `
+    <h2>Vue 3 / Nuxt</h2>
+    <p class="lead">FenixUI são <strong>Web Components nativos</strong>. No Vue 3, basta dizer ao
+    compilador que tags <code>fx-*</code> são custom elements — e você tem autocomplete, validação
+    de atributos e reactive bindings funcionando como em componentes Vue.</p>
+
+    <h3>1. Instale</h3>
+    ${codeBlock('npm install @wrrdev/fenix-ui')}
+
+    <h3>2. Configure o Vue (main.ts)</h3>
+    <p>Dois passos no <code>main.ts</code> — o plugin <code>isCustomElement</code> e o import de tipos:</p>
+    ${codeBlock(`import { createApp } from 'vue';
+import App from './App.vue';
+import '@wrrdev/fenix-ui'; // registra todos os componentes
+
+// habilita autocomplete + validação (Volar / vue-tsc)
+import '@wrrdev/fenix-ui/vue';
+
+// diretiva de tooltip (usa em qualquer elemento)
+import { defineFxTooltipDirective } from '@wrrdev/fenix-ui/tooltip';
+defineFxTooltipDirective();
+
+const app = createApp(App);
+
+// *** essencial ***: Vue precisa saber que fx-* são Web Components
+app.config.compilerOptions.isCustomElement = (tag) => tag.startsWith('fx-');
+
+app.mount('#app');`)}
+
+    <h3>3. Use no template</h3>
+    <p>Tags sempre em <strong>kebab-case</strong>. Propriedades reativas funcionam normalmente:</p>
+    ${codeBlock(`<template>
+  <div class="p-4">
+    <!-- componente wrapper -->
+    <fx-tooltip content="Dica">
+      <fx-button variant="primary">Hover</fx-button>
+    </fx-tooltip>
+
+    <!-- diretiva em elementos HTML -->
+    <div fx-tooltip="Texto da dica">Div com tooltip</div>
+
+    <!-- vue reactivity com orderlist -->
+    <fx-orderlist
+      selection-mode="multiple"
+      :data="orderList"
+      data-key="id"
+    ></fx-orderlist>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue';
+const orderList = ref([
+  { id: 1, label: 'Item A' },
+  { id: 2, label: 'Item B' },
+]);
+</script>`)}
+
+    <div class="note">
+      <strong>Sem <code>isCustomElement</code></strong>, o Vue tenta resolver <code>fx-button</code> como um
+      componente Vue e falha. Sem <code>@wrrdev/fenix-ui/vue</code>, o Volar não autocompleta atributos de
+      <code>fx-*</code>.
+    </div>
+
+    <h3> Nuxt ( Nitro ) </h3>
+    <p>Nuxt já detecta <code>.client.ts</code> / <code>plugin.ts</code>. Crie
+    <code>plugins/fenix-ui.client.ts</code>:</p>
+    ${codeBlock(`import { defineNuxtPlugin } from '#app';
+import '@wrrdev/fenix-ui';
+import '@wrrdev/fenix-ui/vue';
+import { defineFxTooltipDirective } from '@wrrdev/fenix-ui/tooltip';
+defineFxTooltipDirective();
+
+export default defineNuxtPlugin((nuxtApp) => {
+  nuxtApp.vueApp.config.compilerOptions.isCustomElement = (tag) => tag.startsWith('fx-');
+});`)}
+  `;
+  wireCopyButtons(main);
 }
 
 /** Página Auto Import — uso do plugin no projeto do cliente. */

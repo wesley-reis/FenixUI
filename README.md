@@ -249,13 +249,28 @@ import '@wrrdev/fenix-ui'; // registra componentes + habilita as tipagens JSX
 Se o autocomplete ainda não aparecer, garanta que o `tsconfig` do seu projeto tem
 `"moduleResolution": "bundler"` (ou `"node16"`/`"nodenext"`) para resolver os `exports` do pacote.
 
-#### Vue 3 (templates SFC / Volar)
+#### Vue 3 / Nuxt
 
 No Vue, o autocomplete dos atributos `fx-*` nos templates é habilitado por um módulo próprio.
 Importe o subpath `./vue` **uma única vez** no `main.ts`:
 
 ```ts
 import '@wrrdev/fenix-ui/vue'; // habilita autocomplete de fx-* nos templates SFC
+```
+
+**Configuração essencial do Vue 3** — diga ao compilador que `fx-*` são Web Components:
+
+```ts
+import { createApp } from 'vue';
+import App from './App.vue';
+import '@wrrdev/fenix-ui';           // registra todos os componentes
+import '@wrrdev/fenix-ui/vue';       // tipos + autocomplete
+import { defineFxTooltipDirective } from '@wrrdev/fenix-ui/tooltip';
+defineFxTooltipDirective();         // diretiva fx-tooltip="texto"
+
+const app = createApp(App);
+app.config.compilerOptions.isCustomElement = (tag) => tag.startsWith('fx-');
+app.mount('#app');
 ```
 
 Requisitos:
@@ -278,6 +293,9 @@ ative o modo estrito do Volar no `tsconfig.json`:
 
 > Sem `strictTemplates`, o Vue não reporta atributos desconhecidos de elementos nativos
 > (comportamento padrão do Volar) — mas o autocomplete das propriedades continua funcionando.
+>
+> **Para Nuxt:** use `plugins/fenix-ui.client.ts` e configure
+> `nuxtApp.vueApp.config.compilerOptions.isCustomElement` no plugin.
 
 ## Componentes (fase 1)
 
