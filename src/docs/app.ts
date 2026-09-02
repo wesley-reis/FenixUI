@@ -886,7 +886,8 @@ async function renderVue3(): Promise<void> {
     <p>Dois passos no <code>main.ts</code> — o plugin <code>isCustomElement</code> e o import de tipos:</p>
     ${codeBlock(`import { createApp } from 'vue';
 import App from './App.vue';
-import '@wrrdev/fenix-ui'; // registra todos os componentes
+import '@wrrdev/fenix-ui';            // registra todos os componentes
+import { applyPreset } from '@wrrdev/fenix-ui'; // aplica tokens CSS (--fx-*) ao :root
 
 // habilita autocomplete + validação (Volar / vue-tsc)
 import '@wrrdev/fenix-ui/vue';
@@ -904,6 +905,7 @@ app.mount('#app');`)}
 
     <h3>3. Use no template</h3>
     <p>Tags sempre em <strong>kebab-case</strong>. Propriedades reativas funcionam normalmente:</p>
+     <p><strong>Anote:</strong> sem <code>applyPreset()</code> os tokens CSS ficam <em>undefined</em> — cores de fallback, bordas podem sumir.</p>
     ${codeBlock(`<template>
   <div class="p-4">
     <!-- componente wrapper -->

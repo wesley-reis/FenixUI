@@ -31,6 +31,7 @@ export interface ComponentDoc {
     events?: ApiRow[];
     slots?: ApiRow[];
     cssVars?: ApiRow[];
+    initNote?: string;
     directiveInfo?: {
         name: string;
         description: string;
