@@ -1,6 +1,6 @@
 {
   "name": "@wrrdev/fenix-ui",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "FenixUI Design System Web nativo (Web Components + Shadow DOM + Design Tokens) com tree-shaking por componente.",
   "type": "module",
   "license": "ISC",

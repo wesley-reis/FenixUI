@@ -16,6 +16,7 @@ export class FxAlert extends FxElement {
       --_color: var(--fx-color-primary);
       --_bg: color-mix(in srgb, var(--fx-color-primary) 10%, var(--fx-surface-background));
     }
+    :host([variant='info']) { --_color: var(--fx-color-info); --_bg: color-mix(in srgb, var(--fx-color-info) 10%, var(--fx-surface-background)); }
     :host([variant='success']) { --_color: var(--fx-color-success); --_bg: color-mix(in srgb, var(--fx-color-success) 10%, var(--fx-surface-background)); }
     :host([variant='warning']) { --_color: var(--fx-color-warning); --_bg: color-mix(in srgb, var(--fx-color-warning) 12%, var(--fx-surface-background)); }
     :host([variant='danger']) { --_color: var(--fx-color-danger); --_bg: color-mix(in srgb, var(--fx-color-danger) 10%, var(--fx-surface-background)); }
