@@ -11,9 +11,9 @@ export const picklistDoc: ComponentDoc = {
 	group: "Dados",
 	lead: "Duas listas para transferir itens entre origem e destino com filtro, seleção múltipla e templates customizados.",
 	imports: [
-		'import { defineFxPickList } from "@wrrdev/fenix-ui/picklist";',
-		"defineFxPickList();",
+		'import "@wrrdev/fenix-ui/picklist";',
 	],
+	initNote: "Este componente recebe dados via atributos JSON (source='[...]', target='[...]'). O auto-import registra o elemento automaticamente. Se os dados não aparecerem ao usar innerHTML dinâmico, reinicialize via JavaScript: <code>document.querySelectorAll('fx-picklist').forEach(el => el.source = [...])</code>",
 	demoHtml: (a) =>
 		`<style>.picklist-demo{width:100%}</style><fx-picklist class="picklist-demo" ${a} source-label="Disponíveis" target-label="Selecionados" source='[{"id":1,"label":"Apple"},{"id":2,"label":"Banana"},{"id":3,"label":"Cherry"},{"id":4,"label":"Date"}]' target='[]' source-key="id"></fx-picklist>`,
 	variantsHtml: () =>

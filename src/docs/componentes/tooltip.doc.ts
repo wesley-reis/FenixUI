@@ -27,7 +27,12 @@ export const tooltipDoc: ComponentDoc = {
 	title: "Tooltip",
 	group: "Feedback",
 	lead: "Dica contextual que aparece ao passar o mouse ou focar no elemento. Pode ser usada como componente wrapper ou como diretiva em qualquer elemento HTML.",
-	imports: ["import '@wrrdev/fenix-ui/tooltip';", "import { defineFxTooltipDirective } from '@wrrdev/fenix-ui/tooltip';"],
+	imports: [
+		"import '@wrrdev/fenix-ui/tooltip';",
+		"// Para usar como diretiva (atributo fx-tooltip):",
+		"import { defineFxTooltipDirective } from '@wrrdev/fenix-ui/tooltip';",
+	],
+	initNote: "O componente <fx-tooltip> funciona automaticamente com o import. A diretiva (atributo fx-tooltip='texto') requer inicialização explícita: chame <code>defineFxTooltipDirective()</code> uma vez na aplicação para ativar o MutationObserver que observa elementos com o atributo fx-tooltip.",
 	demoHtml: (a) =>
 		`<div style="display:flex;flex-direction:column;gap:24px">
 			<!-- Componente wrapper dinâmico (controles interativos) -->

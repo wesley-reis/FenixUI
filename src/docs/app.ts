@@ -804,6 +804,7 @@ async function renderComponentPage(doc: ComponentDoc): Promise<void> {
     <p class="lead">${doc.lead}</p>
     <h3>Importação (tree-shakeable)</h3>
     ${codeBlock(doc.imports.join("\n"))}
+    ${doc.initNote ? `<div class="note"><strong>Nota:</strong> ${doc.initNote}</div>` : ''}
     <h3>Playground</h3>
     <div class="demo">
       <div class="demo-stage" id="stage"></div>

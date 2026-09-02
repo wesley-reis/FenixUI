@@ -11,9 +11,9 @@ export const orderlistDoc: ComponentDoc = {
 	group: "Dados",
 	lead: "Lista ordenável com controles para mover itens, filtro, seleção, drag-and-drop e templates customizados.",
 	imports: [
-		'import { defineFxOrderList } from "@wrrdev/fenix-ui/orderlist";',
-		"defineFxOrderList();",
+		'import "@wrrdev/fenix-ui/orderlist";',
 	],
+	initNote: "Este componente recebe dados via atributo JSON (data='[...]'). O auto-import registra o elemento automaticamente. Se os dados não aparecerem ao usar innerHTML dinâmico, reinicialize via JavaScript: <code>document.querySelectorAll('fx-orderlist').forEach(el => el.data = [...])</code>",
 	demoHtml: (a) =>
 		`<fx-orderlist ${a} data='[{"id":1,"label":"Item A"},{"id":2,"label":"Item B"},{"id":3,"label":"Item C"},{"id":4,"label":"Item D"}]' data-key="id"></fx-orderlist>`,
 	variantsHtml: () =>
