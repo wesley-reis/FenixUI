@@ -17,6 +17,7 @@ import { componentDocs, componentLoaders } from './componentes';
 export { componentLoaders };
 import { esc } from './shared';
 import type { ApiRow, ComponentDoc } from './types';
+import { defineFxTooltipDirective } from '../components/tooltip/directive';
 
 /** Versão do pacote, injetada em build via `define` (vite.docs.config.ts / vite.config.ts). */
 declare const __APP_VERSION__: string;
@@ -209,7 +210,7 @@ async function renderTheming(): Promise<void> {
   await Promise.all(tags.map((t) => customElements.whenDefined(t)));
   const main = document.getElementById('main')!;
   const presetsList = listPresets()
-    .map((p) => `<option value="${p.name}">${p.label}</option>`)
+    .map((p) => `<option value="${p.name}" ${p.name === currentPreset ? 'selected' : ''}>${p.label}</option>`)
     .join('');
   main.innerHTML = `
     <h2>Temas</h2>
@@ -221,7 +222,7 @@ async function renderTheming(): Promise<void> {
     Qualquer preset pode ser usado diretamente na sua aplicação:</p>
     <div class="demo"><div class="demo-controls" style="border:none">
       <label>Preset: <fx-select id="th-preset">${presetsList}</fx-select></label>
-      <label>Modo: <fx-select id="th-mode"><option value="light">light</option><option value="dark">dark</option></fx-select></label>
+      <label>Modo: <fx-select id="th-mode"><option value="light" ${currentMode === 'light' ? 'selected' : ''}>light</option><option value="dark" ${currentMode === 'dark' ? 'selected' : ''}>dark</option></fx-select></label>
     </div></div>
     ${codeBlock(`import { applyPreset } from '@wrrdev/fenix-ui';
 
@@ -369,6 +370,11 @@ FenixUI.setTokens({
   };
   document.getElementById('th-preset')!.addEventListener('change', sync);
   document.getElementById('th-mode')!.addEventListener('change', sync);
+  // Inicializa os selects com os valores padrão (Fenix + light)
+  const thPreset = document.getElementById('th-preset') as HTMLSelectElement | null;
+  const thMode = document.getElementById('th-mode') as HTMLSelectElement | null;
+  if (thPreset) thPreset.value = currentPreset;
+  if (thMode) thMode.value = currentMode;
   paint();
   setupCustomBuilder();
   wireCopyButtons(main);
@@ -948,6 +954,7 @@ applyPreset('fenix', 'light');
 setupHeader();
 setupSearch();
 buildSidebar();
+defineFxTooltipDirective();
 
 /** Promise resolvida quando o render da rota atual finaliza — útil para testes. */
 let routeResolve: (() => void) | null = null;

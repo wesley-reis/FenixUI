@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Teste de integração da documentação: monta o DOM do index.html,
  * carrega o app da doc e valida a renderização de cada página.
  */
@@ -137,10 +137,18 @@ describe("docs app", () => {
 		expect(stage.querySelector("fx-drawer")).toBeTruthy();
 	});
 
+	it("playground do tooltip: renderiza componente e diretivas", async () => {
+		await navigate("fx-tooltip");
+		const stage = main().querySelector("#stage")!;
+		// Componente wrapper dinâmico
+		expect(stage.querySelector("fx-tooltip")).toBeTruthy();
+		// Diretiva em elementos HTML
+		expect(stage.querySelector("[fx-tooltip]")).toBeTruthy();
+	});
+
 	it.each([
 		"fx-textarea",
 		"fx-dialog",
-		"fx-tooltip",
 		"fx-tabs",
 		"fx-progress",
 		"fx-skeleton",

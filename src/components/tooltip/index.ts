@@ -1,7 +1,7 @@
-﻿import { FxTooltip, defineFxTooltip } from './tooltip';
+import { FxTooltip, defineFxTooltip } from './tooltip';
+import { defineFxTooltipDirective, destroyFxTooltipDirective } from './directive';
 
-export { FxTooltip };
-
+export { FxTooltip, defineFxTooltipDirective, destroyFxTooltipDirective };
 
 defineFxTooltip();
 
@@ -10,5 +10,3 @@ declare global {
     'fx-tooltip': FxTooltip;
   }
 }
-
-
