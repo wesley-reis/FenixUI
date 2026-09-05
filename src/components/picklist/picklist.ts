@@ -1,6 +1,7 @@
 import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
+import { esc } from '../../core/sanitize';
 
 export interface PickListItem {
   [key: string]: unknown;
@@ -793,10 +794,6 @@ export class FxPickList extends FxElement {
     this._updateSelectAllBars();
     this._attachListeners();
   }
-}
-
-function esc(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 export function defineFxPickList(): typeof FxPickList {

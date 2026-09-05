@@ -48,6 +48,17 @@ function initDataComponents(container: HTMLElement): void {
     }
   });
 
+  // Table - re-inicializa com dados do atributo 'data'
+  container.querySelectorAll('fx-table').forEach((el) => {
+    const dataAttr = el.getAttribute('data');
+    if (dataAttr) {
+      try {
+        const data = JSON.parse(dataAttr);
+        (el as any).data = data;
+      } catch { /* ignora parse inválido */ }
+    }
+  });
+
   // PickList - re-inicializa com dados dos atributos 'source' e 'target'
   container.querySelectorAll('fx-picklist').forEach((el) => {
     const sourceAttr = el.getAttribute('source');
@@ -794,9 +805,22 @@ function collectDemoTags(doc: ComponentDoc): string[] {
   return all.filter((t) => t in componentLoaders);
 }
 
+/** Componentes usados pelos controles do playground (buildControls). */
+const CONTROL_TAGS = ['fx-select', 'fx-switch', 'fx-input'];
+
+/** Componentes usados pelo drawer de customização de tema no header. */
+const THEME_DRAWER_TAGS = ['fx-drawer', 'fx-tabs', 'fx-tab-panel', 'fx-button', 'fx-badge', 'fx-spinner', 'fx-input', 'fx-select', 'fx-switch'];
+
 async function renderComponentPage(doc: ComponentDoc): Promise<void> {
-	// Garante que todos os fx-* usados no demo e variantes sejam importados primeiro.
-	const tags = collectDemoTags(doc);
+	// Garante que todos os fx-* usados no demo, variantes E nos controles do
+	// playground sejam importados ANTES de inserir o innerHTML — caso contrário
+	// os controles ficam como unknown elements vazios até outra página carregá-los.
+	const tags = [
+		...new Set([
+			...collectDemoTags(doc),
+			...CONTROL_TAGS.filter((t) => t in componentLoaders),
+		]),
+	];
 	await Promise.all(tags.map((t) => componentLoaders[t]?.()));
 
 	const main = document.getElementById("main")!;
@@ -822,7 +846,7 @@ async function renderComponentPage(doc: ComponentDoc): Promise<void> {
   `;
 
 	// Aguarda TODAS as tags customizadas serem definidas antes de manipular o stage.
-	await Promise.all(collectDemoTags(doc).map((tag) => customElements.whenDefined(tag)));
+	await Promise.all(tags.map((tag) => customElements.whenDefined(tag)));
 
 	const stage = main.querySelector<HTMLDivElement>("#stage")!;
 	const codeEl = main
@@ -1026,8 +1050,221 @@ export default defineConfig({
 }
 
 /* ------------------------------------------------------------------ */
-/* Bootstrap                                                           */
+/* Drawer de customização de tema (header)                             */
 /* ------------------------------------------------------------------ */
+
+/** Lê os tokens customizados a partir dos controles do drawer. */
+function readDrawerCustomTokens(): DeepPartial<FenixTokens> {
+  const colorInputs = document.querySelectorAll<HTMLInputElement>('input[data-drawer-color]');
+  const colors: Record<string, string> = {};
+  colorInputs.forEach((input) => {
+    colors[input.dataset.drawerColor!] = input.value;
+  });
+  const radius = (document.getElementById('drawer-radius') as any)?.value ?? '8px';
+  const readSize = (id: string, fallback: string): string =>
+    (document.getElementById(id) as any)?.value || fallback;
+  const focusRing = document.querySelector('fx-switch#drawer-focus-ring') as any;
+  const ripple = document.querySelector('fx-switch#drawer-ripple') as any;
+  return {
+    color: colors,
+    radius: { sm: radius === '9999px' ? '9999px' : `calc(${radius} / 2)`, md: radius, lg: `calc(${radius} * 1.5)` },
+    size: {
+      sm: readSize('drawer-size-sm', '32px'),
+      md: readSize('drawer-size-md', '40px'),
+      lg: readSize('drawer-size-lg', '48px'),
+    },
+    effect: {
+      'focus-ring': focusRing && !focusRing.checked
+        ? 'none'
+        : '0 0 0 3px color-mix(in srgb, var(--fx-color-primary) 22%, transparent)',
+      ripple: ripple && !ripple.checked ? '0' : '1',
+    },
+  };
+}
+
+/** Gera o JSON formatado do preset atual para exibição na aba "Preset". */
+function buildPresetJson(): string {
+  const tokens = readDrawerCustomTokens();
+  const nameInput = document.getElementById('drawer-name') as HTMLInputElement;
+  const labelInput = document.getElementById('drawer-label') as HTMLInputElement;
+  const name = slugify(nameInput?.value || 'meu-tema');
+  const label = labelInput?.value || name;
+  const preset = defineCustomPreset(name, label, tokens);
+  return JSON.stringify({ $schema: 'fenix-preset/v1', ...preset }, null, 2);
+}
+
+/** Atualiza o preview ao vivo no drawer. */
+function refreshDrawerPreview(): void {
+  const preview = document.getElementById('drawer-preview-stage');
+  if (!preview) return;
+  FenixUI.setTokens(readDrawerCustomTokens());
+  preview.innerHTML = `
+    <fx-button variant="primary">Primário</fx-button>
+    <fx-button variant="success">Sucesso</fx-button>
+    <fx-button variant="outline">Outline</fx-button>
+    <fx-badge variant="danger">7</fx-badge>
+    <fx-spinner></fx-spinner>
+    <fx-input placeholder="Digite algo…"></fx-input>
+    <fx-select><option value="a">Opção A</option><option value="b">Opção B</option></fx-select>
+  `;
+}
+
+/** Atualiza o bloco de JSON do preset na aba "Preset". */
+function updateDrawerPresetJson(): void {
+  const pre = document.getElementById('drawer-preset-json');
+  if (pre) pre.textContent = buildPresetJson();
+}
+
+/** Monta o HTML do drawer de customização. */
+function buildThemeDrawerHtml(): string {
+  const colors = ['primary', 'secondary', 'success', 'warning', 'danger', 'info']
+    .map((c) => `<div class="control-item"><label>${c}<input type="color" data-drawer-color="${c}" id="dc-${c}"></label></div>`)
+    .join('');
+
+  return `
+    <div class="theme-drawer-body">
+      <fx-tabs value="custom">
+        <fx-tab tab="custom">Personalizar</fx-tab>
+        <fx-tab tab="preset">Preset</fx-tab>
+      </fx-tabs>
+      <fx-tab-panel tab="custom">
+        <div class="tab-content">
+          <div class="controls-grid">
+            ${colors}
+            <div class="control-item">
+              <label>Arredondamento</label>
+              <fx-select id="drawer-radius" value="8px">
+                <option value="0">Nenhum (retas)</option>
+                <option value="4px">Pequeno</option>
+                <option value="8px">Médio</option>
+                <option value="16px">Grande</option>
+                <option value="9999px">Pílula</option>
+              </fx-select>
+            </div>
+            <div class="control-item">
+              <label>Tamanho sm</label>
+              <fx-select id="drawer-size-sm" value="32px">
+                <option value="28px">Compacto (28px)</option>
+                <option value="32px">Padrão (32px)</option>
+                <option value="36px">Confortável (36px)</option>
+              </fx-select>
+            </div>
+            <div class="control-item">
+              <label>Tamanho md</label>
+              <fx-select id="drawer-size-md" value="40px">
+                <option value="34px">Compacto (34px)</option>
+                <option value="40px">Padrão (40px)</option>
+                <option value="44px">Confortável (44px)</option>
+              </fx-select>
+            </div>
+            <div class="control-item">
+              <label>Tamanho lg</label>
+              <fx-select id="drawer-size-lg" value="48px">
+                <option value="42px">Compacto (42px)</option>
+                <option value="48px">Padrão (48px)</option>
+                <option value="56px">Confortável (56px)</option>
+              </fx-select>
+            </div>
+            <div class="control-item">
+              <label><fx-switch id="drawer-focus-ring" checked>Anel de foco</fx-switch></label>
+            </div>
+            <div class="control-item">
+              <label><fx-switch id="drawer-ripple" checked>Efeito ripple</fx-switch></label>
+            </div>
+          </div>
+          <div class="preview-section">
+            <h4>Preview ao vivo</h4>
+            <div class="preview-stage" id="drawer-preview-stage">
+              <fx-button variant="primary">Primário</fx-button>
+              <fx-button variant="success">Sucesso</fx-button>
+              <fx-button variant="outline">Outline</fx-button>
+              <fx-badge variant="danger">7</fx-badge>
+              <fx-spinner></fx-spinner>
+              <fx-input placeholder="Digite algo…"></fx-input>
+              <fx-select><option value="a">Opção A</option><option value="b">Opção B</option></fx-select>
+            </div>
+          </div>
+        </div>
+      </fx-tab-panel>
+      <fx-tab-panel tab="preset">
+        <div class="tab-content">
+          <div class="control-item" style="margin-bottom:12px">
+            <label>Nome do tema</label>
+            <fx-input id="drawer-name" value="meu-tema"></fx-input>
+          </div>
+          <div class="control-item" style="margin-bottom:12px">
+            <label>Rótulo</label>
+            <fx-input id="drawer-label" value="✨ Meu Tema"></fx-input>
+          </div>
+          <h4 style="margin:16px 0 8px;font-size:.85rem;color:var(--fx-text-muted)">Preset gerado</h4>
+          <pre class="preset-json" id="drawer-preset-json">${esc(buildPresetJson())}</pre>
+          <div class="drawer-footer" style="border-top:none;padding-top:0;margin-top:12px">
+            <fx-button id="drawer-download" variant="primary">⬇️ Baixar preset</fx-button>
+            <div class="spacer"></div>
+            <span class="status" id="drawer-status"></span>
+          </div>
+        </div>
+      </fx-tab-panel>
+    </div>
+  `;
+}
+
+/** Inicializa controles do drawer e liga eventos. */
+function initDrawerControls(): void {
+  document.querySelectorAll<HTMLInputElement>('input[data-drawer-color]').forEach((input) => {
+    input.value = DEFAULT_CUSTOM_COLORS[input.dataset.drawerColor!];
+    input.addEventListener('input', () => {
+      refreshDrawerPreview();
+      updateDrawerPresetJson();
+    });
+  });
+  for (const id of ['drawer-radius', 'drawer-size-sm', 'drawer-size-md', 'drawer-size-lg']) {
+    document.getElementById(id)?.addEventListener('change', () => {
+      refreshDrawerPreview();
+      updateDrawerPresetJson();
+    });
+  }
+  for (const id of ['drawer-focus-ring', 'drawer-ripple']) {
+    document.getElementById(id)?.addEventListener('change', () => {
+      refreshDrawerPreview();
+      updateDrawerPresetJson();
+    });
+  }
+  for (const id of ['drawer-name', 'drawer-label']) {
+    document.getElementById(id)?.addEventListener('input', updateDrawerPresetJson);
+  }
+  document.getElementById('drawer-download')?.addEventListener('click', () => {
+    const nameInput = document.getElementById('drawer-name') as HTMLInputElement;
+    const labelInput = document.getElementById('drawer-label') as HTMLInputElement;
+    const name = slugify(nameInput?.value || 'meu-tema');
+    const preset = defineCustomPreset(name, labelInput?.value || name, readDrawerCustomTokens());
+    downloadPreset(preset);
+    currentPreset = name;
+    syncHeaderControls(name, currentMode);
+    const status = document.getElementById('drawer-status');
+    if (status) status.textContent = `✅ Baixado como ${name}.fenix-preset.json`;
+  });
+  updateDrawerPresetJson();
+}
+
+/** Configura o drawer de customização no header. */
+async function setupThemeDrawer(): Promise<void> {
+  await Promise.all(THEME_DRAWER_TAGS.map((t) => componentLoaders[t]?.()));
+  await Promise.all(THEME_DRAWER_TAGS.map((t) => customElements.whenDefined(t)));
+  const toggle = document.getElementById('theme-customize-toggle');
+  const drawer = document.getElementById('theme-customize-drawer') as any;
+  if (!toggle || !drawer) return;
+  let initialized = false;
+  toggle.addEventListener('click', () => {
+    if (!initialized) {
+      drawer.innerHTML = buildThemeDrawerHtml();
+      initialized = true;
+    }
+    drawer.open = true;
+    setTimeout(() => initDrawerControls(), 60);
+  });
+  drawer.addEventListener('close', () => { drawer.open = false; });
+}
 
 /** Eventos de ação globais da doc (funciona dentro de shadow DOM e no jsdom). */
 document.addEventListener('click', (e: MouseEvent) => {
@@ -1044,6 +1281,7 @@ document.addEventListener('click', (e: MouseEvent) => {
 applyPreset('fenix', 'light');
 setupHeader();
 setupSearch();
+setupThemeDrawer();
 buildSidebar();
 defineFxTooltipDirective();
 

@@ -59,6 +59,107 @@
       #mode-toggle:hover svg {
         transform: rotate(15deg);
       }
+      /* Botão de customizar tema (engrenagem) */
+      #theme-customize-toggle {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 40px; height: 40px; padding: 0;
+        border: 1px solid rgba(255, 255, 255, .45);
+        border-radius: var(--fx-radius-sm);
+        background: rgba(255, 255, 255, .14);
+        color: #fff; cursor: pointer;
+        transition: background .2s, transform .2s;
+        flex: none;
+      }
+      #theme-customize-toggle:hover {
+        background: rgba(255, 255, 255, .24);
+        transform: scale(1.05);
+      }
+      #theme-customize-toggle svg {
+        width: 20px; height: 20px;
+      }
+      /* ---------- Drawer de customização de tema ---------- */
+      .theme-drawer-body { display: flex; flex-direction: column; height: 100%; }
+      .theme-drawer-body fx-tabs { flex: 1; min-height: 0; }
+      .theme-drawer-body .tab-content {
+        padding: var(--fx-space-md) 0;
+        overflow-y: auto;
+        flex: 1;
+      }
+      .theme-drawer-body .controls-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: var(--fx-space-md);
+      }
+      .theme-drawer-body .control-item {
+        display: flex;
+        flex-direction: column;
+        gap: var(--fx-space-xs);
+      }
+      .theme-drawer-body .control-item label {
+        font-size: .78rem;
+        color: var(--fx-text-muted);
+        font-weight: 500;
+      }
+      .theme-drawer-body input[type="color"] {
+        width: 100%;
+        height: 36px;
+        padding: 0;
+        border: 1px solid var(--fx-border-default);
+        border-radius: var(--fx-radius-sm);
+        background: none;
+        cursor: pointer;
+      }
+      .theme-drawer-body .preview-section {
+        margin-top: var(--fx-space-md);
+        padding: var(--fx-space-md);
+        border: 1px solid var(--fx-border-default);
+        border-radius: var(--fx-radius-md);
+        background: var(--fx-surface);
+      }
+      .theme-drawer-body .preview-section h4 {
+        margin: 0 0 var(--fx-space-sm);
+        font-size: .85rem;
+        color: var(--fx-text-muted);
+      }
+      .theme-drawer-body .preview-stage {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--fx-space-sm);
+        align-items: center;
+      }
+      .theme-drawer-body .preset-json {
+        background: var(--fx-surface);
+        border: 1px solid var(--fx-border-default);
+        border-radius: var(--fx-radius-md);
+        padding: var(--fx-space-md);
+        font-family: ui-monospace, monospace;
+        font-size: .78rem;
+        max-height: 300px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+      .theme-drawer-body .drawer-footer {
+        display: flex;
+        gap: var(--fx-space-sm);
+        align-items: center;
+        margin-top: var(--fx-space-md);
+        padding-top: var(--fx-space-md);
+        border-top: 1px solid var(--fx-border-default);
+      }
+      .theme-drawer-body .drawer-footer .spacer { flex: 1; }
+      .theme-drawer-body .drawer-footer .status {
+        font-size: .78rem;
+        color: var(--fx-text-muted);
+      }
+      /* Selects dentro do drawer: dropdown abre para cima (não há espaço embaixo) */
+      .theme-drawer-body fx-select {
+        position: relative;
+      }
+      .theme-drawer-body fx-select .panel {
+        top: auto;
+        bottom: calc(100% + 4px);
+      }
       /* Badge de versão em tom translúcido sobre o header */
       header fx-badge { --fx-color-warning: rgba(255, 255, 255, .22); --fx-text-default: #fff; }
 
@@ -337,11 +438,23 @@
           <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
         </svg>
       </button>
+      <button id="theme-customize-toggle" aria-label="Customizar tema" title="Customizar tema">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </button>
     </header>
     <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
     <aside id="sidebar"></aside>
     <main id="main"></main>
+
+    <!-- Drawer de customização de tema (aberto pelo botão no header) -->
+    <fx-drawer id="theme-customize-drawer" position="right" title="🎨 Customizar tema">
+      Carregando…
+    </fx-drawer>
 
     <script type="module" src="/src/docs/app.ts"></script>
   </body>

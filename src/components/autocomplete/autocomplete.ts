@@ -1,6 +1,7 @@
 ﻿import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
+import { esc } from '../../core/sanitize';
 
 /**
  * <fx-autocomplete> — Campo de texto com sugestões filtradas.
@@ -122,7 +123,7 @@ export class FxAutocomplete extends FxElement {
       const q = field.value.toLowerCase();
       const matches = this.source.filter((s) => s.toLowerCase().includes(q)).slice(0, 8);
       list.innerHTML = matches.length
-        ? matches.map((m) => `<button type="button" class="opt" role="option" data-v="${m}">${m}</button>`).join('')
+        ? matches.map((m) => `<button type="button" class="opt" role="option" data-v="${esc(m)}">${esc(m)}</button>`).join('')
         : '<div class="empty">Nenhum resultado</div>';
       list.querySelectorAll<HTMLButtonElement>('.opt').forEach((btn) => {
         btn.addEventListener('click', () => {

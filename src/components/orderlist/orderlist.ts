@@ -1,6 +1,7 @@
 import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
+import { esc } from '../../core/sanitize';
 
 export interface OrderListItem {
   [key: string]: unknown;
@@ -755,10 +756,6 @@ export class FxOrderList extends FxElement {
       btn.disabled = disabled;
     });
   }
-}
-
-function esc(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 export function defineFxOrderList(): typeof FxOrderList {

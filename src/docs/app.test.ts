@@ -8,6 +8,8 @@ import { applyPreset } from "../core/presets";
 document.body.innerHTML = `
   <select id="preset-select"></select>
   <button id="mode-toggle"></button>
+  <button id="theme-customize-toggle"></button>
+  <fx-drawer id="theme-customize-drawer" position="right" title="Customizar tema">Carregando…</fx-drawer>
   <aside id="sidebar"></aside>
   <main id="main"></main>
 `;
@@ -50,6 +52,19 @@ describe("docs app", () => {
 	it("página do button renderiza playground com fx-button ao vivo", async () => {
 		await navigate("fx-button");
 		expect(main().querySelector("#stage fx-button")).toBeTruthy();
+	});
+
+	it("controles do playground renderizam na primeira visita direta à página (bug de lazy-load)", async () => {
+		// Ao abrir uma página de componente sem ter visitado antes uma rota que
+		// carregue fx-select/fx-switch/fx-input, os controles devem estar
+		// renderizados (shadow com conteúdo), e não como unknown elements vazios.
+		await navigate("fx-button");
+		const controls = main().querySelectorAll(".demo-controls fx-select, .demo-controls fx-switch");
+		expect(controls.length).toBeGreaterThan(0);
+		for (const c of controls) {
+			expect((c as HTMLElement).shadowRoot).toBeTruthy();
+			expect((c as HTMLElement).shadowRoot!.innerHTML.trim()).not.toBe("");
+		}
 	});
 
 	it("página do badge renderiza playground com fx-badge ao vivo", async () => {
@@ -137,6 +152,57 @@ describe("docs app", () => {
 		expect(stage.querySelector("fx-drawer")).toBeTruthy();
 	});
 
+	it("drawer de customização: abre ao clicar no botão do header", async () => {
+		const toggle = document.getElementById("theme-customize-toggle") as HTMLButtonElement;
+		const drawer = document.getElementById("theme-customize-drawer") as any;
+		expect(drawer.open).toBeFalsy();
+		toggle.click();
+		await new Promise((r) => setTimeout(r, 80));
+		expect(drawer.open).toBeTruthy();
+	});
+
+	it("drawer de customização: renderiza tabs Personalizar e Preset", async () => {
+		const toggle = document.getElementById("theme-customize-toggle") as HTMLButtonElement;
+		toggle.click();
+		await new Promise((r) => setTimeout(r, 80));
+		const drawer = document.getElementById("theme-customize-drawer")!;
+		expect(drawer.querySelector("fx-tabs")).toBeTruthy();
+		expect(drawer.querySelector("fx-tab-panel")).toBeTruthy();
+	});
+
+	it("drawer de customização: color pickers inicializados com valores padrão", async () => {
+		const toggle = document.getElementById("theme-customize-toggle") as HTMLButtonElement;
+		toggle.click();
+		await new Promise((r) => setTimeout(r, 80));
+		const drawer = document.getElementById("theme-customize-drawer")!;
+		const colorInputs = drawer.querySelectorAll('input[data-drawer-color]');
+		expect(colorInputs.length).toBe(6);
+		for (const input of colorInputs) {
+			expect((input as HTMLInputElement).value).toMatch(/^#[0-9a-f]{6}$/i);
+		}
+	});
+
+	it("drawer de customização: preview renderiza componentes", async () => {
+		const toggle = document.getElementById("theme-customize-toggle") as HTMLButtonElement;
+		toggle.click();
+		await new Promise((r) => setTimeout(r, 80));
+		const drawer = document.getElementById("theme-customize-drawer")!;
+		const preview = drawer.querySelector("#drawer-preview-stage")!;
+		expect(preview.querySelector("fx-button")).toBeTruthy();
+		expect(preview.querySelector("fx-badge")).toBeTruthy();
+		expect(preview.querySelector("fx-input")).toBeTruthy();
+	});
+
+	it("drawer de customização: aba Preset mostra JSON formatado", async () => {
+		const toggle = document.getElementById("theme-customize-toggle") as HTMLButtonElement;
+		toggle.click();
+		await new Promise((r) => setTimeout(r, 80));
+		const drawer = document.getElementById("theme-customize-drawer")!;
+		const json = drawer.querySelector("#drawer-preset-json")!;
+		expect(json.textContent).toContain('"name"');
+		expect(json.textContent).toContain('"tokens"');
+	});
+
 	it("playground do tooltip: renderiza componente e diretivas", async () => {
 		await navigate("fx-tooltip");
 		const stage = main().querySelector("#stage")!;
@@ -173,6 +239,21 @@ describe("docs app", () => {
 	it("página da table exibe os dados fictícios no primeiro render", async () => {
 		await navigate("fx-table");
 		const table = main().querySelector("#stage fx-table") as any;
+		expect(table).toBeTruthy();
+		await new Promise((r) => setTimeout(r, 0));
+		expect(table.data.length).toBeGreaterThan(0);
+		expect(
+			table.shadowRoot!.querySelectorAll("tbody tr").length,
+		).toBeGreaterThan(0);
+	});
+
+	it("variantes da table carregam os dados dos exemplos de uso", async () => {
+		await navigate("fx-table");
+		await new Promise((r) => setTimeout(r, 0));
+		// Cada .example-stage deve conter um fx-table com linhas renderizadas.
+		const stages = main().querySelectorAll(".example-stage");
+		expect(stages.length).toBeGreaterThan(0);
+		const table = stages[0].querySelector("fx-table") as any;
 		expect(table).toBeTruthy();
 		await new Promise((r) => setTimeout(r, 0));
 		expect(table.data.length).toBeGreaterThan(0);

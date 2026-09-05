@@ -1,6 +1,7 @@
 ﻿import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
+import { esc } from '../../core/sanitize';
 
 /**
  * <fx-select> — Campo de seleção com dropdown customizado.
@@ -255,18 +256,18 @@ export class FxSelect extends FxElement {
 
     this.setTemplate(`
       <span class="trigger" part="trigger" role="button" tabindex="${this.disabled ? -1 : 0}" aria-haspopup="listbox" aria-expanded="${prevOpen}">
-        <span class="${selectedLabel ? 'label' : 'placeholder'}">${selectedLabel || placeholder}</span>
+        <span class="${selectedLabel ? 'label' : 'placeholder'}">${esc(selectedLabel) || esc(placeholder)}</span>
         <span class="actions">
           ${this.hasAttr('clearable') && current ? '<button type="button" class="clear" part="clear" aria-label="Limpar">×</button>' : ''}
           <span class="caret">▼</span>
         </span>
       </span>
       <div class="panel" part="panel" role="listbox">
-        ${this.hasAttr('searchable') ? `<input class="search" part="search" type="text" placeholder="${this.getAttr('search-placeholder', 'Pesquisar…')}">` : ''}
+        ${this.hasAttr('searchable') ? `<input class="search" part="search" type="text" placeholder="${esc(this.getAttr('search-placeholder', 'Pesquisar…'))}">` : ''}
         ${filtered.map((o) => `
-          <button type="button" class="opt" role="option" data-value="${o.value}"
-            aria-selected="${o.value === current}">${o.label}</button>`).join('')}
-        ${filtered.length === 0 ? `<div class="empty">${this.getAttr('no-results', 'Nenhum resultado')}</div>` : ''}
+          <button type="button" class="opt" role="option" data-value="${esc(o.value)}"
+            aria-selected="${o.value === current}">${esc(o.label)}</button>`).join('')}
+        ${filtered.length === 0 ? `<div class="empty">${esc(this.getAttr('no-results', 'Nenhum resultado'))}</div>` : ''}
       </div>
     `);
 

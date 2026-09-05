@@ -9,8 +9,10 @@ export const tableDoc: ComponentDoc = {
 	tag: "fx-table",
 	title: "Table",
 	group: "Exibição",
-	lead: "Tabela estilo DataTable com ordenação, filtro no header, paginação e clique na linha. Colunas declaradas como <fx-column> dentro do componente.",
+	lead: "Tabela estilo DataTable com ordenação, filtro no header, paginação e clique na linha. Colunas declaradas como <fx-column> dentro do componente, com suporte a templates de célula personalizados (formatação de moeda, data, ícones e condicionais).",
 	imports: ["import '@wrrdev/fenix-ui/table';"],
+	initNote:
+		"Cada coluna pode ter um template de célula próprio: dentro do <fx-column>, use <code>&lt;template&gt;</code> (ou o próprio conteúdo) com expressões <code>{{ }}</code>. Pipes disponíveis: <code>currency</code>, <code>date</code>, <code>dateTime</code>, <code>number</code>; além de ternários (<code>{{ value &gt; 1000 ? 'alto' : 'baixo' }}</code>) e acesso a campos da linha via <code>{{ row.campo }}</code>.",
 	demoHtml: (a) => {
 		const data = [
 			{
@@ -111,7 +113,7 @@ export const tableDoc: ComponentDoc = {
 			},
 		];
 		const json = JSON.stringify(data).replace(/"/g, "&quot;");
-		return `<fx-table ${a} data="${json}"><fx-column field="nome" header="Nome" sortable filterable></fx-column><fx-column field="cargo" header="Cargo" sortable filterable></fx-column><fx-column field="departamento" header="Departamento" filterable></fx-column><fx-column field="salario" header="Salário (R$)" sortable></fx-column><fx-column field="ativo" header="Ativo"></fx-column></fx-table>`;
+		return `<fx-table ${a} data="${json}"><template slot="toolbar"><input data-search-fields="nome,cargo,departamento" placeholder="Buscar por nome, cargo ou departamento…" style="padding:6px 10px;border:1px solid var(--fx-border-default);border-radius:var(--fx-radius-sm);font-family:inherit;font-size:inherit;min-width:220px"><button type="button" style="padding:6px 12px;font-family:inherit;font-size:inherit;border:1px solid var(--fx-border-default);border-radius:var(--fx-radius-sm);background:var(--fx-surface-background);cursor:pointer">Exportar</button></template><fx-column field="nome" header="Nome" sortable filterable></fx-column><fx-column field="cargo" header="Cargo" sortable filterable></fx-column><fx-column field="departamento" header="Departamento" filterable></fx-column><fx-column field="salario" header="Salário" sortable><template>R$ {{ value | number }}</template></fx-column><fx-column field="ativo" header="Ativo"></fx-column></fx-table>`;
 	},
 	variantsHtml: () => {
 		const small = JSON.stringify([
@@ -131,6 +133,9 @@ export const tableDoc: ComponentDoc = {
 			`<h4>Paginação centralizada</h4><fx-table data="${small}" pagination rows="3" pagination-position="center">${cols}</fx-table>`,
 			`<h4>Listrada + hover + paginação à direita</h4><fx-table data="${small}" striped hover pagination rows="3" pagination-position="right">${cols}</fx-table>`,
 			`<h4>Vazia com mensagem customizada</h4><fx-table data='[]' empty-message="Nenhum funcionário encontrado">${cols}</fx-table>`,
+			`<h4>Templates de célula (moeda, data, ícone dinâmico)</h4><fx-table data="${small}"><fx-column field="nome" header="Nome"></fx-column><fx-column field="cargo" header="Cargo"></fx-column><fx-column field="salario" header="Salário (formatado)"><template>R$ {{ value | number }}</template></fx-column><fx-column field="salario" header="Faixa"><template>{{ value >= 6000 ? 'Sênior' : 'Júnior' }}</template></fx-column></fx-table>`,
+			`<h4>Toolbar acima do header (busca global + ação)</h4><fx-table data="${small}"><template slot="toolbar"><input data-search-fields="nome,cargo" placeholder="Buscar por nome ou cargo…" style="padding:6px 10px;border:1px solid var(--fx-border-default);border-radius:var(--fx-radius-sm);font-family:inherit;font-size:inherit"><button type="button" style="padding:6px 12px;font-family:inherit;font-size:inherit;border:1px solid var(--fx-border-default);border-radius:var(--fx-radius-sm);background:var(--fx-surface-background);cursor:pointer">Exportar</button></template><fx-column field="nome" header="Nome" sortable></fx-column><fx-column field="cargo" header="Cargo" sortable></fx-column><fx-column field="salario" header="Salário" sortable><template>R$ {{ value | number }}</template></fx-column></fx-table>`,
+			`<h4>Carregando (atributo loading — para buscas sob demanda)</h4><fx-table data="${small}" loading>${cols}</fx-table>`,
 		].join("");
 	},
 	controls: [
@@ -213,22 +218,40 @@ export const tableDoc: ComponentDoc = {
 			default: "''",
 			desc: "Direção inicial.",
 		},
+		{
+			name: "lazy",
+			type: "boolean",
+			default: "false",
+			desc: "Modo sob demanda: data é a página já carregada do servidor. A tabela não filtra/ordena/pagina localmente — re-busque ao ouvir page-change / sort-change / filter-change.",
+		},
+		{
+			name: "total",
+			type: "number",
+			default: "''",
+			desc: "Total de registros no servidor (usado pelo pager em modo lazy).",
+		},
+		{
+			name: "loading",
+			type: "boolean",
+			default: "false",
+			desc: "Exibe overlay com spinner sobre a tabela (use durante a busca sob demanda).",
+		},
 	],
 	events: [
 		{
 			name: "sort-change",
-			type: `CustomEvent<{ field: string; direction: 'asc' | 'desc' }>`,
+			type: `CustomEvent<{ field: string; direction: 'asc' | 'desc'; lazy: boolean }>`,
 			desc: "Ao ordenar.",
 		},
 		{
 			name: "filter-change",
-			type: `CustomEvent<{ field: string; value: string }>`,
+			type: `CustomEvent<{ field: string; value: string; lazy: boolean }>`,
 			desc: "Ao filtrar uma coluna.",
 		},
 		{
 			name: "page-change",
-			type: `CustomEvent<{ page: number; rows: number }>`,
-			desc: "Ao trocar de página.",
+			type: `CustomEvent<{ page: number; pages: number; rowsPerPage: number; total: number; lazy: boolean }>`,
+			desc: "Ao trocar de página. Em lazy, re-busque a página no servidor.",
 		},
 		{
 			name: "row-click",
@@ -238,9 +261,16 @@ export const tableDoc: ComponentDoc = {
 	],
 	slots: [
 		{
-			name: "header[slot]",
-			desc: "Slot de header customizado por coluna (via <fx-column>).",
+			name: "fx-column > <template>",
+			desc: "Template HTML da célula da coluna. Aceita expressões {{ }} com pipes (currency, date, dateTime, number), condicionais ternários e acesso a row.campo. Ex.: <template>R$ {{ value | currency }}</template>",
 		},
-		{ name: "body[slot]", desc: "Slot de célula customizado." },
+		{
+			name: "fx-column > conteúdo",
+			desc: "Se não houver <template>, o conteúdo direto do <fx-column> é usado como template. Ex.: <fx-column field=\"status\"><i class=\"pi pi-{{ row.ativo ? 'check' : 'times' }}\"></i> {{ value }}</fx-column>",
+		},
+		{
+			name: "template[slot='toolbar']",
+			desc: 'Toolbar opcional renderizada acima do header. Inputs com data-search-fields="campo1,campo2…" viram busca global (filtrando por esses campos; sem o atributo, busca em todas as colunas). Demais elementos (botões etc.) aparecem como estão.',
+		},
 	],
 };

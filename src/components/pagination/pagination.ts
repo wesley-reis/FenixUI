@@ -1,6 +1,7 @@
 ﻿import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
+import '../select';
 
 /**
  * <fx-pagination> — Paginação standalone.
@@ -36,7 +37,7 @@ export class FxPagination extends FxElement {
         border-color var(--fx-motion-duration-fast) var(--fx-motion-easing),
         background var(--fx-motion-duration-fast) var(--fx-motion-easing);
     }
-    .nav:hover:not([disabled]) { border-color: var(--fx-color-primary); color: var(--fx-color-primary); }
+    .nav:hover:not([disabled]):not(.active) { border-color: var(--fx-color-primary); color: var(--fx-color-primary); }
     .nav[disabled] { opacity: 0.5; cursor: not-allowed; }
     .nav.active {
       background: var(--fx-color-primary);
@@ -45,7 +46,14 @@ export class FxPagination extends FxElement {
       font-weight: 600;
     }
     .info { color: var(--fx-text-muted); font-size: calc(var(--fx-font-size) - 2px); }
-    select.nav { cursor: pointer; }
+    fx-select { vertical-align: middle; }
+    fx-select::part(trigger) {
+      min-width: 64px !important;
+      min-height: var(--fx-size-sm) !important;
+      padding: 0 var(--fx-space-sm) !important;
+      border-radius: var(--fx-radius-sm) !important;
+      font-size: calc(var(--fx-font-size) - 2px) !important;
+    }
   `;
 
   static override get observedAttributes(): string[] {
@@ -83,9 +91,9 @@ export class FxPagination extends FxElement {
       ${window_[window_.length - 1] !== pages && pages > 5 ? `<button type="button" class="nav" data-go="${pages}">${pages}</button>` : ''}
       <button type="button" class="nav" part="next" data-go="${current + 1}" ${current >= pages ? 'disabled' : ''}>›</button>
       ${opts.length ? `
-        <select class="nav" part="rows" aria-label="Itens por página">
-          ${opts.map((o) => `<option value="${o}" ${Number(o) === this.rows ? 'selected' : ''}>${o}</option>`).join('')}
-        </select>` : ''}
+        <fx-select class="rows-sel" part="rows" size="sm" value="${this.rows}" aria-label="Itens por página">
+          ${opts.map((o) => `<option value="${o}">${o}</option>`).join('')}
+        </fx-select>` : ''}
     `);
 
     function total0(page: number, rows: number): number {
@@ -101,9 +109,11 @@ export class FxPagination extends FxElement {
         }
       });
     });
-    const sel = this.root.querySelector<HTMLSelectElement>('select.nav');
-    sel?.addEventListener('change', () => {
-      this.rows = Number(sel.value);
+    const sel = this.root.querySelector<HTMLElement>('fx-select.rows-sel');
+    sel?.addEventListener('change', (e) => {
+      const value = Number((e as CustomEvent).detail?.value);
+      if (!value || value === this.rows) return;
+      this.rows = value;
       this.page = 1;
       this.emit();
     });
