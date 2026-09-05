@@ -1,6 +1,7 @@
 import { FxElement } from "../../core/base.js";
 import { css } from "../../core/css.js";
 import { defineElement } from "../../core/define.js";
+import { esc } from "../../core/sanitize.js";
 const _FxPickList = class _FxPickList extends FxElement {
   constructor() {
     super(...arguments);
@@ -736,9 +737,6 @@ _FxPickList.styles = css`
     .list-item { animation: slideIn 0.2s ease-out; }
   `;
 let FxPickList = _FxPickList;
-function esc(s) {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
 function defineFxPickList() {
   return defineElement("fx-picklist", FxPickList);
 }

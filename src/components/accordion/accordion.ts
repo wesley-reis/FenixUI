@@ -1,6 +1,7 @@
 import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
+import { esc } from '../../core/sanitize';
 
 /**
  * <fx-accordion-panel> — Painel individual do accordion.
@@ -117,18 +118,21 @@ export class FxAccordionPanel extends FxElement {
   protected override connectedCallback(): void {
     super.connectedCallback();
     // O clique vem do shadow root; composedPath() revela o alvo real.
-    this.addEventListener('click', (e) => {
-      const path = e.composedPath() as HTMLElement[];
-      if (!path.some((el) => el.classList?.contains('header'))) return;
-      if (this.disabled) return;
-      this.dispatchEvent(
-        new CustomEvent('fx-accordion-toggle', {
-          bubbles: true,
-          composed: true,
-          detail: { panel: this },
-        }),
-      );
-    });
+    if (!this._clickListenerAttached) {
+      this._clickListenerAttached = true;
+      this.addEventListener('click', (e) => {
+        const path = e.composedPath() as HTMLElement[];
+        if (!path.some((el) => el.classList?.contains('header'))) return;
+        if (this.disabled) return;
+        this.dispatchEvent(
+          new CustomEvent('fx-accordion-toggle', {
+            bubbles: true,
+            composed: true,
+            detail: { panel: this },
+          }),
+        );
+      });
+    }
     // Re-render quando o atributo expanded muda (para aria-expanded).
     this._mo = new MutationObserver(() => this.render());
     this._mo.observe(this, { attributes: true, attributeFilter: ['expanded', 'header', 'disabled'] });
@@ -140,6 +144,7 @@ export class FxAccordionPanel extends FxElement {
   }
 
   private _mo: MutationObserver | null = null;
+  private _clickListenerAttached = false;
 
   protected override render(): void {
     this.setTemplate(`
@@ -148,7 +153,7 @@ export class FxAccordionPanel extends FxElement {
           aria-expanded="${this.expanded}"
           ${this.disabled ? 'aria-disabled="true"' : ''}>
           <span class="header-text" part="header-text">
-            <slot name="header">${this.header}</slot>
+            <slot name="header">${esc(this.header)}</slot>
           </span>
           <span class="chevron" part="chevron" aria-hidden="true">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"

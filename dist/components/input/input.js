@@ -1,6 +1,7 @@
 import { FxElement } from "../../core/base.js";
 import { css } from "../../core/css.js";
 import { defineElement } from "../../core/define.js";
+import { esc } from "../../core/sanitize.js";
 const _FxInput = class _FxInput extends FxElement {
   // `value` fica FORA da observação: refleti-lo a cada tecla não pode
   // re-renderizar o template, senão o campo perde o foco ao digitar.
@@ -46,9 +47,9 @@ const _FxInput = class _FxInput extends FxElement {
     const step = this.getAttr("step");
     this.setTemplate(`
       ${this.hasAttr("clearable") ? '<div class="wrap">' : ""}
-      <input class="field" part="input" type="${type}"
-        ${placeholder ? `placeholder="${placeholder}"` : ""}
-        ${min ? `min="${min}"` : ""} ${max ? `max="${max}"` : ""} ${step ? `step="${step}"` : ""}
+      <input class="field" part="input" type="${esc(type)}"
+        ${placeholder ? `placeholder="${esc(placeholder)}"` : ""}
+        ${min ? `min="${esc(min)}"` : ""} ${max ? `max="${esc(max)}"` : ""} ${step ? `step="${esc(step)}"` : ""}
       />
       ${this.hasAttr("clearable") ? '<button type="button" class="clear" part="clear" aria-label="Limpar" tabindex="-1">×</button></div>' : ""}
     `);

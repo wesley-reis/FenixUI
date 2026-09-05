@@ -1,7 +1,7 @@
 /**
  * Entrada principal do FenixUI.
  *
- * Ao importar este agregador, todos os componentes são registrados (bundle
+ * Ao importar este agregador, todos os componentes s�o registrados (bundle
  * "tudo-em-um"). Para consumo com TREE-SHAKING, prefira importar apenas o
  * subpath que deseja, ex.: `@wrrdev/fenix-ui/button`.
  */
@@ -11,6 +11,7 @@ export * from './core/presets';
 export * from './core/css';
 export * from './core/base';
 export * from './core/define';
+export * from './core/sanitize';
 export * from './core/types';
 export * from './core/jsx';
 export * from './components/button';

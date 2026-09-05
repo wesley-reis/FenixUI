@@ -101,12 +101,28 @@ export class FxAutocomplete extends FxElement {
     this.setAttribute('source', typeof value === 'string' ? value : JSON.stringify(value));
   }
 
+  private docListener?: (e: Event) => void;
+
+  protected override connectedCallback(): void {
+    super.connectedCallback();
+    this.docListener = (e: Event) => {
+      if (!this.contains(e.target as Node)) this.toggleAttr('open', false);
+    };
+    document.addEventListener('click', this.docListener);
+  }
+
+  protected override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    if (this.docListener) document.removeEventListener('click', this.docListener);
+    this.docListener = undefined;
+  }
+
   protected override render(): void {
     const placeholder = this.getAttr('placeholder');
 
     this.setTemplate(`
       <input class="field" part="input" type="text"
-        ${placeholder ? `placeholder="${placeholder}"` : ''} autocomplete="off"/>
+        ${placeholder ? `placeholder="${esc(placeholder)}"` : ''} autocomplete="off"/>
       <div class="list" part="list" role="listbox"></div>
     `);
 
@@ -144,9 +160,22 @@ export class FxAutocomplete extends FxElement {
       openList();
     });
     field.addEventListener('focus', () => { if (field.value.length >= minChars) openList(); });
-
-    document.addEventListener('click', (e) => {
-      if (!this.contains(e.target as Node)) this.toggleAttr('open', false);
+    // Navegação por teclado: setas movem o foco entre as sugestões; ESC fecha.
+    field.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        this.toggleAttr('open', false);
+        return;
+      }
+      if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+      e.preventDefault();
+      if (!this.hasAttr('open')) openList();
+      const opts = Array.from(this.root.querySelectorAll<HTMLButtonElement>('.opt'));
+      if (!opts.length) return;
+      const current = opts.indexOf(this.root.activeElement as HTMLButtonElement);
+      const next = e.key === 'ArrowDown'
+        ? (current === -1 ? 0 : Math.min(current + 1, opts.length - 1))
+        : (current === -1 ? opts.length - 1 : Math.max(current - 1, 0));
+      opts[next]?.focus();
     });
   }
 }

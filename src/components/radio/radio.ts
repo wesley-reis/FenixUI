@@ -125,7 +125,7 @@ export class FxRadio extends FxElement {
     // Desmarca os outros radios do mesmo grupo (mesmo name).
     const name = this.getAttr('name');
     if (name) {
-      document.querySelectorAll(`fx-radio[name="${name}"]`).forEach((r) => {
+      document.querySelectorAll(`fx-radio[name="${CSS.escape(name)}"]`).forEach((r) => {
         (r as FxRadio).checked = false;
       });
     }

@@ -1,6 +1,7 @@
 import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
+import { esc } from '../../core/sanitize';
 
 /**
  * <fx-drawer> — Painel deslizante (drawer) com overlay.
@@ -164,31 +165,32 @@ export class FxDrawer extends FxElement {
 
 		this.setTemplate(`
       <div class="overlay" part="overlay"></div>
-      <div class="panel" part="panel" role="dialog" aria-modal="true" aria-label="${title || "Drawer"}">
-        ${title !== "" ? `<div class="header" part="header"><span class="title">${title}</span><button type="button" class="close" part="close" aria-label="Fechar">✕</button></div>` : ""}
+      <div class="panel" part="panel" role="dialog" aria-modal="true" aria-label="${esc(title || "Drawer")}" tabindex="-1">
+        ${title !== "" ? `<div class="header" part="header"><span class="title">${esc(title)}</span><button type="button" class="close" part="close" aria-label="Fechar">✕</button></div>` : ""}
         <div class="body" part="body"><slot></slot></div>
       </div>
     `);
 
-		const close = () => {
-			if (!this.open) return;
-			this.open = false;
-			this.dispatchEvent(
-				new CustomEvent("close", { bubbles: true, composed: true }),
-			);
-		};
-		this.root.querySelector(".overlay")?.addEventListener("click", close);
-		this.root.querySelector(".close")?.addEventListener("click", close);
+		this.root.querySelector(".overlay")?.addEventListener("click", this._close);
+		this.root.querySelector(".close")?.addEventListener("click", this._close);
+
+		if (this.open) {
+			requestAnimationFrame(() => {
+				if (this._previouslyFocused === null) {
+					this._previouslyFocused = document.activeElement as HTMLElement | null;
+				}
+				this.root.querySelector<HTMLElement>(".panel")?.focus();
+			});
+		}
 	}
 
 	protected override connectedCallback(): void {
 		super.connectedCallback?.();
 		this._onKeydown = (e: KeyboardEvent) => {
 			if (e.key === "Escape" && this.open) {
-				this.open = false;
-				this.dispatchEvent(
-					new CustomEvent("close", { bubbles: true, composed: true }),
-				);
+				this._close();
+			} else if (e.key === "Tab" && this.open) {
+				this._trapFocus(e);
 			}
 		};
 		document.addEventListener("keydown", this._onKeydown);
@@ -196,10 +198,46 @@ export class FxDrawer extends FxElement {
 
 	protected override disconnectedCallback(): void {
 		document.removeEventListener("keydown", this._onKeydown);
+		this._restoreFocus();
 		super.disconnectedCallback?.();
 	}
 
 	private _onKeydown: (e: KeyboardEvent) => void = () => {};
+	private _previouslyFocused: HTMLElement | null = null;
+
+	private _close = (): void => {
+		if (!this.open) return;
+		this.open = false;
+		this._restoreFocus();
+		this.dispatchEvent(
+			new CustomEvent("close", { bubbles: true, composed: true }),
+		);
+	};
+
+	/** Mantém o foco dentro do drawer (WCAG 2.4.3 / 2.1.2). */
+	private _trapFocus(e: KeyboardEvent): void {
+		const panel = this.root.querySelector<HTMLElement>(".panel");
+		if (!panel) return;
+		const focusables = panel.querySelectorAll<HTMLElement>(
+			'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+		);
+		if (!focusables.length) return;
+		const first = focusables[0];
+		const last = focusables[focusables.length - 1];
+		const active = this.root.activeElement;
+		if (e.shiftKey && (active === first || active === panel)) {
+			e.preventDefault();
+			last.focus();
+		} else if (!e.shiftKey && active === last) {
+			e.preventDefault();
+			first.focus();
+		}
+	}
+
+	private _restoreFocus(): void {
+		if (this._previouslyFocused?.isConnected) this._previouslyFocused.focus();
+		this._previouslyFocused = null;
+	}
 }
 
 export function defineFxDrawer(): typeof FxDrawer {

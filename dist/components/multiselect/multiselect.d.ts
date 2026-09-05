@@ -26,6 +26,8 @@ export declare class FxMultiselect extends FxElement {
     /** Aplica a seleção, reflete e emite change. */
     private commit;
     private toggleValue;
+    /** Navegação por teclado entre as opções do listbox (WCAG 2.1.1). */
+    private _navigateOptions;
     protected render(): void;
 }
 export declare function defineFxMultiselect(): typeof FxMultiselect;

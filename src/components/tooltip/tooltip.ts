@@ -1,6 +1,7 @@
 ﻿import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
+import { esc } from '../../core/sanitize';
 
 /**
  * <fx-tooltip> — Dica flutuante ao passar o mouse/focar no elemento.
@@ -80,7 +81,7 @@ export class FxTooltip extends FxElement {
     const content = this.getAttr('content');
     this.setTemplate(`
       <slot></slot>
-      <span class="bubble" part="bubble" role="tooltip">${content}</span>
+      <span class="bubble" part="bubble" role="tooltip">${esc(content)}</span>
     `);
   }
 }

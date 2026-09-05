@@ -12,6 +12,11 @@ export declare class FxDropdown extends FxElement {
     get open(): boolean;
     set open(value: boolean);
     protected render(): void;
+    private docListener?;
+    private _listenersAttached;
+    /** Delegação de cliques nos itens + fechamento ao clicar fora (registrado uma vez). */
+    private _attachDelegatedListeners;
+    protected disconnectedCallback(): void;
 }
 /**
  * <fx-dropdown-item> — Item de menu.

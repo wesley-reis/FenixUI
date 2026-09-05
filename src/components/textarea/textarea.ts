@@ -1,6 +1,7 @@
 ﻿import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
+import { esc } from '../../core/sanitize';
 
 /**
  * <fx-textarea> — Área de texto multilinha estilizada com os tokens do tema.
@@ -80,9 +81,9 @@ export class FxTextarea extends FxElement {
     const maxlength = this.getAttr('maxlength');
 
     this.setTemplate(`<textarea class="field" part="textarea"
-      ${placeholder ? `placeholder="${placeholder}"` : ''}
-      ${rows ? `rows="${rows}"` : ''}
-      ${maxlength ? `maxlength="${maxlength}"` : ''}
+      ${placeholder ? `placeholder="${esc(placeholder)}"` : ''}
+      ${rows ? `rows="${esc(rows)}"` : ''}
+      ${maxlength ? `maxlength="${esc(maxlength)}"` : ''}
     ></textarea>`);
 
     const field = this.root.querySelector<HTMLTextAreaElement>('.field');

@@ -1,6 +1,7 @@
 ﻿import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
+import { esc } from '../../core/sanitize';
 
 /**
  * <fx-dialog> — Janela modal com overlay, ESC para fechar e foco preso.
@@ -94,9 +95,9 @@ export class FxDialog extends FxElement {
 
     this.setTemplate(`
       <div class="overlay" part="overlay" ${isOpen ? '' : 'hidden'}>
-        <div class="dialog" role="dialog" aria-modal="true" aria-label="${heading}">
+        <div class="dialog" role="dialog" aria-modal="true" aria-label="${esc(heading)}" tabindex="-1">
           <header>
-            <h2>${heading}</h2>
+            <h2>${esc(heading)}</h2>
             <button type="button" class="close" part="close" aria-label="Fechar">×</button>
           </header>
           <div class="body"><slot></slot></div>
@@ -111,27 +112,62 @@ export class FxDialog extends FxElement {
     const closeBtn = this.root.querySelector<HTMLButtonElement>('.close');
     const close = (): void => {
       this.open = false;
+      this._cleanup?.();
+      this._cleanup = undefined;
+      this._restoreFocus();
       this.dispatchEvent(new CustomEvent('close', { bubbles: true, composed: true }));
     };
     overlay?.addEventListener('click', (e) => { if (e.target === overlay) close(); });
     closeBtn?.addEventListener('click', close);
 
-    // ESC fecha + foco no diálogo
+    // ESC fecha + foco preso no diálogo
     const onKey = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') { e.stopPropagation(); close(); }
+      if (e.key === 'Escape') { e.stopPropagation(); close(); return; }
+      if (e.key === 'Tab') this._trapFocus(e);
     };
-    document.addEventListener('keydown', onKey, { once: true });
+    document.addEventListener('keydown', onKey);
     this._cleanup = () => document.removeEventListener('keydown', onKey);
 
-    requestAnimationFrame(() => this.root.querySelector<HTMLElement>('.dialog')?.focus());
+    requestAnimationFrame(() => {
+      this._previouslyFocused = document.activeElement as HTMLElement | null;
+      this.root.querySelector<HTMLElement>('.dialog')?.focus();
+    });
     this.dispatchEvent(new CustomEvent('open', { bubbles: true, composed: true }));
   }
 
   private _cleanup?: () => void;
+  private _previouslyFocused: HTMLElement | null = null;
+
+  /** Mantém o foco dentro do modal (WCAG 2.4.3 / 2.1.2). */
+  private _trapFocus(e: KeyboardEvent): void {
+    const dialog = this.root.querySelector<HTMLElement>('.dialog');
+    if (!dialog) return;
+    const focusables = dialog.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+    );
+    if (!focusables.length) return;
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    const active = this.root.activeElement;
+    if (e.shiftKey && (active === first || active === dialog)) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && active === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+
+  private _restoreFocus(): void {
+    if (this._previouslyFocused?.isConnected) this._previouslyFocused.focus();
+    this._previouslyFocused = null;
+  }
 
   override disconnectedCallback(): void {
     super.disconnectedCallback();
     this._cleanup?.();
+    this._cleanup = undefined;
+    this._restoreFocus();
   }
 }
 

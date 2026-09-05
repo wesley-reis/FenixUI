@@ -1,6 +1,8 @@
 import { FxElement } from "../../core/base.js";
 import { css } from "../../core/css.js";
 import { defineElement } from "../../core/define.js";
+import { esc } from "../../core/sanitize.js";
+import "../select/index.js";
 const _FxPagination = class _FxPagination extends FxElement {
   static get observedAttributes() {
     return ["page", "total", "rows", "rows-options", "position"];
@@ -42,9 +44,9 @@ const _FxPagination = class _FxPagination extends FxElement {
       ${window_[window_.length - 1] !== pages && pages > 5 ? `<button type="button" class="nav" data-go="${pages}">${pages}</button>` : ""}
       <button type="button" class="nav" part="next" data-go="${current + 1}" ${current >= pages ? "disabled" : ""}>›</button>
       ${opts.length ? `
-        <select class="nav" part="rows" aria-label="Itens por página">
-          ${opts.map((o) => `<option value="${o}" ${Number(o) === this.rows ? "selected" : ""}>${o}</option>`).join("")}
-        </select>` : ""}
+        <fx-select class="rows-sel" part="rows" size="sm" value="${this.rows}" aria-label="Itens por página">
+          ${opts.map((o) => `<option value="${esc(o)}">${esc(o)}</option>`).join("")}
+        </fx-select>` : ""}
     `);
     function total0(page, rows) {
       return (page - 1) * rows + 1;
@@ -58,9 +60,11 @@ const _FxPagination = class _FxPagination extends FxElement {
         }
       });
     });
-    const sel = this.root.querySelector("select.nav");
-    sel?.addEventListener("change", () => {
-      this.rows = Number(sel.value);
+    const sel = this.root.querySelector("fx-select.rows-sel");
+    sel?.addEventListener("change", (e) => {
+      const value = Number(e.detail?.value);
+      if (!value || value === this.rows) return;
+      this.rows = value;
       this.page = 1;
       this.emit();
     });
@@ -99,7 +103,7 @@ _FxPagination.styles = css`
         border-color var(--fx-motion-duration-fast) var(--fx-motion-easing),
         background var(--fx-motion-duration-fast) var(--fx-motion-easing);
     }
-    .nav:hover:not([disabled]) { border-color: var(--fx-color-primary); color: var(--fx-color-primary); }
+    .nav:hover:not([disabled]):not(.active) { border-color: var(--fx-color-primary); color: var(--fx-color-primary); }
     .nav[disabled] { opacity: 0.5; cursor: not-allowed; }
     .nav.active {
       background: var(--fx-color-primary);
@@ -108,7 +112,14 @@ _FxPagination.styles = css`
       font-weight: 600;
     }
     .info { color: var(--fx-text-muted); font-size: calc(var(--fx-font-size) - 2px); }
-    select.nav { cursor: pointer; }
+    fx-select { vertical-align: middle; }
+    fx-select::part(trigger) {
+      min-width: 64px !important;
+      min-height: var(--fx-size-sm) !important;
+      padding: 0 var(--fx-space-sm) !important;
+      border-radius: var(--fx-radius-sm) !important;
+      font-size: calc(var(--fx-font-size) - 2px) !important;
+    }
   `;
 let FxPagination = _FxPagination;
 function defineFxPagination() {

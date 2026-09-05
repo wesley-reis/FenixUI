@@ -30,6 +30,8 @@ export declare class FxSelect extends FxElement {
     protected connectedCallback(): void;
     protected disconnectedCallback(): void;
     private select;
+    /** Navegação por teclado entre as opções do listbox (WCAG 2.1.1). */
+    private _navigateOptions;
     protected render(): void;
 }
 export declare function defineFxSelect(): typeof FxSelect;

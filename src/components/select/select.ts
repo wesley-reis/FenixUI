@@ -232,6 +232,24 @@ export class FxSelect extends FxElement {
     );
   }
 
+  /** Navegação por teclado entre as opções do listbox (WCAG 2.1.1). */
+  private _navigateOptions(e: KeyboardEvent): void {
+    e.preventDefault();
+    if (!this.hasAttr('open')) {
+      this.toggleAttribute('open');
+      this.render();
+    }
+    const opts = Array.from(this.root.querySelectorAll<HTMLButtonElement>('.opt'));
+    if (!opts.length) return;
+    const current = opts.indexOf(this.root.activeElement as HTMLButtonElement);
+    let next = 0;
+    if (e.key === 'ArrowDown') next = current === -1 ? 0 : Math.min(current + 1, opts.length - 1);
+    else if (e.key === 'ArrowUp') next = current === -1 ? opts.length - 1 : Math.max(current - 1, 0);
+    else if (e.key === 'Home') next = 0;
+    else if (e.key === 'End') next = opts.length - 1;
+    opts[next]?.focus();
+  }
+
   protected override render(): void {
     const prevOpen = this.hasAttr('open');
     const prevSearch = this.root.querySelector<HTMLInputElement>('.search');
@@ -296,11 +314,24 @@ export class FxSelect extends FxElement {
       this.root.querySelector<HTMLInputElement>('.search')?.focus();
     });
 
-    // Teclado: Enter/Espaço abrem o dropdown.
+    // Teclado: Enter/Espaço abrem o dropdown; setas/Home/End/Escape navegam.
     trigger.addEventListener('keydown', (e) => {
+      if (this.disabled) return;
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         trigger.click();
+        return;
+      }
+      if (e.key === 'Escape') {
+        if (this.hasAttr('open')) {
+          this.removeAttribute('open');
+          this.render();
+          this.root.querySelector<HTMLElement>('.trigger')?.focus();
+        }
+        return;
+      }
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Home' || e.key === 'End') {
+        this._navigateOptions(e);
       }
     });
 

@@ -17,6 +17,9 @@ export declare class FxAutocomplete extends FxElement {
     /** Setter necessário para o Vue (patchDOMProp seta `source` como
      *  propriedade, pois o getter existe no prototype). */
     set source(value: string | string[]);
+    private docListener?;
+    protected connectedCallback(): void;
+    protected disconnectedCallback(): void;
     protected render(): void;
 }
 export declare function defineFxAutocomplete(): typeof FxAutocomplete;

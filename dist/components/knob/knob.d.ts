@@ -40,6 +40,8 @@ export declare class FxKnob extends FxElement {
     private _startValue;
     protected render(): void;
     private getSizeNum;
+    /** Valida um valor de cor CSS, retornando-o seguro ou vazio. */
+    private safeColor;
     private clampValue;
     private emitChange;
     private attachListeners;

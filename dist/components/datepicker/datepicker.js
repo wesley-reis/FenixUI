@@ -1,6 +1,7 @@
 import { FxElement } from "../../core/base.js";
 import { css } from "../../core/css.js";
 import { defineElement } from "../../core/define.js";
+import { esc } from "../../core/sanitize.js";
 const _FxDatepicker = class _FxDatepicker extends FxElement {
   constructor() {
     super(...arguments);
@@ -103,21 +104,21 @@ const _FxDatepicker = class _FxDatepicker extends FxElement {
     const hasValue = text.length > 0;
     const showTime = this.hasAttr("show-time");
     this.loadTimeFromValue();
-    let calAttrs = `min="${this.getAttr("min")}" max="${this.getAttr("max")}"`;
+    let calAttrs = `min="${esc(this.getAttr("min"))}" max="${esc(this.getAttr("max"))}"`;
     if (this.mode === "range") {
-      calAttrs += ` range start="${this.getAttr("start")}" end="${this.getAttr("end")}"`;
+      calAttrs += ` range start="${esc(this.getAttr("start"))}" end="${esc(this.getAttr("end"))}"`;
     } else if (this.mode === "multiple") {
       const dates = this.values.map((v) => v.split("T")[0]).join(",");
-      calAttrs += ` mode="multiple" values="${dates}"`;
+      calAttrs += ` mode="multiple" values="${esc(dates)}"`;
     } else {
       const v = this.value.split("T")[0] ?? "";
-      calAttrs += ` value="${v}"`;
+      calAttrs += ` value="${esc(v)}"`;
     }
     this.setTemplate(`
       <div class="field" part="field">
         <input class="display" part="display" type="text" ${this.hasAttr("free-text") && !disabled ? "" : "readonly"}
-          placeholder="${this.getAttr("placeholder", "dd/mm/aaaa")}"
-          value="${text}" ${disabled ? "disabled" : ""}>
+          placeholder="${esc(this.getAttr("placeholder", "dd/mm/aaaa"))}"
+          value="${esc(text)}" ${disabled ? "disabled" : ""}>
         <button type="button" class="clear" part="clear" aria-label="Limpar"
           ${clearable && hasValue ? "" : "hidden"}>
           ×

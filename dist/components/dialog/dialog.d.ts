@@ -13,6 +13,10 @@ export declare class FxDialog extends FxElement {
     set open(value: boolean);
     protected render(): void;
     private _cleanup?;
+    private _previouslyFocused;
+    /** Mantém o foco dentro do modal (WCAG 2.4.3 / 2.1.2). */
+    private _trapFocus;
+    private _restoreFocus;
     disconnectedCallback(): void;
 }
 export declare function defineFxDialog(): typeof FxDialog;

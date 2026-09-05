@@ -51,7 +51,7 @@ const _FxRadio = class _FxRadio extends FxElement {
     if (this.disabled || this.checked) return;
     const name = this.getAttr("name");
     if (name) {
-      document.querySelectorAll(`fx-radio[name="${name}"]`).forEach((r) => {
+      document.querySelectorAll(`fx-radio[name="${CSS.escape(name)}"]`).forEach((r) => {
         r.checked = false;
       });
     }

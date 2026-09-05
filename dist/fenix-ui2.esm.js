@@ -305,6 +305,37 @@ function defineElement(tag, ctor) {
   }
   return customElements.get(tag) ?? ctor;
 }
+const HTML_ENTITIES = {
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#39;",
+  "/": "&#x2F;",
+  "`": "&#x60;",
+  "=": "&#x3D;"
+};
+const SANITIZE_REGEX = /[&<>"'`=/]/g;
+function esc(value) {
+  if (value == null) return "";
+  return String(value).replace(SANITIZE_REGEX, (char) => HTML_ENTITIES[char] || char);
+}
+function stripTags(html) {
+  return html.replace(/<[^>]*>/g, "");
+}
+function sanitizeData(data) {
+  if (data == null) return data;
+  if (typeof data === "string") return esc(data);
+  if (Array.isArray(data)) return data.map(sanitizeData);
+  if (typeof data === "object") {
+    const result = {};
+    for (const [key2, value] of Object.entries(data)) {
+      result[key2] = sanitizeData(value);
+    }
+    return result;
+  }
+  return data;
+}
 const FX_JSX_TYPES = true;
 const _FxButton = class _FxButton extends FxElement {
   constructor() {
@@ -633,6 +664,23 @@ const _FxSelect = class _FxSelect extends FxElement {
       new CustomEvent("change", { bubbles: true, composed: true, detail: { value } })
     );
   }
+  /** Navegação por teclado entre as opções do listbox (WCAG 2.1.1). */
+  _navigateOptions(e) {
+    e.preventDefault();
+    if (!this.hasAttr("open")) {
+      this.toggleAttribute("open");
+      this.render();
+    }
+    const opts = Array.from(this.root.querySelectorAll(".opt"));
+    if (!opts.length) return;
+    const current = opts.indexOf(this.root.activeElement);
+    let next = 0;
+    if (e.key === "ArrowDown") next = current === -1 ? 0 : Math.min(current + 1, opts.length - 1);
+    else if (e.key === "ArrowUp") next = current === -1 ? opts.length - 1 : Math.max(current - 1, 0);
+    else if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = opts.length - 1;
+    opts[next]?.focus();
+  }
   render() {
     const prevOpen = this.hasAttr("open");
     const prevSearch = this.root.querySelector(".search");
@@ -650,18 +698,18 @@ const _FxSelect = class _FxSelect extends FxElement {
     const filtered = search ? opts.filter((o) => o.label.toLowerCase().includes(search.toLowerCase())) : opts;
     this.setTemplate(`
       <span class="trigger" part="trigger" role="button" tabindex="${this.disabled ? -1 : 0}" aria-haspopup="listbox" aria-expanded="${prevOpen}">
-        <span class="${selectedLabel ? "label" : "placeholder"}">${selectedLabel || placeholder}</span>
+        <span class="${selectedLabel ? "label" : "placeholder"}">${esc(selectedLabel) || esc(placeholder)}</span>
         <span class="actions">
           ${this.hasAttr("clearable") && current ? '<button type="button" class="clear" part="clear" aria-label="Limpar">×</button>' : ""}
           <span class="caret">▼</span>
         </span>
       </span>
       <div class="panel" part="panel" role="listbox">
-        ${this.hasAttr("searchable") ? `<input class="search" part="search" type="text" placeholder="${this.getAttr("search-placeholder", "Pesquisar…")}">` : ""}
+        ${this.hasAttr("searchable") ? `<input class="search" part="search" type="text" placeholder="${esc(this.getAttr("search-placeholder", "Pesquisar…"))}">` : ""}
         ${filtered.map((o) => `
-          <button type="button" class="opt" role="option" data-value="${o.value}"
-            aria-selected="${o.value === current}">${o.label}</button>`).join("")}
-        ${filtered.length === 0 ? `<div class="empty">${this.getAttr("no-results", "Nenhum resultado")}</div>` : ""}
+          <button type="button" class="opt" role="option" data-value="${esc(o.value)}"
+            aria-selected="${o.value === current}">${esc(o.label)}</button>`).join("")}
+        ${filtered.length === 0 ? `<div class="empty">${esc(this.getAttr("no-results", "Nenhum resultado"))}</div>` : ""}
       </div>
     `);
     if (prevOpen) this.setAttribute("open", "");
@@ -689,9 +737,22 @@ const _FxSelect = class _FxSelect extends FxElement {
       this.root.querySelector(".search")?.focus();
     });
     trigger.addEventListener("keydown", (e) => {
+      if (this.disabled) return;
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
         trigger.click();
+        return;
+      }
+      if (e.key === "Escape") {
+        if (this.hasAttr("open")) {
+          this.removeAttribute("open");
+          this.render();
+          this.root.querySelector(".trigger")?.focus();
+        }
+        return;
+      }
+      if (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Home" || e.key === "End") {
+        this._navigateOptions(e);
       }
     });
     this.root.querySelector(".clear")?.addEventListener("click", (e) => {
@@ -901,9 +962,9 @@ const _FxInput = class _FxInput extends FxElement {
     const step = this.getAttr("step");
     this.setTemplate(`
       ${this.hasAttr("clearable") ? '<div class="wrap">' : ""}
-      <input class="field" part="input" type="${type}"
-        ${placeholder ? `placeholder="${placeholder}"` : ""}
-        ${min ? `min="${min}"` : ""} ${max ? `max="${max}"` : ""} ${step ? `step="${step}"` : ""}
+      <input class="field" part="input" type="${esc(type)}"
+        ${placeholder ? `placeholder="${esc(placeholder)}"` : ""}
+        ${min ? `min="${esc(min)}"` : ""} ${max ? `max="${esc(max)}"` : ""} ${step ? `step="${esc(step)}"` : ""}
       />
       ${this.hasAttr("clearable") ? '<button type="button" class="clear" part="clear" aria-label="Limpar" tabindex="-1">×</button></div>' : ""}
     `);
@@ -1189,6 +1250,23 @@ const _FxMultiselect = class _FxMultiselect extends FxElement {
     else this.selected.add(value);
     this.commit();
   }
+  /** Navegação por teclado entre as opções do listbox (WCAG 2.1.1). */
+  _navigateOptions(e) {
+    e.preventDefault();
+    if (!this.hasAttr("open")) {
+      this.toggleAttribute("open");
+      this.render();
+    }
+    const opts = Array.from(this.root.querySelectorAll(".opt"));
+    if (!opts.length) return;
+    const current = opts.indexOf(this.root.activeElement);
+    let next = 0;
+    if (e.key === "ArrowDown") next = current === -1 ? 0 : Math.min(current + 1, opts.length - 1);
+    else if (e.key === "ArrowUp") next = current === -1 ? opts.length - 1 : Math.max(current - 1, 0);
+    else if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = opts.length - 1;
+    opts[next]?.focus();
+  }
   render() {
     const wasOpen = this.hasAttr("open");
     const search = this.root.querySelector(".search")?.value ?? "";
@@ -1203,10 +1281,10 @@ const _FxMultiselect = class _FxMultiselect extends FxElement {
       <span class="trigger" part="trigger" role="button" tabindex="${this.disabled ? -1 : 0}" aria-haspopup="listbox" aria-expanded="${wasOpen}" aria-disabled="${this.disabled}">
         <span class="lead">
         ${chips.length ? chips.map((c) => `
-              <span class="chip" data-value="${c.value}">
-                ${c.label}
-                <span class="chip__x" role="button" aria-label="Remover ${c.label}">×</span>
-              </span>`).join("") : `<span class="placeholder">${placeholder}</span>`}
+              <span class="chip" data-value="${esc(c.value)}">
+                ${esc(c.label)}
+                <span class="chip__x" role="button" aria-label="Remover ${esc(c.label)}">×</span>
+              </span>`).join("") : `<span class="placeholder">${esc(placeholder)}</span>`}
         </span>
         <span class="trigger-right">
           ${this.hasAttr("clearable") && chips.length ? '<button type="button" class="icon-btn clear" part="clear" aria-label="Limpar seleção">×</button>' : ""}
@@ -1218,14 +1296,14 @@ const _FxMultiselect = class _FxMultiselect extends FxElement {
           <span class="count">${chips.length} selecionado${chips.length === 1 ? "" : "s"}</span>
           ${this.hasAttr("clearable") && chips.length ? '<button type="button" class="clear-all">Limpar tudo</button>' : ""}
         </div>
-        ${this.hasAttr("searchable") ? `<input class="search" part="search" type="text" placeholder="${this.getAttr("search-placeholder", "Pesquisar…")}">` : ""}
+        ${this.hasAttr("searchable") ? `<input class="search" part="search" type="text" placeholder="${esc(this.getAttr("search-placeholder", "Pesquisar…"))}">` : ""}
         <ul class="list">
           ${filtered.map((o) => `
-            <li><button type="button" class="opt" role="option" data-value="${o.value}"
+            <li><button type="button" class="opt" role="option" data-value="${esc(o.value)}"
               aria-selected="${this.selected.has(o.value)}">
-              <span class="box" aria-hidden="true"></span>${o.label}
+              <span class="box" aria-hidden="true"></span>${esc(o.label)}
             </button></li>`).join("")}
-          ${filtered.length === 0 ? `<li class="empty">${this.getAttr("no-results", "Nenhum resultado")}</li>` : ""}
+          ${filtered.length === 0 ? `<li class="empty">${esc(this.getAttr("no-results", "Nenhum resultado"))}</li>` : ""}
         </ul>
       </div>
     `);
@@ -1264,6 +1342,18 @@ const _FxMultiselect = class _FxMultiselect extends FxElement {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
         trigger.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+        return;
+      }
+      if (e.key === "Escape") {
+        if (this.hasAttr("open")) {
+          this.removeAttribute("open");
+          this.render();
+          this.root.querySelector(".trigger")?.focus();
+        }
+        return;
+      }
+      if (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Home" || e.key === "End") {
+        this._navigateOptions(e);
       }
     });
     this.root.querySelector(".clear")?.addEventListener("click", (e) => {
@@ -2047,21 +2137,21 @@ const _FxDatepicker = class _FxDatepicker extends FxElement {
     const hasValue = text.length > 0;
     const showTime = this.hasAttr("show-time");
     this.loadTimeFromValue();
-    let calAttrs = `min="${this.getAttr("min")}" max="${this.getAttr("max")}"`;
+    let calAttrs = `min="${esc(this.getAttr("min"))}" max="${esc(this.getAttr("max"))}"`;
     if (this.mode === "range") {
-      calAttrs += ` range start="${this.getAttr("start")}" end="${this.getAttr("end")}"`;
+      calAttrs += ` range start="${esc(this.getAttr("start"))}" end="${esc(this.getAttr("end"))}"`;
     } else if (this.mode === "multiple") {
       const dates = this.values.map((v) => v.split("T")[0]).join(",");
-      calAttrs += ` mode="multiple" values="${dates}"`;
+      calAttrs += ` mode="multiple" values="${esc(dates)}"`;
     } else {
       const v = this.value.split("T")[0] ?? "";
-      calAttrs += ` value="${v}"`;
+      calAttrs += ` value="${esc(v)}"`;
     }
     this.setTemplate(`
       <div class="field" part="field">
         <input class="display" part="display" type="text" ${this.hasAttr("free-text") && !disabled ? "" : "readonly"}
-          placeholder="${this.getAttr("placeholder", "dd/mm/aaaa")}"
-          value="${text}" ${disabled ? "disabled" : ""}>
+          placeholder="${esc(this.getAttr("placeholder", "dd/mm/aaaa"))}"
+          value="${esc(text)}" ${disabled ? "disabled" : ""}>
         <button type="button" class="clear" part="clear" aria-label="Limpar"
           ${clearable && hasValue ? "" : "hidden"}>
           ×
@@ -2564,7 +2654,7 @@ const _FxRadio = class _FxRadio extends FxElement {
     if (this.disabled || this.checked) return;
     const name = this.getAttr("name");
     if (name) {
-      document.querySelectorAll(`fx-radio[name="${name}"]`).forEach((r) => {
+      document.querySelectorAll(`fx-radio[name="${CSS.escape(name)}"]`).forEach((r) => {
         r.checked = false;
       });
     }
@@ -2640,17 +2730,465 @@ function defineFxRadio() {
   return defineElement("fx-radio", FxRadio);
 }
 defineFxRadio();
+const LOCALE = "pt-BR";
+const PIPES = {
+  /** Formata como moeda brasileira (R$). */
+  currency: (v) => {
+    if (v == null || v === "") return "";
+    try {
+      return new Intl.NumberFormat(LOCALE, {
+        style: "currency",
+        currency: "BRL"
+      }).format(Number(v));
+    } catch {
+      return String(v);
+    }
+  },
+  /** Formata como data. Estilos: short | medium | long | full (default medium). */
+  date: (v, arg) => {
+    const d = toDate(v);
+    if (!d) return String(v ?? "");
+    const styles = {
+      short: { dateStyle: "short" },
+      medium: { dateStyle: "medium" },
+      long: { dateStyle: "long" },
+      full: { dateStyle: "full" }
+    };
+    const opts = arg && styles[arg] ? styles[arg] : styles.medium;
+    try {
+      return new Intl.DateTimeFormat(LOCALE, opts).format(d);
+    } catch {
+      return d.toLocaleDateString(LOCALE);
+    }
+  },
+  /** Formata como data + hora (medium/short). */
+  dateTime: (v) => {
+    const d = toDate(v);
+    if (!d) return String(v ?? "");
+    try {
+      return new Intl.DateTimeFormat(LOCALE, {
+        dateStyle: "medium",
+        timeStyle: "short"
+      }).format(d);
+    } catch {
+      return d.toLocaleString(LOCALE);
+    }
+  },
+  /** Formata como número (pt-BR). Opcional: `number: 2` (casas decimais). */
+  number: (v, arg) => {
+    if (v == null || v === "") return "";
+    try {
+      const opt = {};
+      if (arg !== void 0) {
+        const dec = Number(arg);
+        opt.minimumFractionDigits = dec;
+        opt.maximumFractionDigits = dec;
+      }
+      return new Intl.NumberFormat(LOCALE, opt).format(Number(v));
+    } catch {
+      return String(v);
+    }
+  }
+};
+function toDate(v) {
+  if (v == null || v === "") return null;
+  if (v instanceof Date) return isNaN(v.getTime()) ? null : v;
+  if (typeof v === "number") {
+    const d = new Date(v);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  if (typeof v === "string") {
+    const d = new Date(v);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  return null;
+}
+const IDENT_START = (ch) => /[a-z_$]/i.test(ch);
+const IDENT_PART = (ch) => /[a-z0-9_$]/i.test(ch);
+function tokenize(expr) {
+  const tokens = [];
+  let i = 0;
+  while (i < expr.length) {
+    const ch = expr[i];
+    if (/\s/.test(ch)) {
+      i++;
+      continue;
+    }
+    if (ch === "'" || ch === '"') {
+      const quote = ch;
+      let str = "";
+      i++;
+      while (i < expr.length && expr[i] !== quote) {
+        if (expr[i] === "\\" && i + 1 < expr.length) {
+          str += expr[i + 1];
+          i += 2;
+        } else {
+          str += expr[i];
+          i++;
+        }
+      }
+      i++;
+      tokens.push({ type: "str", value: str });
+      continue;
+    }
+    if (ch >= "0" && ch <= "9") {
+      let numStr = "";
+      while (i < expr.length && (expr[i] >= "0" && expr[i] <= "9" || expr[i] === ".")) {
+        numStr += expr[i];
+        i++;
+      }
+      tokens.push({ type: "num", value: numStr });
+      continue;
+    }
+    if (IDENT_START(ch)) {
+      let ident = "";
+      while (i < expr.length && IDENT_PART(expr[i])) {
+        ident += expr[i];
+        i++;
+      }
+      if (ident === "true" || ident === "false" || ident === "null") {
+        tokens.push({ type: "kw", value: ident });
+      } else {
+        tokens.push({ type: "id", value: ident });
+      }
+      continue;
+    }
+    const two = expr.slice(i, i + 2);
+    if (two === "==" || two === "!=" || two === ">=" || two === "<=") {
+      tokens.push({ type: "cmp", value: two });
+      i += 2;
+      continue;
+    }
+    if (ch === "+") {
+      tokens.push({ type: "op", value: "+" });
+      i++;
+      continue;
+    }
+    if (ch === "-") {
+      tokens.push({ type: "op", value: "-" });
+      i++;
+      continue;
+    }
+    if (ch === "*") {
+      tokens.push({ type: "op", value: "*" });
+      i++;
+      continue;
+    }
+    if (ch === "/") {
+      tokens.push({ type: "op", value: "/" });
+      i++;
+      continue;
+    }
+    if (ch === ">") {
+      tokens.push({ type: "cmp", value: ">" });
+      i++;
+      continue;
+    }
+    if (ch === "<") {
+      tokens.push({ type: "cmp", value: "<" });
+      i++;
+      continue;
+    }
+    if (ch === "!") {
+      tokens.push({ type: "op", value: "!" });
+      i++;
+      continue;
+    }
+    if (ch === "?") {
+      tokens.push({ type: "qm", value: "?" });
+      i++;
+      continue;
+    }
+    if (ch === ":") {
+      tokens.push({ type: "colon", value: ":" });
+      i++;
+      continue;
+    }
+    if (ch === "|") {
+      tokens.push({ type: "pipe", value: "|" });
+      i++;
+      continue;
+    }
+    if (ch === "(") {
+      tokens.push({ type: "lparen", value: "(" });
+      i++;
+      continue;
+    }
+    if (ch === ")") {
+      tokens.push({ type: "rparen", value: ")" });
+      i++;
+      continue;
+    }
+    if (ch === ".") {
+      tokens.push({ type: "dot", value: "." });
+      i++;
+      continue;
+    }
+    i++;
+  }
+  return tokens;
+}
+class Parser {
+  constructor(tokens, ctx) {
+    this.tokens = tokens;
+    this.ctx = ctx;
+    this.pos = 0;
+  }
+  peek() {
+    return this.pos < this.tokens.length ? this.tokens[this.pos] : null;
+  }
+  next() {
+    return this.pos < this.tokens.length ? this.tokens[this.pos++] : null;
+  }
+  matchType(type) {
+    if (this.peek()?.type === type) return this.next();
+    return null;
+  }
+  parse() {
+    return this.parsePipe();
+  }
+  /* pipeExpr := ternary ('|' IDENT (':' pipeArg)? )* */
+  parsePipe() {
+    let val = this.parseTernary();
+    while (this.peek()?.type === "pipe") {
+      this.next();
+      const nameTok = this.matchType("id");
+      if (!nameTok) break;
+      let arg;
+      if (this.peek()?.type === "colon") {
+        this.next();
+        const argTok = this.peek();
+        if (argTok && (argTok.type === "str" || argTok.type === "num" || argTok.type === "id")) {
+          arg = argTok.type === "str" ? argTok.value : String(argTok.value);
+          this.next();
+        }
+      }
+      val = this.applyPipe(nameTok.value, arg, val);
+    }
+    return val;
+  }
+  /* ternary := comparison ('?' pipeExpr ':' pipeExpr)? */
+  parseTernary() {
+    const cond = this.parseComparison();
+    if (this.peek()?.type === "qm") {
+      this.next();
+      const trueVal = this.parsePipe();
+      if (this.peek()?.type === "colon") {
+        this.next();
+        const falseVal = this.parsePipe();
+        return cond ? trueVal : falseVal;
+      }
+      return trueVal;
+    }
+    return cond;
+  }
+  /* comparison := additive (COMP_OP additive)? */
+  parseComparison() {
+    const left = this.parseAdditive();
+    const tok = this.peek();
+    if (tok?.type === "cmp") {
+      this.next();
+      const right = this.parseAdditive();
+      return this.compare(left, tok.value, right);
+    }
+    return left;
+  }
+  compare(left, op, right) {
+    const l = toComparable(left);
+    const r = toComparable(right);
+    switch (op) {
+      case "==":
+        return l == r;
+      case "!=":
+        return l != r;
+      case ">":
+        return l > r;
+      case "<":
+        return l < r;
+      case ">=":
+        return l >= r;
+      case "<=":
+        return l <= r;
+    }
+    return false;
+  }
+  /* additive := multiplicative (('+' | '-') multiplicative)* */
+  parseAdditive() {
+    let left = this.parseMultiplicative();
+    for (; ; ) {
+      const tok = this.peek();
+      if (tok?.type === "op" && (tok.value === "+" || tok.value === "-")) {
+        this.next();
+        const right = this.parseMultiplicative();
+        left = tok.value === "+" ? this.add(left, right) : this.subtract(left, right);
+      } else break;
+    }
+    return left;
+  }
+  add(l, r) {
+    if (typeof l === "string" || typeof r === "string") {
+      return String(l ?? "") + String(r ?? "");
+    }
+    return Number(l) + Number(r);
+  }
+  subtract(l, r) {
+    return Number(l) - Number(r);
+  }
+  /* multiplicative := unary (('*' | '/') unary)* */
+  parseMultiplicative() {
+    let left = this.parseUnary();
+    for (; ; ) {
+      const tok = this.peek();
+      if (tok?.type === "op" && (tok.value === "*" || tok.value === "/")) {
+        this.next();
+        const right = this.parseUnary();
+        left = tok.value === "*" ? Number(left) * Number(right) : Number(left) / Number(right);
+      } else break;
+    }
+    return left;
+  }
+  /* unary := ('+' | '-' | '!') unary | primary */
+  parseUnary() {
+    const tok = this.peek();
+    if (tok?.type === "op" && (tok.value === "+" || tok.value === "-")) {
+      this.next();
+      const val = Number(this.parseUnary());
+      return tok.value === "-" ? -val : val;
+    }
+    if (tok?.type === "op" && tok.value === "!") {
+      this.next();
+      return !this.parseUnary();
+    }
+    return this.parsePrimary();
+  }
+  /* primary := STRING | NUMBER | kw | id ( '.' id )* | '(' pipeExpr ')' */
+  parsePrimary() {
+    const tok = this.peek();
+    if (!tok) return void 0;
+    if (tok.type === "lparen") {
+      this.next();
+      const val = this.parsePipe();
+      this.matchType("rparen");
+      return val;
+    }
+    if (tok.type === "str") {
+      this.next();
+      return tok.value;
+    }
+    if (tok.type === "num") {
+      this.next();
+      return Number(tok.value);
+    }
+    if (tok.type === "kw") {
+      this.next();
+      return tok.value === "true" ? true : tok.value === "false" ? false : null;
+    }
+    if (tok.type === "id") {
+      this.next();
+      let result = this.resolveId(tok.value);
+      while (this.peek()?.type === "dot") {
+        this.next();
+        const propTok = this.peek();
+        if (propTok?.type === "id") {
+          this.next();
+          result = result == null ? void 0 : result[propTok.value];
+        } else break;
+      }
+      return result;
+    }
+    this.next();
+    return void 0;
+  }
+  resolveId(name) {
+    switch (name) {
+      case "value":
+        return this.ctx.value;
+      case "row":
+        return this.ctx.row;
+      case "true":
+        return true;
+      case "false":
+        return false;
+      case "null":
+        return null;
+      default:
+        return this.ctx.row[name];
+    }
+  }
+  applyPipe(name, arg, input) {
+    const pipe = PIPES[name];
+    if (!pipe) return formatDefault(input);
+    try {
+      return pipe(input, arg);
+    } catch {
+      return formatDefault(input);
+    }
+  }
+}
+function toComparable(v) {
+  if (typeof v === "number") return v;
+  if (typeof v === "boolean") return v ? 1 : 0;
+  return String(v ?? "");
+}
+function formatDefault(v) {
+  if (v == null) return "";
+  if (typeof v === "object") return "[object Object]";
+  return String(v);
+}
+function evaluate(expr, ctx) {
+  try {
+    const tokens = tokenize(expr);
+    const parser = new Parser(tokens, ctx);
+    const result = parser.parse();
+    return formatDefault(result);
+  } catch {
+    return "";
+  }
+}
+function renderCell(template, row, field) {
+  const ctx = { value: row[field], row };
+  return template.replace(/\{\{([^}]+)\}\}/g, (_, expr) => esc(evaluate(decodeEntities(expr.trim()), ctx)));
+}
+function decodeEntities(str) {
+  return str.replace(/&amp;/g, "&").replace(/&gt;/g, ">").replace(/&lt;/g, "<").replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+}
 const _FxTable = class _FxTable extends FxElement {
   constructor() {
     super(...arguments);
-    this.data = [];
+    this._data = [];
     this.page = 0;
     this.sortField = "";
     this.sortDir = 1;
     this.filters = {};
+    this.globalSearch = "";
   }
   static get observedAttributes() {
-    return ["pagination", "rows", "rows-options", "striped", "empty-message", "pagination-position"];
+    return [
+      "pagination",
+      "rows",
+      "rows-options",
+      "striped",
+      "empty-message",
+      "pagination-position",
+      "lazy",
+      "total",
+      "loading",
+      "loading-message"
+    ];
+  }
+  get data() {
+    return this._data;
+  }
+  set data(value) {
+    this._data = Array.isArray(value) ? value : [];
+    this.render();
+  }
+  get total() {
+    return this._total ?? this._data.length;
+  }
+  set total(value) {
+    this._total = value;
+    this.setAttribute("total", String(value));
   }
   get rowsPerPage() {
     const r = Number(this.getAttr("rows", "10"));
@@ -2659,57 +3197,101 @@ const _FxTable = class _FxTable extends FxElement {
   set rowsPerPage(value) {
     this.setAttribute("rows", String(value));
   }
-  /** Colunas declaradas no light DOM (<fx-column>). */
+  get lazy() {
+    return this.hasAttr("lazy");
+  }
   get columns() {
-    return [...this.querySelectorAll("fx-column")].map((c) => ({
-      field: c.getAttribute("field") ?? "",
-      header: c.getAttribute("header") ?? c.getAttribute("field") ?? "",
-      sortable: c.hasAttribute("sortable"),
-      filterable: c.hasAttribute("filterable"),
-      align: c.getAttribute("align") ?? "left",
-      template: c.querySelector("template") ?? void 0
-    }));
+    return [...this.querySelectorAll("fx-column")].map((c) => {
+      const tpl = c.querySelector("template");
+      const direct = tpl ? void 0 : c.innerHTML.trim();
+      const align = c.getAttribute("align") ?? "left";
+      return {
+        field: c.getAttribute("field") ?? "",
+        header: c.getAttribute("header") ?? c.getAttribute("field") ?? "",
+        sortable: c.hasAttribute("sortable"),
+        filterable: c.hasAttribute("filterable"),
+        align: ["left", "center", "right", "justify", "start", "end"].includes(align) ? align : "left",
+        template: tpl ?? void 0,
+        directTemplate: direct || void 0
+      };
+    });
+  }
+  get toolbarTemplate() {
+    return this.querySelector(
+      'template[slot="toolbar"]'
+    );
   }
   connectedCallback() {
+    this._parseDataAttribute();
     super.connectedCallback();
-    if (!this.data.length) {
+    this._columnObserver = new MutationObserver(() => this.render());
+    this._columnObserver.observe(this, { childList: true, subtree: true });
+  }
+  disconnectedCallback() {
+    this._columnObserver?.disconnect();
+    super.disconnectedCallback();
+  }
+  _parseDataAttribute() {
+    if (!this._data.length) {
       try {
         const json = this.getAttr("data");
-        if (json) this.data = JSON.parse(json);
+        if (json) this._data = JSON.parse(json);
       } catch {
       }
     }
-    new MutationObserver(() => this.render()).observe(this, { childList: true, subtree: true });
+    const totalAttr = this.getAttr("total");
+    if (totalAttr) {
+      const n = Number(totalAttr);
+      if (!isNaN(n)) this._total = n;
+    }
   }
-  /** Pipeline: filtra → ordena → pagina. */
   computeRows() {
-    let out = [...this.data];
+    let out = [...this._data];
     for (const [field, term] of Object.entries(this.filters)) {
       if (!term) continue;
       const t = term.toLowerCase();
-      out = out.filter((r) => String(r[field] ?? "").toLowerCase().includes(t));
+      out = out.filter(
+        (r) => String(r[field] ?? "").toLowerCase().includes(t)
+      );
     }
-    const total = out.length;
+    if (this.globalSearch) {
+      const t = this.globalSearch.toLowerCase();
+      const searchFields = this._getSearchFields();
+      out = out.filter((r) => {
+        const fields = searchFields.length ? searchFields : Object.keys(r);
+        return fields.some(
+          (f) => String(r[f] ?? "").toLowerCase().includes(t)
+        );
+      });
+    }
+    const total = this.lazy ? this.total : out.length;
     if (this.sortField) {
       out.sort((a, b) => {
         const av = a[this.sortField], bv = b[this.sortField];
-        if (typeof av === "number" && typeof bv === "number") return (av - bv) * this.sortDir;
+        if (typeof av === "number" && typeof bv === "number")
+          return (av - bv) * this.sortDir;
         return String(av ?? "").localeCompare(String(bv ?? ""), "pt-BR") * this.sortDir;
       });
     }
-    if (this.hasAttr("pagination")) {
+    if (this.hasAttr("pagination") && !this.lazy) {
       const start = this.page * this.rowsPerPage;
       out = out.slice(start, start + this.rowsPerPage);
     }
     return { rows: out, total };
   }
-  /** Célula: template customizado ({{value}}, {{campo}}, {{row}}) ou valor direto. */
+  _getSearchFields() {
+    const input = this.root.querySelector(
+      "[data-search-fields]"
+    );
+    if (!input) return [];
+    const attr = input.getAttribute("data-search-fields");
+    if (attr === null) return [];
+    return attr.split(",").map((s) => s.trim()).filter(Boolean);
+  }
   cellHtml(col, row) {
-    const value = row[col.field];
-    if (col.template) {
-      return col.template.innerHTML.replace(/\{\{(\w+)\}\}/g, (_, k) => k === "value" ? String(value ?? "") : k === "row" ? "" : String(row[k] ?? ""));
-    }
-    return String(value ?? "");
+    const template = col.template?.innerHTML ?? col.directTemplate;
+    if (template) return renderCell(template, row, col.field);
+    return esc(String(row[col.field] ?? ""));
   }
   render() {
     const cols = this.columns.filter((c) => c.field);
@@ -2717,12 +3299,18 @@ const _FxTable = class _FxTable extends FxElement {
     const paginated = this.hasAttr("pagination");
     const pages = Math.max(1, Math.ceil(total / this.rowsPerPage));
     if (this.page >= pages) this.page = pages - 1;
+    const toolbar = this.toolbarTemplate;
+    const toolbarHtml = toolbar ? `<div class="toolbar" part="toolbar">${toolbar.innerHTML}</div>` : "";
     const headHtml = cols.map((c) => {
-      const ind = this.sortField === c.field ? this.sortDir === 1 ? "▲" : "▼" : "";
-      return `<th part="header" class="${c.sortable ? "sortable" : ""}" style="text-align:${c.align}" data-field="${c.field}">${c.header}${ind ? `<span class="sort-ind">${ind}</span>` : ""}</th>`;
+      const isSorted = this.sortField === c.field;
+      const ind = isSorted ? this.sortDir === 1 ? "▲" : "▼" : c.sortable ? "⇅" : "";
+      const activeClass = isSorted ? "active" : "";
+      return `<th part="header" class="${c.sortable ? "sortable" : ""}" style="text-align:${c.align}" data-field="${esc(c.field)}">${esc(c.header)}${ind ? `<span class="sort-ind ${activeClass}">${ind}</span>` : ""}</th>`;
     }).join("");
-    const filterRow = cols.some((c) => c.filterable) ? `<tr class="filter-row">${cols.map((c) => `<th style="text-align:${c.align}">${c.filterable ? `<input class="filter" data-field="${c.field}" placeholder="Filtrar…" value="${this.filters[c.field] ?? ""}">` : ""}</th>`).join("")}</tr>` : "";
-    const bodyHtml = rows.length ? rows.map((row, i) => `<tr part="row" data-index="${i}">${cols.map((c) => `<td part="cell" style="text-align:${c.align}">${this.cellHtml(c, row)}</td>`).join("")}</tr>`).join("") : `<tr><td class="empty" colspan="${cols.length || 1}">${this.getAttr("empty-message", "Nenhum registro encontrado")}</td></tr>`;
+    const filterRow = cols.some((c) => c.filterable) ? `<tr class="filter-row">${cols.map((c) => `<th style="text-align:${c.align}">${c.filterable ? `<input class="filter" data-field="${esc(c.field)}" placeholder="${esc("Filtrar…")}" value="${esc(this.filters[c.field] ?? "")}">` : ""}</th>`).join("")}</tr>` : "";
+    const bodyHtml = rows.length ? rows.map(
+      (row, i) => `<tr part="row" data-index="${i}">${cols.map((c) => `<td part="cell" style="text-align:${c.align}">${this.cellHtml(c, row)}</td>`).join("")}</tr>`
+    ).join("") : `<tr><td class="empty" colspan="${cols.length || 1}">${esc(this.getAttr("empty-message", "Nenhum registro encontrado"))}</td></tr>`;
     const pagerHtml = !paginated ? "" : `
       <div class="pager" part="pager">
         <span class="info">Página ${this.page + 1} de ${pages} · ${total} registros</span>
@@ -2731,43 +3319,69 @@ const _FxTable = class _FxTable extends FxElement {
         ${Array.from({ length: pages }, (_, p) => `<button type="button" class="pg-btn" data-pg="${p}" aria-current="${p === this.page}">${p + 1}</button>`).join("")}
         <button type="button" class="pg-btn" data-pg="next" ${this.page >= pages - 1 ? "disabled" : ""}>›</button>
         <button type="button" class="pg-btn" data-pg="last" ${this.page >= pages - 1 ? "disabled" : ""}>»</button>
-        <label class="info">Por página:
-          <select class="rows-sel">${this.getAttr("rows-options", "5,10,20,50").split(",").map((n) => n.trim()).map((n) => `<option value="${n}" ${Number(n) === this.rowsPerPage ? "selected" : ""}>${n}</option>`).join("")}</select>
+        <label class="info">${esc("Por página:")}
+          <fx-select class="rows-sel" size="sm" value="${this.rowsPerPage}" aria-label="Itens por página">${this.getAttr(
+      "rows-options",
+      "5,10,20,50"
+    ).split(",").map((n) => n.trim()).map((n) => `<option value="${esc(n)}">${esc(n)}</option>`).join("")}</fx-select>
         </label>
       </div>`;
+    const loading = this.hasAttr("loading");
+    const loadingHtml = loading ? `<div class="loading-overlay" part="loading-overlay"><div class="tbl-spinner" part="spinner"></div><span class="loading-text">${esc(this.getAttr("loading-message", "Carregando…"))}</span></div>` : "";
     this.setTemplate(`
-      <div class="scroll">
-        <table part="table">
-          <thead><tr>${headHtml}</tr>${filterRow}</thead>
-          <tbody>${bodyHtml}</tbody>
-        </table>
+      ${toolbarHtml}
+      <div class="table-wrap">
+        <div class="scroll">
+          <table part="table">
+            <thead><tr>${headHtml}</tr>${filterRow}</thead>
+            <tbody>${bodyHtml}</tbody>
+          </table>
+        </div>
+        ${loadingHtml}
       </div>
       ${pagerHtml}
     `);
     this.root.querySelectorAll("th.sortable").forEach((th) => {
       th.addEventListener("click", () => {
         const f = th.dataset.field;
-        if (this.sortField === f) this.sortDir = this.sortDir === 1 ? -1 : 1;
+        if (this.sortField === f)
+          this.sortDir = this.sortDir === 1 ? -1 : 1;
         else {
           this.sortField = f;
           this.sortDir = 1;
         }
         this.render();
-        this.dispatchEvent(new CustomEvent("sort-change", {
-          bubbles: true,
-          composed: true,
-          detail: { field: this.sortField, direction: this.sortDir === 1 ? "asc" : "desc" }
-        }));
+        this.dispatchEvent(
+          new CustomEvent("sort-change", {
+            bubbles: true,
+            composed: true,
+            detail: {
+              field: this.sortField,
+              direction: this.sortDir === 1 ? "asc" : "desc",
+              lazy: this.lazy
+            }
+          })
+        );
       });
     });
     this.root.querySelectorAll(".filter").forEach((inp) => {
       inp.addEventListener("input", () => {
-        this.filters[inp.dataset.field] = inp.value;
-        this.page = 0;
         const field = inp.dataset.field;
+        const value = inp.value;
         const pos = inp.selectionStart;
+        this.filters[field] = value;
+        this.page = 0;
         this.render();
-        const again = this.root.querySelector(`.filter[data-field="${field}"]`);
+        this.dispatchEvent(
+          new CustomEvent("filter-change", {
+            bubbles: true,
+            composed: true,
+            detail: { field, value, lazy: this.lazy }
+          })
+        );
+        const again = this.root.querySelector(
+          `.filter[data-field="${esc(field)}"]`
+        );
         if (again) {
           again.focus();
           again.setSelectionRange(pos, pos);
@@ -2775,117 +3389,274 @@ const _FxTable = class _FxTable extends FxElement {
       });
       inp.addEventListener("click", (e) => e.stopPropagation());
     });
+    this.root.querySelectorAll("[data-search-fields]").forEach((inp) => {
+      inp.addEventListener("input", () => {
+        this.globalSearch = inp.value;
+        this.page = 0;
+        const pos = inp.selectionStart;
+        this.render();
+        const again = this.root.querySelector(
+          "[data-search-fields]"
+        );
+        if (again) {
+          again.focus();
+          again.setSelectionRange(pos, pos);
+        }
+      });
+    });
     this.root.querySelectorAll(".pg-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
         const pg = btn.dataset.pg;
         this.page = pg === "first" ? 0 : pg === "prev" ? Math.max(0, this.page - 1) : pg === "next" ? Math.min(pages - 1, this.page + 1) : pg === "last" ? pages - 1 : Number(pg);
         this.render();
-        this.dispatchEvent(new CustomEvent("page-change", {
-          bubbles: true,
-          composed: true,
-          detail: { page: this.page + 1, pages, rowsPerPage: this.rowsPerPage, total }
-        }));
+        this.dispatchEvent(
+          new CustomEvent("page-change", {
+            bubbles: true,
+            composed: true,
+            detail: {
+              page: this.page + 1,
+              pages,
+              rowsPerPage: this.rowsPerPage,
+              total,
+              lazy: this.lazy
+            }
+          })
+        );
       });
     });
-    this.root.querySelector(".rows-sel")?.addEventListener("change", (e) => {
-      this.rowsPerPage = Number(e.target.value);
+    this.root.querySelector("fx-select.rows-sel")?.addEventListener("change", (e) => {
+      const value = Number(e.detail?.value);
+      if (!value || value === this.rowsPerPage) return;
+      this.rowsPerPage = value;
       this.page = 0;
       this.render();
     });
     this.root.querySelectorAll("tbody tr[data-index]").forEach((tr) => {
       tr.addEventListener("click", () => {
-        this.dispatchEvent(new CustomEvent("row-click", {
-          bubbles: true,
-          composed: true,
-          detail: { row: rows[Number(tr.dataset.index)], index: Number(tr.dataset.index) }
-        }));
+        this.dispatchEvent(
+          new CustomEvent("row-click", {
+            bubbles: true,
+            composed: true,
+            detail: {
+              row: rows[Number(tr.dataset.index)],
+              index: Number(tr.dataset.index)
+            }
+          })
+        );
       });
     });
+    this._restoreToolbarSearch();
+  }
+  _restoreToolbarSearch() {
+    const input = this.root.querySelector(
+      "[data-search-fields]"
+    );
+    if (input && this.globalSearch) input.value = this.globalSearch;
   }
 };
 _FxTable.styles = css`
-    :host {
-      display: block;
-      font-family: var(--fx-font-family);
-      font-size: var(--fx-font-size);
-      color: var(--fx-text-default);
-    }
-    .scroll { overflow-x: auto; border: 1px solid var(--fx-border-default); border-radius: var(--fx-radius-md); }
-    table { width: 100%; border-collapse: collapse; }
-    th {
-      text-align: left;
-      padding: var(--fx-space-sm) var(--fx-space-md);
-      background: var(--fx-surface-background);
-      border-bottom: 2px solid var(--fx-border-default);
-      white-space: nowrap;
-      user-select: none;
-    }
-    th.sortable { cursor: pointer; }
-    th.sortable:hover { color: var(--fx-color-primary); }
-    .sort-ind { font-size: calc(var(--fx-font-size) - 4px); margin-left: var(--fx-space-3xs, 2px); }
-    .filter-row th { padding: var(--fx-space-3xs, 4px) var(--fx-space-md) var(--fx-space-sm); border-bottom-width: 1px; }
-    .filter {
-      width: 100%;
-      box-sizing: border-box;
-      font: inherit;
-      font-size: calc(var(--fx-font-size) - 2px);
-      color: var(--fx-text-default);
-      background: var(--fx-surface-background);
-      border: 1px solid var(--fx-border-default);
-      border-radius: var(--fx-radius-sm);
-      padding: var(--fx-space-3xs, 4px) var(--fx-space-xs);
-      outline: none;
-    }
-    .filter:focus { border-color: var(--fx-color-primary); box-shadow: var(--fx-effect-focus-ring, none); }
-    td {
-      padding: var(--fx-space-sm) var(--fx-space-md);
-      border-bottom: 1px solid var(--fx-border-default);
-    }
-    tbody tr { cursor: pointer; transition: background-color var(--fx-motion-duration-fast) var(--fx-motion-easing); }
-    tbody tr:hover { background: color-mix(in srgb, var(--fx-color-primary) 8%, transparent); }
-    :host([striped]) tbody tr:nth-child(even) { background: var(--fx-surface-background); }
-    :host([striped]) tbody tr:hover { background: color-mix(in srgb, var(--fx-color-primary) 8%, transparent); }
-    .empty { text-align: center; padding: var(--fx-space-xl); color: var(--fx-text-muted); }
-    .pager {
-      display: flex;
-      align-items: center;
-      gap: var(--fx-space-sm);
-      flex-wrap: wrap;
-      padding: var(--fx-space-sm) 0;
-    }
-    :host([pagination-position='center']) .pager { justify-content: center; }
-    :host([pagination-position='right']) .pager { justify-content: flex-end; }
-    .pager .info { color: var(--fx-text-muted); font-size: calc(var(--fx-font-size) - 2px); }
-    .pg-btn {
-      font: inherit;
-      font-size: calc(var(--fx-font-size) - 2px);
-      color: var(--fx-text-default);
-      background: var(--fx-surface-background);
-      border: 1px solid var(--fx-border-default);
-      border-radius: var(--fx-radius-sm);
-      padding: var(--fx-space-3xs, 4px) var(--fx-space-sm);
-      cursor: pointer;
-      transition: border-color var(--fx-motion-duration-fast) var(--fx-motion-easing);
-    }
-    .pg-btn:hover:not(:disabled) { border-color: var(--fx-color-primary); color: var(--fx-color-primary); }
-    .pg-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .pg-btn[aria-current='true'] {
-      background: var(--fx-color-primary);
-      border-color: var(--fx-color-primary);
-      color: #fff;
-      font-weight: var(--fx-font-weight);
-    }
-    .rows-sel {
-      font: inherit;
-      font-size: calc(var(--fx-font-size) - 2px);
-      color: var(--fx-text-default);
-      background: var(--fx-surface-background);
-      border: 1px solid var(--fx-border-default);
-      border-radius: var(--fx-radius-sm);
-      padding: 2px var(--fx-space-xs);
-      outline: none;
-    }
-  `;
+		:host {
+			display: block;
+			font-family: var(--fx-font-family);
+			font-size: var(--fx-font-size);
+			color: var(--fx-text-default);
+			background: var(--fx-surface-background);
+		}
+		.table-wrap {
+			position: relative;
+		}
+		.scroll {
+			overflow-x: auto;
+			border: 1px solid var(--fx-border-default);
+			border-radius: var(--fx-radius-md);
+		}
+		table {
+			width: 100%;
+			border-collapse: collapse;
+		}
+		th {
+			text-align: left;
+			padding: var(--fx-space-sm) var(--fx-space-md);
+			background: var(--fx-surface-surface);
+			border-bottom: 2px solid var(--fx-border-default);
+			white-space: nowrap;
+			user-select: none;
+		}
+		th.sortable {
+			cursor: pointer;
+		}
+		th.sortable:hover {
+			color: var(--fx-color-primary);
+		}
+		.sort-ind {
+			font-size: calc(var(--fx-font-size) - 4px);
+			margin-left: var(--fx-space-3xs, 2px);
+			opacity: 0.45;
+			transition: opacity var(--fx-motion-duration-fast)
+				var(--fx-motion-easing);
+		}
+		th.sortable:hover .sort-ind {
+			opacity: 0.85;
+		}
+		.sort-ind.active {
+			opacity: 1;
+			color: var(--fx-color-primary);
+		}
+		.filter-row th {
+			padding: var(--fx-space-3xs, 4px) var(--fx-space-md) var(--fx-space-sm);
+			border-bottom-width: 1px;
+		}
+		.filter {
+			width: 100%;
+			box-sizing: border-box;
+			font: inherit;
+			font-size: calc(var(--fx-font-size) - 2px);
+			color: var(--fx-text-default);
+			background: var(--fx-surface-background);
+			border: 1px solid var(--fx-border-default);
+			border-radius: var(--fx-radius-sm);
+			padding: var(--fx-space-3xs, 4px) var(--fx-space-xs);
+			outline: none;
+		}
+		.filter:focus {
+			border-color: var(--fx-color-primary);
+			box-shadow: var(--fx-effect-focus-ring, none);
+		}
+		td {
+			padding: var(--fx-space-sm) var(--fx-space-md);
+			border-bottom: 1px solid var(--fx-border-default);
+		}
+		tbody tr {
+			cursor: pointer;
+			transition: background-color var(--fx-motion-duration-fast)
+				var(--fx-motion-easing);
+		}
+		tbody tr:hover {
+			background: color-mix(
+				in srgb,
+				var(--fx-color-primary) 8%,
+				transparent
+			);
+		}
+		:host([striped]) tbody tr:nth-child(even) {
+			background: var(--fx-surface-background);
+		}
+		:host([striped]) tbody tr:hover {
+			background: color-mix(
+				in srgb,
+				var(--fx-color-primary) 8%,
+				transparent
+			);
+		}
+		.empty {
+			text-align: center;
+			padding: var(--fx-space-xl);
+			color: var(--fx-text-muted);
+		}
+		.pager {
+			display: flex;
+			align-items: center;
+			gap: var(--fx-space-sm);
+			flex-wrap: wrap;
+			padding: var(--fx-space-sm) 0;
+		}
+		:host([pagination-position="center"]) .pager {
+			justify-content: center;
+		}
+		:host([pagination-position="right"]) .pager {
+			justify-content: flex-end;
+		}
+		.pager .info {
+			color: var(--fx-text-muted);
+			font-size: calc(var(--fx-font-size) - 2px);
+		}
+		.pg-btn {
+			min-width: var(--fx-size-sm);
+			height: var(--fx-size-sm);
+			font: inherit;
+			font-size: calc(var(--fx-font-size) - 2px);
+			color: var(--fx-text-default);
+			background: var(--fx-surface-background);
+			border: 1px solid var(--fx-border-default);
+			border-radius: var(--fx-radius-sm);
+			padding: var(--fx-space-3xs, 4px) var(--fx-space-sm);
+			cursor: pointer;
+			transition: border-color var(--fx-motion-duration-fast)
+				var(--fx-motion-easing);
+		}
+		.pg-btn:hover:not(:disabled):not([aria-current="true"]) {
+			border-color: var(--fx-color-primary);
+			color: var(--fx-color-primary);
+		}
+		.pg-btn:disabled {
+			opacity: 0.5;
+			cursor: not-allowed;
+		}
+		.pg-btn[aria-current="true"] {
+			background: var(--fx-color-primary);
+			border-color: var(--fx-color-primary);
+			color: #fff;
+			font-weight: var(--fx-font-weight);
+		}
+		fx-select {
+			vertical-align: middle;
+		}
+		fx-select::part(trigger) {
+			min-width: 64px !important;
+			min-height: var(--fx-size-sm) !important;
+			padding: 0 var(--fx-space-sm) !important;
+			border-radius: var(--fx-radius-sm) !important;
+			font-size: calc(var(--fx-font-size) - 2px) !important;
+		}
+		.toolbar {
+			display: flex;
+			align-items: center;
+			gap: var(--fx-space-sm);
+			flex-wrap: wrap;
+			padding: var(--fx-space-sm) var(--fx-space-md);
+			border: 1px solid var(--fx-border-default);
+			border-bottom: none;
+			border-radius: var(--fx-radius-md) var(--fx-radius-md) 0 0;
+			background: var(--fx-surface-background);
+		}
+		.toolbar:empty {
+			display: none;
+		}
+		.loading-overlay {
+			position: absolute;
+			inset: 0;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			gap: var(--fx-space-sm);
+			background: color-mix(
+				in srgb,
+				var(--fx-surface-background) 85%,
+				transparent
+			);
+			backdrop-filter: blur(2px);
+			z-index: 10;
+			border-radius: var(--fx-radius-md);
+		}
+		.tbl-spinner {
+			width: 32px;
+			height: 32px;
+			border: 3px solid var(--fx-border-default);
+			border-top-color: var(--fx-color-primary);
+			border-radius: 50%;
+			animation: tbl-spin 1s linear infinite;
+		}
+		@keyframes tbl-spin {
+			to {
+				transform: rotate(360deg);
+			}
+		}
+		.loading-text {
+			color: var(--fx-text-muted);
+			font-size: calc(var(--fx-font-size) - 1px);
+		}
+	`;
 let FxTable = _FxTable;
 function defineFxTable() {
   return defineElement("fx-table", FxTable);
@@ -3178,9 +3949,9 @@ const _FxTextarea = class _FxTextarea extends FxElement {
     const rows = this.getAttr("rows");
     const maxlength = this.getAttr("maxlength");
     this.setTemplate(`<textarea class="field" part="textarea"
-      ${placeholder ? `placeholder="${placeholder}"` : ""}
-      ${rows ? `rows="${rows}"` : ""}
-      ${maxlength ? `maxlength="${maxlength}"` : ""}
+      ${placeholder ? `placeholder="${esc(placeholder)}"` : ""}
+      ${rows ? `rows="${esc(rows)}"` : ""}
+      ${maxlength ? `maxlength="${esc(maxlength)}"` : ""}
     ></textarea>`);
     const field = this.root.querySelector(".field");
     if (!field) return;
@@ -3257,6 +4028,10 @@ function defineFxTextarea() {
 }
 defineFxTextarea();
 const _FxDialog = class _FxDialog extends FxElement {
+  constructor() {
+    super(...arguments);
+    this._previouslyFocused = null;
+  }
   static get observedAttributes() {
     return ["open", "size", "heading"];
   }
@@ -3271,9 +4046,9 @@ const _FxDialog = class _FxDialog extends FxElement {
     const heading = this.getAttr("heading");
     this.setTemplate(`
       <div class="overlay" part="overlay" ${isOpen ? "" : "hidden"}>
-        <div class="dialog" role="dialog" aria-modal="true" aria-label="${heading}">
+        <div class="dialog" role="dialog" aria-modal="true" aria-label="${esc(heading)}" tabindex="-1">
           <header>
-            <h2>${heading}</h2>
+            <h2>${esc(heading)}</h2>
             <button type="button" class="close" part="close" aria-label="Fechar">×</button>
           </header>
           <div class="body"><slot></slot></div>
@@ -3286,6 +4061,9 @@ const _FxDialog = class _FxDialog extends FxElement {
     const closeBtn = this.root.querySelector(".close");
     const close = () => {
       this.open = false;
+      this._cleanup?.();
+      this._cleanup = void 0;
+      this._restoreFocus();
       this.dispatchEvent(new CustomEvent("close", { bubbles: true, composed: true }));
     };
     overlay?.addEventListener("click", (e) => {
@@ -3296,16 +4074,46 @@ const _FxDialog = class _FxDialog extends FxElement {
       if (e.key === "Escape") {
         e.stopPropagation();
         close();
+        return;
       }
+      if (e.key === "Tab") this._trapFocus(e);
     };
-    document.addEventListener("keydown", onKey, { once: true });
+    document.addEventListener("keydown", onKey);
     this._cleanup = () => document.removeEventListener("keydown", onKey);
-    requestAnimationFrame(() => this.root.querySelector(".dialog")?.focus());
+    requestAnimationFrame(() => {
+      this._previouslyFocused = document.activeElement;
+      this.root.querySelector(".dialog")?.focus();
+    });
     this.dispatchEvent(new CustomEvent("open", { bubbles: true, composed: true }));
+  }
+  /** Mantém o foco dentro do modal (WCAG 2.4.3 / 2.1.2). */
+  _trapFocus(e) {
+    const dialog = this.root.querySelector(".dialog");
+    if (!dialog) return;
+    const focusables = dialog.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    if (!focusables.length) return;
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    const active = this.root.activeElement;
+    if (e.shiftKey && (active === first || active === dialog)) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && active === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+  _restoreFocus() {
+    if (this._previouslyFocused?.isConnected) this._previouslyFocused.focus();
+    this._previouslyFocused = null;
   }
   disconnectedCallback() {
     super.disconnectedCallback();
     this._cleanup?.();
+    this._cleanup = void 0;
+    this._restoreFocus();
   }
 };
 _FxDialog.styles = css`
@@ -3555,7 +4363,7 @@ const _FxTooltip = class _FxTooltip extends FxElement {
     const content = this.getAttr("content");
     this.setTemplate(`
       <slot></slot>
-      <span class="bubble" part="bubble" role="tooltip">${content}</span>
+      <span class="bubble" part="bubble" role="tooltip">${esc(content)}</span>
     `);
   }
 };
@@ -3934,8 +4742,8 @@ const _FxTabs = class _FxTabs extends FxElement {
       const tabId = t.getAttribute("tab") ?? "";
       const disabled = t.hasAttribute("disabled");
       return `<button type="button" class="tab" role="tab" part="tab"
-            data-tab="${tabId}" aria-selected="${tabId === active}"
-            ${disabled ? 'aria-disabled="true" data-disabled="true"' : ""}>${t.textContent?.trim()}</button>`;
+            data-tab="${esc(tabId)}" aria-selected="${tabId === active}"
+            ${disabled ? 'aria-disabled="true" data-disabled="true"' : ""}>${esc(t.textContent?.trim() ?? "")}</button>`;
     }).join("")}
       </div>
       <slot></slot>
@@ -4095,7 +4903,7 @@ const _FxProgress = class _FxProgress extends FxElement {
     const labelText = this.getAttr("label");
     const showPct = !indeterminate && !this.hasAttr("hide-label");
     this.setTemplate(`
-      ${labelText ? `<div class="caption" part="caption">${labelText}</div>` : ""}
+      ${labelText ? `<div class="caption" part="caption">${esc(labelText)}</div>` : ""}
       <div class="row">
         <div class="track" part="track" role="progressbar"
           aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100">
@@ -4171,10 +4979,15 @@ const _FxSkeleton = class _FxSkeleton extends FxElement {
   static get observedAttributes() {
     return ["variant", "width", "height", "lines"];
   }
+  /** Valida um valor de dimensão CSS, retornando-o seguro ou vazio. */
+  safeSize(value) {
+    const v = value.trim();
+    return /^-?\d*\.?\d+(px|em|rem|%|vw|vh|vmin|vmax|ch|ex|cm|mm|in|pt|pc)$/.test(v) ? v : "";
+  }
   render() {
     const variant = this.getAttr("variant", "text");
-    const width = this.getAttr("width");
-    const height = this.getAttr("height");
+    const width = this.safeSize(this.getAttr("width"));
+    const height = this.safeSize(this.getAttr("height"));
     const style = `${width ? `width:${width};` : ""}${height ? `height:${height};` : ""}`;
     if (variant === "circle") {
       const size = height || width || "40px";
@@ -4234,7 +5047,7 @@ const _FxAlert = class _FxAlert extends FxElement {
       <div class="alert" part="alert" role="alert">
         <span class="icon">${icons[variant] ?? "ℹ"}</span>
         <div class="content">
-          ${title ? `<div class="title">${title}</div>` : ""}
+          ${title ? `<div class="title">${esc(title)}</div>` : ""}
           <div class="body"><slot></slot></div>
         </div>
         ${this.hasAttr("dismissible") ? '<button type="button" class="close" aria-label="Fechar">×</button>' : ""}
@@ -4286,6 +5099,10 @@ function defineFxAlert() {
 }
 defineFxAlert();
 const _FxDropdown = class _FxDropdown extends FxElement {
+  constructor() {
+    super(...arguments);
+    this._listenersAttached = false;
+  }
   static get observedAttributes() {
     return ["label", "position", "open"];
   }
@@ -4301,7 +5118,7 @@ const _FxDropdown = class _FxDropdown extends FxElement {
     this.setTemplate(`
       <span class="trigger" role="button" tabindex="0" part="trigger"
         aria-haspopup="menu" aria-expanded="${this.open}">
-        ${label} ▾
+        ${esc(label)} ▾
       </span>
       <div class="panel" role="menu" part="panel">
         ${items.length ? "" : '<div class="empty">Nenhuma ação</div>'}
@@ -4320,18 +5137,37 @@ const _FxDropdown = class _FxDropdown extends FxElement {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
         this.open = !this.open;
+      } else if (e.key === "Escape") {
+        this.open = false;
       }
     });
-    items.forEach((item) => {
-      item.addEventListener("click", () => {
-        this.open = false;
-        this.dispatchEvent(new CustomEvent("select", {
-          bubbles: true,
-          composed: true,
-          detail: { value: item.getAttribute("value") ?? "" }
-        }));
-      });
+    this._attachDelegatedListeners();
+  }
+  /** Delegação de cliques nos itens + fechamento ao clicar fora (registrado uma vez). */
+  _attachDelegatedListeners() {
+    if (this._listenersAttached) return;
+    this._listenersAttached = true;
+    this.addEventListener("click", (e) => {
+      const item = e.composedPath().find(
+        (n) => n.tagName?.toLowerCase() === "fx-dropdown-item"
+      );
+      if (!item) return;
+      this.open = false;
+      this.dispatchEvent(new CustomEvent("select", {
+        bubbles: true,
+        composed: true,
+        detail: { value: item.getAttribute("value") ?? "" }
+      }));
     });
+    this.docListener = (e) => {
+      if (!this.contains(e.target)) this.open = false;
+    };
+    document.addEventListener("click", this.docListener);
+  }
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    if (this.docListener) document.removeEventListener("click", this.docListener);
+    this.docListener = void 0;
   }
 };
 _FxDropdown.styles = css`
@@ -4419,6 +5255,15 @@ const _FxDrawer = class _FxDrawer extends FxElement {
     super(...arguments);
     this._onKeydown = () => {
     };
+    this._previouslyFocused = null;
+    this._close = () => {
+      if (!this.open) return;
+      this.open = false;
+      this._restoreFocus();
+      this.dispatchEvent(
+        new CustomEvent("close", { bubbles: true, composed: true })
+      );
+    };
   }
   static get observedAttributes() {
     return ["open", "title", "position"];
@@ -4446,36 +5291,60 @@ const _FxDrawer = class _FxDrawer extends FxElement {
     const title = this.getAttr("title");
     this.setTemplate(`
       <div class="overlay" part="overlay"></div>
-      <div class="panel" part="panel" role="dialog" aria-modal="true" aria-label="${title || "Drawer"}">
-        ${title !== "" ? `<div class="header" part="header"><span class="title">${title}</span><button type="button" class="close" part="close" aria-label="Fechar">✕</button></div>` : ""}
+      <div class="panel" part="panel" role="dialog" aria-modal="true" aria-label="${esc(title || "Drawer")}" tabindex="-1">
+        ${title !== "" ? `<div class="header" part="header"><span class="title">${esc(title)}</span><button type="button" class="close" part="close" aria-label="Fechar">✕</button></div>` : ""}
         <div class="body" part="body"><slot></slot></div>
       </div>
     `);
-    const close = () => {
-      if (!this.open) return;
-      this.open = false;
-      this.dispatchEvent(
-        new CustomEvent("close", { bubbles: true, composed: true })
-      );
-    };
-    this.root.querySelector(".overlay")?.addEventListener("click", close);
-    this.root.querySelector(".close")?.addEventListener("click", close);
+    this.root.querySelector(".overlay")?.addEventListener("click", this._close);
+    this.root.querySelector(".close")?.addEventListener("click", this._close);
+    if (this.open) {
+      requestAnimationFrame(() => {
+        if (this._previouslyFocused === null) {
+          this._previouslyFocused = document.activeElement;
+        }
+        this.root.querySelector(".panel")?.focus();
+      });
+    }
   }
   connectedCallback() {
     super.connectedCallback?.();
     this._onKeydown = (e) => {
       if (e.key === "Escape" && this.open) {
-        this.open = false;
-        this.dispatchEvent(
-          new CustomEvent("close", { bubbles: true, composed: true })
-        );
+        this._close();
+      } else if (e.key === "Tab" && this.open) {
+        this._trapFocus(e);
       }
     };
     document.addEventListener("keydown", this._onKeydown);
   }
   disconnectedCallback() {
     document.removeEventListener("keydown", this._onKeydown);
+    this._restoreFocus();
     super.disconnectedCallback?.();
+  }
+  /** Mantém o foco dentro do drawer (WCAG 2.4.3 / 2.1.2). */
+  _trapFocus(e) {
+    const panel = this.root.querySelector(".panel");
+    if (!panel) return;
+    const focusables = panel.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    if (!focusables.length) return;
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    const active = this.root.activeElement;
+    if (e.shiftKey && (active === first || active === panel)) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && active === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+  _restoreFocus() {
+    if (this._previouslyFocused?.isConnected) this._previouslyFocused.focus();
+    this._previouslyFocused = null;
   }
 };
 _FxDrawer.styles = css`
@@ -4643,9 +5512,9 @@ const _FxPagination = class _FxPagination extends FxElement {
       ${window_[window_.length - 1] !== pages && pages > 5 ? `<button type="button" class="nav" data-go="${pages}">${pages}</button>` : ""}
       <button type="button" class="nav" part="next" data-go="${current + 1}" ${current >= pages ? "disabled" : ""}>›</button>
       ${opts.length ? `
-        <select class="nav" part="rows" aria-label="Itens por página">
-          ${opts.map((o) => `<option value="${o}" ${Number(o) === this.rows ? "selected" : ""}>${o}</option>`).join("")}
-        </select>` : ""}
+        <fx-select class="rows-sel" part="rows" size="sm" value="${this.rows}" aria-label="Itens por página">
+          ${opts.map((o) => `<option value="${esc(o)}">${esc(o)}</option>`).join("")}
+        </fx-select>` : ""}
     `);
     function total0(page, rows) {
       return (page - 1) * rows + 1;
@@ -4659,9 +5528,11 @@ const _FxPagination = class _FxPagination extends FxElement {
         }
       });
     });
-    const sel = this.root.querySelector("select.nav");
-    sel?.addEventListener("change", () => {
-      this.rows = Number(sel.value);
+    const sel = this.root.querySelector("fx-select.rows-sel");
+    sel?.addEventListener("change", (e) => {
+      const value = Number(e.detail?.value);
+      if (!value || value === this.rows) return;
+      this.rows = value;
       this.page = 1;
       this.emit();
     });
@@ -4700,7 +5571,7 @@ _FxPagination.styles = css`
         border-color var(--fx-motion-duration-fast) var(--fx-motion-easing),
         background var(--fx-motion-duration-fast) var(--fx-motion-easing);
     }
-    .nav:hover:not([disabled]) { border-color: var(--fx-color-primary); color: var(--fx-color-primary); }
+    .nav:hover:not([disabled]):not(.active) { border-color: var(--fx-color-primary); color: var(--fx-color-primary); }
     .nav[disabled] { opacity: 0.5; cursor: not-allowed; }
     .nav.active {
       background: var(--fx-color-primary);
@@ -4709,7 +5580,14 @@ _FxPagination.styles = css`
       font-weight: 600;
     }
     .info { color: var(--fx-text-muted); font-size: calc(var(--fx-font-size) - 2px); }
-    select.nav { cursor: pointer; }
+    fx-select { vertical-align: middle; }
+    fx-select::part(trigger) {
+      min-width: 64px !important;
+      min-height: var(--fx-size-sm) !important;
+      padding: 0 var(--fx-space-sm) !important;
+      border-radius: var(--fx-radius-sm) !important;
+      font-size: calc(var(--fx-font-size) - 2px) !important;
+    }
   `;
 let FxPagination = _FxPagination;
 function defineFxPagination() {
@@ -4746,11 +5624,23 @@ const _FxAutocomplete = class _FxAutocomplete extends FxElement {
   set source(value) {
     this.setAttribute("source", typeof value === "string" ? value : JSON.stringify(value));
   }
+  connectedCallback() {
+    super.connectedCallback();
+    this.docListener = (e) => {
+      if (!this.contains(e.target)) this.toggleAttr("open", false);
+    };
+    document.addEventListener("click", this.docListener);
+  }
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    if (this.docListener) document.removeEventListener("click", this.docListener);
+    this.docListener = void 0;
+  }
   render() {
     const placeholder = this.getAttr("placeholder");
     this.setTemplate(`
       <input class="field" part="input" type="text"
-        ${placeholder ? `placeholder="${placeholder}"` : ""} autocomplete="off"/>
+        ${placeholder ? `placeholder="${esc(placeholder)}"` : ""} autocomplete="off"/>
       <div class="list" part="list" role="listbox"></div>
     `);
     const field = this.root.querySelector(".field");
@@ -4763,7 +5653,7 @@ const _FxAutocomplete = class _FxAutocomplete extends FxElement {
       if (!list) return;
       const q = field.value.toLowerCase();
       const matches = this.source.filter((s) => s.toLowerCase().includes(q)).slice(0, 8);
-      list.innerHTML = matches.length ? matches.map((m) => `<button type="button" class="opt" role="option" data-v="${m}">${m}</button>`).join("") : '<div class="empty">Nenhum resultado</div>';
+      list.innerHTML = matches.length ? matches.map((m) => `<button type="button" class="opt" role="option" data-v="${esc(m)}">${esc(m)}</button>`).join("") : '<div class="empty">Nenhum resultado</div>';
       list.querySelectorAll(".opt").forEach((btn) => {
         btn.addEventListener("click", () => {
           field.value = btn.dataset.v ?? "";
@@ -4785,8 +5675,19 @@ const _FxAutocomplete = class _FxAutocomplete extends FxElement {
     field.addEventListener("focus", () => {
       if (field.value.length >= minChars) openList();
     });
-    document.addEventListener("click", (e) => {
-      if (!this.contains(e.target)) this.toggleAttr("open", false);
+    field.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        this.toggleAttr("open", false);
+        return;
+      }
+      if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+      e.preventDefault();
+      if (!this.hasAttr("open")) openList();
+      const opts = Array.from(this.root.querySelectorAll(".opt"));
+      if (!opts.length) return;
+      const current = opts.indexOf(this.root.activeElement);
+      const next = e.key === "ArrowDown" ? current === -1 ? 0 : Math.min(current + 1, opts.length - 1) : current === -1 ? opts.length - 1 : Math.max(current - 1, 0);
+      opts[next]?.focus();
     });
   }
 };
@@ -4981,8 +5882,10 @@ const _FxKnob = class _FxKnob extends FxElement {
     const radius = (sizeNum - strokeW) / 2;
     const circumference = 2 * Math.PI * radius;
     const offset = circumference * (1 - pct);
-    const valueColorStyle = this.valueColor ? `--_value-color: ${this.valueColor};` : "";
-    const rangeColorStyle = this.rangeColor ? `--_range-color: ${this.rangeColor};` : "";
+    const vc = this.valueColor ? this.safeColor(this.valueColor) : "";
+    const rc = this.rangeColor ? this.safeColor(this.rangeColor) : "";
+    const valueColorStyle = vc ? `--_value-color: ${vc};` : "";
+    const rangeColorStyle = rc ? `--_range-color: ${rc};` : "";
     const displayValue = this.valueTemplate.replace("{value}", String(Math.round(value)));
     this.setTemplate(`
       <div class="knob" part="knob" tabindex="${this.disabled ? "-1" : "0"}"
@@ -4997,7 +5900,7 @@ const _FxKnob = class _FxKnob extends FxElement {
             stroke-dasharray="${circumference}"
             stroke-dashoffset="${offset}" />
         </svg>
-        <div class="label" part="label">${displayValue}</div>
+        <div class="label" part="label">${esc(displayValue)}</div>
       </div>
     `);
     this.attachListeners();
@@ -5007,6 +5910,15 @@ const _FxKnob = class _FxKnob extends FxElement {
     if (s === "sm") return 60;
     if (s === "lg") return 140;
     return 100;
+  }
+  /** Valida um valor de cor CSS, retornando-o seguro ou vazio. */
+  safeColor(value) {
+    const v = value.trim();
+    if (/^#[0-9a-fA-F]{3,8}$/.test(v)) return v;
+    if (/^(rgb|rgba|hsl|hsla)\([\d\s.,%()]+\)$/i.test(v)) return v;
+    if (/^var\(--[\w-]+(,\s*[^)]*)?\)$/.test(v)) return v;
+    if (/^[a-zA-Z]+$/.test(v)) return v;
+    return "";
   }
   clampValue(v) {
     const min = this.min;
@@ -5421,7 +6333,7 @@ const _FxOrderList = class _FxOrderList extends FxElement {
           <div class="filter-wrapper" part="filter-wrapper">
             <input type="text" class="filter-input" part="filter-input"
               placeholder="${this.filterPlaceholder}"
-              value="${esc$1(this._filterValue)}"
+              value="${esc(this._filterValue)}"
               aria-label="Filtrar lista" />
           </div>
         ` : ""}
@@ -5467,10 +6379,10 @@ const _FxOrderList = class _FxOrderList extends FxElement {
       const key2 = this._getItemKey(item, index);
       const label = this._getItemLabel(item);
       const isSelected = this._isSelected(item);
-      const content = this._optionTemplate ? this._optionTemplate(item) : esc$1(label);
+      const content = this._optionTemplate ? this._optionTemplate(item) : esc(label);
       return `
                   <li class="list-item${isSelected ? " selected" : ""}" part="list-item"
-                    data-index="${index}" data-key="${esc$1(key2)}"
+                    data-index="${index}" data-key="${esc(key2)}"
                     role="option" aria-selected="${isSelected}"
                     ${this.dragdrop ? 'draggable="true"' : ""}
                     tabindex="0">
@@ -5478,7 +6390,7 @@ const _FxOrderList = class _FxOrderList extends FxElement {
                     ${hasSelection ? `
                       <input type="checkbox" class="checkbox" part="checkbox"
                         ${isSelected ? "checked" : ""}
-                        aria-label="Selecionar ${esc$1(label)}" />
+                        aria-label="Selecionar ${esc(label)}" />
                     ` : ""}
                     <span class="item-content" part="item-content">${content}</span>
                   </li>
@@ -5626,10 +6538,10 @@ const _FxOrderList = class _FxOrderList extends FxElement {
       const key2 = this._getItemKey(item, index);
       const label = this._getItemLabel(item);
       const isSelected = this._isSelected(item);
-      const content = this._optionTemplate ? this._optionTemplate(item) : esc$1(label);
+      const content = this._optionTemplate ? this._optionTemplate(item) : esc(label);
       return `
             <li class="list-item${isSelected ? " selected" : ""}" part="list-item"
-              data-index="${index}" data-key="${esc$1(key2)}"
+              data-index="${index}" data-key="${esc(key2)}"
               role="option" aria-selected="${isSelected}"
               ${this.dragdrop ? 'draggable="true"' : ""}
               tabindex="0">
@@ -5637,7 +6549,7 @@ const _FxOrderList = class _FxOrderList extends FxElement {
               ${hasSelection ? `
                 <input type="checkbox" class="checkbox" part="checkbox"
                   ${isSelected ? "checked" : ""}
-                  aria-label="Selecionar ${esc$1(label)}" />
+                  aria-label="Selecionar ${esc(label)}" />
               ` : ""}
               <span class="item-content" part="item-content">${content}</span>
             </li>
@@ -5825,9 +6737,6 @@ _FxOrderList.styles = css`
     .list-item { animation: slideIn 0.2s ease-out; }
     `;
 let FxOrderList = _FxOrderList;
-function esc$1(s) {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
 function defineFxOrderList() {
   return defineElement("fx-orderlist", FxOrderList);
 }
@@ -6567,9 +7476,6 @@ _FxPickList.styles = css`
     .list-item { animation: slideIn 0.2s ease-out; }
   `;
 let FxPickList = _FxPickList;
-function esc(s) {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
 function defineFxPickList() {
   return defineElement("fx-picklist", FxPickList);
 }
@@ -6578,6 +7484,7 @@ const _FxAccordionPanel = class _FxAccordionPanel extends FxElement {
   constructor() {
     super(...arguments);
     this._mo = null;
+    this._clickListenerAttached = false;
   }
   static get observedAttributes() {
     return ["header", "expanded", "disabled"];
@@ -6608,18 +7515,21 @@ const _FxAccordionPanel = class _FxAccordionPanel extends FxElement {
   }
   connectedCallback() {
     super.connectedCallback();
-    this.addEventListener("click", (e) => {
-      const path = e.composedPath();
-      if (!path.some((el) => el.classList?.contains("header"))) return;
-      if (this.disabled) return;
-      this.dispatchEvent(
-        new CustomEvent("fx-accordion-toggle", {
-          bubbles: true,
-          composed: true,
-          detail: { panel: this }
-        })
-      );
-    });
+    if (!this._clickListenerAttached) {
+      this._clickListenerAttached = true;
+      this.addEventListener("click", (e) => {
+        const path = e.composedPath();
+        if (!path.some((el) => el.classList?.contains("header"))) return;
+        if (this.disabled) return;
+        this.dispatchEvent(
+          new CustomEvent("fx-accordion-toggle", {
+            bubbles: true,
+            composed: true,
+            detail: { panel: this }
+          })
+        );
+      });
+    }
     this._mo = new MutationObserver(() => this.render());
     this._mo.observe(this, { attributes: true, attributeFilter: ["expanded", "header", "disabled"] });
   }
@@ -6634,7 +7544,7 @@ const _FxAccordionPanel = class _FxAccordionPanel extends FxElement {
           aria-expanded="${this.expanded}"
           ${this.disabled ? 'aria-disabled="true"' : ""}>
           <span class="header-text" part="header-text">
-            <slot name="header">${this.header}</slot>
+            <slot name="header">${esc(this.header)}</slot>
           </span>
           <span class="chevron" part="chevron" aria-hidden="true">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
@@ -6899,11 +7809,14 @@ export {
   defineElement,
   defineFxTooltipDirective,
   destroyFxTooltipDirective,
+  esc,
   kebabToCamel,
   lightTokens,
   listPresets,
   resetTheme,
+  sanitizeData,
   setTokens,
+  stripTags,
   theme,
   themePresets,
   tokenCssVars

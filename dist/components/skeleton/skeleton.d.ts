@@ -7,6 +7,8 @@ import { FxElement } from '../../core/base';
 export declare class FxSkeleton extends FxElement {
     static styles: string;
     static get observedAttributes(): string[];
+    /** Valida um valor de dimensão CSS, retornando-o seguro ou vazio. */
+    private safeSize;
     protected render(): void;
 }
 export declare function defineFxSkeleton(): typeof FxSkeleton;

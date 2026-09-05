@@ -1,4 +1,5 @@
 import { FxElement } from '../../core/base';
+import '../select';
 /**
  * <fx-pagination> — Paginação standalone.
  *

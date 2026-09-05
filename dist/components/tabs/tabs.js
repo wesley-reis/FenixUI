@@ -1,6 +1,7 @@
 import { FxElement } from "../../core/base.js";
 import { css } from "../../core/css.js";
 import { defineElement } from "../../core/define.js";
+import { esc } from "../../core/sanitize.js";
 const _FxTabs = class _FxTabs extends FxElement {
   static get observedAttributes() {
     return ["value"];
@@ -20,8 +21,8 @@ const _FxTabs = class _FxTabs extends FxElement {
       const tabId = t.getAttribute("tab") ?? "";
       const disabled = t.hasAttribute("disabled");
       return `<button type="button" class="tab" role="tab" part="tab"
-            data-tab="${tabId}" aria-selected="${tabId === active}"
-            ${disabled ? 'aria-disabled="true" data-disabled="true"' : ""}>${t.textContent?.trim()}</button>`;
+            data-tab="${esc(tabId)}" aria-selected="${tabId === active}"
+            ${disabled ? 'aria-disabled="true" data-disabled="true"' : ""}>${esc(t.textContent?.trim() ?? "")}</button>`;
     }).join("")}
       </div>
       <slot></slot>

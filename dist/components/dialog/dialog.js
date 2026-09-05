@@ -1,7 +1,12 @@
 import { FxElement } from "../../core/base.js";
 import { css } from "../../core/css.js";
 import { defineElement } from "../../core/define.js";
+import { esc } from "../../core/sanitize.js";
 const _FxDialog = class _FxDialog extends FxElement {
+  constructor() {
+    super(...arguments);
+    this._previouslyFocused = null;
+  }
   static get observedAttributes() {
     return ["open", "size", "heading"];
   }
@@ -16,9 +21,9 @@ const _FxDialog = class _FxDialog extends FxElement {
     const heading = this.getAttr("heading");
     this.setTemplate(`
       <div class="overlay" part="overlay" ${isOpen ? "" : "hidden"}>
-        <div class="dialog" role="dialog" aria-modal="true" aria-label="${heading}">
+        <div class="dialog" role="dialog" aria-modal="true" aria-label="${esc(heading)}" tabindex="-1">
           <header>
-            <h2>${heading}</h2>
+            <h2>${esc(heading)}</h2>
             <button type="button" class="close" part="close" aria-label="Fechar">×</button>
           </header>
           <div class="body"><slot></slot></div>
@@ -31,6 +36,9 @@ const _FxDialog = class _FxDialog extends FxElement {
     const closeBtn = this.root.querySelector(".close");
     const close = () => {
       this.open = false;
+      this._cleanup?.();
+      this._cleanup = void 0;
+      this._restoreFocus();
       this.dispatchEvent(new CustomEvent("close", { bubbles: true, composed: true }));
     };
     overlay?.addEventListener("click", (e) => {
@@ -41,16 +49,46 @@ const _FxDialog = class _FxDialog extends FxElement {
       if (e.key === "Escape") {
         e.stopPropagation();
         close();
+        return;
       }
+      if (e.key === "Tab") this._trapFocus(e);
     };
-    document.addEventListener("keydown", onKey, { once: true });
+    document.addEventListener("keydown", onKey);
     this._cleanup = () => document.removeEventListener("keydown", onKey);
-    requestAnimationFrame(() => this.root.querySelector(".dialog")?.focus());
+    requestAnimationFrame(() => {
+      this._previouslyFocused = document.activeElement;
+      this.root.querySelector(".dialog")?.focus();
+    });
     this.dispatchEvent(new CustomEvent("open", { bubbles: true, composed: true }));
+  }
+  /** Mantém o foco dentro do modal (WCAG 2.4.3 / 2.1.2). */
+  _trapFocus(e) {
+    const dialog = this.root.querySelector(".dialog");
+    if (!dialog) return;
+    const focusables = dialog.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    if (!focusables.length) return;
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    const active = this.root.activeElement;
+    if (e.shiftKey && (active === first || active === dialog)) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && active === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+  _restoreFocus() {
+    if (this._previouslyFocused?.isConnected) this._previouslyFocused.focus();
+    this._previouslyFocused = null;
   }
   disconnectedCallback() {
     super.disconnectedCallback();
     this._cleanup?.();
+    this._cleanup = void 0;
+    this._restoreFocus();
   }
 };
 _FxDialog.styles = css`

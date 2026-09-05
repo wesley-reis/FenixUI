@@ -1,6 +1,7 @@
 ﻿import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
+import { esc } from '../../core/sanitize';
 
 /**
  * <fx-multiselect> — Seleção múltipla .
@@ -301,6 +302,24 @@ export class FxMultiselect extends FxElement {
     this.commit();
   }
 
+  /** Navegação por teclado entre as opções do listbox (WCAG 2.1.1). */
+  private _navigateOptions(e: KeyboardEvent): void {
+    e.preventDefault();
+    if (!this.hasAttr('open')) {
+      this.toggleAttribute('open');
+      this.render();
+    }
+    const opts = Array.from(this.root.querySelectorAll<HTMLButtonElement>('.opt'));
+    if (!opts.length) return;
+    const current = opts.indexOf(this.root.activeElement as HTMLButtonElement);
+    let next = 0;
+    if (e.key === 'ArrowDown') next = current === -1 ? 0 : Math.min(current + 1, opts.length - 1);
+    else if (e.key === 'ArrowUp') next = current === -1 ? opts.length - 1 : Math.max(current - 1, 0);
+    else if (e.key === 'Home') next = 0;
+    else if (e.key === 'End') next = opts.length - 1;
+    opts[next]?.focus();
+  }
+
   protected override render(): void {
     const wasOpen = this.hasAttr('open');
     // Preserva o estado do campo de pesquisa entre re-renders.
@@ -323,11 +342,11 @@ export class FxMultiselect extends FxElement {
         ${
           chips.length
             ? chips.map((c) => `
-              <span class="chip" data-value="${c.value}">
-                ${c.label}
-                <span class="chip__x" role="button" aria-label="Remover ${c.label}">×</span>
+              <span class="chip" data-value="${esc(c.value)}">
+                ${esc(c.label)}
+                <span class="chip__x" role="button" aria-label="Remover ${esc(c.label)}">×</span>
               </span>`).join('')
-            : `<span class="placeholder">${placeholder}</span>`
+            : `<span class="placeholder">${esc(placeholder)}</span>`
         }
         </span>
         <span class="trigger-right">
@@ -340,14 +359,14 @@ export class FxMultiselect extends FxElement {
           <span class="count">${chips.length} selecionado${chips.length === 1 ? '' : 's'}</span>
           ${this.hasAttr('clearable') && chips.length ? '<button type="button" class="clear-all">Limpar tudo</button>' : ''}
         </div>
-        ${this.hasAttr('searchable') ? `<input class="search" part="search" type="text" placeholder="${this.getAttr('search-placeholder', 'Pesquisar…')}">` : ''}
+        ${this.hasAttr('searchable') ? `<input class="search" part="search" type="text" placeholder="${esc(this.getAttr('search-placeholder', 'Pesquisar…'))}">` : ''}
         <ul class="list">
           ${filtered.map((o) => `
-            <li><button type="button" class="opt" role="option" data-value="${o.value}"
+            <li><button type="button" class="opt" role="option" data-value="${esc(o.value)}"
               aria-selected="${this.selected.has(o.value)}">
-              <span class="box" aria-hidden="true"></span>${o.label}
+              <span class="box" aria-hidden="true"></span>${esc(o.label)}
             </button></li>`).join('')}
-          ${filtered.length === 0 ? `<li class="empty">${this.getAttr('no-results', 'Nenhum resultado')}</li>` : ''}
+          ${filtered.length === 0 ? `<li class="empty">${esc(this.getAttr('no-results', 'Nenhum resultado'))}</li>` : ''}
         </ul>
       </div>
     `);
@@ -389,12 +408,24 @@ export class FxMultiselect extends FxElement {
       this.render();
     });
 
-    // Acessibilidade: Enter/Espaço abrem o painel (span role=button).
+    // Acessibilidade: Enter/Espaço abrem o painel (span role=button); setas navegam.
     trigger.addEventListener('keydown', (e) => {
       if (this.disabled) return;
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         trigger.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        return;
+      }
+      if (e.key === 'Escape') {
+        if (this.hasAttr('open')) {
+          this.removeAttribute('open');
+          this.render();
+          this.root.querySelector<HTMLElement>('.trigger')?.focus();
+        }
+        return;
+      }
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Home' || e.key === 'End') {
+        this._navigateOptions(e);
       }
     });
 

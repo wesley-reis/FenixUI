@@ -1,6 +1,7 @@
 import { FxElement } from "../../core/base.js";
 import { css } from "../../core/css.js";
 import { defineElement } from "../../core/define.js";
+import { esc } from "../../core/sanitize.js";
 const _FxAlert = class _FxAlert extends FxElement {
   static get observedAttributes() {
     return ["variant", "title", "dismissible"];
@@ -18,7 +19,7 @@ const _FxAlert = class _FxAlert extends FxElement {
       <div class="alert" part="alert" role="alert">
         <span class="icon">${icons[variant] ?? "ℹ"}</span>
         <div class="content">
-          ${title ? `<div class="title">${title}</div>` : ""}
+          ${title ? `<div class="title">${esc(title)}</div>` : ""}
           <div class="body"><slot></slot></div>
         </div>
         ${this.hasAttr("dismissible") ? '<button type="button" class="close" aria-label="Fechar">×</button>' : ""}

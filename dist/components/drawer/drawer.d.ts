@@ -22,6 +22,11 @@ export declare class FxDrawer extends FxElement {
     protected connectedCallback(): void;
     protected disconnectedCallback(): void;
     private _onKeydown;
+    private _previouslyFocused;
+    private _close;
+    /** Mantém o foco dentro do drawer (WCAG 2.4.3 / 2.1.2). */
+    private _trapFocus;
+    private _restoreFocus;
 }
 export declare function defineFxDrawer(): typeof FxDrawer;
 //# sourceMappingURL=drawer.d.ts.map

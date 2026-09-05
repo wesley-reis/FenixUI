@@ -32,10 +32,16 @@ export class FxSkeleton extends FxElement {
     return ['variant', 'width', 'height', 'lines'];
   }
 
+  /** Valida um valor de dimensão CSS, retornando-o seguro ou vazio. */
+  private safeSize(value: string): string {
+    const v = value.trim();
+    return /^-?\d*\.?\d+(px|em|rem|%|vw|vh|vmin|vmax|ch|ex|cm|mm|in|pt|pc)$/.test(v) ? v : '';
+  }
+
   protected override render(): void {
     const variant = this.getAttr('variant', 'text');
-    const width = this.getAttr('width');
-    const height = this.getAttr('height');
+    const width = this.safeSize(this.getAttr('width'));
+    const height = this.safeSize(this.getAttr('height'));
     const style = `${width ? `width:${width};` : ''}${height ? `height:${height};` : ''}`;
 
     if (variant === 'circle') {

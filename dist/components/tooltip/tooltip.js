@@ -1,6 +1,7 @@
 import { FxElement } from "../../core/base.js";
 import { css } from "../../core/css.js";
 import { defineElement } from "../../core/define.js";
+import { esc } from "../../core/sanitize.js";
 const _FxTooltip = class _FxTooltip extends FxElement {
   static get observedAttributes() {
     return ["content", "position"];
@@ -9,7 +10,7 @@ const _FxTooltip = class _FxTooltip extends FxElement {
     const content = this.getAttr("content");
     this.setTemplate(`
       <slot></slot>
-      <span class="bubble" part="bubble" role="tooltip">${content}</span>
+      <span class="bubble" part="bubble" role="tooltip">${esc(content)}</span>
     `);
   }
 };

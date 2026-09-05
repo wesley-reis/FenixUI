@@ -1,6 +1,7 @@
 ﻿import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
+import { esc } from '../../core/sanitize';
 
 /**
  * <fx-alert> — Aviso inline com variantes semânticas.
@@ -59,7 +60,7 @@ export class FxAlert extends FxElement {
       <div class="alert" part="alert" role="alert">
         <span class="icon">${icons[variant] ?? 'ℹ'}</span>
         <div class="content">
-          ${title ? `<div class="title">${title}</div>` : ''}
+          ${title ? `<div class="title">${esc(title)}</div>` : ''}
           <div class="body"><slot></slot></div>
         </div>
         ${this.hasAttr('dismissible') ? '<button type="button" class="close" aria-label="Fechar">×</button>' : ''}

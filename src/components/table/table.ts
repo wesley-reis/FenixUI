@@ -297,12 +297,13 @@ export class FxTable extends FxElement {
 		return [...this.querySelectorAll("fx-column")].map((c) => {
 			const tpl = c.querySelector("template");
 			const direct = tpl ? undefined : c.innerHTML.trim();
+			const align = c.getAttribute("align") ?? "left";
 			return {
 				field: c.getAttribute("field") ?? "",
 				header: c.getAttribute("header") ?? c.getAttribute("field") ?? "",
 				sortable: c.hasAttribute("sortable"),
 				filterable: c.hasAttribute("filterable"),
-				align: c.getAttribute("align") ?? "left",
+				align: ["left", "center", "right", "justify", "start", "end"].includes(align) ? align : "left",
 				template: tpl ?? undefined,
 				directTemplate: direct || undefined,
 			};

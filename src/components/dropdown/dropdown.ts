@@ -1,6 +1,7 @@
 ﻿import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
+import { esc } from '../../core/sanitize';
 
 /**
  * <fx-dropdown> — Menu de ações em popover.
@@ -59,7 +60,7 @@ export class FxDropdown extends FxElement {
     this.setTemplate(`
       <span class="trigger" role="button" tabindex="0" part="trigger"
         aria-haspopup="menu" aria-expanded="${this.open}">
-        ${label} ▾
+        ${esc(label)} ▾
       </span>
       <div class="panel" role="menu" part="panel">
         ${items.length ? '' : '<div class="empty">Nenhuma ação</div>'}
@@ -77,18 +78,47 @@ export class FxDropdown extends FxElement {
       this.open = !this.open;
     });
     trigger?.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.open = !this.open; }
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        this.open = !this.open;
+      } else if (e.key === 'Escape') {
+        this.open = false;
+      }
     });
 
-    items.forEach((item) => {
-      item.addEventListener('click', () => {
-        this.open = false;
-        this.dispatchEvent(new CustomEvent('select', {
-          bubbles: true, composed: true,
-          detail: { value: item.getAttribute('value') ?? '' },
-        }));
-      });
+    this._attachDelegatedListeners();
+  }
+
+  private docListener?: (e: Event) => void;
+  private _listenersAttached = false;
+
+  /** Delegação de cliques nos itens + fechamento ao clicar fora (registrado uma vez). */
+  private _attachDelegatedListeners(): void {
+    if (this._listenersAttached) return;
+    this._listenersAttached = true;
+
+    this.addEventListener('click', (e) => {
+      const item = (e.composedPath() as HTMLElement[]).find(
+        (n) => n.tagName?.toLowerCase() === 'fx-dropdown-item',
+      );
+      if (!item) return;
+      this.open = false;
+      this.dispatchEvent(new CustomEvent('select', {
+        bubbles: true, composed: true,
+        detail: { value: item.getAttribute('value') ?? '' },
+      }));
     });
+
+    this.docListener = (e: Event) => {
+      if (!this.contains(e.target as Node)) this.open = false;
+    };
+    document.addEventListener('click', this.docListener);
+  }
+
+  protected override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    if (this.docListener) document.removeEventListener('click', this.docListener);
+    this.docListener = undefined;
   }
 }
 

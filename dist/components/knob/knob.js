@@ -1,6 +1,7 @@
 import { FxElement } from "../../core/base.js";
 import { css } from "../../core/css.js";
 import { defineElement } from "../../core/define.js";
+import { esc } from "../../core/sanitize.js";
 const _FxKnob = class _FxKnob extends FxElement {
   constructor() {
     super(...arguments);
@@ -124,8 +125,10 @@ const _FxKnob = class _FxKnob extends FxElement {
     const radius = (sizeNum - strokeW) / 2;
     const circumference = 2 * Math.PI * radius;
     const offset = circumference * (1 - pct);
-    const valueColorStyle = this.valueColor ? `--_value-color: ${this.valueColor};` : "";
-    const rangeColorStyle = this.rangeColor ? `--_range-color: ${this.rangeColor};` : "";
+    const vc = this.valueColor ? this.safeColor(this.valueColor) : "";
+    const rc = this.rangeColor ? this.safeColor(this.rangeColor) : "";
+    const valueColorStyle = vc ? `--_value-color: ${vc};` : "";
+    const rangeColorStyle = rc ? `--_range-color: ${rc};` : "";
     const displayValue = this.valueTemplate.replace("{value}", String(Math.round(value)));
     this.setTemplate(`
       <div class="knob" part="knob" tabindex="${this.disabled ? "-1" : "0"}"
@@ -140,7 +143,7 @@ const _FxKnob = class _FxKnob extends FxElement {
             stroke-dasharray="${circumference}"
             stroke-dashoffset="${offset}" />
         </svg>
-        <div class="label" part="label">${displayValue}</div>
+        <div class="label" part="label">${esc(displayValue)}</div>
       </div>
     `);
     this.attachListeners();
@@ -150,6 +153,15 @@ const _FxKnob = class _FxKnob extends FxElement {
     if (s === "sm") return 60;
     if (s === "lg") return 140;
     return 100;
+  }
+  /** Valida um valor de cor CSS, retornando-o seguro ou vazio. */
+  safeColor(value) {
+    const v = value.trim();
+    if (/^#[0-9a-fA-F]{3,8}$/.test(v)) return v;
+    if (/^(rgb|rgba|hsl|hsla)\([\d\s.,%()]+\)$/i.test(v)) return v;
+    if (/^var\(--[\w-]+(,\s*[^)]*)?\)$/.test(v)) return v;
+    if (/^[a-zA-Z]+$/.test(v)) return v;
+    return "";
   }
   clampValue(v) {
     const min = this.min;

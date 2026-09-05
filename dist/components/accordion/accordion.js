@@ -1,10 +1,12 @@
 import { FxElement } from "../../core/base.js";
 import { css } from "../../core/css.js";
 import { defineElement } from "../../core/define.js";
+import { esc } from "../../core/sanitize.js";
 const _FxAccordionPanel = class _FxAccordionPanel extends FxElement {
   constructor() {
     super(...arguments);
     this._mo = null;
+    this._clickListenerAttached = false;
   }
   static get observedAttributes() {
     return ["header", "expanded", "disabled"];
@@ -35,18 +37,21 @@ const _FxAccordionPanel = class _FxAccordionPanel extends FxElement {
   }
   connectedCallback() {
     super.connectedCallback();
-    this.addEventListener("click", (e) => {
-      const path = e.composedPath();
-      if (!path.some((el) => el.classList?.contains("header"))) return;
-      if (this.disabled) return;
-      this.dispatchEvent(
-        new CustomEvent("fx-accordion-toggle", {
-          bubbles: true,
-          composed: true,
-          detail: { panel: this }
-        })
-      );
-    });
+    if (!this._clickListenerAttached) {
+      this._clickListenerAttached = true;
+      this.addEventListener("click", (e) => {
+        const path = e.composedPath();
+        if (!path.some((el) => el.classList?.contains("header"))) return;
+        if (this.disabled) return;
+        this.dispatchEvent(
+          new CustomEvent("fx-accordion-toggle", {
+            bubbles: true,
+            composed: true,
+            detail: { panel: this }
+          })
+        );
+      });
+    }
     this._mo = new MutationObserver(() => this.render());
     this._mo.observe(this, { attributes: true, attributeFilter: ["expanded", "header", "disabled"] });
   }
@@ -61,7 +66,7 @@ const _FxAccordionPanel = class _FxAccordionPanel extends FxElement {
           aria-expanded="${this.expanded}"
           ${this.disabled ? 'aria-disabled="true"' : ""}>
           <span class="header-text" part="header-text">
-            <slot name="header">${this.header}</slot>
+            <slot name="header">${esc(this.header)}</slot>
           </span>
           <span class="chevron" part="chevron" aria-hidden="true">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"

@@ -1,6 +1,7 @@
 import { FxElement } from "../../core/base.js";
 import { css } from "../../core/css.js";
 import { defineElement } from "../../core/define.js";
+import { esc } from "../../core/sanitize.js";
 const _FxTextarea = class _FxTextarea extends FxElement {
   static get observedAttributes() {
     return ["size", "placeholder", "disabled", "readonly", "rows", "maxlength"];
@@ -25,9 +26,9 @@ const _FxTextarea = class _FxTextarea extends FxElement {
     const rows = this.getAttr("rows");
     const maxlength = this.getAttr("maxlength");
     this.setTemplate(`<textarea class="field" part="textarea"
-      ${placeholder ? `placeholder="${placeholder}"` : ""}
-      ${rows ? `rows="${rows}"` : ""}
-      ${maxlength ? `maxlength="${maxlength}"` : ""}
+      ${placeholder ? `placeholder="${esc(placeholder)}"` : ""}
+      ${rows ? `rows="${esc(rows)}"` : ""}
+      ${maxlength ? `maxlength="${esc(maxlength)}"` : ""}
     ></textarea>`);
     const field = this.root.querySelector(".field");
     if (!field) return;

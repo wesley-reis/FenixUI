@@ -1,6 +1,7 @@
 import { FxElement } from "../../core/base.js";
 import { css } from "../../core/css.js";
 import { defineElement } from "../../core/define.js";
+import { esc } from "../../core/sanitize.js";
 const _FxProgress = class _FxProgress extends FxElement {
   constructor() {
     super(...arguments);
@@ -21,7 +22,7 @@ const _FxProgress = class _FxProgress extends FxElement {
     const labelText = this.getAttr("label");
     const showPct = !indeterminate && !this.hasAttr("hide-label");
     this.setTemplate(`
-      ${labelText ? `<div class="caption" part="caption">${labelText}</div>` : ""}
+      ${labelText ? `<div class="caption" part="caption">${esc(labelText)}</div>` : ""}
       <div class="row">
         <div class="track" part="track" role="progressbar"
           aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100">

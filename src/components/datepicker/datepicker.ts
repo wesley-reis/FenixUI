@@ -1,6 +1,7 @@
 ﻿import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
+import { esc } from '../../core/sanitize';
 
 /**
  * <fx-datepicker> — Campo de data com calendário suspenso.
@@ -303,23 +304,23 @@ export class FxDatepicker extends FxElement {
     this.loadTimeFromValue();
 
     // Atributos repassados ao calendário interno, conforme o modo.
-    let calAttrs = `min="${this.getAttr('min')}" max="${this.getAttr('max')}"`;
+    let calAttrs = `min="${esc(this.getAttr('min'))}" max="${esc(this.getAttr('max'))}"`;
     if (this.mode === 'range') {
-      calAttrs += ` range start="${this.getAttr('start')}" end="${this.getAttr('end')}"`;
+      calAttrs += ` range start="${esc(this.getAttr('start'))}" end="${esc(this.getAttr('end'))}"`;
     } else if (this.mode === 'multiple') {
       // Repassa apenas as partes de data (sem hora) para o calendário pintar.
       const dates = this.values.map((v) => v.split('T')[0]).join(',');
-      calAttrs += ` mode="multiple" values="${dates}"`;
+      calAttrs += ` mode="multiple" values="${esc(dates)}"`;
     } else {
       const v = this.value.split('T')[0] ?? '';
-      calAttrs += ` value="${v}"`;
+      calAttrs += ` value="${esc(v)}"`;
     }
 
     this.setTemplate(`
       <div class="field" part="field">
         <input class="display" part="display" type="text" ${this.hasAttr('free-text') && !disabled ? '' : 'readonly'}
-          placeholder="${this.getAttr('placeholder', 'dd/mm/aaaa')}"
-          value="${text}" ${disabled ? 'disabled' : ''}>
+          placeholder="${esc(this.getAttr('placeholder', 'dd/mm/aaaa'))}"
+          value="${esc(text)}" ${disabled ? 'disabled' : ''}>
         <button type="button" class="clear" part="clear" aria-label="Limpar"
           ${clearable && hasValue ? '' : 'hidden'}>
           ×

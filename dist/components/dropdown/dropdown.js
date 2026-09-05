@@ -1,7 +1,12 @@
 import { FxElement } from "../../core/base.js";
 import { css } from "../../core/css.js";
 import { defineElement } from "../../core/define.js";
+import { esc } from "../../core/sanitize.js";
 const _FxDropdown = class _FxDropdown extends FxElement {
+  constructor() {
+    super(...arguments);
+    this._listenersAttached = false;
+  }
   static get observedAttributes() {
     return ["label", "position", "open"];
   }
@@ -17,7 +22,7 @@ const _FxDropdown = class _FxDropdown extends FxElement {
     this.setTemplate(`
       <span class="trigger" role="button" tabindex="0" part="trigger"
         aria-haspopup="menu" aria-expanded="${this.open}">
-        ${label} ▾
+        ${esc(label)} ▾
       </span>
       <div class="panel" role="menu" part="panel">
         ${items.length ? "" : '<div class="empty">Nenhuma ação</div>'}
@@ -36,18 +41,37 @@ const _FxDropdown = class _FxDropdown extends FxElement {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
         this.open = !this.open;
+      } else if (e.key === "Escape") {
+        this.open = false;
       }
     });
-    items.forEach((item) => {
-      item.addEventListener("click", () => {
-        this.open = false;
-        this.dispatchEvent(new CustomEvent("select", {
-          bubbles: true,
-          composed: true,
-          detail: { value: item.getAttribute("value") ?? "" }
-        }));
-      });
+    this._attachDelegatedListeners();
+  }
+  /** Delegação de cliques nos itens + fechamento ao clicar fora (registrado uma vez). */
+  _attachDelegatedListeners() {
+    if (this._listenersAttached) return;
+    this._listenersAttached = true;
+    this.addEventListener("click", (e) => {
+      const item = e.composedPath().find(
+        (n) => n.tagName?.toLowerCase() === "fx-dropdown-item"
+      );
+      if (!item) return;
+      this.open = false;
+      this.dispatchEvent(new CustomEvent("select", {
+        bubbles: true,
+        composed: true,
+        detail: { value: item.getAttribute("value") ?? "" }
+      }));
     });
+    this.docListener = (e) => {
+      if (!this.contains(e.target)) this.open = false;
+    };
+    document.addEventListener("click", this.docListener);
+  }
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    if (this.docListener) document.removeEventListener("click", this.docListener);
+    this.docListener = void 0;
   }
 };
 _FxDropdown.styles = css`

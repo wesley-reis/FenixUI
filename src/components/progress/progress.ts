@@ -1,6 +1,7 @@
 ﻿import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
+import { esc } from '../../core/sanitize';
 
 /**
  * <fx-progress> — Indicador de progresso determinado/indeterminado.
@@ -76,7 +77,7 @@ export class FxProgress extends FxElement {
     const showPct = !indeterminate && !this.hasAttr('hide-label');
 
     this.setTemplate(`
-      ${labelText ? `<div class="caption" part="caption">${labelText}</div>` : ''}
+      ${labelText ? `<div class="caption" part="caption">${esc(labelText)}</div>` : ''}
       <div class="row">
         <div class="track" part="track" role="progressbar"
           aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100">

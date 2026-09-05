@@ -1,6 +1,7 @@
 ﻿import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
+import { esc } from '../../core/sanitize';
 
 /**
  * <fx-input> — Campo de texto estilizado com os tokens do tema.
@@ -126,9 +127,9 @@ export class FxInput extends FxElement {
 
     this.setTemplate(`
       ${this.hasAttr('clearable') ? '<div class="wrap">' : ''}
-      <input class="field" part="input" type="${type}"
-        ${placeholder ? `placeholder="${placeholder}"` : ''}
-        ${min ? `min="${min}"` : ''} ${max ? `max="${max}"` : ''} ${step ? `step="${step}"` : ''}
+      <input class="field" part="input" type="${esc(type)}"
+        ${placeholder ? `placeholder="${esc(placeholder)}"` : ''}
+        ${min ? `min="${esc(min)}"` : ''} ${max ? `max="${esc(max)}"` : ''} ${step ? `step="${esc(step)}"` : ''}
       />
       ${this.hasAttr('clearable') ? '<button type="button" class="clear" part="clear" aria-label="Limpar" tabindex="-1">×</button></div>' : ''}
     `);

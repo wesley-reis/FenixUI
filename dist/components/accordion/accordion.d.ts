@@ -22,6 +22,7 @@ export declare class FxAccordionPanel extends FxElement {
     protected connectedCallback(): void;
     protected disconnectedCallback(): void;
     private _mo;
+    private _clickListenerAttached;
     protected render(): void;
 }
 /**

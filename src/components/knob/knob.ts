@@ -1,6 +1,7 @@
 import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
+import { esc } from '../../core/sanitize';
 
 /**
  * <fx-knob> - Controle giratorio circular para ajuste de valor.
@@ -205,8 +206,10 @@ export class FxKnob extends FxElement {
     const circumference = 2 * Math.PI * radius;
     const offset = circumference * (1 - pct);
 
-    const valueColorStyle = this.valueColor ? `--_value-color: ${this.valueColor};` : '';
-    const rangeColorStyle = this.rangeColor ? `--_range-color: ${this.rangeColor};` : '';
+    const vc = this.valueColor ? this.safeColor(this.valueColor) : '';
+    const rc = this.rangeColor ? this.safeColor(this.rangeColor) : '';
+    const valueColorStyle = vc ? `--_value-color: ${vc};` : '';
+    const rangeColorStyle = rc ? `--_range-color: ${rc};` : '';
 
     const displayValue = this.valueTemplate.replace('{value}', String(Math.round(value)));
 
@@ -223,7 +226,7 @@ export class FxKnob extends FxElement {
             stroke-dasharray="${circumference}"
             stroke-dashoffset="${offset}" />
         </svg>
-        <div class="label" part="label">${displayValue}</div>
+        <div class="label" part="label">${esc(displayValue)}</div>
       </div>
     `);
 
@@ -235,6 +238,16 @@ export class FxKnob extends FxElement {
     if (s === 'sm') return 60;
     if (s === 'lg') return 140;
     return 100;
+  }
+
+  /** Valida um valor de cor CSS, retornando-o seguro ou vazio. */
+  private safeColor(value: string): string {
+    const v = value.trim();
+    if (/^#[0-9a-fA-F]{3,8}$/.test(v)) return v;
+    if (/^(rgb|rgba|hsl|hsla)\([\d\s.,%()]+\)$/i.test(v)) return v;
+    if (/^var\(--[\w-]+(,\s*[^)]*)?\)$/.test(v)) return v;
+    if (/^[a-zA-Z]+$/.test(v)) return v;
+    return '';
   }
 
   private clampValue(v: number): number {

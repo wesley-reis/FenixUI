@@ -1,6 +1,7 @@
 import { FxElement } from "../../core/base.js";
 import { css } from "../../core/css.js";
 import { defineElement } from "../../core/define.js";
+import { esc } from "../../core/sanitize.js";
 const _FxMultiselect = class _FxMultiselect extends FxElement {
   constructor() {
     super(...arguments);
@@ -64,6 +65,23 @@ const _FxMultiselect = class _FxMultiselect extends FxElement {
     else this.selected.add(value);
     this.commit();
   }
+  /** Navegação por teclado entre as opções do listbox (WCAG 2.1.1). */
+  _navigateOptions(e) {
+    e.preventDefault();
+    if (!this.hasAttr("open")) {
+      this.toggleAttribute("open");
+      this.render();
+    }
+    const opts = Array.from(this.root.querySelectorAll(".opt"));
+    if (!opts.length) return;
+    const current = opts.indexOf(this.root.activeElement);
+    let next = 0;
+    if (e.key === "ArrowDown") next = current === -1 ? 0 : Math.min(current + 1, opts.length - 1);
+    else if (e.key === "ArrowUp") next = current === -1 ? opts.length - 1 : Math.max(current - 1, 0);
+    else if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = opts.length - 1;
+    opts[next]?.focus();
+  }
   render() {
     const wasOpen = this.hasAttr("open");
     const search = this.root.querySelector(".search")?.value ?? "";
@@ -78,10 +96,10 @@ const _FxMultiselect = class _FxMultiselect extends FxElement {
       <span class="trigger" part="trigger" role="button" tabindex="${this.disabled ? -1 : 0}" aria-haspopup="listbox" aria-expanded="${wasOpen}" aria-disabled="${this.disabled}">
         <span class="lead">
         ${chips.length ? chips.map((c) => `
-              <span class="chip" data-value="${c.value}">
-                ${c.label}
-                <span class="chip__x" role="button" aria-label="Remover ${c.label}">×</span>
-              </span>`).join("") : `<span class="placeholder">${placeholder}</span>`}
+              <span class="chip" data-value="${esc(c.value)}">
+                ${esc(c.label)}
+                <span class="chip__x" role="button" aria-label="Remover ${esc(c.label)}">×</span>
+              </span>`).join("") : `<span class="placeholder">${esc(placeholder)}</span>`}
         </span>
         <span class="trigger-right">
           ${this.hasAttr("clearable") && chips.length ? '<button type="button" class="icon-btn clear" part="clear" aria-label="Limpar seleção">×</button>' : ""}
@@ -93,14 +111,14 @@ const _FxMultiselect = class _FxMultiselect extends FxElement {
           <span class="count">${chips.length} selecionado${chips.length === 1 ? "" : "s"}</span>
           ${this.hasAttr("clearable") && chips.length ? '<button type="button" class="clear-all">Limpar tudo</button>' : ""}
         </div>
-        ${this.hasAttr("searchable") ? `<input class="search" part="search" type="text" placeholder="${this.getAttr("search-placeholder", "Pesquisar…")}">` : ""}
+        ${this.hasAttr("searchable") ? `<input class="search" part="search" type="text" placeholder="${esc(this.getAttr("search-placeholder", "Pesquisar…"))}">` : ""}
         <ul class="list">
           ${filtered.map((o) => `
-            <li><button type="button" class="opt" role="option" data-value="${o.value}"
+            <li><button type="button" class="opt" role="option" data-value="${esc(o.value)}"
               aria-selected="${this.selected.has(o.value)}">
-              <span class="box" aria-hidden="true"></span>${o.label}
+              <span class="box" aria-hidden="true"></span>${esc(o.label)}
             </button></li>`).join("")}
-          ${filtered.length === 0 ? `<li class="empty">${this.getAttr("no-results", "Nenhum resultado")}</li>` : ""}
+          ${filtered.length === 0 ? `<li class="empty">${esc(this.getAttr("no-results", "Nenhum resultado"))}</li>` : ""}
         </ul>
       </div>
     `);
@@ -139,6 +157,18 @@ const _FxMultiselect = class _FxMultiselect extends FxElement {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
         trigger.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+        return;
+      }
+      if (e.key === "Escape") {
+        if (this.hasAttr("open")) {
+          this.removeAttribute("open");
+          this.render();
+          this.root.querySelector(".trigger")?.focus();
+        }
+        return;
+      }
+      if (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Home" || e.key === "End") {
+        this._navigateOptions(e);
       }
     });
     this.root.querySelector(".clear")?.addEventListener("click", (e) => {

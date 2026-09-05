@@ -1,6 +1,7 @@
 ﻿import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
+import { esc } from '../../core/sanitize';
 import '../select';
 
 /**
@@ -92,7 +93,7 @@ export class FxPagination extends FxElement {
       <button type="button" class="nav" part="next" data-go="${current + 1}" ${current >= pages ? 'disabled' : ''}>›</button>
       ${opts.length ? `
         <fx-select class="rows-sel" part="rows" size="sm" value="${this.rows}" aria-label="Itens por página">
-          ${opts.map((o) => `<option value="${o}">${o}</option>`).join('')}
+          ${opts.map((o) => `<option value="${esc(o)}">${esc(o)}</option>`).join('')}
         </fx-select>` : ''}
     `);
 

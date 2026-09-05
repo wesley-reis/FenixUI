@@ -1,6 +1,7 @@
 import { FxElement } from "../../core/base.js";
 import { css } from "../../core/css.js";
 import { defineElement } from "../../core/define.js";
+import { esc } from "../../core/sanitize.js";
 const _FxSelect = class _FxSelect extends FxElement {
   // `value` fica FORA da observação: refleti-lo no change não pode
   // re-renderizar o template e fechar o dropdown.
@@ -58,6 +59,23 @@ const _FxSelect = class _FxSelect extends FxElement {
       new CustomEvent("change", { bubbles: true, composed: true, detail: { value } })
     );
   }
+  /** Navegação por teclado entre as opções do listbox (WCAG 2.1.1). */
+  _navigateOptions(e) {
+    e.preventDefault();
+    if (!this.hasAttr("open")) {
+      this.toggleAttribute("open");
+      this.render();
+    }
+    const opts = Array.from(this.root.querySelectorAll(".opt"));
+    if (!opts.length) return;
+    const current = opts.indexOf(this.root.activeElement);
+    let next = 0;
+    if (e.key === "ArrowDown") next = current === -1 ? 0 : Math.min(current + 1, opts.length - 1);
+    else if (e.key === "ArrowUp") next = current === -1 ? opts.length - 1 : Math.max(current - 1, 0);
+    else if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = opts.length - 1;
+    opts[next]?.focus();
+  }
   render() {
     const prevOpen = this.hasAttr("open");
     const prevSearch = this.root.querySelector(".search");
@@ -75,18 +93,18 @@ const _FxSelect = class _FxSelect extends FxElement {
     const filtered = search ? opts.filter((o) => o.label.toLowerCase().includes(search.toLowerCase())) : opts;
     this.setTemplate(`
       <span class="trigger" part="trigger" role="button" tabindex="${this.disabled ? -1 : 0}" aria-haspopup="listbox" aria-expanded="${prevOpen}">
-        <span class="${selectedLabel ? "label" : "placeholder"}">${selectedLabel || placeholder}</span>
+        <span class="${selectedLabel ? "label" : "placeholder"}">${esc(selectedLabel) || esc(placeholder)}</span>
         <span class="actions">
           ${this.hasAttr("clearable") && current ? '<button type="button" class="clear" part="clear" aria-label="Limpar">×</button>' : ""}
           <span class="caret">▼</span>
         </span>
       </span>
       <div class="panel" part="panel" role="listbox">
-        ${this.hasAttr("searchable") ? `<input class="search" part="search" type="text" placeholder="${this.getAttr("search-placeholder", "Pesquisar…")}">` : ""}
+        ${this.hasAttr("searchable") ? `<input class="search" part="search" type="text" placeholder="${esc(this.getAttr("search-placeholder", "Pesquisar…"))}">` : ""}
         ${filtered.map((o) => `
-          <button type="button" class="opt" role="option" data-value="${o.value}"
-            aria-selected="${o.value === current}">${o.label}</button>`).join("")}
-        ${filtered.length === 0 ? `<div class="empty">${this.getAttr("no-results", "Nenhum resultado")}</div>` : ""}
+          <button type="button" class="opt" role="option" data-value="${esc(o.value)}"
+            aria-selected="${o.value === current}">${esc(o.label)}</button>`).join("")}
+        ${filtered.length === 0 ? `<div class="empty">${esc(this.getAttr("no-results", "Nenhum resultado"))}</div>` : ""}
       </div>
     `);
     if (prevOpen) this.setAttribute("open", "");
@@ -114,9 +132,22 @@ const _FxSelect = class _FxSelect extends FxElement {
       this.root.querySelector(".search")?.focus();
     });
     trigger.addEventListener("keydown", (e) => {
+      if (this.disabled) return;
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
         trigger.click();
+        return;
+      }
+      if (e.key === "Escape") {
+        if (this.hasAttr("open")) {
+          this.removeAttribute("open");
+          this.render();
+          this.root.querySelector(".trigger")?.focus();
+        }
+        return;
+      }
+      if (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Home" || e.key === "End") {
+        this._navigateOptions(e);
       }
     });
     this.root.querySelector(".clear")?.addEventListener("click", (e) => {

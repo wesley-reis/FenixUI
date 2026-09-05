@@ -1,10 +1,20 @@
 import { FxElement } from "../../core/base.js";
 import { css } from "../../core/css.js";
 import { defineElement } from "../../core/define.js";
+import { esc } from "../../core/sanitize.js";
 const _FxDrawer = class _FxDrawer extends FxElement {
   constructor() {
     super(...arguments);
     this._onKeydown = () => {
+    };
+    this._previouslyFocused = null;
+    this._close = () => {
+      if (!this.open) return;
+      this.open = false;
+      this._restoreFocus();
+      this.dispatchEvent(
+        new CustomEvent("close", { bubbles: true, composed: true })
+      );
     };
   }
   static get observedAttributes() {
@@ -33,36 +43,60 @@ const _FxDrawer = class _FxDrawer extends FxElement {
     const title = this.getAttr("title");
     this.setTemplate(`
       <div class="overlay" part="overlay"></div>
-      <div class="panel" part="panel" role="dialog" aria-modal="true" aria-label="${title || "Drawer"}">
-        ${title !== "" ? `<div class="header" part="header"><span class="title">${title}</span><button type="button" class="close" part="close" aria-label="Fechar">✕</button></div>` : ""}
+      <div class="panel" part="panel" role="dialog" aria-modal="true" aria-label="${esc(title || "Drawer")}" tabindex="-1">
+        ${title !== "" ? `<div class="header" part="header"><span class="title">${esc(title)}</span><button type="button" class="close" part="close" aria-label="Fechar">✕</button></div>` : ""}
         <div class="body" part="body"><slot></slot></div>
       </div>
     `);
-    const close = () => {
-      if (!this.open) return;
-      this.open = false;
-      this.dispatchEvent(
-        new CustomEvent("close", { bubbles: true, composed: true })
-      );
-    };
-    this.root.querySelector(".overlay")?.addEventListener("click", close);
-    this.root.querySelector(".close")?.addEventListener("click", close);
+    this.root.querySelector(".overlay")?.addEventListener("click", this._close);
+    this.root.querySelector(".close")?.addEventListener("click", this._close);
+    if (this.open) {
+      requestAnimationFrame(() => {
+        if (this._previouslyFocused === null) {
+          this._previouslyFocused = document.activeElement;
+        }
+        this.root.querySelector(".panel")?.focus();
+      });
+    }
   }
   connectedCallback() {
     super.connectedCallback?.();
     this._onKeydown = (e) => {
       if (e.key === "Escape" && this.open) {
-        this.open = false;
-        this.dispatchEvent(
-          new CustomEvent("close", { bubbles: true, composed: true })
-        );
+        this._close();
+      } else if (e.key === "Tab" && this.open) {
+        this._trapFocus(e);
       }
     };
     document.addEventListener("keydown", this._onKeydown);
   }
   disconnectedCallback() {
     document.removeEventListener("keydown", this._onKeydown);
+    this._restoreFocus();
     super.disconnectedCallback?.();
+  }
+  /** Mantém o foco dentro do drawer (WCAG 2.4.3 / 2.1.2). */
+  _trapFocus(e) {
+    const panel = this.root.querySelector(".panel");
+    if (!panel) return;
+    const focusables = panel.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    if (!focusables.length) return;
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    const active = this.root.activeElement;
+    if (e.shiftKey && (active === first || active === panel)) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && active === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+  _restoreFocus() {
+    if (this._previouslyFocused?.isConnected) this._previouslyFocused.focus();
+    this._previouslyFocused = null;
   }
 };
 _FxDrawer.styles = css`

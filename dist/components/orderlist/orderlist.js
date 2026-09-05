@@ -1,6 +1,7 @@
 import { FxElement } from "../../core/base.js";
 import { css } from "../../core/css.js";
 import { defineElement } from "../../core/define.js";
+import { esc } from "../../core/sanitize.js";
 const _FxOrderList = class _FxOrderList extends FxElement {
   constructor() {
     super(...arguments);
@@ -652,9 +653,6 @@ _FxOrderList.styles = css`
     .list-item { animation: slideIn 0.2s ease-out; }
     `;
 let FxOrderList = _FxOrderList;
-function esc(s) {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
 function defineFxOrderList() {
   return defineElement("fx-orderlist", FxOrderList);
 }

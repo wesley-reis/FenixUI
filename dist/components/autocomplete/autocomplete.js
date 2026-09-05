@@ -1,6 +1,7 @@
 import { FxElement } from "../../core/base.js";
 import { css } from "../../core/css.js";
 import { defineElement } from "../../core/define.js";
+import { esc } from "../../core/sanitize.js";
 const _FxAutocomplete = class _FxAutocomplete extends FxElement {
   static get observedAttributes() {
     return ["size", "placeholder", "source", "disabled", "min-chars"];
@@ -31,11 +32,23 @@ const _FxAutocomplete = class _FxAutocomplete extends FxElement {
   set source(value) {
     this.setAttribute("source", typeof value === "string" ? value : JSON.stringify(value));
   }
+  connectedCallback() {
+    super.connectedCallback();
+    this.docListener = (e) => {
+      if (!this.contains(e.target)) this.toggleAttr("open", false);
+    };
+    document.addEventListener("click", this.docListener);
+  }
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    if (this.docListener) document.removeEventListener("click", this.docListener);
+    this.docListener = void 0;
+  }
   render() {
     const placeholder = this.getAttr("placeholder");
     this.setTemplate(`
       <input class="field" part="input" type="text"
-        ${placeholder ? `placeholder="${placeholder}"` : ""} autocomplete="off"/>
+        ${placeholder ? `placeholder="${esc(placeholder)}"` : ""} autocomplete="off"/>
       <div class="list" part="list" role="listbox"></div>
     `);
     const field = this.root.querySelector(".field");
@@ -48,7 +61,7 @@ const _FxAutocomplete = class _FxAutocomplete extends FxElement {
       if (!list) return;
       const q = field.value.toLowerCase();
       const matches = this.source.filter((s) => s.toLowerCase().includes(q)).slice(0, 8);
-      list.innerHTML = matches.length ? matches.map((m) => `<button type="button" class="opt" role="option" data-v="${m}">${m}</button>`).join("") : '<div class="empty">Nenhum resultado</div>';
+      list.innerHTML = matches.length ? matches.map((m) => `<button type="button" class="opt" role="option" data-v="${esc(m)}">${esc(m)}</button>`).join("") : '<div class="empty">Nenhum resultado</div>';
       list.querySelectorAll(".opt").forEach((btn) => {
         btn.addEventListener("click", () => {
           field.value = btn.dataset.v ?? "";
@@ -70,8 +83,19 @@ const _FxAutocomplete = class _FxAutocomplete extends FxElement {
     field.addEventListener("focus", () => {
       if (field.value.length >= minChars) openList();
     });
-    document.addEventListener("click", (e) => {
-      if (!this.contains(e.target)) this.toggleAttr("open", false);
+    field.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        this.toggleAttr("open", false);
+        return;
+      }
+      if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+      e.preventDefault();
+      if (!this.hasAttr("open")) openList();
+      const opts = Array.from(this.root.querySelectorAll(".opt"));
+      if (!opts.length) return;
+      const current = opts.indexOf(this.root.activeElement);
+      const next = e.key === "ArrowDown" ? current === -1 ? 0 : Math.min(current + 1, opts.length - 1) : current === -1 ? opts.length - 1 : Math.max(current - 1, 0);
+      opts[next]?.focus();
     });
   }
 };
