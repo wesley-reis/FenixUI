@@ -105,7 +105,10 @@ jobs:
       - name: Create or reuse Pull Request
         id: pr
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Usa BUMP_TOKEN (PAT do admin) se existir — necessário quando a
+          # configuração "Allow GitHub Actions to create and approve pull
+          # requests" não está disponível. Caso contrário, usa o GITHUB_TOKEN.
+          GH_TOKEN: ${{ secrets.BUMP_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           NEW_VERSION="${{ steps.bump.outputs.new_version }}"
           BRANCH="${{ steps.branch.outputs.branch }}"
@@ -132,7 +135,7 @@ jobs:
 
       - name: Wait for CI and merge PR
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.BUMP_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           PR_URL="${{ steps.pr.outputs.url }}"
           echo "⏳ Watching CI checks on $PR_URL ..."
