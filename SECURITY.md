@@ -42,25 +42,30 @@ Este documento explica como configurar a proteção da branch `main` e os workfl
 ### Passo 2: Configurar Branch Protection Rules
 
 1. Acesse: `https://github.com/wesley-reis/FenixUI/settings/branches`
+2. Clique em **"Add branch protection rule"**
 3. Configure conforme a tabela abaixo:
 
 | Configuração | Valor | Descrição |
 |---|---|---|
+| **Enforcement status** | `Active` | ✅ **Ativa** a regra de proteção |
 | **Branch name pattern** | `main` | Protege a branch principal |
 | **Require a pull request before merging** | ✅ Ativar | Impede push direto |
 | ↳ Require approvals | `1` | Mínimo 1 aprovação |
 | ↳ Dismiss stale pull request approvals | ✅ Ativar | Reavalia se houver mudanças |
 | ↳ Require review from Code Owners | ✅ **CRÍTICO** | Exige aprovação do maintainer |
 | ↳ Restrict who can dismiss reviews | ✅ Ativar | Apenas maintainers |
-| **Require status checks to pass** | ✅ Ativar | CI precisa passar |
+| **Require status checks to pass** | ⚠️ Veja nota | CI precisa passar |
 | ↳ Require branches to be up to date | ✅ Ativar | Branch precisa estar atualizada |
 | **Require conversation resolution** | ✅ Ativar | Comentários resolvidos |
-| **Include administrators** | ✅ **CRÍTICO** | Até admins seguem as regras |
-| **Restrict who can push** | ✅ Ativar | Apenas pessoas específicas |
 | **Allow force pushes** | ❌ Desativado | **NUNCA** ative |
 | **Allow deletions** | ❌ Desativado | **NUNCA** ative |
 
-> ⚠️ Marque **"Include administrators"** para que até o dono precise seguir as regras.
+> ⚠️ **Sobre "Require status checks to pass":** O GitHub exige que pelo menos um workflow tenha rodado na branch antes de aparecer como opção. Se der erro "Required status checks cannot be empty", faça assim:
+> 1. **Salve a regra sem ativar** "Require status checks" primeiro
+> 2. Dispare o workflow CI manualmente: **Actions → CI → Run workflow** (na branch `main`)
+> 3. Após o CI rodar com sucesso, volte em **Branch Protection Rules** e ative "Require status checks to pass", selecionando o job `validate`
+
+> 💡 **Sobre "Include administrators":** Essa opção só aparece em contas pagas (Pro/Team/Enterprise) ou organizações. Em **contas pessoais gratuitas**, a proteção já se aplica a todos por padrão — não precisa configurar.
 
 4. Clique em **"Create"** ou **"Save changes"**
 
