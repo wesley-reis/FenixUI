@@ -23,6 +23,11 @@ import { textareaDoc } from './textarea.doc';
 import { dialogDoc } from './dialog.doc';
 import { confirmpopupDoc } from './confirmpopup.doc';
 import { fileuploadDoc } from './fileupload.doc';
+import { sliderDoc } from './slider.doc';
+import { chipDoc } from './chip.doc';
+import { avatarDoc } from './avatar.doc';
+import { cardDoc } from './card.doc';
+import { breadcrumbDoc } from './breadcrumb.doc';
 import { toastDoc } from './toast.doc';
 import { tooltipDoc } from './tooltip.doc';
 import { tabsDoc } from './tabs.doc';
@@ -56,6 +61,11 @@ export const componentDocs: ComponentDoc[] = [
 	dialogDoc,
 	confirmpopupDoc,
 	fileuploadDoc,
+	sliderDoc,
+	chipDoc,
+	avatarDoc,
+	cardDoc,
+	breadcrumbDoc,
 	toastDoc,
 	tooltipDoc,
 	tabsDoc,
@@ -90,6 +100,11 @@ export const componentLoaders: Record<string, () => Promise<unknown>> = {
 	'fx-dialog': () => import('../../components/dialog'),
 	'fx-confirmpopup': () => import('../../components/confirmpopup'),
 	'fx-fileupload': () => import('../../components/fileupload'),
+	'fx-slider': () => import('../../components/slider'),
+	'fx-chip': () => import('../../components/chip'),
+	'fx-avatar': () => import('../../components/avatar'),
+	'fx-card': () => import('../../components/card'),
+	'fx-breadcrumb': () => import('../../components/breadcrumb'),
 	'fx-toast': () => import('../../components/toast'),
 	'fx-tooltip': () => import('../../components/tooltip'),
 	'fx-tabs': () => import('../../components/tabs'),

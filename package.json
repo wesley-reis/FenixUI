@@ -130,6 +130,26 @@
       "types": "./dist/components/fileupload/index.d.ts",
       "import": "./dist/components/fileupload/index.js"
     },
+    "./slider": {
+      "types": "./dist/components/slider/index.d.ts",
+      "import": "./dist/components/slider/index.js"
+    },
+    "./chip": {
+      "types": "./dist/components/chip/index.d.ts",
+      "import": "./dist/components/chip/index.js"
+    },
+    "./avatar": {
+      "types": "./dist/components/avatar/index.d.ts",
+      "import": "./dist/components/avatar/index.js"
+    },
+    "./card": {
+      "types": "./dist/components/card/index.d.ts",
+      "import": "./dist/components/card/index.js"
+    },
+    "./breadcrumb": {
+      "types": "./dist/components/breadcrumb/index.d.ts",
+      "import": "./dist/components/breadcrumb/index.js"
+    },
     "./toast": {
       "types": "./dist/components/toast/index.d.ts",
       "import": "./dist/components/toast/index.js"
