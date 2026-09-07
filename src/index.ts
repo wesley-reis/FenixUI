@@ -1,7 +1,7 @@
 /**
  * Entrada principal do FenixUI.
  *
- * Ao importar este agregador, todos os componentes são registrados (bundle
+ * Ao importar este agregador, todos os componentes sï¿½o registrados (bundle
  * "tudo-em-um"). Para consumo com TREE-SHAKING, prefira importar apenas o
  * subpath que deseja, ex.: `@wrrdev/fenix-ui/button`.
  */
@@ -15,7 +15,7 @@ export * from './core/base';
 export * from './core/define';
 export * from './core/sanitize';
 
-// tipagens JSX/HTML (autocomplete + validação de atributos fx-* em TSX/Vue JSX)
+// tipagens JSX/HTML (autocomplete + validaï¿½ï¿½o de atributos fx-* em TSX/Vue JSX)
 export * from './core/types';
 export * from './core/jsx';
 
@@ -35,6 +35,8 @@ export * from './components/table';
 export * from './components/floatlabel';
 export * from './components/textarea';
 export * from './components/dialog';
+export * from './components/confirmpopup';
+export * from './components/fileupload';
 export * from './components/toast';
 export * from './components/tooltip';
 export * from './components/tabs';

@@ -21,6 +21,8 @@ import { tableDoc } from './table.doc';
 import { floatlabelDoc } from './floatlabel.doc';
 import { textareaDoc } from './textarea.doc';
 import { dialogDoc } from './dialog.doc';
+import { confirmpopupDoc } from './confirmpopup.doc';
+import { fileuploadDoc } from './fileupload.doc';
 import { toastDoc } from './toast.doc';
 import { tooltipDoc } from './tooltip.doc';
 import { tabsDoc } from './tabs.doc';
@@ -52,6 +54,8 @@ export const componentDocs: ComponentDoc[] = [
 	floatlabelDoc,
 	textareaDoc,
 	dialogDoc,
+	confirmpopupDoc,
+	fileuploadDoc,
 	toastDoc,
 	tooltipDoc,
 	tabsDoc,
@@ -84,6 +88,8 @@ export const componentLoaders: Record<string, () => Promise<unknown>> = {
 	'fx-floatlabel': () => import('../../components/floatlabel'),
 	'fx-textarea': () => import('../../components/textarea'),
 	'fx-dialog': () => import('../../components/dialog'),
+	'fx-confirmpopup': () => import('../../components/confirmpopup'),
+	'fx-fileupload': () => import('../../components/fileupload'),
 	'fx-toast': () => import('../../components/toast'),
 	'fx-tooltip': () => import('../../components/tooltip'),
 	'fx-tabs': () => import('../../components/tabs'),

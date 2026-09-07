@@ -122,6 +122,14 @@
       "types": "./dist/components/dialog/index.d.ts",
       "import": "./dist/components/dialog/index.js"
     },
+    "./confirmpopup": {
+      "types": "./dist/components/confirmpopup/index.d.ts",
+      "import": "./dist/components/confirmpopup/index.js"
+    },
+    "./fileupload": {
+      "types": "./dist/components/fileupload/index.d.ts",
+      "import": "./dist/components/fileupload/index.js"
+    },
     "./toast": {
       "types": "./dist/components/toast/index.d.ts",
       "import": "./dist/components/toast/index.js"
