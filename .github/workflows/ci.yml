@@ -35,7 +35,8 @@ jobs:
             git add README.md
             git commit -m "chore: sync README version (prepack) [skip ci]"
             git push origin HEAD:${{ github.head_ref }}
-            echo "✅ README.md synced automatically to v$(node -p \"require('./package.json').version\")"
+            VERSION=$(node -p "require('./package.json').version")
+            echo "✅ README.md synced automatically to v$VERSION"
           fi
       
       - name: Setup Node.js
