@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Tipo de versão (patch, minor, major) ou versão específica (ex: 1.2.3)'
+        description: 'Tipo de versão (patch, minor, major) ou custom'
         required: true
         type: choice
         options:
@@ -16,113 +16,127 @@ on:
         description: 'Versão customizada (apenas se version=custom, ex: 1.2.3)'
         required: false
         type: string
-      skip_publish:
-        description: 'Pular publicação automática no npm após o bump'
-        required: false
-        type: boolean
-        default: false
 
-# Garante que apenas uma instância rode por vez
 concurrency:
   group: version-bump
   cancel-in-progress: false
 
+# Fluxo compatível com Branch Protection:
+# cria branch → abre PR → aguarda CI → merge automático (squash).
+# A tag vX.Y.Z é criada pelo workflow "Release Tag" após o merge,
+# o que dispara automaticamente o "Publish to npm".
 jobs:
   bump:
     runs-on: ubuntu-latest
-    
-    # CRÍTICO: Só executa na branch main
-    if: github.ref == 'refs/heads/main'
-    
+    if: github.repository == 'wesley-reis/FenixUI' && github.ref == 'refs/heads/main'
     permissions:
-      contents: write  # Necessário para criar commits e tags
-    
+      contents: write
+      pull-requests: write
+
     steps:
-      - name: Checkout code
+      - name: Checkout main
         uses: actions/checkout@v4
         with:
           ref: main
-          # Usa token com permissão de push
-          token: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
-      
+
       - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-      
+
       - name: Get current version
         id: current
         run: |
           CURRENT_VERSION=$(node -p "require('./package.json').version")
           echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
           echo "📦 Current version: $CURRENT_VERSION"
-      
-      - name: Bump version
+
+      - name: Compute new version
         id: bump
         run: |
-          VERSION_TYPE="${{ inputs.version }}"
-          
-          if [ "$VERSION_TYPE" = "custom" ]; then
-            CUSTOM_VERSION="${{ inputs.custom_version }}"
-            if [ -z "$CUSTOM_VERSION" ]; then
+          TYPE="${{ inputs.version }}"
+
+          if [ "$TYPE" = "custom" ]; then
+            CUSTOM="${{ inputs.custom_version }}"
+            if [ -z "$CUSTOM" ]; then
               echo "❌ Error: custom_version is required when version=custom"
               exit 1
             fi
-            NEW_VERSION="$CUSTOM_VERSION"
-            echo "🔧 Using custom version: $NEW_VERSION"
+            node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.version='$CUSTOM';fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n');"
+            echo "🔧 Using custom version: $CUSTOM"
           else
-            # Usa npm version para fazer o bump
-            npm version "$VERSION_TYPE" --no-git-tag-version
-            NEW_VERSION=$(node -p "require('./package.json').version")
-            echo "🔧 Bumped version ($VERSION_TYPE): $NEW_VERSION"
+            npm version "$TYPE" --no-git-tag-version
           fi
-          
+
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          if [ "$NEW_VERSION" = "${{ steps.current.outputs.version }}" ]; then
+            echo "❌ Version did not change"
+            exit 1
+          fi
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          
-          # Atualiza o package.json com a versão customizada se necessário
-          if [ "$VERSION_TYPE" = "custom" ]; then
-            node -e "const fs=require('fs'); const pkg=JSON.parse(fs.readFileSync('package.json','utf8')); pkg.version='$NEW_VERSION'; fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2)+'\n');"
-          fi
-      
-      - name: Run prepack (update README)
+          echo "🔧 New version: $NEW_VERSION"
+
+      - name: Sync README (prepack)
         run: npm run prepack
-      
-      - name: Commit changes
+
+      - name: Create bump branch and commit
+        id: branch
         run: |
           NEW_VERSION="${{ steps.bump.outputs.new_version }}"
-          git add package.json README.md
-          git commit -m "chore: bump version to v$NEW_VERSION [skip ci]"
-      
-      - name: Create tag
+          BRANCH="chore/bump-v$NEW_VERSION"
+          git checkout -b "$BRANCH"
+          git add package.json package-lock.json README.md
+          if git diff --cached --quiet; then
+            echo "❌ No changes to commit"
+            exit 1
+          fi
+          git commit -m "chore: bump version to v$NEW_VERSION"
+          git push origin "$BRANCH"
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+
+      - name: Create Pull Request
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           NEW_VERSION="${{ steps.bump.outputs.new_version }}"
-          git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
-      
-      - name: Push changes
+          PR_URL=$(gh pr create \
+            --base main \
+            --head "${{ steps.branch.outputs.branch }}" \
+            --title "chore: bump version to v$NEW_VERSION" \
+            --body "Automated version bump to **v$NEW_VERSION**.
+
+          Ao mergear, o workflow **Release Tag** criará a tag \`v$NEW_VERSION\`
+          e o **Publish to npm** será disparado automaticamente.")
+          echo "url=$PR_URL" >> $GITHUB_OUTPUT
+          echo "$PR_URL"
+
+      - name: Wait for CI and merge PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git push origin main
-          git push origin --tags
-      
-      - name: Trigger npm publish
-        if: ${{ !inputs.skip_publish }}
-        uses: peter-evans/repository-dispatch@v3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          event-type: trigger-publish
-          client-payload: '{"version": "${{ steps.bump.outputs.new_version }}"}'
-      
+          PR_URL="${{ steps.pr.outputs.url }}"
+          echo "⏳ Watching CI checks on $PR_URL ..."
+          if gh pr checks "$PR_URL" --watch --fail-fast; then
+            echo "✅ CI passed — merging PR (squash)"
+            gh pr merge "$PR_URL" --squash --delete-branch
+          else
+            echo "❌ CI failed — PR kept open for manual inspection"
+            exit 1
+          fi
+
       - name: Summary
         run: |
           NEW_VERSION="${{ steps.bump.outputs.new_version }}"
-          echo "✅ Version bumped successfully!" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Previous version:** ${{ steps.current.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **New version:** $NEW_VERSION" >> $GITHUB_STEP_SUMMARY
-          echo "- **Tag:** v$NEW_VERSION" >> $GITHUB_STEP_SUMMARY
-          echo "- **Auto-publish:** ${{ !inputs.skip_publish && '✅ Enabled' || '❌ Skipped' }}" >> $GITHUB_STEP_SUMMARY
+          {
+            echo "## ✅ Version bump v${{ steps.current.outputs.version }} → v$NEW_VERSION"
+            echo ""
+            echo "- **PR:** ${{ steps.pr.outputs.url }} (auto-merged após CI passar)"
+            echo "- **Tag + npm publish:** disparados automaticamente pelo workflow *Release Tag* após o merge"
+          } >> $GITHUB_STEP_SUMMARY
