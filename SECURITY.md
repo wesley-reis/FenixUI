@@ -67,6 +67,17 @@ Este documento explica como configurar a proteção da branch `main` e os workfl
 
 > 💡 **Sobre "Include administrators":** Essa opção só aparece em contas pagas (Pro/Team/Enterprise) ou organizações. Em **contas pessoais gratuitas**, a proteção já se aplica a todos por padrão — não precisa configurar.
 
+> 🔄 **Sobre auto-aprovação de PRs (dono único):** O autor de um Pull Request **nunca pode se auto-aprovar**. Se o CODEOWNERS aponta para você (`* @wesley-reis`) e o PR é seu, ele fica travado em *"Awaiting review from Code Owners"* sem botão de aprovação.
+>
+> **Para dono único em conta gratuita** (sem a opção "Who can bypass"), a configuração mais segura possível é:
+> - ✅ Manter: "Require a pull request before merging" (push direto bloqueado)
+> - ❌ Desmarcar: "Require review from Code Owners" e "Require approvals" (auto-aprovação é impossível no GitHub)
+> - ✅ Manter: CI `validate` obrigatório, force push e deletions bloqueados
+>
+> **Resultado:** PRs seus → CI roda → merge liberado. PRs de contribuidores → CI roda → **você aprova** → merge. A segurança real vem do CI + bloqueio de push direto + CODEOWNERS documentando os responsáveis.
+>
+> 💡 **Dica:** Ao adicionar mais maintainers ao CODEOWNERS (`* @wesley-reis @outro-maintainer`), reative "Require review from Code Owners" e "Require approvals" — eles poderão aprovar seus PRs e a proteção completa volta a valer.
+
 4. Clique em **"Create"** ou **"Save changes"**
 
 ### Passo 3: Verificar GitHub Pages
