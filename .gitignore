@@ -1,4 +1,6 @@
 node_modules
+dist
+docs-dist
 *.local
 .DS_Store
 coverage
@@ -6,4 +8,3 @@ playwright-report
 test-results
 *.log
 *.txt
-docs-dist
