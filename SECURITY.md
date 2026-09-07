@@ -109,17 +109,19 @@ Este documento explica como configurar a proteção da branch `main` e os workfl
 ```
 1. Maintainer vai em Actions → "Bump Version" → "Run workflow"
 2. Escolhe o tipo: patch / minor / major / custom
-3. Workflow executa:
-   ├── Atualiza versão no package.json
-   ├── Atualiza README.md (prepack)
-   ├── Commit + push na main
-   ├── Cria tag vX.Y.Z
-   └── Dispara automaticamente o "Publish to npm"
-4. Workflow "Publish to npm" executa:
+3. Workflow "Bump Version" executa (compatível com Branch Protection):
+   ├── Atualiza versão no package.json + README (prepack)
+   ├── Cria branch chore/bump-vX.Y.Z e abre um Pull Request
+   ├── Aguarda o CI (validate) passar no PR
+   └── Faz merge automático (squash) do PR
+4. Workflow "Release Tag" (disparado pelo merge):
+   ├── Verifica se a tag vX.Y.Z já existe
+   └── Se não existir, cria e envia a tag → dispara o Publish
+5. Workflow "Publish to npm" executa:
    ├── Build, typecheck, tests
-   ├── Publica no npm com --provenance
+   ├── Publica no npm com --provenance (tolerante a versões em validating)
    └── Cria GitHub Release
-5. Workflow "Deploy Docs" executa:
+6. Workflow "Deploy Docs" executa:
    ├── Build das docs
    └── Deploy no GitHub Pages
 ```
