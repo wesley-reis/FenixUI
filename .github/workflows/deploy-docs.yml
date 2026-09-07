@@ -1,8 +1,18 @@
 name: Deploy Docs
 
 on:
+  # Só executa na branch main
   push:
     branches: [main]
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'index.html'
+      - 'vite.docs.config.ts'
+      - 'package.json'
+      - '.github/workflows/deploy-docs.yml'
+  
+  # Permite disparar manualmente
   workflow_dispatch:
 
 permissions:
@@ -10,6 +20,7 @@ permissions:
   pages: write
   id-token: write
 
+# Garante que apenas uma instância rode por vez
 concurrency:
   group: pages
   cancel-in-progress: true
@@ -17,30 +28,62 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    
+    # CRÍTICO: Só executa na branch main e não em forks
+    if: github.repository == 'wesley-reis/FenixUI' && github.ref == 'refs/heads/main'
+    
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
-
-      - run: npm ci
-
-      # As docs importam os componentes via caminhos relativos de src/,
-      # então o build:docs resolve tudo sozinho.
-      - run: npm run build:docs
-
-      - uses: actions/upload-pages-artifact@v3
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build documentation
+        run: npm run build:docs
+      
+      - name: Verify build output
+        run: |
+          if [ ! -d "docs-dist" ]; then
+            echo "❌ Build failed: docs-dist directory not found"
+            exit 1
+          fi
+          if [ ! -f "docs-dist/index.html" ]; then
+            echo "❌ Build failed: docs-dist/index.html not found"
+            exit 1
+          fi
+          echo "✅ Docs build verified successfully"
+          ls -la docs-dist/
+      
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
           path: docs-dist
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    
     steps:
-      - id: deployment
+      - name: Deploy to GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v4
+      
+      - name: Deployment summary
+        run: |
+          echo "✅ Docs deployed successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🌐 **URL:** ${{ steps.deployment.outputs.page_url }}" >> $GITHUB_STEP_SUMMARY
+

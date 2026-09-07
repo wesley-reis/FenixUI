@@ -1,0 +1,22 @@
+# CODEOWNERS — Define quem DEVE aprovar Pull Requests.
+#
+# O padrão `*` no início garante que TODOS os arquivos do repositório
+# exijam aprovação do maintainer (wesley-reis) antes do merge.
+#
+# Isto inclui:
+#   - .github/workflows/   (pipelines)
+#   - package.json          (configurações npm)
+#   - vite.*.config.ts      (configurações de build)
+#   - tsconfig*.json        (configurações TypeScript)
+#   - vitest.config.ts      (configurações de teste)
+#   - src/                  (código-fonte)
+#   - scripts/              (scripts de automação)
+#   - .npmignore            (configuração de publicação)
+#   - README.md             (documentação)
+#
+# IMPORTANTE: Para funcionar com Branch Protection Rules, ative a opção
+# "Require review from Code Owners" nas configurações da branch main.
+#
+# Docs: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+* @wesley-reis

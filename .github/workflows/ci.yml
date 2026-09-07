@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run typecheck
+        run: npm run typecheck
+      
+      - name: Run tests
+        run: npm test
+      
+      - name: Build library
+        run: npm run build:esm
+      
+      - name: Build types
+        run: npm run build:types
+      
+      - name: Verify build output
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "❌ Build failed: dist directory not found"
+            exit 1
+          fi
+          echo "✅ Build verified successfully"
+      
+      - name: Summary
+        if: success()
+        run: |
+          echo "✅ **CI passed successfully!**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Dependencies installed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Typecheck passed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Tests passed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Build completed" >> $GITHUB_STEP_SUMMARY

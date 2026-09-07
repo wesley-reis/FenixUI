@@ -1,0 +1,100 @@
+name: Publish to npm
+
+on:
+  # Permite disparar manualmente a partir da branch main
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag npm (latest, beta, next, etc)'
+        required: true
+        default: 'latest'
+        type: choice
+        options:
+          - latest
+          - beta
+          - next
+          - alpha
+  
+  # Dispara automaticamente quando uma tag v* é criada
+  push:
+    tags:
+      - 'v*'
+  
+  # Dispara automaticamente quando o workflow de versionamento termina
+  repository_dispatch:
+    types: [trigger-publish]
+
+# Garante que apenas uma instância rode por vez
+concurrency:
+  group: npm-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    
+    # CRÍTICO: Só executa se estiver na branch main ou em uma tag, e não em forks
+    if: |
+      github.repository == 'wesley-reis/FenixUI' &&
+      (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || github.event_name == 'repository_dispatch')
+    
+    permissions:
+      contents: read
+      id-token: write  # Necessário para npm provenance
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          # Garante que estamos na main
+          ref: ${{ github.ref }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          registry-url: 'https://registry.npmjs.org'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run typecheck
+        run: npm run typecheck
+      
+      - name: Run tests
+        run: npm test
+      
+      - name: Build library
+        run: npm run build
+      
+      - name: Verify build output
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "❌ Build failed: dist directory not found"
+            exit 1
+          fi
+          if [ ! -f "dist/index.js" ]; then
+            echo "❌ Build failed: dist/index.js not found"
+            exit 1
+          fi
+          echo "✅ Build verified successfully"
+          ls -la dist/
+      
+      - name: Publish to npm
+        run: |
+          TAG="${{ inputs.tag || 'latest' }}"
+          echo "📦 Publishing to npm with tag: $TAG"
+          npm publish --access public --tag "$TAG" --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      
+      - name: Create GitHub Release (for tags)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ contains(github.ref, 'beta') || contains(github.ref, 'alpha') || contains(github.ref, 'next') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
