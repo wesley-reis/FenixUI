@@ -18,6 +18,26 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
+      - name: Auto-sync README version (prepack)
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        # Em PRs do mesmo repo, o bot pode empurrar para a branch do PR
+        # (branch protection só bloqueia a main). Sincroniza o README com a
+        # versão do package.json automaticamente — sem ação manual.
+        run: |
+          git fetch origin ${{ github.head_ref }}
+          git checkout ${{ github.head_ref }}
+          npm run prepack
+          if git diff --quiet README.md; then
+            echo "ℹ️ README.md already in sync with package.json version"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add README.md
+            git commit -m "chore: sync README version (prepack) [skip ci]"
+            git push origin HEAD:${{ github.head_ref }}
+            echo "✅ README.md synced automatically to v$(node -p \"require('./package.json').version\")"
+          fi
+      
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
