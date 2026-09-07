@@ -84,7 +84,22 @@ jobs:
           echo "✅ Build verified successfully"
           ls -la dist/
       
+      - name: Check if version already exists on npm
+        id: check
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "Checking if @wrrdev/fenix-ui@$VERSION already exists on npm..."
+          
+          if npm view "@wrrdev/fenix-ui@$VERSION" version 2>/dev/null; then
+            echo "⚠️ Version $VERSION already exists on npm — skipping publish"
+            echo "already_published=true" >> $GITHUB_OUTPUT
+          else
+            echo "✅ Version $VERSION is new — proceeding with publish"
+            echo "already_published=false" >> $GITHUB_OUTPUT
+          fi
+      
       - name: Publish to npm (Trusted Publishing — sem token estático)
+        if: steps.check.outputs.already_published != 'true'
         # Autentica via OIDC automaticamente (Trusted Publishing).
         # NÃO precisa de NODE_AUTH_TOKEN — o npm gera um token efêmero
         # vinculado a este workflow, repo e branch específicos.
@@ -93,6 +108,12 @@ jobs:
           echo "📦 Publishing to npm with tag: $TAG"
           echo "🔐 Using Trusted Publishing (OIDC) — no static token needed"
           npm publish --access public --tag "$TAG" --provenance
+      
+      - name: Skip publish (version already exists)
+        if: steps.check.outputs.already_published == 'true'
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "ℹ️ @wrrdev/fenix-ui@$VERSION already published on npm — nothing to do"
       
       - name: Create GitHub Release (for tags)
         if: startsWith(github.ref, 'refs/tags/v')
