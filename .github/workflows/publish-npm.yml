@@ -38,15 +38,18 @@ jobs:
       github.repository == 'wesley-reis/FenixUI' &&
       (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || github.event_name == 'repository_dispatch')
     
+    # Protection environment — adiciona camada extra de segurança no GitHub
+    environment:
+      name: npm-publish
+    
     permissions:
       contents: read
-      id-token: write  # Necessário para npm provenance
+      id-token: write  # OBRIGATÓRIO para Trusted Publishing (OIDC)
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          # Garante que estamos na main
           ref: ${{ github.ref }}
       
       - name: Setup Node.js
@@ -81,13 +84,15 @@ jobs:
           echo "✅ Build verified successfully"
           ls -la dist/
       
-      - name: Publish to npm
+      - name: Publish to npm (Trusted Publishing — sem token estático)
+        # Autentica via OIDC automaticamente (Trusted Publishing).
+        # NÃO precisa de NODE_AUTH_TOKEN — o npm gera um token efêmero
+        # vinculado a este workflow, repo e branch específicos.
         run: |
           TAG="${{ inputs.tag || 'latest' }}"
           echo "📦 Publishing to npm with tag: $TAG"
+          echo "🔐 Using Trusted Publishing (OIDC) — no static token needed"
           npm publish --access public --tag "$TAG" --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       
       - name: Create GitHub Release (for tags)
         if: startsWith(github.ref, 'refs/tags/v')
