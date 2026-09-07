@@ -107,24 +107,29 @@ Este documento explica como configurar a proteção da branch `main` e os workfl
 ### Fluxo para Maintainer (Versionamento + Publicação)
 
 ```
-1. Maintainer vai em Actions → "Bump Version" → "Run workflow"
-2. Escolhe o tipo: patch / minor / major / custom
-3. Workflow "Bump Version" executa (compatível com Branch Protection):
-   ├── Atualiza versão no package.json + README (prepack)
-   ├── Cria branch chore/bump-vX.Y.Z e abre um Pull Request
-   ├── Aguarda o CI (validate) passar no PR
-   └── Faz merge automático (squash) do PR
-4. Workflow "Release Tag" (disparado pelo merge):
+1. Crie uma branch e edite a versão no package.json
+   (ex.: 1.0.16 → 1.0.17)
+2. Abra um Pull Request
+3. O CI automaticamente:
+   ├── Sincroniza o README.md com a nova versão (prepack automático)
+   ├── Roda typecheck, tests e build
+   └── Faz commit do README direto na branch do PR (se necessário)
+4. Mergeie o PR quando o CI passar
+5. Workflow "Release Tag" (disparado pelo merge):
    ├── Verifica se a tag vX.Y.Z já existe
    └── Se não existir, cria e envia a tag → dispara o Publish
-5. Workflow "Publish to npm" executa:
+6. Workflow "Publish to npm" executa:
    ├── Build, typecheck, tests
    ├── Publica no npm com --provenance (tolerante a versões em validating)
    └── Cria GitHub Release
-6. Workflow "Deploy Docs" executa:
-   ├── Build das docs
+7. Workflow "Deploy Docs" executa:
+   ├── Build das docs (versão lida do package.json)
    └── Deploy no GitHub Pages
 ```
+
+> 💡 **Sem necessidade de rodar `npm run prepack` manualmente** — o CI sincroniza
+> o README automaticamente no PR. O pacote npm também sempre recebe o README
+> correto, pois o hook `prepack` roda dentro do próprio `npm publish`.
 
 ---
 
@@ -139,7 +144,7 @@ Este documento explica como configurar a proteção da branch `main` e os workfl
   - Verifica se o build foi gerado corretamente
 
 ### 2. `publish-npm.yml` — Publicação no npm
-- **Trigger:** Criação de tag `v*`, `workflow_dispatch` manual, ou `repository_dispatch` do bump-version
+- **Trigger:** Criação de tag `v*` ou `workflow_dispatch` manual
 - **O que faz:** Build, testes, e publicação no npm
 - **Proteções:**
   - Só roda na branch `main` ou em tags
@@ -147,14 +152,15 @@ Este documento explica como configurar a proteção da branch `main` e os workfl
   - Usa **Trusted Publishing (OIDC)** — sem token estático, token efêmero vinculado ao workflow
   - Verifica se o build foi gerado corretamente
   - Publica com `--provenance` para rastreabilidade
+  - Tolerante a versões em *staged/validating* (sem erro E409)
 
-### 3. `bump-version.yml` — Versionamento
-- **Trigger:** Apenas `workflow_dispatch` manual na branch `main`
-- **O que faz:** Bump de versão, commit, tag, e dispara publicação
+### 3. `release-tag.yml` — Criação de Tag Automática
+- **Trigger:** Push na branch `main` (após merge de qualquer PR)
+- **O que faz:** Lê a versão do `package.json`; se a tag `vX.Y.Z` não existir, cria e envia
 - **Proteções:**
-  - Só pode ser disparado na branch `main`
-  - Só maintainers (com permissão de `write`) podem disparar
-  - Cria tag automaticamente
+  - Idempotente — não faz nada se a tag já existir
+  - A tag dispara automaticamente o `publish-npm.yml`
+  - Tags não são bloqueadas por Branch Protection Rules
 
 ---
 
@@ -205,36 +211,24 @@ Isso inclui:
 
 ## 🚀 Como Publicar uma Nova Versão
 
-### Opção A: Workflow Automático (Recomendado)
+### Fluxo único: PR de versão (simples e seguro)
 
-1. Vá em **Actions** → **Bump Version** → **Run workflow**
-2. Escolha o tipo de bump:
-   - `patch` → 1.0.15 → 1.0.16 (bugfixes)
-   - `minor` → 1.0.15 → 1.1.0 (novas features)
-   - `major` → 1.0.15 → 2.0.0 (breaking changes)
-   - `custom` → versão específica (ex: 1.2.3)
-3. Opcionalmente, marque **"Pular publicação automática"** se quiser publicar manualmente depois
-4. Clique em **Run workflow**
+1. Crie uma branch e edite a versão no `package.json`:
+   - `patch` → 1.0.16 → 1.0.17 (bugfixes)
+   - `minor` → 1.0.16 → 1.1.0 (novas features)
+   - `major` → 1.0.16 → 2.0.0 (breaking changes)
+2. Abra um **Pull Request**
+3. O CI sincroniza o README automaticamente e valida tudo (typecheck, tests, build)
+4. Faça o **merge**
 
-O workflow irá:
-- Atualizar `package.json` com a nova versão
-- Atualizar `README.md` com a nova versão
-- Criar commit na `main`
-- Criar tag `vX.Y.Z`
-- Disparar automaticamente o **Publish to npm**
-- Criar **GitHub Release**
+Ao mergear, automaticamente:
+- ✅ Tag `vX.Y.Z` é criada (workflow *Release Tag*)
+- ✅ Pacote é publicado no npm com provenance (workflow *Publish to npm*)
+- ✅ **GitHub Release** é criada
+- ✅ Site de docs é atualizado no GitHub Pages (workflow *Deploy Docs*)
 
-### Opção B: Publicação Manual
-
-Se você marcou "Pular publicação automática" no bump:
-
-1. Vá em **Actions** → **Publish to npm** → **Run workflow**
-2. Escolha a tag npm:
-   - `latest` → versão estável (padrão)
-   - `beta` → versão beta
-   - `next` → próxima versão
-   - `alpha` → versão alpha
-3. Clique em **Run workflow**
+> 💡 Não é necessário rodar `npm run prepack` manualmente — o CI faz isso
+> no PR, e o pacote npm também recebe o README correto via hook do `npm publish`.
 
 ---
 
