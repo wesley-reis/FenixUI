@@ -67,6 +67,15 @@ Este documento explica como configurar a proteção da branch `main` e os workfl
 
 > 💡 **Sobre "Include administrators":** Essa opção só aparece em contas pagas (Pro/Team/Enterprise) ou organizações. Em **contas pessoais gratuitas**, a proteção já se aplica a todos por padrão — não precisa configurar.
 
+> 🔄 **Sobre auto-aprovação de PRs (dono único):** O autor de um Pull Request **nunca pode se auto-aprovar**. Se o CODEOWNERS aponta para você (`* @wesley-reis`) e o PR é seu, ele fica travado em *"Awaiting review from Code Owners"* sem botão de aprovação.
+>
+> **Soluções para dono único (conta gratuita):**
+> 1. **Bypass de Admin (preferencial):** Na Branch Protection Rule, seção **"Who can bypass"**, marque **"Repository admin"**. Você poderá mergear seus próprios PRs; contribuidores externos continuam presos às regras.
+> 2. **Relaxar approvals:** Desmarque **"Require review from Code Owners"** e a exigência de approvals. Mantém: push direto bloqueado, CI obrigatório, force push/deletions bloqueados. Contribuidores externos ainda precisam de PR + CI — e você aprova os deles normalmente.
+> 3. **Bypass temporário:** **Enforcement status: `Disabled`** → merge → reative como `Active`.
+>
+> 💡 **Dica:** Ao adicionar mais maintainers ao CODEOWNERS (`* @wesley-reis @outro-maintainer`), eles poderão aprovar seus PRs e a regra completa volta a funcionar sem bypass.
+
 4. Clique em **"Create"** ou **"Save changes"**
 
 ### Passo 3: Verificar GitHub Pages
