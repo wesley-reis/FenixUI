@@ -6,6 +6,11 @@ on:
   push:
     branches: [main]
 
+# Escrita necessária para o bot sincronizar o README na branch do PR
+# (a branch main continua protegida — push direto nela segue bloqueado).
+permissions:
+  contents: write
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
