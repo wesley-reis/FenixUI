@@ -101,13 +101,32 @@ jobs:
       - name: Publish to npm (Trusted Publishing — sem token estático)
         if: steps.check.outputs.already_published != 'true'
         # Autentica via OIDC automaticamente (Trusted Publishing).
-        # NÃO precisa de NODE_AUTH_TOKEN — o npm gera um token efêmero
-        # vinculado a este workflow, repo e branch específicos.
+        # Tolerante a "race condition": se a versão estiver em staged/validating
+        # no npm (invisível para npm view), o publish falha com E409 — nesse caso
+        # aguardamos e verificamos novamente; se a versão existir, tratamos como sucesso.
         run: |
           TAG="${{ inputs.tag || 'latest' }}"
-          echo "📦 Publishing to npm with tag: $TAG"
+          VERSION=$(node -p "require('./package.json').version")
+          echo "📦 Publishing @wrrdev/fenix-ui@$VERSION with tag: $TAG"
           echo "🔐 Using Trusted Publishing (OIDC) — no static token needed"
-          npm publish --access public --tag "$TAG" --provenance
+
+          if npm publish --access public --tag "$TAG" --provenance; then
+            echo "✅ Published successfully"
+            exit 0
+          fi
+
+          echo "⚠️ Publish failed — checking if version is staged/validating on npm..."
+          for i in 1 2 3 4; do
+            sleep 30
+            echo "🔍 Attempt $i: checking npm registry..."
+            if npm view "@wrrdev/fenix-ui@$VERSION" version 2>/dev/null; then
+              echo "✅ Version $VERSION exists on npm (was staged/validating) — treating as success"
+              exit 0
+            fi
+          done
+
+          echo "❌ Publish failed and version not found after retries"
+          exit 1
       
       - name: Skip publish (version already exists)
         if: steps.check.outputs.already_published == 'true'
