@@ -220,11 +220,11 @@ export class FxOrderList extends FxElement {
     super.connectedCallback();
   }
 
-  protected override attributeChangedCallback(): void {
+  protected override attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null): void {
     if (this.getAttr('data', '') !== '') {
       this._parseDataAttribute();
     }
-    super.attributeChangedCallback();
+    super.attributeChangedCallback(name, oldValue, newValue);
   }
 
   private _parseDataAttribute(): void {

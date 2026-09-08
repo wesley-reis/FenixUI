@@ -150,6 +150,46 @@
       "types": "./dist/components/breadcrumb/index.d.ts",
       "import": "./dist/components/breadcrumb/index.js"
     },
+    "./popover": {
+      "types": "./dist/components/popover/index.d.ts",
+      "import": "./dist/components/popover/index.js"
+    },
+    "./stepper": {
+      "types": "./dist/components/stepper/index.d.ts",
+      "import": "./dist/components/stepper/index.js"
+    },
+    "./rating": {
+      "types": "./dist/components/rating/index.d.ts",
+      "import": "./dist/components/rating/index.js"
+    },
+    "./menu": {
+      "types": "./dist/components/menu/index.d.ts",
+      "import": "./dist/components/menu/index.js"
+    },
+    "./toggle-button-group": {
+      "types": "./dist/components/toggle-button-group/index.d.ts",
+      "import": "./dist/components/toggle-button-group/index.js"
+    },
+    "./empty-state": {
+      "types": "./dist/components/empty-state/index.d.ts",
+      "import": "./dist/components/empty-state/index.js"
+    },
+    "./password-strength": {
+      "types": "./dist/components/password-strength/index.d.ts",
+      "import": "./dist/components/password-strength/index.js"
+    },
+    "./timeline": {
+      "types": "./dist/components/timeline/index.d.ts",
+      "import": "./dist/components/timeline/index.js"
+    },
+    "./carousel": {
+      "types": "./dist/components/carousel/index.d.ts",
+      "import": "./dist/components/carousel/index.js"
+    },
+    "./tree": {
+      "types": "./dist/components/tree/index.d.ts",
+      "import": "./dist/components/tree/index.js"
+    },
     "./toast": {
       "types": "./dist/components/toast/index.d.ts",
       "import": "./dist/components/toast/index.js"

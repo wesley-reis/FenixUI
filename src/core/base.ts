@@ -23,7 +23,7 @@ export abstract class FxElement extends HTMLElement {
   }
 
   /** Chamado quando um atributo observado muda. */
-  protected attributeChangedCallback(): void {
+  protected attributeChangedCallback(_name: string, _oldValue: string | null, _newValue: string | null): void {
     if (this.isConnected) this.render();
   }
 

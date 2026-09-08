@@ -445,14 +445,14 @@ export class FxPickList extends FxElement {
     super.connectedCallback();
   }
 
-  protected override attributeChangedCallback(): void {
+  protected override attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null): void {
     if (this.getAttr('source', '') !== '') {
       this._parseSourceAttribute();
     }
     if (this.getAttr('target', '') !== '') {
       this._parseTargetAttribute();
     }
-    super.attributeChangedCallback();
+    super.attributeChangedCallback(name, oldValue, newValue);
   }
 
   private _parseSourceAttribute(): void {

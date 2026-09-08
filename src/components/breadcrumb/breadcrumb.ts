@@ -130,8 +130,6 @@ export class FxBreadcrumb extends FxElement {
     super.disconnectedCallback();
     this._items = [];
   }
-
-  private _onSlotChange = (): void => this._decorateItems();
 }
 
 export function defineFxBreadcrumb(): typeof FxBreadcrumb {
