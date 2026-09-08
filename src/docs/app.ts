@@ -14,6 +14,7 @@ import { applyPreset, listPresets, defineCustomPreset, type FenixPreset } from '
 import { FenixUI } from '../core/theme';
 import type { DeepPartial, FenixTokens } from '../core/tokens';
 import { componentDocs, componentLoaders } from './componentes';
+import { FENIX_ICON_NAMES } from '../icons';
 export { componentLoaders };
 import { esc } from './shared';
 import type { ApiRow, ComponentDoc } from './types';
@@ -715,6 +716,7 @@ function buildSidebar(): void {
     { id: 'introduction', title: 'Introdução' },
     { id: 'vue3', title: 'Vue 3 / Nuxt' },
     { id: 'auto-import', title: 'Auto Import' },
+    { id: 'icons', title: 'Ícones' },
     { id: 'theming', title: 'Temas' },
   ]);
   for (const c of components) {
@@ -889,6 +891,7 @@ async function renderRoute(): Promise<void> {
     }
   else if (route === 'theming') await renderTheming();
   else if (route === 'auto-import') renderAutoImport();
+  else if (route === 'icons') renderIcons();
   else if (route === 'vue3') renderVue3();
   else await renderIntro();
 }
@@ -1047,6 +1050,118 @@ export default defineConfig({
       tbody.appendChild(tr);
     }
   }
+}
+
+/* ------------------------------------------------------------------ */
+/* Página Ícones — biblioteca Fenix Icons                              */
+/* ------------------------------------------------------------------ */
+
+/** Quantidade máxima de itens renderizados por vez no grid (performance). */
+const ICON_GRID_LIMIT = 288;
+
+/** Página Ícones — uso da biblioteca padrão + grid pesquisável de todos os glifos. */
+function renderIcons(): void {
+  const main = document.getElementById('main')!;
+  main.innerHTML = `
+    <h2>Ícones</h2>
+    <p class="lead">O FenixUI traz uma biblioteca de ícones padrão com <b>${FENIX_ICON_NAMES.length} glifos</b>,
+    já <b>self-hosted</b> no pacote — nenhuma dependência externa, nenhum CDN, nada para instalar além do
+    próprio <code>@wrrdev/fenix-ui</code>. Para usar, basta aplicar a classe na tag:</p>
+
+    <h3>1. Uso geral (qualquer lugar da aplicação)</h3>
+    <pre><code>&lt;!-- Importe UMA vez no projeto (o auto-import faz isso por você) --&gt;
+import '@wrrdev/fenix-ui/icons';
+
+&lt;!-- Por classe (recomendado) --&gt;
+&lt;i class="fx-icon fx-icon-home"&gt;&lt;/i&gt;
+&lt;span class="fx-icon fx-icon-settings"&gt;&lt;/span&gt;
+
+&lt;!-- Ou com o nome do ícone como conteúdo --&gt;
+&lt;i class="fx-icon"&gt;home&lt;/i&gt;</code></pre>
+
+    <div class="note">
+      <strong>Auto Import:</strong> com o plugin <code>FenixAutoImport</code>, qualquer uso de
+      <code>class="fx-icon…"</code> no seu código injeta automaticamente
+      <code>import '@wrrdev/fenix-ui/icons'</code> — você só escreve a classe e usa.
+    </div>
+
+    <h3>2. Modificadores</h3>
+    <table>
+      <thead><tr><th>Classe</th><th>Efeito</th></tr></thead>
+      <tbody>
+        <tr><td><code>fx-icon</code></td><td>Classe base — obrigatória quando o nome vem como conteúdo</td></tr>
+        <tr><td><code>fx-icon-fill</code></td><td>Versão preenchida (filled) do glifo</td></tr>
+        <tr><td><code>fx-icon-bold</code></td><td>Traço mais pesado (peso 600)</td></tr>
+      </tbody>
+    </table>
+
+    <h3>3. Nos componentes</h3>
+    <p>Componentes com <code>slot="icon"</code> (button, avatar, empty-state, dropdown-item…) aceitam diretamente:</p>
+    <pre><code>&lt;fx-button&gt;
+  &lt;i class="fx-icon fx-icon-save" slot="icon"&gt;&lt;/i&gt;
+  Salvar
+&lt;/fx-button&gt;</code></pre>
+    <p>Componentes com atributo <code>icon</code> também aceitam o nome do glifo — se o valor for um nome
+    de ícone válido, ele é renderizado com a fonte (senão, emoji/texto livre continua funcionando):</p>
+    <table>
+      <thead><tr><th>Componente</th><th>Exemplo</th></tr></thead>
+      <tbody>
+        <tr><td><code>fx-alert</code></td><td><code>&lt;fx-alert icon="notification" variant="info"&gt;…&lt;/fx-alert&gt;</code></td></tr>
+        <tr><td><code>fx-toast</code></td><td><code>&lt;fx-toast kind="success" icon="check_circle" title="OK"&gt;&lt;/fx-toast&gt;</code></td></tr>
+        <tr><td><code>fx-confirmpopup</code></td><td><code>&lt;fx-confirmpopup icon="help" …&gt;</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3>4. Todos os ícones</h3>
+    <p>Busque e clique no ícone para copiar a classe. <span id="icon-count" class="icon-count"></span></p>
+    <input id="icon-search" type="search" class="icon-search" placeholder="Buscar ícone… (ex.: home, delete, settings)" />
+    <div id="icon-grid" class="icon-grid"></div>
+    <style>
+      .icon-search {
+        width: 100%; max-width: 420px; padding: 10px 14px; margin-bottom: 16px;
+        border: 1px solid var(--fx-border-default); border-radius: var(--fx-radius-md);
+        background: var(--fx-surface-background); color: var(--fx-text-default);
+        font: inherit; outline: none;
+      }
+      .icon-search:focus { border-color: var(--fx-color-primary); }
+      .icon-count { color: var(--fx-text-muted); font-size: 13px; }
+      .icon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; }
+      .icon-cell {
+        display: flex; flex-direction: column; align-items: center; gap: 6px;
+        padding: 12px 4px 8px; border: 1px solid transparent; border-radius: var(--fx-radius-md);
+        background: transparent; cursor: pointer; color: var(--fx-text-default); font: inherit;
+      }
+      .icon-cell:hover { background: var(--fx-surface-surface-hover, rgba(0,0,0,.04)); border-color: var(--fx-border-default); }
+      .icon-cell .fx-icon { font-size: 26px; color: var(--fx-text-default); }
+      .icon-cell span { font-size: 10px; color: var(--fx-text-muted); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .icon-cell.copied { border-color: var(--fx-color-success); }
+    </style>
+  `;
+
+  const input = document.getElementById('icon-search') as HTMLInputElement;
+  const grid = document.getElementById('icon-grid')!;
+  const count = document.getElementById('icon-count')!;
+
+  const renderGrid = (): void => {
+    const q = input.value.trim().toLowerCase();
+    const matches = FENIX_ICON_NAMES.filter((n) => !q || n.includes(q));
+    const shown = matches.slice(0, ICON_GRID_LIMIT);
+    grid.innerHTML = shown
+      .map((n) => `<button type="button" class="icon-cell" data-icon="${n}" title="Copiar fx-icon-${n}"><i class="fx-icon fx-icon-${n}"></i><span>${n}</span></button>`)
+      .join('');
+    count.textContent = `${matches.length} ícone(s)${matches.length > shown.length ? ' — refine a busca para ver mais' : ''}`;
+  };
+  input.addEventListener('input', renderGrid);
+  grid.addEventListener('click', (e) => {
+    const cell = (e.target as HTMLElement).closest<HTMLElement>('.icon-cell');
+    if (!cell) return;
+    const cls = `fx-icon-${cell.dataset.icon}`;
+    navigator.clipboard?.writeText(cls).catch(() => { /* clipboard indisponível */ });
+    cell.classList.add('copied');
+    cell.title = `${cls} copiado!`;
+    setTimeout(() => cell.classList.remove('copied'), 900);
+  });
+  renderGrid();
 }
 
 /* ------------------------------------------------------------------ */

@@ -21,6 +21,21 @@ export const fenixComponentMap: Record<string, string> = {
   'fx-dialog': '@wrrdev/fenix-ui/dialog',
   'fx-confirmpopup': '@wrrdev/fenix-ui/confirmpopup',
   'fx-fileupload': '@wrrdev/fenix-ui/fileupload',
+  'fx-slider': '@wrrdev/fenix-ui/slider',
+  'fx-chip': '@wrrdev/fenix-ui/chip',
+  'fx-avatar': '@wrrdev/fenix-ui/avatar',
+  'fx-card': '@wrrdev/fenix-ui/card',
+  'fx-breadcrumb': '@wrrdev/fenix-ui/breadcrumb',
+  'fx-popover': '@wrrdev/fenix-ui/popover',
+  'fx-stepper': '@wrrdev/fenix-ui/stepper',
+  'fx-rating': '@wrrdev/fenix-ui/rating',
+  'fx-menu': '@wrrdev/fenix-ui/menu',
+  'fx-toggle-button-group': '@wrrdev/fenix-ui/toggle-button-group',
+  'fx-empty-state': '@wrrdev/fenix-ui/empty-state',
+  'fx-password-strength': '@wrrdev/fenix-ui/password-strength',
+  'fx-timeline': '@wrrdev/fenix-ui/timeline',
+  'fx-carousel': '@wrrdev/fenix-ui/carousel',
+  'fx-tree': '@wrrdev/fenix-ui/tree',
   'fx-drawer': '@wrrdev/fenix-ui/drawer',
   'fx-toast': '@wrrdev/fenix-ui/toast',
   'fx-tooltip': '@wrrdev/fenix-ui/tooltip',
@@ -42,6 +57,9 @@ export const fenixComponentMap: Record<string, string> = {
 };
 
 const TAG_RE = /<(fx-[a-z][a-z-]*)(?=[\s/>])/g;
+
+/** Detecta uso da biblioteca de ícones por classe (fx-icon / fx-icon-home etc.). */
+export const FENIX_ICON_CLASS_RE = /\bfx-icon(?:-[a-z0-9_]+)*\b/;
 
 export interface AutoImportOptions {
   /** Prefixo do pacote (padrão '@wrrdev/fenix-ui'). */
@@ -68,6 +86,11 @@ export function transformSource(code: string, options: AutoImportOptions = {}): 
         needed.add(target);
       }
     }
+  }
+  // Biblioteca de ícones: classes fx-icon / fx-icon-<nome> injetam o subpath /icons.
+  const iconsSub = resolve('@wrrdev/fenix-ui/icons');
+  if (FENIX_ICON_CLASS_RE.test(code) && !code.includes(`'${iconsSub}'`) && !code.includes(`"${iconsSub}"`)) {
+    needed.add(iconsSub);
   }
   if (!needed.size) return code;
 

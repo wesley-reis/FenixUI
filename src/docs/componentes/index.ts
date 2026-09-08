@@ -23,6 +23,21 @@ import { textareaDoc } from './textarea.doc';
 import { dialogDoc } from './dialog.doc';
 import { confirmpopupDoc } from './confirmpopup.doc';
 import { fileuploadDoc } from './fileupload.doc';
+import { sliderDoc } from './slider.doc';
+import { chipDoc } from './chip.doc';
+import { avatarDoc } from './avatar.doc';
+import { cardDoc } from './card.doc';
+import { breadcrumbDoc } from './breadcrumb.doc';
+import { popoverDoc } from './popover.doc';
+import { stepperDoc } from './stepper.doc';
+import { ratingDoc } from './rating.doc';
+import { menuDoc } from './menu.doc';
+import { toggleButtonGroupDoc } from './toggle-button-group.doc';
+import { emptyStateDoc } from './empty-state.doc';
+import { passwordStrengthDoc } from './password-strength.doc';
+import { timelineDoc } from './timeline.doc';
+import { carouselDoc } from './carousel.doc';
+import { treeDoc } from './tree.doc';
 import { toastDoc } from './toast.doc';
 import { tooltipDoc } from './tooltip.doc';
 import { tabsDoc } from './tabs.doc';
@@ -56,6 +71,21 @@ export const componentDocs: ComponentDoc[] = [
 	dialogDoc,
 	confirmpopupDoc,
 	fileuploadDoc,
+	sliderDoc,
+	chipDoc,
+	avatarDoc,
+	cardDoc,
+	breadcrumbDoc,
+	popoverDoc,
+	stepperDoc,
+	ratingDoc,
+	menuDoc,
+	toggleButtonGroupDoc,
+	emptyStateDoc,
+	passwordStrengthDoc,
+	timelineDoc,
+	carouselDoc,
+	treeDoc,
 	toastDoc,
 	tooltipDoc,
 	tabsDoc,
@@ -90,6 +120,21 @@ export const componentLoaders: Record<string, () => Promise<unknown>> = {
 	'fx-dialog': () => import('../../components/dialog'),
 	'fx-confirmpopup': () => import('../../components/confirmpopup'),
 	'fx-fileupload': () => import('../../components/fileupload'),
+	'fx-slider': () => import('../../components/slider'),
+	'fx-chip': () => import('../../components/chip'),
+	'fx-avatar': () => import('../../components/avatar'),
+	'fx-card': () => import('../../components/card'),
+	'fx-breadcrumb': () => import('../../components/breadcrumb'),
+	'fx-popover': () => import('../../components/popover'),
+	'fx-stepper': () => import('../../components/stepper'),
+	'fx-rating': () => import('../../components/rating'),
+	'fx-menu': () => import('../../components/menu'),
+	'fx-toggle-button-group': () => import('../../components/toggle-button-group'),
+	'fx-empty-state': () => import('../../components/empty-state'),
+	'fx-password-strength': () => import('../../components/password-strength'),
+	'fx-timeline': () => import('../../components/timeline'),
+	'fx-carousel': () => import('../../components/carousel'),
+	'fx-tree': () => import('../../components/tree'),
 	'fx-toast': () => import('../../components/toast'),
 	'fx-tooltip': () => import('../../components/tooltip'),
 	'fx-tabs': () => import('../../components/tabs'),
