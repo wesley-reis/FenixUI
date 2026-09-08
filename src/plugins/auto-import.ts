@@ -58,6 +58,9 @@ export const fenixComponentMap: Record<string, string> = {
 
 const TAG_RE = /<(fx-[a-z][a-z-]*)(?=[\s/>])/g;
 
+/** Detecta uso da biblioteca de ícones por classe (fx-icon / fx-icon-home etc.). */
+export const FENIX_ICON_CLASS_RE = /\bfx-icon(?:-[a-z0-9_]+)*\b/;
+
 export interface AutoImportOptions {
   /** Prefixo do pacote (padrão '@wrrdev/fenix-ui'). */
   packageName?: string;
@@ -83,6 +86,11 @@ export function transformSource(code: string, options: AutoImportOptions = {}): 
         needed.add(target);
       }
     }
+  }
+  // Biblioteca de ícones: classes fx-icon / fx-icon-<nome> injetam o subpath /icons.
+  const iconsSub = resolve('@wrrdev/fenix-ui/icons');
+  if (FENIX_ICON_CLASS_RE.test(code) && !code.includes(`'${iconsSub}'`) && !code.includes(`"${iconsSub}"`)) {
+    needed.add(iconsSub);
   }
   if (!needed.size) return code;
 

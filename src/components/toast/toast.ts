@@ -29,6 +29,19 @@ const KIND_ICON: Record<ToastKind, string> = {
 
 const CARD_CSS = `
 :host { display: contents; }
+.fx-icon {
+  font-family: var(--fx-icon-font, 'Fenix Icons');
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  display: inline-block;
+  white-space: nowrap;
+  direction: ltr;
+  font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
 .card {
   display: flex; align-items: flex-start; gap: 10px;
   min-width: 260px; max-width: 360px;
@@ -65,7 +78,7 @@ const CARD_CSS = `
 
 export class FxToast extends HTMLElement {
   static get observedAttributes() {
-    return ['kind', 'title', 'message', 'duration'];
+    return ['kind', 'title', 'message', 'duration', 'icon'];
   }
 
   private timer: ReturnType<typeof setTimeout> | null = null;
@@ -108,10 +121,14 @@ export class FxToast extends HTMLElement {
     const title = this.getAttribute('title') ?? '';
     const msg = this.getAttribute('message') ?? '';
     const color = KIND_COLOR[kind] ?? KIND_COLOR.info;
+    const iconName = this.getAttribute('icon');
+    const isFxIcon = !!iconName && /^[a-z][a-z0-9_]*$/.test(iconName);
+    if (isFxIcon) void import('../../icons');
+    const iconContent = isFxIcon ? iconName : KIND_ICON[kind] ?? KIND_ICON.info;
     this.shadowRoot!.innerHTML = `
       <style>${CARD_CSS}</style>
       <div class="card" style="--kind:${color}" role="status" part="card">
-        <span class="icon">${KIND_ICON[kind] ?? KIND_ICON.info}</span>
+        <span class="icon${isFxIcon ? ' fx-icon' : ''}">${iconContent}</span>
         <div class="body">
           ${title ? '<div class="title"></div>' : ''}
           ${msg ? '<div class="msg"></div>' : ''}

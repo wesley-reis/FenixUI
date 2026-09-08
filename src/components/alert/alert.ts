@@ -2,11 +2,13 @@
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from '../../core/sanitize';
+import { FENIX_ICON_BASE_CSS, isFenixIconName } from '../../icons/base-css';
 
 /**
  * <fx-alert> — Aviso inline com variantes semânticas.
  *
- * Atributos: variant (info|success|warning|danger, padrão info), title, dismissible.
+ * Atributos: variant (info|success|warning|danger, padrão info), title, dismissible,
+ * icon (nome da Fenix Icons, ex.: icon="notification" — substitui o glifo padrão).
  * Slot padrão: conteúdo da mensagem. Evento `dismiss`.
  */
 export class FxAlert extends FxElement {
@@ -34,6 +36,8 @@ export class FxAlert extends FxElement {
     }
     :host([hidden]) { display: none; }
     .icon { color: var(--_color); font-weight: bold; line-height: 1.4; }
+    ${FENIX_ICON_BASE_CSS}
+    .icon.fx-icon { font-size: 20px; line-height: 1.2; }
     .content { flex: 1; }
     .title { font-weight: 600; }
     .body { margin-top: 2px; }
@@ -46,19 +50,24 @@ export class FxAlert extends FxElement {
   `;
 
   static override get observedAttributes(): string[] {
-    return ['variant', 'title', 'dismissible'];
+    return ['variant', 'title', 'dismissible', 'icon'];
   }
 
   protected override render(): void {
     const variant = this.getAttr('variant', 'info');
     const title = this.getAttr('title');
+    const iconName = this.getAttr('icon');
+    if (isFenixIconName(iconName)) void import('../../icons');
     const icons: Record<string, string> = {
       info: 'ℹ', success: '✓', warning: '⚠', danger: '✕',
     };
+    const iconHtml = iconName
+      ? `<span class="icon${isFenixIconName(iconName) ? ' fx-icon' : ''}" part="icon" aria-hidden="true">${esc(iconName)}</span>`
+      : `<span class="icon">${icons[variant] ?? 'ℹ'}</span>`;
 
     this.setTemplate(`
       <div class="alert" part="alert" role="alert">
-        <span class="icon">${icons[variant] ?? 'ℹ'}</span>
+        ${iconHtml}
         <div class="content">
           ${title ? `<div class="title">${esc(title)}</div>` : ''}
           <div class="body"><slot></slot></div>

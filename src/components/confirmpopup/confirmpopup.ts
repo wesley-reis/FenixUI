@@ -2,6 +2,7 @@ import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from '../../core/sanitize';
+import { FENIX_ICON_BASE_CSS, isFenixIconName } from '../../icons/base-css';
 
 /**
  * <fx-confirmpopup> — Popup de confirmação não-modal ancorado em um elemento,
@@ -11,7 +12,8 @@ import { esc } from '../../core/sanitize';
  * Atributos:
  *  - target (seletor CSS do elemento âncora — obrigatório para abrir);
  *  - message (texto da mensagem, quando o slot padrão não é usado);
- *  - icon (emoji/glifo exibido antes da mensagem);
+ *  - icon (emoji/glifo exibido antes da mensagem; se for um nome da Fenix Icons,
+ *    ex.: icon="help", é renderizado com a fonte de ícones);
  *  - accept-label / reject-label (textos dos botões padrão);
  *  - position (top|bottom|auto — padrão `auto`, que faz flip conforme o espaço);
  *  - open (exibe o popup).
@@ -79,6 +81,8 @@ export class FxConfirmPopup extends FxElement {
       gap: var(--fx-space-sm);
     }
     .icon { font-size: calc(var(--fx-font-size) + 4px); line-height: 1.2; }
+    ${FENIX_ICON_BASE_CSS}
+    .icon.fx-icon { font-size: calc(var(--fx-font-size) + 6px); color: var(--fx-color-primary); }
     .text { margin: 0; }
     footer {
       display: flex;
@@ -116,13 +120,15 @@ export class FxConfirmPopup extends FxElement {
   protected override render(): void {
     const message = this.getAttr('message');
     const icon = this.getAttr('icon');
+    const iconIsFx = isFenixIconName(icon);
+    if (iconIsFx) void import('../../icons');
     const acceptLabel = this.getAttr('accept-label', 'Sim');
     const rejectLabel = this.getAttr('reject-label', 'Não');
 
     this.setTemplate(`
       <div class="popup" part="popup" role="alertdialog" aria-modal="false" ${this.open ? '' : 'hidden'}>
         <div class="message" part="message">
-          ${icon ? `<span class="icon" aria-hidden="true">${esc(icon)}</span>` : ''}
+          ${icon ? `<span class="icon${iconIsFx ? ' fx-icon' : ''}" aria-hidden="true">${esc(icon)}</span>` : ''}
           <p class="text"><slot>${esc(message)}</slot></p>
         </div>
         <footer part="footer">
