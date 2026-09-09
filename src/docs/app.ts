@@ -715,6 +715,7 @@ function buildSidebar(): void {
     groups.set('Guia', [
     { id: 'introduction', title: 'Introdução' },
     { id: 'vue3', title: 'Vue 3 / Nuxt' },
+    { id: 'integrations', title: 'CDN / React / JSF' },
     { id: 'auto-import', title: 'Auto Import' },
     { id: 'icons', title: 'Ícones' },
     { id: 'theming', title: 'Temas' },
@@ -893,6 +894,7 @@ async function renderRoute(): Promise<void> {
   else if (route === 'auto-import') renderAutoImport();
   else if (route === 'icons') renderIcons();
   else if (route === 'vue3') renderVue3();
+  else if (route === 'integrations') renderIntegrations();
   else await renderIntro();
 }
 
@@ -966,20 +968,159 @@ const orderList = ref([
       <code>fx-*</code>.
     </div>
 
-    <h3> Nuxt ( Nitro ) </h3>
-    <p>Nuxt já detecta <code>.client.ts</code> / <code>plugin.ts</code>. Crie
-    <code>plugins/fenix-ui.client.ts</code>:</p>
-    ${codeBlock(`import { defineNuxtPlugin } from '#app';
+    <h3>Nuxt</h3>
+    <p><code>isCustomElement</code> é uma opção de <strong>compilação</strong> — em Nuxt ela vai no
+    <code>nuxt.config.ts</code> (não em plugin de runtime, que roda depois do build):</p>
+    ${codeBlock(`// nuxt.config.ts
+export default defineNuxtConfig({
+  vue: {
+    compilerOptions: {
+      isCustomElement: (tag) => tag.startsWith('fx-'),
+    },
+  },
+});`)}
+    <p>O plugin (client) fica responsável apenas pelos efeitos colaterais — registrar os componentes,
+    aplicar o tema e os tipos Volar:</p>
+    ${codeBlock(`// plugins/fenix-ui.client.ts
+import { defineNuxtPlugin } from '#app';
 import '@wrrdev/fenix-ui';
 import { applyPreset } from '@wrrdev/fenix-ui';
-applyPreset('fenix', 'light');
 import '@wrrdev/fenix-ui/vue';
-import { defineFxTooltipDirective } from '@wrrdev/fenix-ui/tooltip';
-defineFxTooltipDirective();
 
-export default defineNuxtPlugin((nuxtApp) => {
-  nuxtApp.vueApp.config.compilerOptions.isCustomElement = (tag) => tag.startsWith('fx-');
+export default defineNuxtPlugin(() => {
+  applyPreset('fenix', 'light');
 });`)}
+    <div class="note">
+      <strong>SSR:</strong> os componentes são Web Components (client-side). Use
+      <code>.client.ts</code> para o registro — os templates com tags <code>fx-*</code> são
+      renderizados no cliente após a hidratação. Para outras stacks (CDN, React, JSF, .NET, JSP),
+      veja a página <a href="#/integrations">CDN / React / JSF</a>.
+    </div>
+  `;
+  wireCopyButtons(main);
+}
+
+/** Página Integrações — CDN/HTML puro, JSP/.NET, JSF e React/Next. */
+async function renderIntegrations(): Promise<void> {
+  const main = document.getElementById('main')!;
+  main.innerHTML = `
+    <h2>CDN / React / JSF e outras stacks</h2>
+    <p class="lead">FenixUI são <strong>Web Components nativos</strong>: funcionam em qualquer stack
+    que renderize HTML — sem build, sem transpilação, sem framework específico. Basta registrar os
+    custom elements uma vez e usar as tags <code>fx-*</code> direto no markup.</p>
+
+    <h3>1. CDN / HTML puro / Thymeleaf</h3>
+    <p>Carregue o bundle <strong>UMD</strong> único — ele registra todos os componentes
+    <em>e a biblioteca de ícones</em>, expondo os globals <code>FenixUI</code> (tema/tokens) e
+    <code>FenixToast</code>:</p>
+    ${codeBlock(`<!-- jsDelivr (fixe a versão em produção, ex.: @1.1.1) -->
+<script src="https://cdn.jsdelivr.net/npm/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js"></script>
+
+<script>
+  // tema claro/escuro em runtime (reflete em todos os componentes, incl. Shadow DOM)
+  FenixUI.theme('dark');
+
+  // toasts imperativo via global
+  FenixToast.success('Salvo!', 'Registro atualizado.');
+</script>
+
+<!-- pronto: estas tags já funcionam -->
+<fx-button variant="danger" size="sm">Excluir</fx-button>
+<fx-badge variant="success">Aprovado</fx-badge>
+<fx-toast></fx-toast>
+
+<!-- ícones também funcionam no CDN (fonte copiada junto do UMD) -->
+<i class="fx-icon fx-icon-home"></i>`)}
+    <div class="note">
+      Alternativa ao jsDelivr: <code>https://unpkg.com/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js</code>.
+      Em produção, prefira fixar a versão (<code>@1.1.1</code>) em vez de <code>@latest</code>.
+    </div>
+
+    <h3>2. JSP / .NET (MVC, WebForms, Razor)</h3>
+    <p>É HTML normal no markup — nada muda no servidor. Inclua o script no layout mestre e use as
+    tags nas views:</p>
+    ${codeBlock(`<!-- _Layout.cshtml / master.jsp / template Thymeleaf -->
+<script src="https://cdn.jsdelivr.net/npm/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js"></script>
+
+<!-- Razor (ASP.NET): binding de valores do servidor nos atributos -->
+<fx-button variant="primary">Editar</fx-button>
+<fx-badge variant="@Model.Status">@Model.StatusLabel</fx-badge>
+
+<!-- JSP -->
+<fx-alert variant="info">Bem-vindo, <b><%= user.getName() %></b></fx-alert>`)}
+    <div class="note">
+      <strong>PostBack/POST:</strong> componentes com estado interno (input, select, checkbox…)
+      mantêm o valor no atributo <code>value</code> — sincronize com campos
+      <code>&lt;input type="hidden"&gt;</code> quando precisar enviar ao servidor.
+    </div>
+
+    <h3>3. JSF (Jakarta Faces)</h3>
+    <p>As tags <code>fx-*</code> são XHTML/facelets bem-formado e passam direto pelo Facelets.
+    Carregue o UMD via <code>h:outputScript</code> ou script direto no template:</p>
+    ${codeBlock(`<h:head>
+  <h:outputScript library="js" name="fenix-ui.umd.min.js" />
+  <!-- ou: <script src="https://cdn.jsdelivr.net/npm/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js" /> -->
+</h:head>
+
+<h:body>
+  <fx-button variant="primary">Salvar</fx-button>
+  <fx-badge variant="success">#{bean.status}</fx-badge>
+
+  <!-- AJAX/re-render: os custom elements são globais — o re-render NÃO precisa re-registrar -->
+  <h:panelGroup id="painel">
+    <fx-alert variant="info">#{bean.mensagem}</fx-alert>
+  </h:panelGroup>
+</h:body>`)}
+    <div class="note">
+      No re-render AJAX do JSF, os nós <code>fx-*</code> são substituídos no DOM e recriados — como
+      as definições de custom element são globais no <code>window</code>, eles se re-hidratam
+      sozinhos, sem código extra.
+    </div>
+
+    <h3>4. React / Next.js</h3>
+    <p><strong>React 19+</strong> suporta custom elements nativamente: atributos, propriedades e
+    eventos CustomEvent funcionam direto no JSX:</p>
+    ${codeBlock(`// Next.js App Router (componente client)
+'use client';
+
+import '@wrrdev/fenix-ui/button';
+import '@wrrdev/fenix-ui/badge';
+
+export function SalvarButton() {
+  return (
+    <>
+      <fx-button variant="primary" onClick={(e) => console.log('fx-click', e)}>
+        Salvar
+      </fx-button>
+      <fx-badge variant="success">OK</fx-badge>
+    </>
+  );
+}`)}
+    <p><strong>React &lt; 19:</strong> props desconhecidas viram atributos string (funciona), mas
+    objetos/arrays (ex.: <code>data</code> do <code>fx-table</code>) e eventos precisam de
+    <code>ref</code> + <code>addEventListener</code>:</p>
+    ${codeBlock(`import { useEffect, useRef } from 'react';
+
+export function Tabela({ dados }) {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.data = dados;                          // propriedade complexa direto no elemento
+    const onChange = (e) => console.log(e.detail);
+    el.addEventListener('selection-change', onChange);
+    return () => el.removeEventListener('selection-change', onChange);
+  }, [dados]);
+
+  return <fx-table ref={ref} />;
+}`)}
+    <div class="note">
+      <strong>Tipagem TSX:</strong> importe <code>import '@wrrdev/fenix-ui/jsx';</code> uma vez para o
+      editor autocompletar todos os atributos <code>fx-*</code> no JSX/TSX. Com o plugin
+      <code>FenixAutoImport</code>, os imports dos subpaths são injetados automaticamente (Vite,
+      Rollup e Webpack) — veja a página <a href="#/auto-import">Auto Import</a>.
+    </div>
   `;
   wireCopyButtons(main);
 }
@@ -1056,11 +1197,57 @@ export default defineConfig({
 /* Página Ícones — biblioteca Fenix Icons                              */
 /* ------------------------------------------------------------------ */
 
-/** Quantidade máxima de itens renderizados por vez no grid (performance). */
-const ICON_GRID_LIMIT = 288;
+/** Quantidade padrão de ícones por página no grid. */
+const ICON_PAGE_SIZE = 96;
 
-/** Página Ícones — uso da biblioteca padrão + grid pesquisável de todos os glifos. */
-function renderIcons(): void {
+/** Regras de categorização por palavra-chave no nome do glifo (primeira que casa vence). */
+const ICON_CATEGORY_RULES: Array<{ label: string; test: RegExp }> = [
+  { label: 'Setas & Navegação', test: /arrow|chevron|navigation|compass|first_page|last_page|keyboard_(tab|backspace|return)|expand_more|expand_less|unfold|double_arrow/ },
+  { label: 'Ações', test: /edit|add|remove|delete|close|done|check|save|copy|cut|paste|undo|redo|search|filter|sort|refresh|sync|drag|share|download|upload|send|print|zoom|swipe|touch|click|back_hand|pan_tool|clear|cleaning/ },
+  { label: 'Alertas & Feedback', test: /alert|warning|error|info|notification|priority|report|feedback|campaign/ },
+  { label: 'Áudio & Vídeo', test: /mic|volume|play|pause|stop_|skip|video|movie|camera|music|playlist|equalizer|headphones|speaker|radio|cast|subtitle|album|audio|podcast|videocam|flash_on|flash_off|bright/ },
+  { label: 'Comunicação', test: /call|phone|chat|message|mail|sms|forum|comment|contact|voicemail|dialpad|rss|alternate_email/ },
+  { label: 'Arquivos & Pastas', test: /file|folder|description|attach|drive|note|document|draft|article|snippet|task|topic|inventory_2|archive|inbox/ },
+  { label: 'Dispositivos & Hardware', test: /computer|laptop|device|monitor|keyboard|mouse|printer|scanner|usb|battery|power|memory|chip|watch|tablet|tv|router|sim|hard_drive|screenshot|developer/ },
+  { label: 'Imagem & Design', test: /image|photo|picture|palette|brush|contrast|crop|filter_b_and_w|blur_on|blur_off|gradient|opacity|style|colorize|design|\d+mp|\d+k(_plus)?$|3d|fps|aspect_ratio|animation/ },
+  { label: 'Mapas & Viagem', test: /map|location|pin|gps|directions|route|traffic|place|travel|flight|train|car|vehicle|bike|bus|ferry|taxi|two_wheeler|local_|near_me|navigation/ },
+  { label: 'Casa', test: /home|bed|chair|kitchen|sofa|light|shower|bath|garage|door|window|appliance|blender|coffee|countertops|roofing|house/ },
+  { label: 'Pessoas & Social', test: /person|people|face|emoji|sentiment|favorite|heart|group|account|user|child|mood|handshake|diversity|volunteer/ },
+  { label: 'Comércio & Finanças', test: /shopping|cart|store|sell|paid|payment|credit_card|money|price|wallet|receipt|loyalty|discount|currency|finance|payments|savings/ },
+  { label: 'Gráficos & Dados', test: /chart|graph|analytics|dashboard|pie|bar_|trending|data|statistics|query_stats|insights|timeline|table_chart/ },
+  { label: 'Segurança', test: /lock|security|shield|key|password|vpn|verified|block|gpp_|privacy|policy/ },
+  { label: 'Configurações', test: /settings|tune|build|wrench|tools|config|manage|automation|app_shortcut|extension/ },
+  { label: 'Saúde', test: /health|medical|medication|hospital|medicine|doctor|vaccine|blood|nurse|emergency|ecg|stethoscope/ },
+  { label: 'Clima & Natureza', test: /cloud|sun|moon|rain|snow|weather|tree|park|plant|water_drop|air|pets|forest|wave|nature|landscape|nightlight/ },
+  { label: 'Texto & Editor', test: /format_|text|font|title|paragraph|match_case|spellcheck|translate|abc|letter|type|caret|cursor|subject|notes|comment_bank/ },
+  { label: 'Data & Tempo', test: /calendar|schedule|timer|time|clock|date|hourglass|event|history|today|alarm|update|sunrise|sunset|schedule_send/ },
+  { label: 'Menus & Layout', test: /menu|apps|grid|view|list|layout|tabs|panel|sidebar|space|web|dock|split|drag_indicator|select_all|reorder|wrap_text|align_|vertical|horizontal/ },
+  { label: 'Desenvolvimento', test: /code|terminal|bug|debug|api|database|branch|merge|commit|deploy|integration|variables|function|calculate|math|json|folder_zip|cloud_sync|cloud_upload|cloud_download|data_object/ },
+  { label: 'Educação & Trabalho', test: /school|book|workspace|domain|corporate|business|work|office|badge|meeting|team|science|labs|quiz|assignment|history_edu|engineering/ },
+  { label: 'Esportes & Lazer', test: /sports|game|toys|celebration|party|fitness|gym|medal|trophy|star|award|premium|rank|stadium|music_note|nightlife|attractions|festival/ },
+  { label: 'Indústria & Ferramentas', test: /construction|hammer|factory|machine|agriculture|plumbing|carpenter|architecture|handyman|hardware|precision|rocket|sprint|deployment/ },
+  { label: 'IoT & Sensores', test: /sensor|smart|eco|robot|automation|signal|network|wifi|bluetooth|connected|antenna|router|ssid|hub/ },
+  { label: 'Diversos', test: /flag|label|bookmark|tag|push_pin|attachment|link|star_rate|grade|circle|square|change_|toggle|switch|radio_button|more_|expand|_block|_off$|_on$/ },
+];
+
+/** Calcula as categorias presentes na lista de ícones (uma categoria por glifo). */
+function buildIconCategories(): Array<{ label: string; icons: string[] }> {
+  const byLabel = new Map<string, string[]>(ICON_CATEGORY_RULES.map((r) => [r.label, []]));
+  const other: string[] = [];
+  for (const name of FENIX_ICON_NAMES) {
+    const rule = ICON_CATEGORY_RULES.find((r) => r.test.test(name));
+    if (rule) byLabel.get(rule.label)!.push(name);
+    else other.push(name);
+  }
+  const cats = ICON_CATEGORY_RULES
+    .map((r) => ({ label: r.label, icons: byLabel.get(r.label)! }))
+    .filter((c) => c.icons.length > 0);
+  if (other.length > 0) cats.push({ label: 'Outros', icons: other });
+  return cats;
+}
+
+/** Página Ícones — uso da biblioteca padrão + grid pesquisável/paginado de todos os glifos. */
+async function renderIcons(): Promise<void> {
   const main = document.getElementById('main')!;
   main.innerHTML = `
     <h2>Ícones</h2>
@@ -1113,10 +1300,41 @@ import '@wrrdev/fenix-ui/icons';
     </table>
 
     <h3>4. Todos os ícones</h3>
-    <p>Busque e clique no ícone para copiar a classe. <span id="icon-count" class="icon-count"></span></p>
-    <input id="icon-search" type="search" class="icon-search" placeholder="Buscar ícone… (ex.: home, delete, settings)" />
-    <div id="icon-grid" class="icon-grid"></div>
+    <p>Busque e clique no ícone para abrir as opções de cópia — nome do glifo, classe ou tag pronta.
+    <b>Atenção:</b> a classe <code>fx-icon-&lt;nome&gt;</code> sozinha não renderiza — ela precisa da classe
+    base <code>fx-icon</code> (que aplica a fonte). Na modal, prefira a opção <i>Classe completa</i>.</p>
+    <span id="icon-count" class="icon-count"></span>
+    <div class="icon-layout">
+      <div class="icon-main">
+        <input id="icon-search" type="search" class="icon-search" placeholder="Buscar ícone… (ex.: home, delete, settings)" />
+        <div id="icon-grid" class="icon-grid"></div>
+        <fx-pagination id="icon-pager" position="center" rows="96" rows-options="48,96,192,288" hidden></fx-pagination>
+      </div>
+      <aside class="icon-aside">
+        <ul id="icon-cats" class="icon-cats"></ul>
+      </aside>
+    </div>
     <style>
+      .icon-layout {
+        display: grid; grid-template-columns: minmax(0, 1fr) 190px;
+        gap: 20px; align-items: start;
+      }
+      .icon-aside {
+        position: sticky; top: 16px;
+        max-height: calc(100vh - 96px); overflow-y: auto;
+        border: 1px solid var(--fx-border-default); border-radius: var(--fx-radius-md);
+        background: var(--fx-surface-background); padding: 6px;
+      }
+      .icon-cats { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+      .icon-cat {
+        width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 6px;
+        padding: 7px 10px; font: inherit; font-size: 12px; cursor: pointer; text-align: left;
+        border: 1px solid transparent; border-radius: var(--fx-radius-sm);
+        background: transparent; color: var(--fx-text-default);
+      }
+      .icon-cat:hover { background: var(--fx-surface-surface-hover, rgba(0,0,0,.04)); color: var(--fx-color-primary); }
+      .icon-cat.active { background: var(--fx-color-primary); color: var(--fx-color-primary-contrast, #fff); font-weight: 600; }
+      .icon-cat small { opacity: .7; font-size: 11px; font-weight: 400; }
       .icon-search {
         width: 100%; max-width: 420px; padding: 10px 14px; margin-bottom: 16px;
         border: 1px solid var(--fx-border-default); border-radius: var(--fx-radius-md);
@@ -1125,7 +1343,7 @@ import '@wrrdev/fenix-ui/icons';
       }
       .icon-search:focus { border-color: var(--fx-color-primary); }
       .icon-count { color: var(--fx-text-muted); font-size: 13px; }
-      .icon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; }
+      .icon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; margin-bottom: 16px; }
       .icon-cell {
         display: flex; flex-direction: column; align-items: center; gap: 6px;
         padding: 12px 4px 8px; border: 1px solid transparent; border-radius: var(--fx-radius-md);
@@ -1135,33 +1353,163 @@ import '@wrrdev/fenix-ui/icons';
       .icon-cell .fx-icon { font-size: 26px; color: var(--fx-text-default); }
       .icon-cell span { font-size: 10px; color: var(--fx-text-muted); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .icon-cell.copied { border-color: var(--fx-color-success); }
+      #icon-pager { margin-top: 4px; }
+      @media (max-width: 900px) {
+        .icon-layout { grid-template-columns: 1fr; }
+        .icon-aside { position: static; max-height: 180px; }
+      }
     </style>
   `;
 
   const input = document.getElementById('icon-search') as HTMLInputElement;
   const grid = document.getElementById('icon-grid')!;
   const count = document.getElementById('icon-count')!;
+  const catsMenu = document.getElementById('icon-cats')!;
+  const pager = document.getElementById('icon-pager') as any;
+
+  // Garante o registro do fx-pagination (loader lazy da doc).
+  try { await componentLoaders['fx-pagination'](); } catch { /* já registrado ou indisponível */ }
+
+  const categories = buildIconCategories();
+  let activeCategory = 'Todos';
+  let page = 1;
+  let rows = Number(pager.getAttribute('rows')) || ICON_PAGE_SIZE;
+
+  /* Menu vertical de categorias (lado direito, com scroll próprio) */
+  catsMenu.innerHTML = [`Todos|${FENIX_ICON_NAMES.length}`, ...categories.map((c) => `${c.label}|${c.icons.length}`)]
+    .map((entry) => {
+      const [label, total] = entry.split('|');
+      return `<li><button type="button" class="icon-cat${label === 'Todos' ? ' active' : ''}" data-cat="${esc(label)}"><span>${esc(label)}</span><small>${total}</small></button></li>`;
+    })
+    .join('');
+  catsMenu.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLElement>('.icon-cat');
+    if (!btn?.dataset.cat) return;
+    activeCategory = btn.dataset.cat;
+    catsMenu.querySelectorAll('.icon-cat').forEach((b) => b.classList.toggle('active', b === btn));
+    page = 1;
+    pager.setAttribute('page', '1');
+    renderGrid();
+  });
 
   const renderGrid = (): void => {
     const q = input.value.trim().toLowerCase();
-    const matches = FENIX_ICON_NAMES.filter((n) => !q || n.includes(q));
-    const shown = matches.slice(0, ICON_GRID_LIMIT);
+    const pool = activeCategory === 'Todos'
+      ? FENIX_ICON_NAMES
+      : (categories.find((c) => c.label === activeCategory)?.icons ?? FENIX_ICON_NAMES);
+    const matches = pool.filter((n) => !q || n.includes(q));
+    const start = (page - 1) * rows;
+    const shown = matches.slice(start, start + rows);
     grid.innerHTML = shown
       .map((n) => `<button type="button" class="icon-cell" data-icon="${n}" title="Copiar fx-icon-${n}"><i class="fx-icon fx-icon-${n}"></i><span>${n}</span></button>`)
       .join('');
-    count.textContent = `${matches.length} ícone(s)${matches.length > shown.length ? ' — refine a busca para ver mais' : ''}`;
+    count.textContent = `${matches.length} ícone(s) em "${activeCategory}"`;
+    pager.setAttribute('total', String(matches.length));
+    pager.setAttribute('rows', String(rows));
+    // `hidden` não basta: o :host do fx-pagination define display:flex, então controlamos via style.
+    pager.style.display = matches.length <= rows ? 'none' : '';
   };
+
+  pager.addEventListener('page-change', (e: CustomEvent) => {
+    const detail = e.detail ?? {};
+    page = detail.page ?? 1;
+    if (detail.rows && detail.rows !== rows) { rows = detail.rows; page = 1; }
+    renderGrid();
+    grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
   input.addEventListener('input', renderGrid);
   grid.addEventListener('click', (e) => {
     const cell = (e.target as HTMLElement).closest<HTMLElement>('.icon-cell');
-    if (!cell) return;
-    const cls = `fx-icon-${cell.dataset.icon}`;
-    navigator.clipboard?.writeText(cls).catch(() => { /* clipboard indisponível */ });
-    cell.classList.add('copied');
-    cell.title = `${cls} copiado!`;
-    setTimeout(() => cell.classList.remove('copied'), 900);
+    if (!cell?.dataset.icon) return;
+    void openIconCopyModal(cell.dataset.icon);
   });
   renderGrid();
+}
+
+/** Abre a modal (fx-dialog) com todas as variações de código para copiar o ícone. */
+async function openIconCopyModal(icon: string): Promise<void> {
+  // Garante que o componente fx-dialog esteja registrado (registro lazy).
+  try { await componentLoaders['fx-dialog'](); } catch { /* já registrado ou indisponível */ }
+
+  let dlg = document.getElementById('icon-copy-dialog') as (HTMLElement & { open?: boolean }) | null;
+  if (!dlg) {
+    dlg = document.createElement('fx-dialog');
+    dlg.id = 'icon-copy-dialog';
+    dlg.setAttribute('size', 'sm');
+    // 50% maior que o tamanho sm (400px) para o botão não cobrir o código copiável.
+    dlg.style.setProperty('--fx-dialog-width', '600px');
+    document.body.appendChild(dlg);
+  }
+  dlg.setAttribute('heading', `Copiar ícone — ${icon}`);
+
+  const name = esc(icon);
+
+  const rows: Array<{ label: string; value: string }> = [
+    { label: 'Nome do glifo', value: icon },
+    { label: 'Classe completa (recomendado)', value: `fx-icon fx-icon-${icon}` },
+    { label: 'Classe do glifo (sozinha)', value: `fx-icon-${icon}` },
+    { label: 'Tag <i> pronta', value: `<i class="fx-icon fx-icon-${icon}"></i>` },
+    { label: 'Tag <span> pronta (nome como conteúdo)', value: `<span class="fx-icon">${icon}</span>` },
+    { label: 'Versão preenchida (fill)', value: `<i class="fx-icon fx-icon-fill fx-icon-${icon}"></i>` },
+  ];
+
+  dlg.innerHTML = `
+    <div class="icon-copy-preview">
+      <span class="fx-icon fx-icon-${name}"></span>
+      <code>${name}</code>
+    </div>
+    <div class="icon-copy-list">
+      ${rows.map((r) => `
+        <div class="icon-copy-row">
+          <div class="icon-copy-meta">
+            <span class="icon-copy-label">${r.label}</span>
+            <code class="icon-copy-value">${esc(r.value)}</code>
+          </div>
+          <button type="button" class="icon-copy-btn" data-value="${esc(r.value)}">Copiar</button>
+        </div>`).join('')}
+    </div>
+    <style>
+      .icon-copy-preview {
+        display: flex; align-items: center; gap: 14px;
+        padding: 12px 16px; margin-bottom: 16px;
+        border: 1px solid var(--fx-border-default); border-radius: var(--fx-radius-md);
+        background: var(--fx-surface-background);
+      }
+      .icon-copy-preview .fx-icon { font-size: 40px; color: var(--fx-color-primary); }
+      .icon-copy-preview code { font-size: 15px; color: var(--fx-text-default); }
+      .icon-copy-list { display: flex; flex-direction: column; gap: 10px; }
+      .icon-copy-row {
+        display: flex; align-items: center; justify-content: space-between; gap: 12px;
+        padding: 10px 12px; border: 1px solid var(--fx-border-default);
+        border-radius: var(--fx-radius-md);
+      }
+      .icon-copy-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+      .icon-copy-label { font-size: 13px; font-weight: 600; color: var(--fx-text-default); }
+      .icon-copy-value {
+        font-size: 12px; color: var(--fx-text-muted);
+        max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+      .icon-copy-btn {
+        flex-shrink: 0; align-self: flex-start; margin-top: 1px;
+        padding: 3px 9px; font: inherit; font-size: 11px; line-height: 1.3; cursor: pointer;
+        border: 1px solid var(--fx-border-default); border-radius: var(--fx-radius-sm);
+        background: var(--fx-surface-background); color: var(--fx-text-default);
+      }
+      .icon-copy-btn:hover { border-color: var(--fx-color-primary); color: var(--fx-color-primary); }
+      .icon-copy-btn.copied { border-color: var(--fx-color-success); color: var(--fx-color-success); }
+    </style>
+  `;
+
+  dlg.querySelectorAll<HTMLButtonElement>('.icon-copy-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      navigator.clipboard?.writeText(btn.dataset.value ?? '').catch(() => { /* clipboard indisponível */ });
+      btn.textContent = 'Copiado!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copiar'; btn.classList.remove('copied'); }, 1200);
+    });
+  });
+
+  dlg.setAttribute('open', '');
 }
 
 /* ------------------------------------------------------------------ */

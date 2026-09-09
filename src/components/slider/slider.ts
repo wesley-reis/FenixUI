@@ -154,6 +154,18 @@ export class FxSlider extends FxElement {
   }
 
   private _dragging = false;
+  private _onMove?: (e: PointerEvent) => void;
+  private _onUp?: (e: PointerEvent) => void;
+
+  protected override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    // Limpa listeners de janela se o elemento for removido durante um drag.
+    if (this._dragging) {
+      this._dragging = false;
+      if (this._onMove) window.removeEventListener('pointermove', this._onMove);
+      if (this._onUp) window.removeEventListener('pointerup', this._onUp);
+    }
+  }
 
   private _wrap(): HTMLElement | null {
     return this.root.querySelector<HTMLElement>('.track-wrap');
@@ -177,6 +189,7 @@ export class FxSlider extends FxElement {
         new CustomEvent('input', { bubbles: true, composed: true, detail: { value: this.value } }),
       );
     };
+    this._onMove = move;
     const up = (e: PointerEvent): void => {
       if (!this._dragging) return;
       this._dragging = false;
@@ -189,6 +202,7 @@ export class FxSlider extends FxElement {
         new CustomEvent('change', { bubbles: true, composed: true, detail: { value: this.value } }),
       );
     };
+    this._onUp = up;
 
     wrap.addEventListener('pointerdown', (e) => {
       if (this.hasAttr('disabled')) return;

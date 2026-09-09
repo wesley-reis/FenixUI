@@ -12,7 +12,7 @@ export const timelineDoc: ComponentDoc = {
 	demoHtml: (attrs) =>
 		`<fx-timeline ${attrs} style="width:100%"><div slot="item" time="09:00" title="Reunião de alinhamento">Definição do escopo da sprint.</div><div slot="item" time="11:30" title="Revisão de código">Merge do PR #142 após aprovação.</div><div slot="item" time="16:00" title="Deploy">Publicação da versão 2.0 em produção.</div></fx-timeline>`,
 	variantsHtml: () => {
-		return `<div style="display:flex;flex-direction:column;gap:24px"><div><strong style="font-size:12px;color:var(--fx-text-muted)">Horizontal</strong><fx-timeline orientation="horizontal" style="width:100%"><div slot="item" time="Seg" title="Planejamento">Definição das tarefas da semana.</div><div slot="item" time="Qua" title="Desenvolvimento">Implementação das features.</div><div slot="item" time="Sex" title="Entrega">Deploy e retrospectiva.</div></fx-timeline></div><div><strong style="font-size:12px;color:var(--fx-text-muted)">Marcador customizado</strong><fx-timeline marker="◆"><div slot="item" time="10/05" title="Marcador custom">Marker com glifo ◆.</div><div slot="item" time="11/05" title="Outro evento">Conteúdo do evento.</div></fx-timeline></div></div>`;
+		return `<div style="display:flex;flex-direction:column;gap:24px"><div><strong style="font-size:12px;color:var(--fx-text-muted)">Horizontal</strong><fx-timeline orientation="horizontal" style="width:100%"><div slot="item" time="Seg" title="Planejamento">Definição das tarefas da semana.</div><div slot="item" time="Qua" title="Desenvolvimento">Implementação das features.</div><div slot="item" time="Sex" title="Entrega">Deploy e retrospectiva.</div></fx-timeline></div><div><strong style="font-size:12px;color:var(--fx-text-muted)">Marcador customizado</strong><fx-timeline marker="◆"><div slot="item" time="10/05" title="Marcador custom">Marker com glifo ◆.</div><div slot="item" time="11/05" title="Outro evento">Conteúdo do evento.</div></fx-timeline></div><div><strong style="font-size:12px;color:var(--fx-text-muted)">Com ícones</strong><fx-timeline><div slot="item" icon="schedule" time="09:00" title="Início do expediente">Check-in e planejamento do dia.</div><div slot="item" icon="code" time="11:30" title="Desenvolvimento">Implementação das features.</div><div slot="item" icon="rocket_launch" time="16:00" title="Deploy">Publicação em produção.</div></fx-timeline></div><div><strong style="font-size:12px;color:var(--fx-text-muted)">Tamanho lg</strong><fx-timeline size="lg"><div slot="item" icon="check_circle" time="10/05" title="Marcador lg">Bolinhas maiores no tamanho lg.</div><div slot="item" icon="flag" time="11/05" title="Marcador lg">Escala proporcional ao size.</div></fx-timeline></div></div>`;
 	},
 	controls: [
 		{ kind: "select", attr: "orientation", label: "Orientação", options: ["vertical", "horizontal"], value: "vertical" },
@@ -25,6 +25,6 @@ export const timelineDoc: ComponentDoc = {
 		{ name: "size", type: "'sm' | 'md' | 'lg'", default: "'md'", desc: "Tamanho dos marcadores." },
 	],
 	slots: [
-		{ name: "item", desc: "Eventos da linha do tempo. Atributos: time (data/hora) e title." },
+		{ name: "item", desc: "Eventos da linha do tempo. Atributos: time (data/hora), title e icon (glifo da fonte Fenix Icons, ex.: \"check_circle\" — tem prioridade sobre marker)." },
 	],
 };

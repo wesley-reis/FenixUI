@@ -167,6 +167,8 @@ export interface FxToastProps extends FxElementProps {
   message?: string;
   duration?: number;
   position?: FxToastPosition;
+  /** Força o esquema de cores do card independentemente do tema global. */
+  mode?: 'light' | 'dark';
 }
 export interface FxTooltipProps extends FxElementProps { content?: string; position?: FxTooltipPosition; }
 export interface FxTabsProps extends FxElementProps { value?: string; }

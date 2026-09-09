@@ -16,11 +16,12 @@ export const toastDoc: ComponentDoc = {
 		const dur = /duration="([^"]+)"/.exec(a)?.[1] ?? "4000";
 		const title = /title="([^"]*)"/.exec(a)?.[1] || "Sucesso";
 		const msg = /message="([^"]*)"/.exec(a)?.[1] || "Registro salvo.";
-		const o = `{position:'${pos}',duration:${dur || "0"}}`;
+		const mode = /mode="([^"]+)"/.exec(a)?.[1] ?? "";
+		const o = `{position:'${pos}',duration:${dur || "0"}${mode ? `,mode:'${mode}'` : ""}}`;
 		return `<div style="display:flex;gap:12px;flex-wrap:wrap"><fx-button variant="success" size="sm" onclick="FenixToast.success('${title}','${msg}',${o})">Success</fx-button><fx-button variant="danger" size="sm" onclick="FenixToast.error('${title}','${msg}',${o})">Error</fx-button><fx-button variant="warning" size="sm" onclick="FenixToast.warning('${title}','${msg}',${o})">Warning</fx-button><fx-button variant="secondary" size="sm" onclick="FenixToast.info('${title}','${msg}',${o})">Info</fx-button></div>`;
 	},
 	variantsHtml: () =>
-		`<h4>Cada posição na tela</h4><div style="display:flex;gap:12px;flex-wrap:wrap">${["top-left", "top-center", "top-right", "bottom-left", "bottom-center", "bottom-right"].map((p) => `<fx-button size="sm" variant="secondary" onclick="FenixToast.info('Posição: ${p}','Notificação de exemplo.',{position:'${p}',duration:3500})">${p}</fx-button>`).join("")}</div><h4>Duração customizada</h4><div style="display:flex;gap:12px;flex-wrap:wrap"><fx-button size="sm" onclick="FenixToast.warning('Fixo até fechar','duration: 0',{position:'bottom-center',duration:0})">duration: 0 (fixo)</fx-button><fx-button size="sm" onclick="FenixToast.success('Rápido','some em 1,5s',{position:'bottom-center',duration:1500})">duration: 1500</fx-button></div>`,
+		`<h4>Cada posição na tela</h4><div style="display:flex;gap:12px;flex-wrap:wrap">${["top-left", "top-center", "top-right", "bottom-left", "bottom-center", "bottom-right"].map((p) => `<fx-button size="sm" variant="secondary" onclick="FenixToast.info('Posição: ${p}','Notificação de exemplo.',{position:'${p}',duration:3500})">${p}</fx-button>`).join("")}</div><h4>Duração customizada</h4><div style="display:flex;gap:12px;flex-wrap:wrap"><fx-button size="sm" onclick="FenixToast.warning('Fixo até fechar','duration: 0',{position:'bottom-center',duration:0})">duration: 0 (fixo)</fx-button><fx-button size="sm" onclick="FenixToast.success('Rápido','some em 1,5s',{position:'bottom-center',duration:1500})">duration: 1500</fx-button></div><h4>Modo claro/escuro por toast</h4><p>Force o esquema de cores do card independentemente do tema global (útil sobre fundos personalizados):</p><div style="display:flex;gap:12px;flex-wrap:wrap"><fx-button size="sm" variant="secondary" onclick="FenixToast.info('Modo claro','mode: light',{mode:'light',duration:4000})">mode: 'light'</fx-button><fx-button size="sm" variant="secondary" onclick="FenixToast.info('Modo escuro','mode: dark',{mode:'dark',duration:4000})">mode: 'dark'</fx-button><fx-button size="sm" variant="secondary" onclick="FenixToast.success('Segue o tema','sem mode',{duration:4000})">sem mode (tema global)</fx-button></div>`,
 	controls: [
 		{
 			kind: "select",
@@ -41,6 +42,13 @@ export const toastDoc: ComponentDoc = {
 			attr: "duration",
 			label: "Duração em ms (0 = fixo, mín. 1000)",
 			value: "4000",
+		},
+		{
+			kind: "select",
+			attr: "mode",
+			label: "Modo (cores do card)",
+			options: ["", "light", "dark"],
+			value: "",
 		},
 		{
 			kind: "text",
@@ -73,6 +81,12 @@ export const toastDoc: ComponentDoc = {
 			type: "number",
 			default: "4000",
 			desc: "Ms até dispensar. Mínimo 1000ms; 0 = fixo até fechar.",
+		},
+		{
+			name: "options.mode / atributo mode",
+			type: `'light' | 'dark'`,
+			default: "—",
+			desc: "Força o esquema de cores do card independentemente do tema global.",
 		},
 		{
 			name: "(retorno)",

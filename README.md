@@ -294,8 +294,9 @@ ative o modo estrito do Volar no `tsconfig.json`:
 > Sem `strictTemplates`, o Vue não reporta atributos desconhecidos de elementos nativos
 > (comportamento padrão do Volar) — mas o autocomplete das propriedades continua funcionando.
 >
-> **Para Nuxt:** use `plugins/fenix-ui.client.ts` e configure
-> `nuxtApp.vueApp.config.compilerOptions.isCustomElement` no plugin.
+> **Para Nuxt:** `isCustomElement` é opção de compilação — configure em `nuxt.config.ts`
+> (`vue: { compilerOptions: { isCustomElement: (tag) => tag.startsWith('fx-') } }`) e use um
+> plugin `plugins/fenix-ui.client.ts` apenas para os imports (componentes, tema e tipos Volar).
 
 ## Componentes (fase 1)
 
