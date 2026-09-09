@@ -36,6 +36,11 @@ function copyIconFontPlugin() {
  */
 export default defineConfig({
   plugins: [copyIconFontPlugin()],
+  // Base relativa: o Vite emite a URL da fonte de ícones como caminho RELATIVO
+  // (ex.: '../assets/fenix-icons-HASH.woff2'). Com caminho absoluto ('/assets/...')
+  // o bundler do projeto consumidor não encontra o arquivo dentro de node_modules
+  // e a fonte 404 em produção. Com o relativo, Vite/webpack resolvem e copiam o asset.
+  base: './',
   /** Versão lida do package.json — usada pelo badge do header da doc em dev. */
   define: {
     __APP_VERSION__: JSON.stringify(
