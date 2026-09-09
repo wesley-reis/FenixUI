@@ -28,9 +28,12 @@ function resolveFontUrl(): string {
   if (typeof __FENIX_ICONS_FONT_URL__ !== 'undefined' && __FENIX_ICONS_FONT_URL__) {
     return __FENIX_ICONS_FONT_URL__;
   }
-  // Indireção proposital: impede que o bundler reescreva para um caminho absoluto.
-  const moduleUrl = import.meta.url;
-  return new URL('./fenix-icons.woff2', moduleUrl).toString();
+  // IMPORTANTE: o `import.meta.url` precisa ser usado DIRETAMENTE como 2º
+  // argumento do `new URL` (sem variável intermediária). É assim que Vite,
+  // webpack e Rollup reconhecem o padrão de asset e copiam/reescrevem a URL
+  // da fonte no build do PROJETO CONSUMIDOR — com variável, a URL permanece
+  // dinâmica e quebra em produção (a fonte 404 e os ícones viram texto).
+  return new URL('./fenix-icons.woff2', import.meta.url).toString();
 }
 
 const FONT_URL = resolveFontUrl();
