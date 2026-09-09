@@ -141,6 +141,7 @@ export class FxAccordionPanel extends FxElement {
   protected override disconnectedCallback(): void {
     this._mo?.disconnect();
     this._mo = null;
+    super.disconnectedCallback();
   }
 
   private _mo: MutationObserver | null = null;

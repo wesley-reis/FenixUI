@@ -3,7 +3,8 @@
  *
  * Atributos: kind (success|error|info|warning), title, message,
  * position (top-left|top-center|top-right|bottom-left|bottom-center|bottom-right),
- * duration (ms; 0 = fixo até fechar).
+ * duration (ms; 0 = fixo até fechar), mode ('light'|'dark' — força o esquema de
+ * cores do card independentemente do tema global).
  */
 const POSITIONS = [
   'top-left', 'top-center', 'top-right',
@@ -28,7 +29,24 @@ const KIND_ICON: Record<ToastKind, string> = {
 };
 
 const CARD_CSS = `
-:host { display: contents; }
+:host { display: contents; pointer-events: auto; }
+/* Modo explícito: sobrepõe os tokens herdados do tema global SOMENTE neste card. */
+:host([mode='dark']) {
+  --fx-surface-background: #1e293b;
+  --fx-text-default: #f1f5f9;
+  --fx-text-muted: #94a3b8;
+  --fx-border-default: #334155;
+  --fx-shadow-lg: 0 10px 30px rgba(0, 0, 0, .5);
+  --fx-surface-surface-hover: rgba(255, 255, 255, .08);
+}
+:host([mode='light']) {
+  --fx-surface-background: #ffffff;
+  --fx-text-default: #1e293b;
+  --fx-text-muted: #64748b;
+  --fx-border-default: #e2e8f0;
+  --fx-shadow-lg: 0 10px 30px rgba(0, 0, 0, .14);
+  --fx-surface-surface-hover: rgba(0, 0, 0, .05);
+}
 .fx-icon {
   font-family: var(--fx-icon-font, 'Fenix Icons');
   font-weight: normal;
@@ -78,7 +96,17 @@ const CARD_CSS = `
 
 export class FxToast extends HTMLElement {
   static get observedAttributes() {
-    return ['kind', 'title', 'message', 'duration', 'icon'];
+    return ['kind', 'title', 'message', 'duration', 'icon', 'mode'];
+  }
+
+  /** Esquema de cores forçado do card: 'light' | 'dark' | undefined (segue o tema). */
+  get mode(): 'light' | 'dark' | undefined {
+    const m = this.getAttribute('mode');
+    return m === 'light' || m === 'dark' ? m : undefined;
+  }
+  set mode(value: 'light' | 'dark' | undefined) {
+    if (value) this.setAttribute('mode', value);
+    else this.removeAttribute('mode');
   }
 
   private timer: ReturnType<typeof setTimeout> | null = null;
@@ -164,9 +192,8 @@ function regionFor(position: ToastPosition): HTMLElement {
     style.gap = '8px';
     style.zIndex = '1100';
     style.pointerEvents = 'none';
-    new MutationObserver(() => {
-      region!.querySelectorAll('*').forEach((c) => ((c as HTMLElement).style.pointerEvents = 'auto'));
-    }).observe(region, { childList: true });
+    // Os cards reabilitam pointer-events via `:host { pointer-events: auto }` (herança),
+    // sem necessidade de MutationObserver.
     document.body.appendChild(region);
   }
   return region;
@@ -178,6 +205,8 @@ export interface ToastOptions {
   position?: ToastPosition;
   /** Tempo em ms até sumir. 0 = fixo até fechar. Padrão: 4000 */
   duration?: number;
+  /** Força o esquema de cores do card, independentemente do tema global. */
+  mode?: 'light' | 'dark';
 }
 
 class ToastApi {
@@ -197,6 +226,7 @@ class ToastApi {
     if (message) el.setAttribute('message', message);
     el.setAttribute('position', o.position ?? 'top-right');
     el.setAttribute('duration', String(o.duration ?? 4000));
+    if (o.mode) el.setAttribute('mode', o.mode);
     regionFor(o.position ?? 'top-right').appendChild(el);
     this.map.set(id, el);
     return id;

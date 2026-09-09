@@ -8,7 +8,8 @@ import { esc } from '../../core/sanitize';
  *
  * Atributos: marker (glifo do marcador, padrão '●'), size (sm|md|lg).
  * Slot `item`: cada elemento com [slot="item"] vira um evento. Use os
- * atributos `time` (texto do horário/data) e `title` no item.
+ * atributos `time` (texto do horário/data), `title` e `icon` (glifo da
+ * fonte Fenix Icons, ex.: "check_circle") no item.
  *
  * Exemplo:
  *   <fx-timeline>
@@ -22,10 +23,10 @@ export class FxTimeline extends FxElement {
       display: block;
       font-family: var(--fx-font-family);
       font-size: var(--fx-font-size);
-      --_marker: calc(var(--fx-font-size) - 1px);
+      --_marker: calc(var(--fx-font-size) + 6px);
     }
-    :host([size='sm']) { --_marker: calc(var(--fx-font-size) - 3px); }
-    :host([size='lg']) { --_marker: calc(var(--fx-font-size) + 2px); }
+    :host([size='sm']) { --_marker: calc(var(--fx-font-size) - 2px); }
+    :host([size='lg']) { --_marker: calc(var(--fx-font-size) + 14px); }
 
     .tl {
       list-style: none;
@@ -58,9 +59,21 @@ export class FxTimeline extends FxElement {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: calc(var(--_marker) * 0.55);
+      font-size: calc(var(--_marker) * 0.5);
       color: var(--fx-color-primary);
       line-height: 1;
+    }
+    /* marcador com ícone da fonte Fenix Icons (atributo icon no item) */
+    .dot.fx-icon {
+      font-family: var(--fx-icon-font, 'Fenix Icons');
+      font-weight: normal;
+      font-style: normal;
+      font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+      -webkit-font-smoothing: antialiased;
+      user-select: none;
+      background: color-mix(in srgb, var(--fx-color-primary) 14%, transparent);
+      border-radius: 50%;
+      font-size: calc(var(--_marker) * 0.55);
     }
     .head {
       display: flex;
@@ -139,9 +152,16 @@ export class FxTimeline extends FxElement {
           time ? `<span class="time">${esc(time)}</span>` : '',
           title ? `<span class="title">${esc(title)}</span>` : '',
         ].join('');
-        return `<li class="event" part="event"><span class="dot" part="marker" aria-hidden="true">${esc(marker)}</span><div class="head">${head}</div><div class="content">${item.innerHTML}</div></li>`;
+        // Ícone por item (atributo icon) tem prioridade sobre o glifo global (marker).
+        const icon = item.getAttribute('icon');
+        const dot = icon
+          ? `<span class="dot fx-icon" part="marker" aria-hidden="true">${esc(icon)}</span>`
+          : `<span class="dot" part="marker" aria-hidden="true">${esc(marker)}</span>`;
+        return `<li class="event" part="event">${dot}<div class="head">${head}</div><div class="content">${item.innerHTML}</div></li>`;
       })
       .join('');
+    // Garante a fonte de ícones quando algum item usa icon="…" (auto-injeção única).
+    if (items.some((item) => item.hasAttribute('icon'))) void import('../../icons');
   }
 
   private _observer?: MutationObserver;

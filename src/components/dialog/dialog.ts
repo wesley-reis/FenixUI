@@ -32,7 +32,8 @@ export class FxDialog extends FxElement {
       border: 1px solid var(--fx-border-default);
       border-radius: var(--fx-radius-lg);
       box-shadow: var(--fx-shadow-xl);
-      width: min(560px, calc(100vw - 32px));
+      /* Largura customizável por instância: defina --fx-dialog-width no elemento. */
+      width: min(var(--fx-dialog-width, 560px), calc(100vw - 32px));
       max-height: calc(100vh - 64px);
       display: flex;
       flex-direction: column;
@@ -40,8 +41,15 @@ export class FxDialog extends FxElement {
       animation: pop var(--fx-motion-duration-normal) var(--fx-motion-easing);
     }
     @keyframes pop { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
-    :host([size='sm']) .dialog { width: min(400px, calc(100vw - 32px)); }
-    :host([size='lg']) .dialog { width: min(800px, calc(100vw - 32px)); }
+    :host([size='sm']) .dialog { width: min(var(--fx-dialog-width, 400px), calc(100vw - 32px)); }
+    :host([size='lg']) .dialog { width: min(var(--fx-dialog-width, 800px), calc(100vw - 32px)); }
+    /* Mobile: dialog ocupa praticamente toda a largura da tela. */
+    @media (max-width: 640px) {
+      .dialog, :host([size='sm']) .dialog, :host([size='lg']) .dialog {
+        width: calc(100vw - 16px);
+        max-width: calc(100vw - 16px);
+      }
+    }
     header {
       display: flex;
       align-items: center;
