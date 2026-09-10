@@ -53,6 +53,11 @@ export default defineConfig({
     minify: false,
     target: 'es2020',
     emptyOutDir: true,
+    // Impede o Vite de injetar `__vitePreload`/`__vite__mapDeps` no dist da lib.
+    // Esses identificadores colidem com os helpers que o Vite 8 (rolldown) injeta
+    // no projeto consumidor, causando "Identifier '__vitePreload' has already
+    // been declared". Com `modulePreload: false`, os imports dinâmicos ficam puros.
+    modulePreload: false,
     rollupOptions: {
       input: [
         here + 'src/index.ts',
