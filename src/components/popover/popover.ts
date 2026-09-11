@@ -99,6 +99,11 @@ export class FxPopover extends FxElement {
     const popup = this.root.querySelector<HTMLElement>('.popup');
     if (!popup) return;
 
+    // Evita listeners duplicados em re-renders enquanto aberto
+    // (ex.: mudança de target/position/trigger com o popover aberto).
+    this._cleanup?.();
+    this._cleanup = undefined;
+
     const close = (): void => {
       this.open = false;
       this._cleanup?.();
