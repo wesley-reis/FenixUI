@@ -19,4 +19,25 @@ describe('fx-dialog', () => {
     expect(el.hasAttribute('open')).toBe(false);
     el.remove();
   });
+
+  it('não duplica listeners em re-render com o dialog aberto (ex.: heading mudando)', () => {
+    const el = document.createElement('fx-dialog');
+    el.setAttribute('heading', 'Título A');
+    document.body.appendChild(el);
+    el.setAttribute('open', '');
+
+    // Re-renders enquanto aberto (mudanças de heading/size observadas)
+    el.setAttribute('heading', 'Título B');
+    el.setAttribute('size', 'lg');
+
+    let closes = 0;
+    el.addEventListener('close', () => (closes++));
+
+    const esc = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+    document.dispatchEvent(esc);
+
+    expect(closes).toBe(1);
+    expect(el.hasAttribute('open')).toBe(false);
+    el.remove();
+  });
 });

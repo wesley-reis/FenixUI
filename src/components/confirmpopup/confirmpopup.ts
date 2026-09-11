@@ -147,6 +147,11 @@ export class FxConfirmPopup extends FxElement {
     const popup = this.root.querySelector<HTMLElement>('.popup');
     if (!popup) return;
 
+    // Evita listeners duplicados em re-renders enquanto aberto
+    // (ex.: mudança de message/icon/accept-label com o popup aberto).
+    this._cleanup?.();
+    this._cleanup = undefined;
+
     const close = (event: 'accept' | 'reject'): void => {
       this.open = false;
       this._cleanup?.();

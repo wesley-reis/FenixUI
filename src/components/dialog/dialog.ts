@@ -116,6 +116,12 @@ export class FxDialog extends FxElement {
 
     if (!isOpen) return;
 
+    // Evita listeners duplicados em re-renders enquanto aberto
+    // (ex.: mudança de heading/size com o dialog aberto sobrescreveria
+    // o _cleanup anterior, deixando listeners de document órfãos).
+    this._cleanup?.();
+    this._cleanup = undefined;
+
     const overlay = this.root.querySelector<HTMLElement>('.overlay');
     const closeBtn = this.root.querySelector<HTMLButtonElement>('.close');
     const close = (): void => {
