@@ -1,7 +1,7 @@
 import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
-import { esc } from '../../core/sanitize';
+import { FENIX_ICON_BASE_CSS, fenixIconHtml } from '../../icons/base-css';
 
 /**
  * <fx-chip> — Chip/Tag compacto para labels, filtros e seleções.
@@ -59,6 +59,8 @@ export class FxChip extends FxElement {
     .chip.clickable:active { transform: scale(0.97); }
 
     .icon { line-height: 1; }
+    /* Base dos glifos Fenix Icons (o @font-face vem de @wrrdev/fenix-ui/icons). */
+    ${FENIX_ICON_BASE_CSS}
     .remove {
       display: inline-flex;
       align-items: center;
@@ -94,7 +96,7 @@ export class FxChip extends FxElement {
     this.setTemplate(`
       <span class="chip ${clickable ? 'clickable' : ''}" part="chip" role="${clickable ? 'button' : 'status'}"
         ${clickable ? `tabindex="0" aria-pressed="${this.selected}"` : ''} ${disabled ? 'aria-disabled="true"' : ''}>
-        ${icon ? `<span class="icon" aria-hidden="true">${esc(icon)}</span>` : ''}
+        ${icon ? `<span class="icon" aria-hidden="true">${fenixIconHtml(icon)}</span>` : ''}
         <slot></slot>
         <button type="button" class="remove" part="remove" aria-label="Remover" ${removable ? '' : 'hidden'}>×</button>
       </span>

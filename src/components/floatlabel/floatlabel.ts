@@ -23,7 +23,7 @@ import { defineElement } from "../../core/define";
  */
 export class FxFloatlabel extends FxElement {
 	static override get observedAttributes(): string[] {
-		return ["variant", "error", "invalid", "success", "valid"];
+		return ["variant", "error", "invalid", "success", "valid", "full", "icon", "icon-pos"];
 	}
 	// 'active' NÃO entra em observedAttributes: togglá-lo apenas atualiza CSS
 	// via :host([active]), sem re-render destrutivo (mantém o foco do campo).
@@ -35,6 +35,12 @@ export class FxFloatlabel extends FxElement {
 			font-family: var(--fx-font-family);
 			font-size: var(--fx-font-size);
 			vertical-align: middle;
+		}
+		/* Full width: o host estica até o pai; o controle interno com
+		   atributo full (ou largura herdada) acompanha. */
+		:host([full]) {
+			display: block;
+			width: 100%;
 		}
 		.wrapper {
 			position: relative;
@@ -99,6 +105,21 @@ export class FxFloatlabel extends FxElement {
 			background-color: var(--fx-surface-background, #fff);
 			padding: 0 5px;
 			color: var(--fx-color-primary, #4f46e5);
+		}
+
+		/* ---- variant="in" com ícone dentro do campo (fx-input icon):
+		   enquanto a label funciona como placeholder (sem foco/valor), ela
+		   começa DEPOIS do glifo (mesma métrica de padding do fx-input).
+		   Ao subir (active), volta ao offset padrão da borda. ---- */
+		:host([variant="in"]) .flabel.icon-indent {
+			left: calc(
+				var(--fx-space-md, 12px) +
+				var(--fx-input-icon-size, calc(var(--fx-font-size, 14px) + 6px)) +
+				var(--fx-space-sm, 8px)
+			);
+		}
+		:host([variant="in"][active]) .flabel.icon-indent {
+			left: var(--fx-space-md, 12px);
 		}
 
 		/* ---- variant="over": label estática ACIMA do campo (fora, em fluxo) ---- */
@@ -175,6 +196,9 @@ export class FxFloatlabel extends FxElement {
 		this.syncControlReference(control);
 		this.syncState();
 		this.applyError();
+		this.applyFull();
+		this.applyIcon();
+		this.syncIconIndent();
 	}
 
 	protected override disconnectedCallback(): void {
@@ -209,6 +233,7 @@ export class FxFloatlabel extends FxElement {
 				this.syncControlReference(control);
 				this.syncState();
 				this.applyError();
+				this.applyFull();
 			});
 		}
 
@@ -232,10 +257,13 @@ export class FxFloatlabel extends FxElement {
 			this.observer = null;
 			this.targetControl = control;
 			if (control) {
-				this.observer = new MutationObserver(() => this.syncState());
+				this.observer = new MutationObserver(() => {
+					this.syncState();
+					this.syncIconIndent();
+				});
 				this.observer.observe(control, {
 					attributes: true,
-					attributeFilter: ["value", "values", "start", "end", "open"],
+					attributeFilter: ["value", "values", "start", "end", "open", "icon", "icon-pos"],
 				});
 			}
 		}
@@ -278,6 +306,58 @@ export class FxFloatlabel extends FxElement {
 		} else {
 			this.removeAttribute("active");
 			this.removeAttribute("focus");
+		}
+	}
+
+	/**
+	 * variant="in" + ícone à esquerda dentro do campo (fx-input icon):
+	 * enquanto a label é placeholder ela precisa começar depois do glifo.
+	 * Detecta via atributos icon/icon-pos (ou slot icon) do controle.
+	 */
+	private syncIconIndent(): void {
+		const label = this.root.querySelector(".flabel");
+		if (!label) return;
+		const c = this.targetControl;
+		const hasLeftIcon = Boolean(
+			c &&
+			(c.hasAttribute("icon") || c.querySelector(':scope > [slot="icon"]')) &&
+			c.getAttribute("icon-pos") !== "right",
+		);
+		label.classList.toggle("icon-indent", hasLeftIcon);
+	}
+
+	private applyFull(): void {
+		// Espelha o full no controle interno: o CSS :host([full]) do floatlabel
+		// estica apenas o HOST — sem isso o campo interno (ex.: fx-input com
+		// width 260px fixa) não acompanharia o container.
+		if (
+			this.targetControl &&
+			typeof this.targetControl.setAttribute === "function"
+		) {
+			if (this.hasAttr("full")) {
+				this.targetControl.setAttribute("full", "");
+			} else {
+				this.targetControl.removeAttribute("full");
+			}
+			}
+	}
+
+	private applyIcon(): void {
+		if (
+			this.targetControl &&
+			typeof this.targetControl.setAttribute === "function"
+		) {
+			// Só propaga icon/icon-pos se o FLOATLABEL possuir o atributo.
+			// Se o ícone foi pondo diretamente no controle (ex.: <fx-input icon="lock">),
+			// não remove — deixa o controle manter o seu próprio ícone.
+			if (this.hasAttr("icon")) {
+				const icon = this.getAttr("icon");
+				const iconPos = this.getAttr("icon-pos");
+				if (icon !== "") this.targetControl.setAttribute("icon", icon);
+				else this.targetControl.setAttribute("icon", "");
+				if (iconPos && iconPos !== "left") this.targetControl.setAttribute("icon-pos", iconPos);
+				else this.targetControl.removeAttribute("icon-pos");
+			}
 		}
 	}
 

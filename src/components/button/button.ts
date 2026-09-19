@@ -1,19 +1,30 @@
 ﻿import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
+import { FENIX_ICON_BASE_CSS, fenixIconHtml } from '../../icons/base-css';
 
 /**
  * <fx-button> — Componente de ação (piloto).
  *
- * Atributos: variant, size, disabled, loading, type, full.
- * Slots: default (rótulo), `icon` (ícone opcional).
+ * Atributos: variant, size, disabled, loading, type, full (largura 100%
+ * acompanhando o elemento pai), icon (nome do glifo Fenix Icons ou
+ * emoji/texto livre) e icon-pos (left|right, padrão left).
+ * Slots: default (rótulo), `icon` (ícone customizado — vence o atributo).
  * Evento: `click` nativo atravessa o Shadow DOM (composed) — ouça no host.
  */
 export class FxButton extends FxElement {
   static override styles = css`
+    ${FENIX_ICON_BASE_CSS}
     :host {
       display: inline-block;
       vertical-align: middle;
+    }
+    /* Full width: o host inline-block é shrink-to-fit, então precisa virar
+       block para o 100% do .btn interno ter contra o que esticar. */
+    :host([full]) {
+      display: block;
+      width: 100%;
+      max-width: 100%;
     }
     .btn {
       display: inline-flex;
@@ -66,9 +77,13 @@ export class FxButton extends FxElement {
     :host([variant='outline']) .btn:hover { background: var(--fx-surface-surface-hover); filter: none; }
 
     /* Ícone e spinner */
-    .btn__icon { display: inline-flex; }
+    .btn__icon { display: inline-flex; align-items: center; font-size: var(--fx-button-icon-size, calc(var(--fx-font-size) + 6px)); line-height: 1; }
     .btn__icon[hidden] { display: none; }
     .btn__label { display: inline-flex; align-items: center; justify-content: center; }
+    /* Icon-only: a label some (o gap do flex some junto) e o botão vira
+       quadrado com padding simétrico — ícone perfeitamente centralizado. */
+    .btn--icon-only { padding-left: var(--fx-space-md); padding-right: var(--fx-space-md); }
+    .btn--icon-only .btn__label { display: none; }
     .btn[hidden] { display: none; }
     .btn__spinner {
       width: 1em;
@@ -114,7 +129,7 @@ export class FxButton extends FxElement {
   `;
 
   static override get observedAttributes(): string[] {
-    return ['variant', 'size', 'disabled', 'loading', 'type', 'full'];
+    return ['variant', 'size', 'disabled', 'loading', 'type', 'full', 'icon', 'icon-pos'];
   }
 
   /** Tamanho. Padrão: `'md'`. */
@@ -144,11 +159,19 @@ export class FxButton extends FxElement {
     const loading = this.hasAttr('loading');
     const disabled = this.hasAttr('disabled') || loading;
     const btnType = this.getAttr('type', 'button');
+    const icon = this.getAttr('icon');
+    const iconRight = this.getAttr('icon-pos', 'left') === 'right';
+    // Slot `icon` vence o atributo `icon`; sem nenhum dos dois, sem ícone.
+    const slottedIcon = this.querySelector<HTMLElement>('[slot="icon"]');
+    const iconContent = slottedIcon
+      ? '<slot name="icon"></slot>'
+      : (icon ? fenixIconHtml(icon) : '');
 
     this.setTemplate(`
       <button class="btn" part="button" type="${btnType}">
-        <span class="btn__icon" part="icon"><slot name="icon"></slot></span>
+        ${!iconRight ? `<span class="btn__icon" part="icon">${iconContent}</span>` : ''}
         <span class="btn__label" part="label"><slot></slot></span>
+        ${iconRight ? `<span class="btn__icon" part="icon">${iconContent}</span>` : ''}
         ${loading ? '<span class="btn__spinner" aria-hidden="true"></span>' : ''}
       </button>
     `);
@@ -156,14 +179,21 @@ export class FxButton extends FxElement {
     const btn = this.root.querySelector<HTMLButtonElement>('.btn');
     if (!btn) return;
 
-    // Esconde o container do ícone quando o slot está vazio,
-    // evitando espaço fantasma do `gap` que descentraliza o rótulo.
-    const iconSlot = btn.querySelector<HTMLSlotElement>('.btn__icon slot');
-    const iconWrap = this.root.querySelector<HTMLElement>('.btn__icon');
-    const hasIcon = Boolean(iconSlot?.assignedNodes({ flatten: true }).some((n) =>
-      n.nodeType === Node.ELEMENT_NODE || (n.textContent ?? '').trim() !== '',
-    ));
-    iconWrap?.toggleAttribute('hidden', !hasIcon);
+    // Esconde o container do ícone quando vazio, evitando espaço fantasma
+    // do `gap` que descentraliza o rótulo.
+    const hasIcon = iconContent.trim() !== '';
+    for (const wrap of this.root.querySelectorAll<HTMLElement>('.btn__icon')) {
+      wrap.toggleAttribute('hidden', !hasIcon);
+    }
+
+    // Icon-only: sem texto no slot default, o botão vira quadrado
+    // (padding simétrico) em vez de retangular largo.
+    const hasLabel = [...(this.childNodes ?? [])].some((n) =>
+      n.nodeType === Node.ELEMENT_NODE
+        ? (n as Element).getAttribute?.('slot') !== 'icon'
+        : (n.textContent ?? '').trim() !== '',
+    );
+    btn.classList.toggle('btn--icon-only', !hasLabel && hasIcon);
     if (disabled) {
       btn.setAttribute('disabled', '');
       btn.setAttribute('aria-disabled', 'true');

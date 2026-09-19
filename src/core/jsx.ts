@@ -40,6 +40,8 @@ export interface FxButtonProps extends FxElementProps {
   size?: FxSize;
   loading?: boolean;
   full?: boolean;
+  icon?: string;
+  'icon-pos'?: 'left' | 'right';
 }
 export interface FxBadgeProps extends FxElementProps {
   variant?: FxBadgeVariant;
@@ -55,6 +57,9 @@ export interface FxInputProps extends FxElementProps {
   max?: string | number;
   step?: string | number;
   clearable?: boolean;
+  full?: boolean;
+  icon?: string;
+  'icon-pos'?: 'left' | 'right';
   error?: boolean;
   invalid?: boolean;
   success?: boolean;
@@ -68,6 +73,7 @@ export interface FxSelectProps extends FxElementProps {
   clearable?: boolean;
   'search-placeholder'?: string;
   'no-results'?: string;
+  full?: boolean;
   error?: boolean;
   invalid?: boolean;
   success?: boolean;
@@ -93,6 +99,7 @@ export interface FxTextareaProps extends FxElementProps {
   readonly?: boolean;
   rows?: number;
   maxlength?: number;
+  full?: boolean;
   error?: boolean;
   invalid?: boolean;
   success?: boolean;
@@ -105,6 +112,7 @@ export interface FxMultiselectProps extends FxElementProps {
   searchable?: boolean;
   clearable?: boolean;
   open?: boolean;
+  full?: boolean;
   error?: boolean;
   invalid?: boolean;
   success?: boolean;
@@ -135,6 +143,7 @@ export interface FxDatepickerProps extends FxElementProps {
   'show-time'?: boolean;
   'free-text'?: boolean;
   clearable?: boolean;
+  full?: boolean;
   error?: boolean;
   invalid?: boolean;
   success?: boolean;
@@ -152,6 +161,7 @@ export interface FxTableProps extends FxElementProps {
 }
 export interface FxFloatlabelProps extends FxElementProps {
   variant?: FxFloatlabelVariant;
+  full?: boolean;
   error?: boolean;
   invalid?: boolean;
   success?: boolean;
@@ -204,6 +214,20 @@ export interface FxAutocompleteProps extends FxElementProps {
   source?: string;
   disabled?: boolean;
   'min-chars'?: number;
+  full?: boolean;
+}
+export interface FxFileUploadProps extends FxElementProps {
+  mode?: 'basic' | 'advanced';
+  size?: FxSize;
+  severity?: 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info';
+  label?: string;
+  icon?: string;
+  accept?: string;
+  multiple?: boolean;
+  disabled?: boolean;
+  'show-progress'?: boolean;
+  progress?: number;
+  full?: boolean;
 }
 /* Augmentation global de JSX (React/TSX, Preact, Vue JSX, …).
    Cada tag fx-* recebe autocomplete + validação de atributos. */
@@ -237,6 +261,7 @@ declare global {
       'fx-dropdown-item': FxDropdownItemProps;
       'fx-pagination': FxPaginationProps;
       'fx-autocomplete': FxAutocompleteProps;
+      'fx-fileupload': FxFileUploadProps;
     }
   }
 }

@@ -15,7 +15,13 @@ export const selectDoc: ComponentDoc = {
 	demoHtml: (a) =>
 		`<fx-select ${a}>\n  <option value="sp">São Paulo</option>\n  <option value="rj">Rio de Janeiro</option>\n  <option value="mg">Minas Gerais</option>\n  <option value="ba">Bahia</option>\n  <option value="pr">Paraná</option>\n</fx-select>`,
 	variantsHtml: () =>
-		`<fx-select clearable searchable placeholder="Selecione um estado"><option value="sp">São Paulo</option><option value="rj">Rio de Janeiro</option><option value="mg">Minas Gerais</option></fx-select>`,
+		`<fx-select clearable searchable placeholder="Selecione um estado"><option value="sp">São Paulo</option><option value="rj">Rio de Janeiro</option><option value="mg">Minas Gerais</option></fx-select>
+        <h4>Validação (error / success)</h4>
+        <p style="font-size:12px;color:var(--fx-text-muted);margin:0 0 8px">Borda vermelha com <code>error</code>, verde com <code>success</code>. Combine com <code>fx-alert</code> no submit (ver página Formulários).</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+          <fx-select error placeholder="error"><option value="sp">São Paulo</option></fx-select>
+          <fx-select success placeholder="success"><option value="sp">São Paulo</option></fx-select>
+        </div>`,
 	controls: [
 		{
 			kind: "select",
@@ -44,6 +50,9 @@ export const selectDoc: ComponentDoc = {
 			on: true,
 		},
 		{ kind: "toggle", attr: "disabled", label: "Desabilitado" },
+		{ kind: "toggle", attr: "error", label: "Erro" },
+		{ kind: "toggle", attr: "success", label: "Sucesso" },
+		{ kind: "toggle", attr: "full", label: "Largura total (full)" },
 	],
 	attributes: [
 		{
@@ -93,6 +102,24 @@ export const selectDoc: ComponentDoc = {
 			type: "boolean",
 			default: "false",
 			desc: "Exibe botão × para limpar a seleção (visível quando há valor).",
+		},
+		{
+			name: "full",
+			type: "boolean",
+			default: "false",
+			desc: "Largura 100% acompanhando o elemento pai (host vira block; min-width do trigger é descartado).",
+		},
+		{
+			name: "error",
+			type: "boolean",
+			default: "false",
+			desc: "Borda vermelha de validação (ex.: campo obrigatório vazio no submit). Combine com fx-alert para a mensagem (ver página Formulários).",
+		},
+		{
+			name: "success",
+			type: "boolean",
+			default: "false",
+			desc: "Borda verde de validação (campo válido).",
 		},
 	],
 	events: [

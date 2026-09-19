@@ -60,6 +60,10 @@ export class FxDatepicker extends FxElement {
     :host([mode='range'][size='lg']) .field { min-width: 360px; }
     :host([mode='multiple'][size='lg']) .field { min-width: 320px; }
     :host([show-time]) .field { min-width: 250px; }
+    /* Full width: o host estica até o pai (os min-width dos modos são
+       descartados para permitir layouts estreitos sob controle do pai). */
+    :host([full]) { display: block; width: 100%; }
+    :host([full]) .field { min-width: 0; }
     /* Validação */
     :host([error]) .field,
     :host([invalid]) .field {
@@ -171,7 +175,7 @@ export class FxDatepicker extends FxElement {
   `;
 
   static override get observedAttributes(): string[] {
-    return ['value', 'start', 'end', 'values', 'mode', 'min', 'max', 'placeholder', 'disabled', 'format', 'show-time', 'free-text'];
+    return ['value', 'start', 'end', 'values', 'mode', 'min', 'max', 'placeholder', 'disabled', 'format', 'show-time', 'free-text', 'error', 'invalid', 'success', 'valid'];
   }
 
   private docListener?: (e: Event) => void;

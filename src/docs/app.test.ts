@@ -261,4 +261,56 @@ describe("docs app", () => {
 			table.shadowRoot!.querySelectorAll("tbody tr").length,
 		).toBeGreaterThan(0);
 	});
+
+	it("página de formulários renderiza os 4 modelos de cadastro", async () => {
+		await navigate("forms");
+		await new Promise((r) => setTimeout(r, 50));
+		const cards = main().querySelectorAll(".example-card");
+		expect(cards.length).toBe(4);
+		expect(main().textContent).toContain("Modelo 1 — Cadastro em uma coluna");
+		expect(main().textContent).toContain("Modelo 4 — FloatLabel com validação");
+		// fx-floatlabel full propaga full para o controle interno (modelo 4).
+		const floatInput = main().querySelector("fx-floatlabel[full] fx-input");
+		expect(floatInput?.hasAttribute("full")).toBe(true);
+	});
+
+	it("formulários: cards são opacos (fundo de superfície) e centralizados", async () => {
+		await navigate("forms");
+		await new Promise((r) => setTimeout(r, 50));
+		// A regra está no <style> da página (o jsdom não aplica CSS do palco,
+		// então validamos o contrato da folha injetada).
+		const css = main().querySelector("style")?.textContent ?? "";
+		const rule = css.replace(/\s+/g, " ");
+		expect(rule).toContain(".example-stage [data-form-validate]");
+		expect(rule).toContain("background: var(--fx-surface-background, #fff)");
+		expect(rule).toContain("margin-inline: auto");
+		expect(rule).toContain("width: 100%");
+		// Cada modelo tem max-width próprio, então o auto-margin centraliza.
+		const models = main().querySelectorAll<HTMLElement>("[data-form-validate]");
+		expect(models.length).toBe(4);
+		models.forEach((m) => expect(m.style.maxWidth).not.toBe(""));
+	});
+
+	it("formulários: save com campos vazios marca error e exibe o alerta", async () => {
+		await navigate("forms");
+		await new Promise((r) => setTimeout(r, 50));
+		const form = main().querySelector("[data-form-validate]")!;
+		const input = form.querySelector("fx-input")!;
+		const alertEl = form.querySelector("fx-alert")!;
+		expect(input.hasAttribute("error")).toBe(false);
+
+		form.querySelector("[data-save]")!.dispatchEvent(new Event("click"));
+		expect(input.hasAttribute("error")).toBe(true);
+		expect(alertEl.hidden).toBe(false);
+
+		// Preencher o campo e salvar novamente limpa o erro; com TODOS os
+		// campos preenchidos o alerta some (vazio em qualquer outro → fica).
+		form.querySelectorAll("fx-input, fx-textarea").forEach((f) => {
+			f.setAttribute("value", "Fenix");
+			f.dispatchEvent(new Event("input"));
+		});
+		form.querySelector("[data-save]")!.dispatchEvent(new Event("click"));
+		expect(input.hasAttribute("error")).toBe(false);
+		expect(alertEl.hidden).toBe(true);
+	});
 });

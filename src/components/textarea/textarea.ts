@@ -56,12 +56,15 @@ export class FxTextarea extends FxElement {
       border-color: var(--fx-color-success, #16a34a);
       box-shadow: 0 0 0 3px color-mix(in srgb, var(--fx-color-success, #16a34a) 18%, transparent);
     }
-    :host([size='sm']) .field { width: 220px; min-height: var(--fx-size-sm); padding: var(--fx-space-sm) var(--fx-space-md); }
+    :host([size='sm']) .field { min-height: var(--fx-size-sm); padding: var(--fx-space-sm) var(--fx-space-md); width: 220px; }
     :host([size='lg']) .field { width: 300px; min-height: calc(var(--fx-size-lg) + 80px); }
+    /* Full width: o host estica até o pai e o campo interno acompanha. */
+    :host([full]) { display: block; width: 100%; }
+    :host([full]) .field { width: 100%; }
   `;
 
   static override get observedAttributes(): string[] {
-    return ['size', 'placeholder', 'disabled', 'readonly', 'rows', 'maxlength'];
+    return ['size', 'placeholder', 'disabled', 'readonly', 'rows', 'maxlength', 'error', 'invalid', 'success', 'valid'];
   }
 
   get size(): string {

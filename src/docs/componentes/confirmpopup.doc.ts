@@ -9,17 +9,30 @@ export const confirmpopupDoc: ComponentDoc = {
 	group: "Feedback",
 	lead: "Popup de confirmação não-modal ancorado em um botão, exibido acima ou abaixo dinamicamente (flip automático). Personalize mensagem e botões via slots.",
 	imports: ["import '@wrrdev/fenix-ui/confirmpopup';"],
-	demoHtml: () =>
-		`<fx-confirmpopup id="cp-demo" target="#cp-demo-btn" message="Tem certeza que deseja excluir este registro?" icon="⚠️"></fx-confirmpopup><fx-button id="cp-demo-btn" variant="danger" size="sm" onclick="document.getElementById('cp-demo').setAttribute('open','')">Excluir</fx-button>`,
+	demoHtml: (a) =>
+		`<fx-confirmpopup id="cp-demo" target="#cp-demo-btn" message="Tem certeza que deseja excluir este registro?" icon="delete" ${a}></fx-confirmpopup><fx-button id="cp-demo-btn" variant="danger" size="sm" onclick="document.getElementById('cp-demo').setAttribute('open','')">Excluir</fx-button>`,
 	variantsHtml: () => {
 		return `<fx-confirmpopup id="cp-top" target="#cp-top-btn" position="top" message="Aplicar as alterações?" accept-label="Aplicar" reject-label="Cancelar"></fx-confirmpopup><fx-confirmpopup id="cp-tpl" target="#cp-tpl-btn" message="Salvar rascunho?"><b slot="accept">Sim, salvar</b><i slot="reject">Agora não</i></fx-confirmpopup><div style="display:flex;gap:12px"><fx-button id="cp-top-btn" size="sm" onclick="document.getElementById('cp-top').setAttribute('open','')">Forçar acima</fx-button><fx-button id="cp-tpl-btn" size="sm" onclick="document.getElementById('cp-tpl').setAttribute('open','')">Com template</fx-button></div>`;
 	},
-	controls: [],
+	controls: [
+		{ kind: "toggle", attr: "open", label: "Aberto (open)" },
+		{ kind: "text", attr: "message", label: "Mensagem", hint: "Pergunta exibida" },
+		{
+			kind: "select",
+			attr: "position",
+			label: "Posição",
+			options: ["auto", "top", "bottom"],
+			value: "auto",
+		},
+		{ kind: "text", attr: "icon", label: "Ícone", hint: "glifo Fenix Icons (ex.: delete) ou emoji" },
+		{ kind: "text", attr: "accept-label", label: "Label confirmar", hint: "padrão: Sim" },
+		{ kind: "text", attr: "reject-label", label: "Label rejeitar", hint: "padrão: Não" },
+	],
 	attributes: [
 		{ name: "open", type: "boolean", default: "false", desc: "Exibe o popup ancorado no target." },
 		{ name: "target", type: "string", default: "''", desc: "Seletor CSS do elemento âncora." },
 		{ name: "message", type: "string", default: "''", desc: "Texto da mensagem (usado quando não há conteúdo no slot padrão)." },
-		{ name: "icon", type: "string", default: "''", desc: "Ícone (glifo/emoji) exibido antes da mensagem." },
+		{ name: "icon", type: "string", default: "''", desc: "Ícone antes da mensagem: nome do glifo Fenix Icons (ex.: icon=\"help\", requer '@wrrdev/fenix-ui/icons') ou emoji/texto livre." },
 		{ name: "accept-label", type: "string", default: "'Sim'", desc: "Texto do botão de confirmação padrão." },
 		{ name: "reject-label", type: "string", default: "'Não'", desc: "Texto do botão de rejeição padrão." },
 		{ name: "position", type: `'auto' | 'top' | 'bottom'`, default: "'auto'", desc: "Lado de exibição. `auto` faz flip para cima quando não há espaço abaixo." },

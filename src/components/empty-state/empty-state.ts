@@ -2,6 +2,7 @@ import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from '../../core/sanitize';
+import { FENIX_ICON_BASE_CSS, fenixIconHtml } from '../../icons/base-css';
 
 /**
  * <fx-empty-state> — Estado vazio/ilustrativo para listas e telas sem dados.
@@ -48,6 +49,8 @@ export class FxEmptyState extends FxElement {
     p[hidden] { display: none; }
     .action { margin-top: var(--fx-space-sm); }
     .action:empty { display: none; }
+    /* Base dos glifos Fenix Icons (o @font-face vem de @wrrdev/fenix-ui/icons). */
+    ${FENIX_ICON_BASE_CSS}
   `;
 
   static override get observedAttributes(): string[] {
@@ -61,7 +64,7 @@ export class FxEmptyState extends FxElement {
 
     this.setTemplate(`
       <div class="wrap" part="wrap">
-        <span class="icon" part="icon" aria-hidden="true">${esc(icon)}</span>
+        <span class="icon" part="icon" aria-hidden="true">${fenixIconHtml(icon)}</span>
         <h4 part="heading" ${heading ? '' : 'hidden'}>${esc(heading)}</h4>
         <p part="description" ${description ? '' : 'hidden'}>${esc(description)}</p>
         <slot name="icon"></slot>

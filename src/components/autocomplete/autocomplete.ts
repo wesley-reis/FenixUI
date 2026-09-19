@@ -18,7 +18,7 @@ export class FxAutocomplete extends FxElement {
       font-family: var(--fx-font-family);
       font-size: var(--fx-font-size);
     }
-    input {
+    .field {
       font-family: inherit;
       font-size: inherit;
       font-weight: var(--fx-font-weight);
@@ -34,15 +34,29 @@ export class FxAutocomplete extends FxElement {
         border-color var(--fx-motion-duration-normal) var(--fx-motion-easing),
         box-shadow var(--fx-motion-duration-normal) var(--fx-motion-easing);
     }
-    input::placeholder { color: var(--fx-text-muted); opacity: 1; }
-    input:hover { border-color: var(--fx-border-hover); }
-    input:focus-visible {
+    .field::placeholder { color: var(--fx-text-muted); opacity: 1; }
+    .field:hover { border-color: var(--fx-border-hover); }
+    .field:focus-visible {
       outline: none;
       border-color: var(--fx-color-primary);
       box-shadow: var(--fx-effect-focus-ring, none);
     }
-    :host([size='sm']) input { width: 220px; min-height: var(--fx-size-sm); padding: var(--fx-space-sm) var(--fx-space-md); }
-    :host([size='lg']) input { width: 300px; min-height: var(--fx-size-lg); }
+    :host([size='sm']) .field { width: 220px; min-height: var(--fx-size-sm); padding: var(--fx-space-sm) var(--fx-space-md); }
+    :host([size='lg']) .field { width: 300px; min-height: var(--fx-size-lg); }
+    /* Full width: o host estica até o pai e o campo interno acompanha. */
+    :host([full]) { display: block; width: 100%; }
+    :host([full]) .field { width: 100%; }
+    /* Validação: sobrescrevem a borda/foco via token do preset. */
+    :host([error]) .field,
+    :host([invalid]) .field {
+      border-color: var(--fx-color-danger, #dc2626);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--fx-color-danger, #dc2626) 18%, transparent);
+    }
+    :host([success]) .field,
+    :host([valid]) .field {
+      border-color: var(--fx-color-success, #16a34a);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--fx-color-success, #16a34a) 18%, transparent);
+    }
     .list {
       position: absolute;
       top: calc(100% + 4px);
@@ -76,7 +90,9 @@ export class FxAutocomplete extends FxElement {
   `;
 
   static override get observedAttributes(): string[] {
-    return ['size', 'placeholder', 'source', 'disabled', 'min-chars'];
+    // `error`/`success` (+ aliases `invalid`/`valid`) PRECISAM ser observados:
+    // é assim que o toggle no playground / setAttribute no submit re-renderiza.
+    return ['size', 'placeholder', 'source', 'disabled', 'min-chars', 'error', 'invalid', 'success', 'valid'];
   }
 
   get size(): string {

@@ -6,7 +6,7 @@ import type { ComponentDoc } from '../types';
 export const ratingDoc: ComponentDoc = {
 	tag: "fx-rating",
 	title: "Rating",
-	group: "Formulario",
+	group: "Formulário",
 	lead: "Avaliação por estrelas com suporte a readonly, disabled e diferentes tamanhos. Emite change com o valor selecionado.",
 	imports: ["import '@wrrdev/fenix-ui/rating';"],
 	demoHtml: (attrs) =>

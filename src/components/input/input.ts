@@ -2,12 +2,16 @@
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from '../../core/sanitize';
+import { FENIX_ICON_BASE_CSS, fenixIconHtml } from '../../icons/base-css';
 
 /**
  * <fx-input> — Campo de texto estilizado com os tokens do tema.
  *
  * Atributos: type (text|number|email|password|search|tel|url), value, size,
- * placeholder, disabled, readonly, min, max, step, clearable.
+ * placeholder, disabled, readonly, min, max, step, clearable,
+ * full (largura 100% acompanhando o elemento pai), icon (nome do glifo Fenix Icons
+ * ou emoji/texto livre) e icon-pos (left|right, padrão left).
+ * Slots: `icon` (ícone customizado no lugar do atributo).
  * Eventos: `input` e `change` (composed, detail: { value }).
  */
 export class FxInput extends FxElement {
@@ -64,10 +68,56 @@ export class FxInput extends FxElement {
     }
     :host([size='sm']) .field { padding: var(--fx-space-sm) var(--fx-space-md); font-size: var(--fx-font-size); width: 220px; min-height: var(--fx-size-sm); }
     :host([size='lg']) .field { padding: var(--fx-space-lg) var(--fx-space-xl); font-size: calc(var(--fx-font-size) + 4px); width: 300px; min-height: var(--fx-size-lg); }
+    /* Full width: o host estica até o pai e o campo interno acompanha
+       (usar com um container de largura controlada, ex. w-full no Vue). */
+    :host([full]) { display: block; width: 100%; }
+    :host([full]) .field { width: 100%; }
     /* Clearable */
     :host([clearable]) { position: relative; display: inline-flex; }
+    :host([clearable][full]) { display: block; }
     .wrap { position: relative; display: inline-flex; align-items: center; }
+    :host([full]) .wrap { display: flex; width: 100%; }
     :host([clearable]) .field { padding-right: var(--fx-space-xl); }
+    :host([clearable][full]) .field { flex: 1 1 auto; }
+    /* Ícones (attr icon + slot icon) — DENTRO do campo, sobre o padding
+       (padrão Material/PrimeVue). Tamanho ajustável via --fx-input-icon-size. */
+    .field-icon {
+      position: relative;
+      display: inline-flex;
+      box-sizing: border-box;
+    }
+    .field-icon .field { flex: 1 1 auto; min-width: 0; }
+    :host([full]) .field-icon { display: flex; width: 100%; }
+    .field-icon .fx-icon,
+    .field-icon ::slotted([slot='icon']) {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--fx-input-icon-size, calc(var(--fx-font-size) + 6px));
+      line-height: 1;
+      color: var(--fx-text-muted);
+      pointer-events: none;
+      z-index: 1;
+    }
+    .field-icon.icon-left .fx-icon,
+    .field-icon.icon-left ::slotted([slot='icon']) { left: var(--fx-space-md); }
+    .field-icon.icon-right .fx-icon,
+    .field-icon.icon-right ::slotted([slot='icon']) { right: var(--fx-space-md); }
+    /* padding = posição do ícone + largura + folga extra para o texto
+       não colar no glifo. */
+    .field-icon.icon-left .field {
+      padding-left: calc(var(--fx-input-icon-size, calc(var(--fx-font-size) + 6px)) + var(--fx-space-md) + var(--fx-space-sm));
+    }
+    .field-icon.icon-right .field {
+      padding-right: calc(var(--fx-input-icon-size, calc(var(--fx-font-size) + 6px)) + var(--fx-space-md) + var(--fx-space-sm));
+    }
+    /* icon-pos right + clearable: desloca o × para não sobrepor o ícone. */
+    .field-icon.icon-right + .clear {
+      right: calc(var(--fx-input-icon-size, calc(var(--fx-font-size) + 6px)) + var(--fx-space-lg));
+    }
     .clear {
       position: absolute;
       right: var(--fx-space-xs);
@@ -82,14 +132,19 @@ export class FxInput extends FxElement {
     }
     .clear:hover { color: var(--fx-color-danger); }
     .clear[hidden] { display: none; }
+    /* Base dos glifos Fenix Icons (o @font-face vem de @wrrdev/fenix-ui/icons). */
+    ${FENIX_ICON_BASE_CSS}
   `;
 
   // `value` fica FORA da observação: refleti-lo a cada tecla não pode
   // re-renderizar o template, senão o campo perde o foco ao digitar.
+  // `error`/`success` (+ aliases `invalid`/`valid`) PRECISAM ser observados:
+  // é assim que o toggle no playground / setAttribute no submit re-renderiza.
   static override get observedAttributes(): string[] {
     return [
       'type', 'size', 'placeholder',
       'disabled', 'readonly', 'min', 'max', 'step',
+      'icon', 'icon-pos', 'error', 'invalid', 'success', 'valid',
     ];
   }
 
@@ -124,13 +179,25 @@ export class FxInput extends FxElement {
     const min = this.getAttr('min');
     const max = this.getAttr('max');
     const step = this.getAttr('step');
+    const icon = this.getAttr('icon');
+    const iconPos = this.getAttr('icon-pos', 'left') === 'right' ? 'right' : 'left';
+    // Slot `icon` vence o atributo `icon`; sem nenhum dos dois, sem ícone.
+    const slottedIcon = this.querySelector<HTMLElement>('[slot="icon"]');
+    const iconContent = slottedIcon
+      ? '<slot name="icon" part="icon"></slot>'
+      : (icon ? fenixIconHtml(icon) : '');
+    const useIconBox = Boolean(iconContent);
 
     this.setTemplate(`
-      ${this.hasAttr('clearable') ? '<div class="wrap">' : ''}
+      ${this.hasAttr('clearable') ? '<div class="wrap" part="wrap">' : ''}
+      ${useIconBox ? `<div class="field-icon icon-${iconPos}">` : ''}
+      ${useIconBox && iconPos === 'left' ? iconContent : ''}
       <input class="field" part="input" type="${esc(type)}"
         ${placeholder ? `placeholder="${esc(placeholder)}"` : ''}
         ${min ? `min="${esc(min)}"` : ''} ${max ? `max="${esc(max)}"` : ''} ${step ? `step="${esc(step)}"` : ''}
       />
+      ${useIconBox && iconPos === 'right' ? iconContent : ''}
+      ${useIconBox ? '</div>' : ''}
       ${this.hasAttr('clearable') ? '<button type="button" class="clear" part="clear" aria-label="Limpar" tabindex="-1">×</button></div>' : ''}
     `);
 

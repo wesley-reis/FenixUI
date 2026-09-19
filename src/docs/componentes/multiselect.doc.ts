@@ -19,7 +19,13 @@ export const multiselectDoc: ComponentDoc = {
         <option value="a">Alpha</option><option value="b">Beta</option><option value="c">Gama</option>
       </fx-multiselect>
       <fx-multiselect values="b"><option value="a">Com valor inicial</option><option value="b">Beta</option></fx-multiselect>
-      <fx-multiselect disabled><option value="a">Desabilitado</option></fx-multiselect>`,
+      <fx-multiselect disabled><option value="a">Desabilitado</option></fx-multiselect>
+      <h4>Validação (error / success)</h4>
+      <p style="font-size:12px;color:var(--fx-text-muted);margin:0 0 8px">Borda vermelha com <code>error</code>, verde com <code>success</code>. Combine com <code>fx-alert</code> no submit (ver página Formulários).</p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+        <fx-multiselect error placeholder="error"><option value="a">Alpha</option></fx-multiselect>
+        <fx-multiselect success placeholder="success"><option value="a">Alpha</option></fx-multiselect>
+      </div>`,
 	controls: [
 		{
 			kind: "select",
@@ -49,6 +55,9 @@ export const multiselectDoc: ComponentDoc = {
 		{ kind: "toggle", attr: "searchable", label: "Pesquisa", on: true },
 		{ kind: "toggle", attr: "clearable", label: "Limpar", on: true },
 		{ kind: "toggle", attr: "disabled", label: "Desabilitado" },
+		{ kind: "toggle", attr: "error", label: "Erro" },
+		{ kind: "toggle", attr: "success", label: "Sucesso" },
+		{ kind: "toggle", attr: "full", label: "Largura total (full)" },
 	],
 	attributes: [
 		{
@@ -92,6 +101,24 @@ export const multiselectDoc: ComponentDoc = {
 			type: "boolean",
 			default: "false",
 			desc: "Desabilita o componente.",
+		},
+		{
+			name: "full",
+			type: "boolean",
+			default: "false",
+			desc: "Largura 100% acompanhando o elemento pai (host vira block; largura fixa do trigger é sobrescrita).",
+		},
+		{
+			name: "error",
+			type: "boolean",
+			default: "false",
+			desc: "Borda vermelha de validação (ex.: campo obrigatório vazio no submit). Combine com fx-alert para a mensagem (ver página Formulários).",
+		},
+		{
+			name: "success",
+			type: "boolean",
+			default: "false",
+			desc: "Borda verde de validação (campo válido).",
 		},
 	],
 	events: [

@@ -6,7 +6,7 @@ import type { ComponentDoc } from '../types';
 export const breadcrumbDoc: ComponentDoc = {
 	tag: "fx-breadcrumb",
 	title: "Breadcrumb",
-	group: "Layout",
+	group: "Navegação",
 	lead: "Trilha de navegação hierárquica. Itens via slot `item`; separador automático entre eles, último item marcado como página atual.",
 	imports: ["import '@wrrdev/fenix-ui/breadcrumb';"],
 	demoHtml: (attrs) =>

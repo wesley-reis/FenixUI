@@ -14,9 +14,19 @@ export const datepickerDoc: ComponentDoc = {
 	imports: ["import '@wrrdev/fenix-ui/datepicker';"],
 	demoHtml: (a) => `<fx-datepicker ${a}></fx-datepicker>`,
 	variantsHtml: () =>
-		`<fx-datepicker placeholder="Data única" value="2026-08-15"></fx-datepicker>
-       <fx-datepicker mode="range" placeholder="Período"></fx-datepicker>
-       <fx-datepicker mode="multiple" placeholder="Várias datas"></fx-datepicker>`,
+		`<div style="display:flex;flex-direction:column;gap:12px">
+			<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+				<fx-datepicker placeholder="Data única" value="2026-08-15"></fx-datepicker>
+				<fx-datepicker mode="range" placeholder="Período"></fx-datepicker>
+				<fx-datepicker mode="multiple" placeholder="Várias datas"></fx-datepicker>
+			</div>
+			<h4>Validação (error / success)</h4>
+			<p style="font-size:12px;color:var(--fx-text-muted);margin:0 0 8px">Borda vermelha com <code>error</code>, verde com <code>success</code>. Combine com <code>fx-alert</code> no submit (ver página Formulários).</p>
+			<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+				<fx-datepicker error placeholder="error"></fx-datepicker>
+				<fx-datepicker success placeholder="success"></fx-datepicker>
+			</div>
+		</div>`,
 	controls: [
 		{
 			kind: "select",
@@ -40,6 +50,8 @@ export const datepickerDoc: ComponentDoc = {
 			hint: "dd/mm/yyyy HH:MM:SS",
 		},
 		{ kind: "toggle", attr: "disabled", label: "Desabilitado" },
+		{ kind: "toggle", attr: "error", label: "Erro" },
+		{ kind: "toggle", attr: "success", label: "Sucesso" },
 		{
 			kind: "select",
 			attr: "size",
@@ -47,6 +59,7 @@ export const datepickerDoc: ComponentDoc = {
 			options: sizes,
 			value: "md",
 		},
+		{ kind: "toggle", attr: "full", label: "Largura total (full)" },
 	],
 	attributes: [
 		{
@@ -120,6 +133,24 @@ export const datepickerDoc: ComponentDoc = {
 			type: `'sm' | 'md' | 'lg'`,
 			default: `'md'`,
 			desc: "Altura do campo.",
+		},
+		{
+			name: "full",
+			type: "boolean",
+			default: "false",
+			desc: "Largura 100% acompanhando o elemento pai (host vira block; min-width por modo é descartado).",
+		},
+		{
+			name: "error",
+			type: "boolean",
+			default: "false",
+			desc: "Borda vermelha de validação (ex.: campo obrigatório vazio no submit). Combine com fx-alert para a mensagem (ver página Formulários).",
+		},
+		{
+			name: "success",
+			type: "boolean",
+			default: "false",
+			desc: "Borda verde de validação (campo válido).",
 		},
 	],
 	events: [

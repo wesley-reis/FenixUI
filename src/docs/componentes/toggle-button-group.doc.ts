@@ -6,7 +6,7 @@ import type { ComponentDoc } from '../types';
 export const toggleButtonGroupDoc: ComponentDoc = {
 	tag: "fx-toggle-button-group",
 	title: "Toggle Button",
-	group: "Formulario",
+	group: "Formulário",
 	lead: "Grupo de botões de seleção múltipla ou única. Cada opção é definida com slot=\"option\" e atributo value.",
 	imports: ["import '@wrrdev/fenix-ui/toggle-button-group';"],
 	demoHtml: (attrs) =>
@@ -16,7 +16,7 @@ export const toggleButtonGroupDoc: ComponentDoc = {
 	},
 	controls: [
 		{ kind: "toggle", attr: "multiple", label: "Seleção múltipla" },
-		{ kind: "select", attr: "size", label: "Tamaño", options: ["sm", "md", "lg"], value: "md" },
+		{ kind: "select", attr: "size", label: "Tamanho", options: ["sm", "md", "lg"], value: "md" },
 	],
 	attributes: [
 		{ name: "multiple", type: "boolean", default: "false", desc: "Permite selecionar várias opções." },

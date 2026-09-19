@@ -61,6 +61,60 @@ describe('fx-button', () => {
     expect(iconWrap.hasAttribute('hidden')).toBe(true);
   });
 
+  it('attr icon renderiza glifo via ligadura e mostra o container', () => {
+    const el = mount('icon=save');
+    const iconWrap = el.shadowRoot!.querySelector('.btn__icon')!;
+    expect(iconWrap.hasAttribute('hidden')).toBe(false);
+    const glyph = iconWrap.querySelector('.fx-icon');
+    expect(glyph?.textContent).toBe('save');
+  });
+
+  it('slot icon vence o attr icon', () => {
+    const el = document.createElement('fx-button');
+    el.setAttribute('icon', 'save');
+    el.innerHTML = '<i slot="icon" class="custom">x</i>Salvar';
+    document.body.appendChild(el);
+    const iconWrap = el.shadowRoot!.querySelector('.btn__icon')!;
+    expect(iconWrap.querySelector('slot[name="icon"]')).toBeTruthy();
+    expect(iconWrap.querySelector('.fx-icon')).toBeFalsy();
+  });
+
+  it('icon-pos=right coloca o ícone depois do rótulo', () => {
+    const el = mount('icon=save icon-pos=right');
+    const btn = el.shadowRoot!.querySelector('button')!;
+    const children = [...btn.children].map((n) => n.className);
+    expect(children.indexOf('btn__label')).toBeLessThan(children.indexOf('btn__icon'));
+  });
+
+  it('escapa HTML no attr icon (sem XSS)', () => {
+    const el = mount();
+    el.setAttribute('icon', '<img src=x onerror=alert(1)>');
+    const iconWrap = el.shadowRoot!.querySelector('.btn__icon')!;
+    expect(iconWrap.innerHTML).not.toContain('<img');
+    expect(iconWrap.textContent).toContain('<img');
+  });
+
+  it('full publica o CSS de largura total no shadow', () => {
+    const el = mount('full');
+    const styles = (el.constructor as any).styles as string;
+    expect(styles).toContain(':host([full])');
+    expect(styles).toContain('width: 100%');
+  });
+
+  it('icon-only (sem rótulo) recebe classe de botão quadrado centralizado', () => {
+    const el = document.createElement('fx-button');
+    el.setAttribute('icon', 'save');
+    el.setAttribute('aria-label', 'Buscar');
+    document.body.appendChild(el);
+    const btn = el.shadowRoot!.querySelector('button')!;
+    expect(btn.classList.contains('btn--icon-only')).toBe(true);
+  });
+
+  it('com rótulo não recebe a classe icon-only', () => {
+    const el = mount('icon=save');
+    expect(el.shadowRoot!.querySelector('button')!.classList.contains('btn--icon-only')).toBe(false);
+  });
+
   it('dispara evento de clique no host (composed)', () => {
     const el = mount();
     let clicked = 0;
