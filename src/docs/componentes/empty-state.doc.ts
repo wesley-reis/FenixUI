@@ -20,7 +20,7 @@ export const emptyStateDoc: ComponentDoc = {
 		{ kind: "text", attr: "icon", label: "Ícone", hint: "📭" },
 	],
 	attributes: [
-		{ name: "icon", type: "string", default: "'📭'", desc: "Glifo/emoji exibido no topo." },
+		{ name: "icon", type: "string", default: "'📭'", desc: "Glifo Fenix Icons (ex.: icon=\"inventory_2\", requer '@wrrdev/fenix-ui/icons') ou emoji/texto livre exibido no topo." },
 		{ name: "heading", type: "string", default: "''", desc: "Título do estado vazio." },
 		{ name: "description", type: "string", default: "''", desc: "Texto de apoio." },
 	],

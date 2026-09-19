@@ -22,6 +22,7 @@ import type {
   FxDropdownItemProps,
   FxDropdownProps,
   FxDrawerProps,
+  FxFileUploadProps,
   FxFloatlabelProps,
   FxInputProps,
   FxMultiselectProps,
@@ -73,6 +74,7 @@ declare module '@vue/runtime-core' {
     'fx-dropdown-item': FxComp<FxDropdownItemProps>;
     'fx-pagination': FxComp<FxPaginationProps>;
     'fx-autocomplete': FxComp<FxAutocompleteProps>;
+    'fx-fileupload': FxComp<FxFileUploadProps>;
   }
 }
 
@@ -105,6 +107,7 @@ declare module '@vue/runtime-dom' {
     'fx-dropdown-item': FxDropdownItemProps;
     'fx-pagination': FxPaginationProps;
     'fx-autocomplete': FxAutocompleteProps;
+    'fx-fileupload': FxFileUploadProps;
   }
 }
 

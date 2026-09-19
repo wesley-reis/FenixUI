@@ -123,18 +123,45 @@ export function formatHtml(src: string): string {
 }
 
 
-function apiTable(title: string, rows: ApiRow[], cols: string[]): string {
-  const head = cols.map((c) => `<th>${c}</th>`).join('');
+/** Coluna de tabela de API: rótulo + célula derivada da linha. */
+type ApiColumn = [label: string, cell: (row: ApiRow) => string];
+
+const API_NAME = (r: ApiRow): string => `<td><code class="inline">${esc(r.name)}</code></td>`;
+const API_TYPE = (r: ApiRow): string => (r.type ? `<td class="type">${esc(r.type)}</td>` : '<td>—</td>');
+const API_DEFAULT = (r: ApiRow): string => (r.default ? `<td class="default">${esc(r.default)}</td>` : '<td>—</td>');
+const API_DESC = (r: ApiRow): string => `<td>${r.desc}</td>`;
+
+/**
+ * Monta as colunas de uma tabela de API com rótulos adequados ao contexto.
+ * Colunas opcionais omitidas (ex.: eventos não têm "Padrão") simplesmente não
+ * são renderizadas — evita colunas sempre vazias ("—") na documentação.
+ */
+function columns(labels: {
+  name: string;
+  type?: string;
+  default?: string;
+  desc?: string;
+}): ApiColumn[] {
+  const cols: ApiColumn[] = [[labels.name, API_NAME]];
+  if (labels.type) cols.push([labels.type, API_TYPE]);
+  if (labels.default) cols.push([labels.default, API_DEFAULT]);
+  cols.push([labels.desc ?? 'Descrição', API_DESC]);
+  return cols;
+}
+
+/** Atributos/propriedades e variáveis CSS: Nome | Tipo | Padrão | Descrição. */
+const COLS_ATTR = columns({ name: 'Nome', type: 'Tipo', default: 'Padrão' });
+/** Eventos não têm valor padrão: Evento | Tipo | Descrição. */
+const COLS_EVENT = columns({ name: 'Evento', type: 'Tipo' });
+/** Slots só têm nome e descrição. */
+const COLS_SLOT = columns({ name: 'Slot' });
+/** Variáveis CSS: Variável | Tipo | Padrão | Descrição. */
+const COLS_CSSVAR = columns({ name: 'Variável', type: 'Tipo', default: 'Padrão' });
+
+function apiTable(title: string, rows: ApiRow[], cols: ApiColumn[]): string {
+  const head = cols.map(([label]) => `<th>${label}</th>`).join('');
   const body = rows
-    .map((r) => {
-      const cells = [
-        `<td><code class="inline">${esc(r.name)}</code></td>`,
-        r.type ? `<td class="type">${esc(r.type)}</td>` : '<td>—</td>',
-        r.default ? `<td class="default">${esc(r.default)}</td>` : '<td>—</td>',
-        `<td>${r.desc}</td>`,
-      ];
-      return `<tr>${cells.filter((_, i) => cols[i]).join('')}</tr>`;
-    })
+    .map((r) => `<tr>${cols.map(([, cell]) => cell(r)).join('')}</tr>`)
     .join('');
   return `<h3>${title}</h3><table class="api"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
 }
@@ -293,7 +320,7 @@ FenixUI.setTokens({
         { name: 'effect', type: `ripple ('1'/'0'), focus-ring`, default: 'ligados', desc: 'Ripple do botão e anel de foco dos campos — desative para visual sem sobra.' },
         { name: 'z', type: 'base, dropdown, modal, toast', default: '1000–1200', desc: 'Camadas de sobreposição.' },
       ],
-      ['Grupo', 'Chaves', 'Padrão', 'Descrição'],
+      columns({ name: 'Grupo', type: 'Chaves', default: 'Padrão' }),
     )}
     ${codeBlock("// O preset só precisa do que for diferente do tema base:\nFenixUI.setTokens({\n  color: { primary: '#0d9488' },   // só a cor primária muda\n  effect: { 'focus-ring': 'none' }, // campos sem anel de foco\n  size: { lg: '52px' },             // só o tamanho lg fica maior\n});")}
     <h3>API de tema</h3>
@@ -303,7 +330,7 @@ FenixUI.setTokens({
       { name: 'FenixUI.configure(options)', type: 'ConfigureOptions', desc: 'Configuração combinada; retorna o estado ativo.' },
       { name: 'FenixUI.resetTheme()', type: '', desc: 'Volta ao tema claro padrão, sem overrides.' },
       { name: 'applyPreset(preset, mode)', type: `preset: string, mode: 'light' | 'dark'`, desc: 'Aplica um preset nomeado + modo.' },
-    ], ['Método', 'Tipo', 'Padrão', 'Descrição'])}
+    ], columns({ name: 'Método', type: 'Tipo' }))}
     <h3>Tokens ativos agora</h3>
     <div class="swatches" id="swatches"></div>
     ${codeBlock("// Override customizado\nFenixUI.setTokens({\n  color: { primary: '#0d9488' },\n  radius: { md: '16px' },\n});")}
@@ -711,26 +738,31 @@ function setupHeader(): void {
 /* ------------------------------------------------------------------ */
 
 function buildSidebar(): void {
-  const groups = new Map<string, { id: string; title: string }[]>();
-    groups.set('Guia', [
-    { id: 'introduction', title: 'Introdução' },
-    { id: 'vue3', title: 'Vue 3 / Nuxt' },
-    { id: 'integrations', title: 'CDN / React / JSF' },
-    { id: 'auto-import', title: 'Auto Import' },
-    { id: 'icons', title: 'Ícones' },
-    { id: 'theming', title: 'Temas' },
-  ]);
-  for (const c of components) {
-    if (!groups.has(c.group)) groups.set(c.group, []);
-    groups.get(c.group)!.push({ id: c.tag, title: c.title });
-  }
-  document.getElementById('sidebar')!.innerHTML = [...groups.entries()]
-    .map(
-      ([group, items]) =>
-        `<div class="group">${group}</div>` +
-        items.map((i) => `<a href="#/${i.id}" data-id="${i.id}">${i.title}</a>`).join(''),
-    )
-    .join('');
+	const groups = new Map<string, { id: string; title: string }[]>();
+	groups.set("Guia", [
+		{ id: "introduction", title: "Introdução" },
+		{ id: "vue3", title: "Vue 3 / Nuxt" },
+		{ id: "integrations", title: "CDN / React / JSF" },
+		{ id: "auto-import", title: "Auto Import" },
+		{ id: "icons", title: "Ícones" },
+		{ id: "theming", title: "Temas" },
+		{ id: "forms", title: "Formulários" },
+	]);
+	for (const c of components) {
+		if (!groups.has(c.group)) groups.set(c.group, []);
+		groups.get(c.group)!.push({ id: c.tag, title: c.title });
+	}
+	document.getElementById("sidebar")!.innerHTML = [...groups.entries()]
+		.map(
+			([group, items]) =>
+				`<div class="group">${group}</div>` +
+				items
+					.map(
+						(i) => `<a href="#/${i.id}" data-id="${i.id}">${i.title}</a>`,
+					)
+					.join(""),
+		)
+		.join("");
 }
 
 /**
@@ -740,79 +772,100 @@ function buildSidebar(): void {
  * para que cada exemplo interno tenha seu próprio par preview/código.
  */
 function renderVariantCards(doc: ComponentDoc): string {
-  const parsed = new DOMParser().parseFromString(doc.variantsHtml!(), 'text/html');
-  const cards: string[] = [];
+	const parsed = new DOMParser().parseFromString(
+		doc.variantsHtml!(),
+		"text/html",
+	);
+	const cards: string[] = [];
 
-  const pushCard = (el: Element, title: string): void => {
-    const html = el.outerHTML;
-    cards.push(
-      `<div class="example-card">` +
-        (title ? `<div class="example-title">${esc(title)}</div>` : '') +
-        `<div class="example-stage">${html}</div>` +
-        `<div class="code-block example-code"><pre><code>${esc(formatHtml(html))}</code></pre><button class="copy-btn">Copiar</button></div>` +
-      `</div>`,
-    );
-  };
+	const pushCard = (el: Element, title: string): void => {
+		const html = el.outerHTML;
+		cards.push(
+			`<div class="example-card">` +
+				(title ? `<div class="example-title">${esc(title)}</div>` : "") +
+				`<div class="example-stage">${html}</div>` +
+				`<div class="code-block example-code"><pre><code>${esc(formatHtml(html))}</code></pre><button class="copy-btn">Copiar</button></div>` +
+				`</div>`,
+		);
+	};
 
-  const walk = (parent: ParentNode, inheritedTitle: string): void => {
-    for (const node of [...parent.childNodes]) {
-      if (node.nodeType === Node.TEXT_NODE) continue;
-      if (!(node instanceof Element)) continue;
-      if (/^H[1-4]$/.test(node.tagName)) continue; // já capturado abaixo
-      // Wrapper genérico: div sem texto próprio e com mais de 1 filho elemento → abre.
-      const isGenericWrapper =
-        node.tagName === 'DIV' &&
-        !node.textContent?.trim() &&
-        [...node.children].length > 1;
-      if (isGenericWrapper) {
-        walk(node, inheritedTitle);
-        continue;
-      }
-      const title =
-        node.previousElementSibling && /^H[1-4]$/.test(node.previousElementSibling.tagName)
-          ? node.previousElementSibling.textContent!.trim()
-          : inheritedTitle;
-      pushCard(node, title);
-    }
-  };
-  walk(parsed.body, '');
+	const walk = (parent: ParentNode, inheritedTitle: string): void => {
+		for (const node of [...parent.childNodes]) {
+			if (node.nodeType === Node.TEXT_NODE) continue;
+			if (!(node instanceof Element)) continue;
+			if (/^H[1-4]$/.test(node.tagName)) continue; // já capturado abaixo
+			// Wrapper genérico: div sem texto próprio e com mais de 1 filho elemento → abre.
+			const isGenericWrapper =
+				node.tagName === "DIV" &&
+				!node.textContent?.trim() &&
+				[...node.children].length > 1;
+			if (isGenericWrapper) {
+				walk(node, inheritedTitle);
+				continue;
+			}
+			const title =
+				node.previousElementSibling &&
+				/^H[1-4]$/.test(node.previousElementSibling.tagName)
+					? node.previousElementSibling.textContent!.trim()
+					: inheritedTitle;
+			pushCard(node, title);
+		}
+	};
+	walk(parsed.body, "");
 
-  if (!cards.length) return '';
-  return `<div class="examples">${cards.join('')}</div>`;
+	if (!cards.length) return "";
+	return `<div class="examples">${cards.join("")}</div>`;
 }
 
 /** Snippet de tipagem TypeScript gerado a partir da tabela de atributos. */
 function renderTyping(doc: ComponentDoc): string {
-  const pascal = doc.tag
-    .split('-')
-    .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
-    .join('');
-  const iface = doc.attributes
-    .filter((a) => /^[a-z][a-z0-9-]*$/i.test(a.name))
-    .map((a) => `  /** ${a.desc.replace(/<[^>]+>/g, '')} */\n  '${a.name}'?: ${a.type};`)
-    .join('\n');
-  if (!iface) return '';
-  return [
-    '<h3>Tipagem TypeScript</h3>',
-    `<p>Todas as variantes e propriedades têm tipos prontos — importe de <code class="inline">@wrrdev/fenix-ui/vue</code>`,
-    `(Vue/Volar) ou <code class="inline">@wrrdev/fenix-ui/jsx</code> (React/TSX) e o editor autocompleta cada atributo:</p>`,
-    codeBlock(`import type { Fx${pascal}Props } from '@wrrdev/fenix-ui/vue';\n\nconst props: Fx${pascal}Props = {\n${iface.split('\n').slice(0, 14).join('\n')}\n};`),
-  ].join(' ');
+	const pascal = doc.tag
+		.split("-")
+		.map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+		.join("");
+	const iface = doc.attributes
+		.filter((a) => /^[a-z][a-z0-9-]*$/i.test(a.name))
+		.map(
+			(a) =>
+				`  /** ${a.desc.replace(/<[^>]+>/g, "")} */\n  '${a.name}'?: ${a.type};`,
+		)
+		.join("\n");
+	if (!iface) return "";
+	return [
+		"<h3>Tipagem TypeScript</h3>",
+		`<p>Todas as variantes e propriedades têm tipos prontos — importe de <code class="inline">@wrrdev/fenix-ui/vue</code>`,
+		`(Vue/Volar) ou <code class="inline">@wrrdev/fenix-ui/jsx</code> (React/TSX) e o editor autocompleta cada atributo:</p>`,
+		codeBlock(
+			`import type { Fx${pascal}Props } from '@wrrdev/fenix-ui/vue';\n\nconst props: Fx${pascal}Props = {\n${iface.split("\n").slice(0, 14).join("\n")}\n};`,
+		),
+	].join(" ");
 }
 
 /** Coleta todas as tags fx-* usadas no demoHtml e variantsHtml do doc. */
 function collectDemoTags(doc: ComponentDoc): string[] {
-  const html = doc.demoHtml('') + (doc.variantsHtml?.() ?? '');
-  const all = [...new Set([...html.matchAll(/<fx-[a-z-]+/g)].map((m) => m[0].slice(1)))];
-  // Só aguarda tags que são custom elements registrados (fx-tab é slot, não CE).
-  return all.filter((t) => t in componentLoaders);
+	const html = doc.demoHtml("") + (doc.variantsHtml?.() ?? "");
+	const all = [
+		...new Set([...html.matchAll(/<fx-[a-z-]+/g)].map((m) => m[0].slice(1))),
+	];
+	// Só aguarda tags que são custom elements registrados (fx-tab é slot, não CE).
+	return all.filter((t) => t in componentLoaders);
 }
 
 /** Componentes usados pelos controles do playground (buildControls). */
-const CONTROL_TAGS = ['fx-select', 'fx-switch', 'fx-input'];
+const CONTROL_TAGS = ["fx-select", "fx-switch", "fx-input"];
 
 /** Componentes usados pelo drawer de customização de tema no header. */
-const THEME_DRAWER_TAGS = ['fx-drawer', 'fx-tabs', 'fx-tab-panel', 'fx-button', 'fx-badge', 'fx-spinner', 'fx-input', 'fx-select', 'fx-switch'];
+const THEME_DRAWER_TAGS = [
+	"fx-drawer",
+	"fx-tabs",
+	"fx-tab-panel",
+	"fx-button",
+	"fx-badge",
+	"fx-spinner",
+	"fx-input",
+	"fx-select",
+	"fx-switch",
+];
 
 async function renderComponentPage(doc: ComponentDoc): Promise<void> {
 	// Garante que todos os fx-* usados no demo, variantes E nos controles do
@@ -832,7 +885,7 @@ async function renderComponentPage(doc: ComponentDoc): Promise<void> {
     <p class="lead">${doc.lead}</p>
     <h3>Importação (tree-shakeable)</h3>
     ${codeBlock(doc.imports.join("\n"))}
-    ${doc.initNote ? `<div class="note"><strong>Nota:</strong> ${doc.initNote}</div>` : ''}
+    ${doc.initNote ? `<div class="note"><strong>Nota:</strong> ${doc.initNote}</div>` : ""}
     <h3>Playground</h3>
     <div class="demo">
       <div class="demo-stage" id="stage"></div>
@@ -840,11 +893,11 @@ async function renderComponentPage(doc: ComponentDoc): Promise<void> {
     </div>
     ${codeBlock(`<${doc.tag}>…</${doc.tag}>`)}
     <h3>Variantes e usos (modelo + código)</h3>
-    ${doc.variantsHtml ? renderVariantCards(doc) : ''}
-    ${apiTable("Atributos / Propriedades", doc.attributes, ["Nome", "Tipo", "Padrão", "Descrição"])}
-    ${doc.events ? apiTable("Eventos", doc.events, ["Evento", "Tipo", "Padrão", "Descrição"]) : ""}
-    ${doc.slots ? apiTable("Slots", doc.slots, ["Slot", "Tipo", "Padrão", "Descrição"]) : ""}
-    ${doc.cssVars ? apiTable("Variáveis CSS", doc.cssVars, ["Variável", "Tipo", "Padrão", "Descrição"]) : ""}
+    ${doc.variantsHtml ? renderVariantCards(doc) : ""}
+    ${apiTable("Atributos / Propriedades", doc.attributes, COLS_ATTR)}
+    ${doc.events?.length ? apiTable("Eventos", doc.events, COLS_EVENT) : ""}
+    ${doc.slots?.length ? apiTable("Slots", doc.slots, COLS_SLOT) : ""}
+    ${doc.cssVars?.length ? apiTable("Variáveis CSS", doc.cssVars, COLS_CSSVAR) : ""}
     ${renderTyping(doc)}
   `;
 
@@ -867,7 +920,7 @@ async function renderComponentPage(doc: ComponentDoc): Promise<void> {
 			);
 			codeEl.textContent = formatHtml(clean);
 		}
-	};;
+	};
 	main
 		.querySelectorAll("fx-select[data-attr], fx-switch[data-attr]")
 		.forEach((el) => el.addEventListener("change", refresh));
@@ -879,23 +932,215 @@ async function renderComponentPage(doc: ComponentDoc): Promise<void> {
 	wireCopyButtons(main);
 }
 
+/* ------------------------------------------------------------------ */
+/* Página: Formulários (modelos prontos de cadastro)                   */
+/* ------------------------------------------------------------------ */
+
+const FORMS_TAGS = [
+	"fx-input",
+	"fx-select",
+	"fx-multiselect",
+	"fx-datepicker",
+	"fx-textarea",
+	"fx-floatlabel",
+	"fx-button",
+	"fx-alert",
+	"fx-fileupload",
+	"fx-autocomplete",
+];
+
+/** Card "modelo + código" de um formulário pronto. */
+function formModelCard(title: string, desc: string, html: string): string {
+	return (
+		`<div class="example-card">` +
+		`<div class="example-title">${esc(title)}</div>` +
+		`<p style="margin:0 0 12px;font-size:13px;color:var(--fx-text-muted); text-align:center">${esc(desc)}</p>` +
+		`<div class="example-stage">${html}</div>` +
+		`<div class="code-block example-code"><pre><code>${esc(formatHtml(html))}</code></pre><button class="copy-btn">Copiar</button></div>` +
+		`</div>`
+	);
+}
+
+/**
+ * Validação dos modelos: ao clicar em [data-save], campos vazios recebem
+ * error (+ error-text quando dentro de fx-floatlabel, que propaga a borda
+ * vermelha para o controle interno). Digitar/trocar valor limpa o erro.
+ */
+function wireFormValidation(root: HTMLElement): void {
+	root
+		.querySelectorAll<HTMLElement>("[data-form-validate]")
+		.forEach((form) => {
+			const fields = form.querySelectorAll<HTMLElement>(
+				"fx-input, fx-select, fx-multiselect, fx-datepicker, fx-textarea, fx-floatlabel",
+			);
+			const alertEl = form.querySelector("fx-alert");
+			const save = form.querySelector<HTMLElement>("[data-save]");
+
+			const clearError = (f: HTMLElement): void => {
+				f.removeAttribute("error");
+				f.removeAttribute("error-text");
+			};
+			fields.forEach((f) => {
+				f.addEventListener("input", () => clearError(f));
+				f.addEventListener("change", () => clearError(f));
+			});
+
+			save?.addEventListener("click", () => {
+				let invalid = false;
+				fields.forEach((f) => {
+					const isFloat = f.tagName.toLowerCase() === "fx-floatlabel";
+					const ctrl = (isFloat ? f.firstElementChild : f) as unknown as {
+						value?: unknown;
+						values?: unknown;
+						getAttribute?: (name: string) => string | null;
+					} | null;
+					let value = "";
+					if (ctrl) {
+						value = Array.isArray(ctrl.values)
+							? (ctrl.values as string[]).join(",")
+							: String(ctrl.value ?? ctrl.getAttribute?.("value") ?? "");
+					}
+					if (!value.trim()) {
+						invalid = true;
+						f.setAttribute("error", "");
+						if (isFloat)
+							f.setAttribute("error-text", "Campo obrigatório");
+					} else {
+						clearError(f);
+					}
+				});
+				if (alertEl) alertEl.hidden = !invalid;
+			});
+		});
+}
+
+const FORM_MODEL_1 = `
+<div data-form-validate style="display:flex;flex-direction:column;gap:16px;max-width:520px">
+  <fx-alert variant="danger" title="Verifique o formulário" hidden>Preencha os campos destacados em vermelho.</fx-alert>
+  <fx-input full icon="person" placeholder="Nome completo"></fx-input>
+  <fx-input full icon="mail" type="email" placeholder="E-mail"></fx-input>
+  <fx-input full icon="lock" type="password" placeholder="Senha"></fx-input>
+  <fx-input full icon="call" placeholder="Telefone"></fx-input>
+  <fx-textarea full rows="3" placeholder="Observações"></fx-textarea>
+  <div style="display:flex;gap:12px;justify-content:flex-end">
+    <fx-button variant="ghost">Cancelar</fx-button>
+    <fx-button data-save><i slot="icon" class="fx-icon fx-icon-save"></i>Salvar</fx-button>
+  </div>
+</div>`;
+
+const FORM_MODEL_2 = `
+<div data-form-validate style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:760px">
+  <fx-alert variant="danger" title="Verifique o formulário" hidden style="grid-column:1/-1">Preencha os campos destacados em vermelho.</fx-alert>
+  <fx-input full icon="person" placeholder="Nome"></fx-input>
+  <fx-input full placeholder="Sobrenome"></fx-input>
+  <fx-input full icon="mail" type="email" placeholder="E-mail"></fx-input>
+  <fx-input full icon="call" placeholder="Telefone"></fx-input>
+  <fx-input full icon="badge" placeholder="CPF"></fx-input>
+  <fx-datepicker full placeholder="Data de nascimento"></fx-datepicker>
+  <fx-input full icon="location_city" placeholder="Cidade"></fx-input>
+  <fx-select full placeholder="UF"><option value="sp">São Paulo</option><option value="rj">Rio de Janeiro</option><option value="mg">Minas Gerais</option></fx-select>
+  <div style="grid-column:1/-1;display:flex;gap:12px;justify-content:flex-end">
+    <fx-button variant="outline">Cancelar</fx-button>
+    <fx-button data-save>Salvar cadastro</fx-button>
+  </div>
+</div>`;
+
+const FORM_MODEL_3 = `
+<div data-form-validate style="display:flex;flex-direction:column;gap:16px;max-width:820px">
+  <fx-alert variant="danger" title="Verifique o formulário" hidden>Preencha os campos destacados em vermelho.</fx-alert>
+  <h4 style="margin:0;font-size:13px;color:var(--fx-text-muted)">Endereço</h4>
+  <div style="display:grid;grid-template-columns:2fr 1fr 2fr;gap:12px">
+    <fx-input full icon="location_on" placeholder="CEP"></fx-input>
+    <fx-input full placeholder="Número"></fx-input>
+    <fx-input full placeholder="Complemento"></fx-input>
+  </div>
+  <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px">
+    <fx-input full placeholder="Logradouro"></fx-input>
+    <fx-select full placeholder="Estado"><option value="sp">SP</option><option value="rj">RJ</option><option value="mg">MG</option></fx-select>
+    <fx-select full placeholder="Perfil"><option value="admin">Administrador</option><option value="user">Usuário</option></fx-select>
+  </div>
+  <h4 style="margin:0;font-size:13px;color:var(--fx-text-muted)">Preferências</h4>
+  <fx-multiselect full searchable placeholder="Interesses"><option value="tech">Tecnologia</option><option value="esporte">Esporte</option><option value="arte">Arte</option><option value="gastronomia">Gastronomia</option></fx-multiselect>
+  <fx-autocomplete full icon="work" placeholder="Cargo" source='["Desenvolvedor","Designer","Analista","Gerente"]'></fx-autocomplete>
+  <fx-fileupload full icon="upload_file" label="Foto do documento" accept=".pdf,.png,.jpg"></fx-fileupload>
+  <div style="display:flex;gap:12px;justify-content:flex-end">
+    <fx-button variant="ghost">Cancelar</fx-button>
+    <fx-button data-save variant="success">Concluir cadastro</fx-button>
+  </div>
+</div>`;
+
+const FORM_MODEL_4 = `
+<div data-form-validate style="display:grid;grid-template-columns:1fr 1fr;gap:20px 16px;max-width:760px">
+  <fx-alert variant="danger" title="Verifique o formulário" hidden style="grid-column:1/-1">Preencha os campos destacados em vermelho.</fx-alert>
+  <fx-floatlabel full><fx-input full></fx-input><label>Nome completo</label></fx-floatlabel>
+  <fx-floatlabel full><fx-input full icon="mail" type="email"></fx-input><label>E-mail</label></fx-floatlabel>
+  <fx-floatlabel full variant="in"><fx-input full icon="lock" type="password"></fx-input><label>Senha</label></fx-floatlabel>
+  <fx-floatlabel full variant="in"><fx-input full icon="lock" type="password"></fx-input><label>Confirmar senha</label></fx-floatlabel>
+  <fx-floatlabel full><fx-select full placeholder="Selecione"><option value="sp">São Paulo</option><option value="rj">Rio de Janeiro</option><option value="mg">Minas Gerais</option></fx-select><label>Estado</label></fx-floatlabel>
+  <fx-floatlabel full><fx-datepicker full></fx-datepicker><label>Nascimento</label></fx-floatlabel>
+  <div style="grid-column:1/-1;display:flex;gap:12px;justify-content:flex-end">
+    <fx-button variant="ghost">Limpar</fx-button>
+    <fx-button data-save>Criar conta</fx-button>
+  </div>
+</div>`;
+
+async function renderForms(): Promise<void> {
+	const main = document.getElementById("main")!;
+	await Promise.all(FORMS_TAGS.map((t) => componentLoaders[t]?.()));
+	await Promise.all(FORMS_TAGS.map((t) => customElements.whenDefined(t)));
+	main.innerHTML = `
+    <h2>Formulários</h2>
+    <p class="lead">Modelos prontos de cadastro combinando os componentes do FenixUI: use <code>full</code> para os campos acompanharem o container, CSS grid para múltiplos campos por linha e <code>error</code>/<code>error-text</code> para a validação. Clique em <strong>Salvar</strong> com campos vazios para ver a validação em ação.</p>
+    <style>
+      /* hidden precisa vencer o display do host do alert */
+      .example-stage fx-alert[hidden] { display: none !important; }
+      /* O palco é display:flex/flex-wrap (index.html): sem isso os modelos
+         colapsam para a largura do conteúdo e o full não estica. */
+      .example-stage [data-form-validate] { flex: 1 1 100%; }
+      /* Os forms são cards opacos centralizados (não transparentes): o palco
+         tem fundo xadrez vazado para mostrar transparência — o form cobre com
+         a cor de superfície, tem largura legível e fica centrado. */
+      .example-stage [data-form-validate] {
+        background: var(--fx-surface-background, #fff);
+        border: 1px solid var(--fx-border-default);
+        border-radius: var(--fx-radius-md);
+        padding: 1.5rem;
+        margin-inline: auto;
+        width: 100%;
+      }
+    </style>
+    <div class="note"><strong>Nota:</strong> com <code>full</code> o campo ocupa a linha inteira (host vira block). Para manter um botão na mesma linha do campo, use o container com <code>display:flex</code> — o campo estica e o botão mantém o tamanho. No <code>fx-floatlabel</code>, o <code>full</code> é propagado automaticamente para o controle interno.</div>
+    ${formModelCard("Modelo 1 — Cadastro em uma coluna (full)", "Campos full empilhados: cada um ocupa a linha toda do container.", FORM_MODEL_1)}
+    ${formModelCard("Modelo 2 — Grid de duas colunas", "Dois campos por linha via CSS grid (grid-template-columns: 1fr 1fr) com full nos campos.", FORM_MODEL_2)}
+    ${formModelCard("Modelo 3 — Misto (múltiplos campos por linha)", "Grids com 2-3 campos por linha, selects, multiselect, autocomplete e fileupload full.", FORM_MODEL_3)}
+    ${formModelCard("Modelo 4 — FloatLabel com validação", "fx-floatlabel full (propagado para o controle) + error/error-text ao salvar com campos vazios.", FORM_MODEL_4)}
+  `;
+	wireFormValidation(main);
+	wireCopyButtons(main);
+}
+
 async function renderRoute(): Promise<void> {
-  const route = location.hash.replace(/^#\//, '') || 'introduction';
-  document.querySelectorAll('#sidebar a').forEach((a) =>
-    a.classList.toggle('active', (a as HTMLAnchorElement).dataset.id === route),
-  );
-  const doc = components.find((c) => c.tag === route);
-  if (doc) {
-    // Import lazy + aguarda o render completo antes de resolver a rota.
-    await componentLoaders[route]?.();
-    await renderComponentPage(doc);
-    }
-  else if (route === 'theming') await renderTheming();
-  else if (route === 'auto-import') renderAutoImport();
-  else if (route === 'icons') renderIcons();
-  else if (route === 'vue3') renderVue3();
-  else if (route === 'integrations') renderIntegrations();
-  else await renderIntro();
+	const route = location.hash.replace(/^#\//, "") || "introduction";
+	document
+		.querySelectorAll("#sidebar a")
+		.forEach((a) =>
+			a.classList.toggle(
+				"active",
+				(a as HTMLAnchorElement).dataset.id === route,
+			),
+		);
+	const doc = components.find((c) => c.tag === route);
+	if (doc) {
+		// Import lazy + aguarda o render completo antes de resolver a rota.
+		await componentLoaders[route]?.();
+		await renderComponentPage(doc);
+	} else if (route === "theming") await renderTheming();
+	else if (route === "auto-import") renderAutoImport();
+	else if (route === "icons") renderIcons();
+	else if (route === "forms") await renderForms();
+	else if (route === "vue3") renderVue3();
+	else if (route === "integrations") renderIntegrations();
+	else await renderIntro();
 }
 
 async function renderVue3(): Promise<void> {

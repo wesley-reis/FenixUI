@@ -2,6 +2,7 @@ import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from '../../core/sanitize';
+import { FENIX_ICON_BASE_CSS, fenixIconHtml } from '../../icons/base-css';
 
 /**
  * <fx-fileupload> — Seletor de arquivos com upload e progresso (estilo FileUpload do PrimeVue).
@@ -147,10 +148,16 @@ export class FxFileUpload extends FxElement {
       min-width: 34px;
       text-align: right;
     }
+    /* Full width: o host estica até o pai e o botão/dropzone acompanha. */
+    :host([full]) { display: block; width: 100%; }
+    :host([full]) .btn { width: 100%; }
+    :host([full]) .drop { width: 100%; }
+    /* Base dos glifos Fenix Icons (o @font-face vem de @wrrdev/fenix-ui/icons). */
+    ${FENIX_ICON_BASE_CSS}
   `;
 
   static override get observedAttributes(): string[] {
-    return ['mode', 'size', 'severity', 'label', 'icon', 'accept', 'multiple', 'disabled', 'show-progress', 'progress', 'value'];
+    return ['mode', 'size', 'severity', 'label', 'icon', 'accept', 'multiple', 'disabled', 'show-progress', 'progress', 'value', 'full'];
   }
 
   get size(): string {
@@ -190,12 +197,12 @@ export class FxFileUpload extends FxElement {
     this.setTemplate(`
       ${advanced
         ? `<div class="drop" part="dropzone" role="button" tabindex="0" aria-label="${esc(label)}">
-             ${icon ? `<span class="icon" aria-hidden="true">${esc(icon)}</span>` : ''}
+             ${icon ? `<span class="icon" part="icon" aria-hidden="true">${fenixIconHtml(icon)}</span>` : ''}
              <span>${esc(label)}</span>
              <span class="hint">ou arraste e solte aqui</span>
            </div>`
         : `<button type="button" class="btn" part="button">
-             ${icon ? `<span class="icon" aria-hidden="true">${esc(icon)}</span>` : ''}
+             ${icon ? `<span class="icon" part="icon" aria-hidden="true">${fenixIconHtml(icon)}</span>` : ''}
              <span>${esc(label)}</span>
            </button>`}
       ${fileInput}

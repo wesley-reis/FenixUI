@@ -14,7 +14,7 @@ export const textareaDoc: ComponentDoc = {
 	demoHtml: (a) =>
 		`<fx-textarea ${a} placeholder="Descreva sua necessidade..."></fx-textarea>`,
 	variantsHtml: () =>
-		'<h4>Tamanhos</h4><div style="display:flex;gap:12px"><fx-textarea size="sm" placeholder="sm"></fx-textarea><fx-textarea size="md" placeholder="md"></fx-textarea><fx-textarea size="lg" placeholder="lg"></fx-textarea></div><h4>Estados</h4><fx-textarea disabled value="Desabilitado"></fx-textarea><fx-textarea readonly value="Somente leitura"></fx-textarea>',
+		'<h4>Tamanhos</h4><div style="display:flex;gap:12px"><fx-textarea size="sm" placeholder="sm"></fx-textarea><fx-textarea size="md" placeholder="md"></fx-textarea><fx-textarea size="lg" placeholder="lg"></fx-textarea></div><h4>Estados</h4><div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center"><fx-textarea disabled value="Desabilitado"></fx-textarea><fx-textarea readonly value="Somente leitura"></fx-textarea></div><h4>Validação (error / success)</h4><p style="font-size:12px;color:var(--fx-text-muted);margin:0 0 8px">Borda vermelha com <code>error</code>/<code>invalid</code>, verde com <code>success</code>/<code>valid</code>. Combine com <code>fx-alert</code> no submit (ver página Formulários).</p><div style="display:flex;gap:12px;flex-wrap:wrap"><fx-textarea error placeholder="error"></fx-textarea><fx-textarea success placeholder="success"></fx-textarea></div>',
 	controls: [
 		{
 			kind: "select",
@@ -26,6 +26,9 @@ export const textareaDoc: ComponentDoc = {
 		{ kind: "text", attr: "maxlength", label: "Máx. caracteres" },
 		{ kind: "toggle", attr: "disabled", label: "Desabilitado" },
 		{ kind: "toggle", attr: "readonly", label: "Somente leitura" },
+		{ kind: "toggle", attr: "error", label: "Erro" },
+		{ kind: "toggle", attr: "success", label: "Sucesso" },
+		{ kind: "toggle", attr: "full", label: "Largura total (full)" },
 	],
 	attributes: [
 		{
@@ -57,6 +60,24 @@ export const textareaDoc: ComponentDoc = {
 			type: "string | boolean",
 			default: "—",
 			desc: "Padrões de formulário.",
+		},
+		{
+			name: "error / invalid",
+			type: "boolean",
+			default: "false",
+			desc: "Borda vermelha de validação (ex.: campo obrigatório vazio no submit). Combine com fx-alert para a mensagem (ver página Formulários).",
+		},
+		{
+			name: "success / valid",
+			type: "boolean",
+			default: "false",
+			desc: "Borda verde de validação (campo válido).",
+		},
+		{
+			name: "full",
+			type: "boolean",
+			default: "false",
+			desc: "Largura 100% acompanhando o elemento pai (host vira block).",
 		},
 	],
 	events: [

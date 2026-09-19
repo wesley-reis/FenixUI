@@ -52,6 +52,9 @@ export class FxMultiselect extends FxElement {
     }
     :host([size='sm']) .trigger { min-height: var(--fx-size-sm); width: 200px; }
     :host([size='lg']) .trigger { min-height: var(--fx-size-lg); width: 280px; font-size: calc(var(--fx-font-size) + 4px); }
+    /* Full width: o host estica até o pai e o trigger acompanha. */
+    :host([full]) { display: block; width: 100%; }
+    :host([full]) .trigger { width: 100%; }
     /* Validação */
     :host([error]) .trigger,
     :host([invalid]) .trigger {
@@ -232,7 +235,9 @@ export class FxMultiselect extends FxElement {
   `;
 
   static override get observedAttributes(): string[] {
-    return ['disabled', 'placeholder'];
+    // `error`/`success` (+ aliases `invalid`/`valid`) PRECISAM ser observados:
+    // é assim que o toggle no playground / setAttribute no submit re-renderiza.
+    return ['disabled', 'placeholder', 'error', 'invalid', 'success', 'valid'];
   }
 
   private observer?: MutationObserver;

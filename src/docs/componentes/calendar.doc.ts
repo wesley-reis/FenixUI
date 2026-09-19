@@ -8,7 +8,7 @@ import type { ComponentDoc } from '../types';
 export const calendarDoc: ComponentDoc = {
 	tag: "fx-calendar",
 	title: "Calendar",
-	group: "Exibição",
+	group: "Formulário",
 	lead: 'Calendário com seleção simples, por período (início/fim) ou múltiplas datas. Clique no mês para escolher meses, no ano para escolher anos, e limite o período com min/max — incluindo ano ("2026") e mês ("2026-03").',
 	imports: ["import '@wrrdev/fenix-ui/calendar';"],
 	demoHtml: (a) => `<fx-calendar ${a}></fx-calendar>`,

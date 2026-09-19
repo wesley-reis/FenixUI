@@ -57,6 +57,10 @@ export class FxSelect extends FxElement {
     }
         :host([size='sm']) .trigger { min-width: 180px; min-height: var(--fx-size-sm); }
     :host([size='lg']) .trigger { min-height: var(--fx-size-lg); font-size: calc(var(--fx-font-size) + 4px); }
+    /* Full width: o host estica até o pai e o trigger acompanha. */
+    :host([full]) { display: block; width: 100%; }
+    :host([full]) .trigger { width: 100%; min-width: 0; }
+    :host([full]) .panel { width: 100%; }
         /* Validação */
     :host([error]) .trigger,
     :host([invalid]) .trigger {
@@ -166,7 +170,9 @@ export class FxSelect extends FxElement {
   // `value` fica FORA da observação: refleti-lo no change não pode
   // re-renderizar o template e fechar o dropdown.
   static override get observedAttributes(): string[] {
-        return ['size', 'disabled', 'placeholder', 'searchable', 'clearable', 'error', 'success'];
+        // `invalid`/`valid` são aliases aceitos no CSS; sem observá-los o
+        // setAttribute no submit não re-renderiza.
+        return ['size', 'disabled', 'placeholder', 'searchable', 'clearable', 'error', 'invalid', 'success', 'valid'];
   }
 
   private observer?: MutationObserver;

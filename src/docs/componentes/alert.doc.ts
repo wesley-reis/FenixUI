@@ -44,6 +44,12 @@ export const alertDoc: ComponentDoc = {
 			default: "false",
 			desc: "Botão de fechar.",
 		},
+		{
+			name: "icon",
+			type: "string",
+			default: "''",
+			desc: "Ícone customizado: nome do glifo Fenix Icons (ex.: icon=\"notification_important\", requer '@wrrdev/fenix-ui/icons') ou emoji/texto livre. Sem o atributo, usa o glifo padrão da variante (ℹ ✓ ⚠ ✕).",
+		},
 	],
 	events: [
 		{

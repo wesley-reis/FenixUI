@@ -297,7 +297,16 @@
       aside a:hover { background: var(--fx-surface-hover); }
       aside a.active { background: color-mix(in srgb, var(--fx-color-primary) 14%, transparent);
         color: var(--fx-color-primary); font-weight: 600; }
-      main { margin-left: var(--doc-sidebar-w); padding: calc(var(--doc-header-h) + 2rem) 2.5rem 4rem; max-width: 980px; }
+      /* Coluna de leitura centralizada no espaço livre à direita do sidebar.
+         flex-column + align-items:center centraliza cada bloco (sem depender de
+         margin-inline, que quebraria nas regras de h2/h3/lead); o max-width
+         evita linhas longas demais em monitores grandes. */
+      main {
+        margin-left: var(--doc-sidebar-w);
+        padding: calc(var(--doc-header-h) + 2rem) 2.5rem 4rem;
+        display: flex; flex-direction: column; align-items: center;
+      }
+      main > * { max-width: 980px; margin-inline: auto; }
 
       /* ---------- Mobile (<768px): sidebar vira drawer ---------- */
       @media (max-width: 767px) {
@@ -320,7 +329,23 @@
       /* ---------- Conteúdo ---------- */
       main h2 { font-size: 1.65rem; margin: 0 0 .35rem; letter-spacing: -.03em; }
       main h3 { margin: 2.2rem 0 .6rem; font-size: 1.05rem; }
+      /* h4 é usado em quase todas as páginas de componente como subtítulo de
+         seção ("Tamanhos", "Estados", "Validação"…): estilo unificado. */
+      main h4 { margin: 1.6rem 0 .5rem; font-size: .95rem; font-weight: 700; letter-spacing: .01em; }
       main .lead { color: var(--fx-text-muted); margin-top: 0; }
+      main p { line-height: 1.6; }
+      /* Caixa de nota (initNote e avisos das páginas-guia) */
+      main .note {
+        border-left: 3px solid var(--fx-color-primary);
+        background: color-mix(in srgb, var(--fx-color-primary) 7%, transparent);
+        border-radius: var(--fx-radius-sm);
+        padding: .8rem 1rem; margin: 0 0 1.6rem;
+        font-size: .92rem; line-height: 1.6;
+      }
+      main .note code {
+        background: color-mix(in srgb, var(--fx-color-primary) 14%, transparent);
+        padding: .1em .35em; border-radius: 4px;
+      }
       code.inline { background: var(--fx-surface-hover); padding: .12em .4em; border-radius: 5px;
         font-size: .86em; font-family: ui-monospace, Consolas, monospace; }
 
@@ -352,6 +377,7 @@
         padding: .7rem 1.1rem .4rem; font-weight: 700;
         color: color-mix(in srgb, var(--fx-color-primary) 80%, var(--fx-text-default));
         text-transform: uppercase; letter-spacing: .06em; font-size: .74rem;
+        text-align: center;
       }
       .example-stage {
         padding: 1.4rem 1.1rem; display: flex; flex-wrap: wrap; gap: .8rem; align-items: center;
@@ -359,6 +385,17 @@
           repeating-conic-gradient(color-mix(in srgb, var(--fx-border-default) 30%, transparent) 0% 25%, transparent 0% 50%)
           0 0 / 18px 18px;
       }
+      /* O palco é flex: um título/parágrafo no nível de topo do bloco precisa de
+         linha própria (sem isso o h4 fica AO LADO dos campos, espremido). */
+      .example-stage > h3,
+      .example-stage > h4,
+      .example-stage > p,
+      .example-stage > strong,
+      .example-stage > .note,
+      .demo-stage > h3,
+      .demo-stage > h4,
+      .demo-stage > p,
+      .demo-stage > .note { flex-basis: 100%; margin: 0; }
       .example-code { margin: 0 !important; border-top: 1px dashed var(--fx-border-default); }
       .example-code pre { border: none; border-radius: 0; background: color-mix(in srgb, var(--fx-surface-hover) 60%, transparent); }
       .example-code .copy-btn { opacity: 1; }

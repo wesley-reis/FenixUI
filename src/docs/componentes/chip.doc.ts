@@ -25,7 +25,7 @@ export const chipDoc: ComponentDoc = {
 	attributes: [
 		{ name: "variant", type: `'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info'`, default: "''", desc: "Cor do chip." },
 		{ name: "size", type: `'sm' | 'md' | 'lg'`, default: "'sm'", desc: "Tamanho do chip." },
-		{ name: "icon", type: "string", default: "''", desc: "Ícone (glifo/emoji) antes do texto." },
+		{ name: "icon", type: "string", default: "''", desc: "Ícone antes do texto: nome do glifo Fenix Icons (ex.: icon=\"check_circle\", requer '@wrrdev/fenix-ui/icons') ou emoji/texto livre." },
 		{ name: "removable", type: "boolean", default: "false", desc: "Exibe o botão × de remoção." },
 		{ name: "selectable", type: "boolean", default: "false", desc: "Clique alterna o estado selected." },
 		{ name: "selected", type: "boolean", default: "false", desc: "Estado selecionado (com selectable)." },
