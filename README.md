@@ -312,6 +312,23 @@ ative o modo estrito do Volar no `tsconfig.json`:
 Todos os componentes com tamanho usam **`md` como padrão** (valores inválidos caem para `md`).
 Escala alinhada ao mercado (Material/Ant): **sm ≈ 32px · md ≈ 40px (padrão) · lg ≈ 48px**.
 
+### Largura dos campos de formulário
+
+Os campos (fx-input, fx-textarea, fx-autocomplete, fx-select, fx-multiselect)
+têm largura padrão fixa, mas ela **respeita CSS externo**: qualquer largura definida no
+elemento — folha de estilo, classe do framework (ex.: w-full/w-64 do Tailwind) ou
+style inline — vence o default, sem precisar do atributo full:
+
+```html
+<fx-input style="width: 320px"></fx-input>
+<fx-input class="w-full"></fx-input>
+```
+
+O default global também é trocável por tokens: --fx-input-width, --fx-textarea-width,
+--fx-autocomplete-width, --fx-multiselect-width e --fx-select-width (com sufixos
+-sm/-lg; para o select, --fx-select-min-width). O atributo full continua
+disponível como atalho para largura 100%.
+
 Eventos usam o nativo `click` no botão; `input`, `change` e o `change` do select são
 `CustomEvent`s **composed** com `detail: { value }` (atravessam o Shadow DOM).
 

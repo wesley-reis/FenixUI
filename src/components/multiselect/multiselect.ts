@@ -21,13 +21,17 @@ export class FxMultiselect extends FxElement {
       font-family: var(--fx-font-family);
       font-size: var(--fx-font-size);
       position: relative;
+      /* Largura padrão no HOST: CSS externo, classes e style inline no elemento
+         vencem este default naturalmente (regras do documento > :host). */
+      width: var(--fx-multiselect-width, 240px);
     }
     .trigger {
       display: inline-flex;
       align-items: center;
       flex-wrap: nowrap;
       gap: var(--fx-space-xs);
-      width: 240px;
+      /* Acompanha a largura definida no :host. */
+      width: 100%;
       box-sizing: border-box;
       min-height: var(--fx-size-md);
       padding: var(--fx-space-xs) var(--fx-space-md);
@@ -50,8 +54,10 @@ export class FxMultiselect extends FxElement {
       min-width: 0;
       overflow: hidden;
     }
-    :host([size='sm']) .trigger { min-height: var(--fx-size-sm); width: 200px; }
-    :host([size='lg']) .trigger { min-height: var(--fx-size-lg); width: 280px; font-size: calc(var(--fx-font-size) + 4px); }
+    :host([size='sm']) { width: var(--fx-multiselect-width-sm, 200px); }
+    :host([size='sm']) .trigger { min-height: var(--fx-size-sm); }
+    :host([size='lg']) { width: var(--fx-multiselect-width-lg, 280px); }
+    :host([size='lg']) .trigger { min-height: var(--fx-size-lg); font-size: calc(var(--fx-font-size) + 4px); }
     /* Full width: o host estica até o pai e o trigger acompanha. */
     :host([full]) { display: block; width: 100%; }
     :host([full]) .trigger { width: 100%; }

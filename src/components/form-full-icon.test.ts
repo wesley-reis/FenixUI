@@ -66,11 +66,51 @@ describe('form full width (opt-in)', () => {
     expect(shadowCss(el)).toMatch(/:host\(\[full\]\) \.trigger \{ width: 100%; \}/);
   });
 
-  it('sem full, o default (largura fixa) é preservado — sem breaking change', () => {
+  it('sem full, o default (largura fixa) é preservado — agora via token no :host', () => {
     const input = mount('<fx-input></fx-input>') as unknown as HTMLElement;
-    expect(shadowCss(input)).toMatch(/\.field[\s\S]*?width: 260px/);
+    expect(shadowCss(input)).toMatch(/:host \{[^}]*width: var\(--fx-input-width, 260px\)/);
     const multi = mount('<fx-multiselect></fx-multiselect>') as unknown as HTMLElement;
-    expect(shadowCss(multi)).toMatch(/\.trigger[\s\S]*?width: 240px/);
+    expect(shadowCss(multi)).toMatch(/:host \{[^}]*width: var\(--fx-multiselect-width, 240px\)/);
+  });
+
+
+  const WIDTH_CASES: Array<[string, string, string, string]> = [
+    ['fx-input', '--fx-input-width', '260px', '.field'],
+    ['fx-textarea', '--fx-textarea-width', '260px', '.field'],
+    ['fx-autocomplete', '--fx-autocomplete-width', '260px', '.field'],
+    ['fx-multiselect', '--fx-multiselect-width', '240px', '.trigger'],
+    ['fx-select', '--fx-select-width', 'max-content', '.trigger'],
+  ];
+
+  it.each(WIDTH_CASES)('%s: largura padrão no :host (token) + campo interno fluido', (tag, token, fallback, inner) => {
+    const el = mount(`<${tag}></${tag}>`) as unknown as HTMLElement;
+    const css = shadowCss(el);
+    expect(css).toContain('width: var(' + token + ', ' + fallback + ')');
+    const ruleStart = css.indexOf(inner + ' {');
+    const rule = css.slice(ruleStart, css.indexOf('}', ruleStart));
+    expect(rule).toContain('width: 100%');
+  });
+
+  it('tamanhos sm/lg do fx-input também são tokens no host', () => {
+    const el = mount(`<fx-input></fx-input>`) as unknown as HTMLElement;
+    const css = shadowCss(el);
+    expect(css).toContain('width: var(--fx-input-width-sm, 220px)');
+    expect(css).toContain('width: var(--fx-input-width-lg, 300px)');
+  });
+
+  it('fx-select full descarta o min-width do HOST (layout estreito segue funcionando)', () => {
+    const el = mount(`<fx-select full></fx-select>`) as unknown as HTMLElement;
+    expect(shadowCss(el)).toContain(':host([full]) { min-width: 0; }');
+  });
+
+  it('fx-fileupload estica botão/dropzone quando o host recebe largura externa', () => {
+    const el = mount(`<fx-fileupload></fx-fileupload>`) as unknown as HTMLElement;
+    const css = shadowCss(el);
+    for (const sel of ['.btn { display', '.drop { display']) {
+      const ruleStart = css.indexOf(sel);
+      const rule = css.slice(ruleStart, css.indexOf('}', ruleStart));
+      expect(rule).toContain('width: 100%');
+    }
   });
 
   it('fx-autocomplete estiliza por .field (não mais por seletor de elemento)', () => {

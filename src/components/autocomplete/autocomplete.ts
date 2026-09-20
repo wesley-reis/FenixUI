@@ -15,6 +15,9 @@ export class FxAutocomplete extends FxElement {
     :host {
       position: relative;
       display: inline-block;
+      /* Largura padrão no HOST: CSS externo, classes e style inline no elemento
+         vencem este default naturalmente (regras do documento > :host). */
+      width: var(--fx-autocomplete-width, 260px);
       font-family: var(--fx-font-family);
       font-size: var(--fx-font-size);
     }
@@ -27,7 +30,8 @@ export class FxAutocomplete extends FxElement {
       border: 1px solid var(--fx-border-default);
       border-radius: var(--fx-radius-md);
       padding: var(--fx-space-md) var(--fx-space-lg);
-      width: 260px;
+      /* Acompanha a largura definida no :host. */
+      width: 100%;
       min-height: var(--fx-size-md);
       box-sizing: border-box;
       transition:
@@ -41,8 +45,10 @@ export class FxAutocomplete extends FxElement {
       border-color: var(--fx-color-primary);
       box-shadow: var(--fx-effect-focus-ring, none);
     }
-    :host([size='sm']) .field { width: 220px; min-height: var(--fx-size-sm); padding: var(--fx-space-sm) var(--fx-space-md); }
-    :host([size='lg']) .field { width: 300px; min-height: var(--fx-size-lg); }
+    :host([size='sm']) { width: var(--fx-autocomplete-width-sm, 220px); }
+    :host([size='sm']) .field { min-height: var(--fx-size-sm); padding: var(--fx-space-sm) var(--fx-space-md); }
+    :host([size='lg']) { width: var(--fx-autocomplete-width-lg, 300px); }
+    :host([size='lg']) .field { min-height: var(--fx-size-lg); }
     /* Full width: o host estica até o pai e o campo interno acompanha. */
     :host([full]) { display: block; width: 100%; }
     :host([full]) .field { width: 100%; }

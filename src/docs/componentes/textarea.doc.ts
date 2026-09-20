@@ -77,7 +77,7 @@ export const textareaDoc: ComponentDoc = {
 			name: "full",
 			type: "boolean",
 			default: "false",
-			desc: "Largura 100% acompanhando o elemento pai (host vira block).",
+			desc: "Largura 100% acompanhando o elemento pai (host vira block). Sem full, a largura também é controlável por CSS externo, classes ou style inline no elemento (ver Variáveis CSS).",
 		},
 	],
 	events: [
@@ -91,5 +91,9 @@ export const textareaDoc: ComponentDoc = {
 			type: `CustomEvent<{ value: string }>`,
 			desc: "Ao concluir a edição.",
 		},
+	],
+	cssVars: [
+		{ name: "--fx-textarea-width", type: "largura CSS", default: "260px", desc: "Largura padrão do campo (aplicada no host). CSS externo, classes e style inline no elemento vencem o default." },
+		{ name: "--fx-textarea-width-sm / -lg", type: "largura CSS", default: "220px / 300px", desc: "Larguras padrão para size sm e lg." },
 	],
 };

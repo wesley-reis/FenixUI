@@ -26,6 +26,10 @@ export class FxSelect extends FxElement {
       font-family: var(--fx-font-family);
       font-size: var(--fx-font-size);
       position: relative;
+      /* Largura no HOST (padrão: conteúdo com mín. 200px). CSS externo, classes
+         e style inline no elemento definem a largura sem precisar do full. */
+      width: var(--fx-select-width, max-content);
+      min-width: var(--fx-select-min-width, 200px);
     }
     .trigger {
       display: inline-flex;
@@ -34,7 +38,8 @@ export class FxSelect extends FxElement {
       gap: var(--fx-space-sm);
       box-sizing: border-box;
       min-height: var(--fx-size-md);
-      min-width: 200px;
+      /* Acompanha a largura definida no :host. */
+      width: 100%;
       font: inherit;
       font-weight: var(--fx-font-weight);
       color: var(--fx-text-default);
@@ -55,10 +60,12 @@ export class FxSelect extends FxElement {
       border-color: var(--fx-color-primary);
       box-shadow: var(--fx-effect-focus-ring, none);
     }
-        :host([size='sm']) .trigger { min-width: 180px; min-height: var(--fx-size-sm); }
+        :host([size='sm']) { min-width: var(--fx-select-min-width-sm, 180px); }
+    :host([size='sm']) .trigger { min-height: var(--fx-size-sm); }
     :host([size='lg']) .trigger { min-height: var(--fx-size-lg); font-size: calc(var(--fx-font-size) + 4px); }
     /* Full width: o host estica até o pai e o trigger acompanha. */
     :host([full]) { display: block; width: 100%; }
+    :host([full]) { min-width: 0; }
     :host([full]) .trigger { width: 100%; min-width: 0; }
     :host([full]) .panel { width: 100%; }
         /* Validação */
