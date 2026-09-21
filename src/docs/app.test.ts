@@ -48,7 +48,18 @@ describe("docs app", () => {
 		expect(main().querySelector(".home-hero")).toBeTruthy();
 		expect(main().querySelector(".hero-cta fx-button")).toBeTruthy();
 		expect(main().querySelectorAll(".feature-card").length).toBe(6);
-		expect(main().querySelectorAll(".usecase-card").length).toBe(2);
+		expect(main().querySelectorAll(".usecase-card").length).toBe(3);
+	});
+
+	it("página Tipagens cobre todos os frameworks", async () => {
+		await navigate("typings");
+		const html = main().innerHTML;
+		for (const sub of ["@wrrdev/fenix-ui/vue", "@wrrdev/fenix-ui/react", "@wrrdev/fenix-ui/jsx"]) {
+			expect(html.includes(sub), `página Tipagens sem '${sub}'`).toBe(true);
+		}
+		expect(html.includes("CUSTOM_ELEMENTS_SCHEMA"), "página Tipagens sem Angular (CUSTOM_ELEMENTS_SCHEMA)").toBe(true);
+		expect(html.includes("HTMLElementTagNameMap"), "página Tipagens sem tipagem imperativa").toBe(true);
+		expect(main().querySelectorAll(".code-block").length).toBeGreaterThanOrEqual(6);
 	});
 
 	it("home: botão Get Started leva à página de instalação", async () => {

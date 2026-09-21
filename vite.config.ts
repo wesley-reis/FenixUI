@@ -63,6 +63,7 @@ export default defineConfig({
         here + 'src/index.ts',
         here + 'src/plugins/index.ts',
         here + 'src/core/vue.ts',
+        here + 'src/core/react.ts',
         here + 'src/icons/index.ts',
       ],
       // O Vite define `false` por padrão; com preserveModules isso é inválido.

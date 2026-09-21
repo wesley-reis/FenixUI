@@ -249,6 +249,59 @@ import '@wrrdev/fenix-ui'; // registra componentes + habilita as tipagens JSX
 Se o autocomplete ainda não aparecer, garanta que o `tsconfig` do seu projeto tem
 `"moduleResolution": "bundler"` (ou `"node16"`/`"nodenext"`) para resolver os `exports` do pacote.
 
+#### React
+
+- **`"jsx": "react-jsx"` (padrão no Create React App, Vite e Next):** importe o subpath `./react`
+  **uma única vez** no `main.tsx` — o namespace `React.JSX` não herda a augmentação global de `JSX`:
+
+```tsx
+import '@wrrdev/fenix-ui/react'; // tipa fx-* em React.JSX (react-jsx)
+
+<fx-button variant="primary" size="lg" loading>Salvar</fx-button>
+```
+
+- **`"jsx": "react"` clássico / Preact / Vue JSX:** basta `import '@wrrdev/fenix-ui/jsx'`
+  (ou importar a lib inteira), que faz a augmentação do namespace global `JSX`.
+
+> Requer `@types/react` instalado no projeto para resolver a augmentação do módulo `react`.
+
+#### Angular
+
+Importe os subpaths dos componentes usados (ou use o plugin Auto Import) e adicione
+`CUSTOM_ELEMENTS_SCHEMA` ao componente — templates Angular não são typecheckados como TSX,
+mas o código TypeScript imperativo é tipado via `HTMLElementTagNameMap`:
+
+```ts
+import { CUSTOM_ELEMENTS_SCHEMA, Component } from '@angular/core';
+import '@wrrdev/fenix-ui/stepper';
+import '@wrrdev/fenix-ui/button';
+
+@Component({
+  selector: 'app-demo',
+  template: `
+    <fx-stepper active="0" show-numbers>
+      <div slot="step-0" step-title="Dados">Conteúdo do passo.</div>
+    </fx-stepper>
+  `,
+  schemas: [CUSTOM_ELEMENTS_SCHEMA], // permite tags fx-* no template
+})
+export class DemoComponent {}
+```
+
+#### TypeScript puro / HTML / JSF
+
+Importar a lib (ou qualquer subpath) habilita a tipagem imperativa — `document.createElement('fx-*')`,
+classes, propriedades e eventos ficam conhecidos do compilador:
+
+```ts
+import '@wrrdev/fenix-ui/button';
+
+const btn = document.createElement('fx-button'); // tipado via HTMLElementTagNameMap
+btn.setAttribute('variant', 'primary');
+```
+
+Veja a página **Tipagens** da documentação para o guia completo por framework.
+
 #### Vue 3 / Nuxt
 
 No Vue, o autocomplete dos atributos `fx-*` nos templates é habilitado por um módulo próprio.

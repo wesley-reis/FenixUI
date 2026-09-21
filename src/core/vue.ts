@@ -12,33 +12,54 @@
  */
 import type {
   FxAutocompleteProps,
+  FxAccordionPanelProps,
+  FxAccordionProps,
   FxAlertProps,
+  FxAvatarProps,
   FxBadgeProps,
+  FxBreadcrumbProps,
   FxButtonProps,
   FxCalendarProps,
+  FxCardProps,
+  FxCarouselProps,
   FxCheckboxProps,
+  FxChipProps,
+  FxConfirmPopupProps,
   FxDatepickerProps,
   FxDialogProps,
   FxDropdownItemProps,
   FxDropdownProps,
   FxDrawerProps,
+  FxEmptyStateProps,
   FxFileUploadProps,
   FxFloatlabelProps,
   FxInputProps,
+  FxKnobProps,
+  FxMenuProps,
   FxMultiselectProps,
+  FxOrderListProps,
   FxPaginationProps,
+  FxPasswordStrengthProps,
+  FxPickListProps,
+  FxPopoverProps,
   FxProgressProps,
   FxRadioProps,
+  FxRatingProps,
   FxSelectProps,
   FxSkeletonProps,
+  FxSliderProps,
   FxSpinnerProps,
+  FxStepperProps,
   FxSwitchProps,
   FxTableProps,
   FxTabPanelProps,
   FxTabsProps,
   FxTextareaProps,
+  FxTimelineProps,
   FxToastProps,
+  FxToggleButtonGroupProps,
   FxTooltipProps,
+  FxTreeProps,
 } from './jsx';
 
 import type {} from '@vue/runtime-dom';
@@ -75,6 +96,27 @@ declare module '@vue/runtime-core' {
     'fx-pagination': FxComp<FxPaginationProps>;
     'fx-autocomplete': FxComp<FxAutocompleteProps>;
     'fx-fileupload': FxComp<FxFileUploadProps>;
+    'fx-slider': FxComp<FxSliderProps>;
+    'fx-chip': FxComp<FxChipProps>;
+    'fx-avatar': FxComp<FxAvatarProps>;
+    'fx-card': FxComp<FxCardProps>;
+    'fx-breadcrumb': FxComp<FxBreadcrumbProps>;
+    'fx-popover': FxComp<FxPopoverProps>;
+    'fx-stepper': FxComp<FxStepperProps>;
+    'fx-rating': FxComp<FxRatingProps>;
+    'fx-menu': FxComp<FxMenuProps>;
+    'fx-toggle-button-group': FxComp<FxToggleButtonGroupProps>;
+    'fx-empty-state': FxComp<FxEmptyStateProps>;
+    'fx-password-strength': FxComp<FxPasswordStrengthProps>;
+    'fx-timeline': FxComp<FxTimelineProps>;
+    'fx-carousel': FxComp<FxCarouselProps>;
+    'fx-tree': FxComp<FxTreeProps>;
+    'fx-confirmpopup': FxComp<FxConfirmPopupProps>;
+    'fx-knob': FxComp<FxKnobProps>;
+    'fx-accordion': FxComp<FxAccordionProps>;
+    'fx-accordion-panel': FxComp<FxAccordionPanelProps>;
+    'fx-orderlist': FxComp<FxOrderListProps>;
+    'fx-picklist': FxComp<FxPickListProps>;
   }
 }
 
@@ -108,9 +150,33 @@ declare module '@vue/runtime-dom' {
     'fx-pagination': FxPaginationProps;
     'fx-autocomplete': FxAutocompleteProps;
     'fx-fileupload': FxFileUploadProps;
+    'fx-slider': FxSliderProps;
+    'fx-chip': FxChipProps;
+    'fx-avatar': FxAvatarProps;
+    'fx-card': FxCardProps;
+    'fx-breadcrumb': FxBreadcrumbProps;
+    'fx-popover': FxPopoverProps;
+    'fx-stepper': FxStepperProps;
+    'fx-rating': FxRatingProps;
+    'fx-menu': FxMenuProps;
+    'fx-toggle-button-group': FxToggleButtonGroupProps;
+    'fx-empty-state': FxEmptyStateProps;
+    'fx-password-strength': FxPasswordStrengthProps;
+    'fx-timeline': FxTimelineProps;
+    'fx-carousel': FxCarouselProps;
+    'fx-tree': FxTreeProps;
+    'fx-confirmpopup': FxConfirmPopupProps;
+    'fx-knob': FxKnobProps;
+    'fx-accordion': FxAccordionProps;
+    'fx-accordion-panel': FxAccordionPanelProps;
+    'fx-orderlist': FxOrderListProps;
+    'fx-picklist': FxPickListProps;
   }
 }
 
 /** Marcador para `import '@wrrdev/fenix-ui/vue'` funcionar como side-effect import. */
 export const FX_VUE_TYPES = true as const;
+
+/** Reexporta os tipos nomeados de props para consumidores Vue. */
+export type * from './jsx';
 

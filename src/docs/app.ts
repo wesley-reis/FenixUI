@@ -218,8 +218,8 @@ function wireCopyButtons(root: ParentNode): void {
 
 /** Componentes usados no showcase da home (carga lazy). */
 const HOME_TAGS = [
-  'fx-button', 'fx-badge', 'fx-spinner', 'fx-input', 'fx-switch',
-  'fx-slider', 'fx-avatar', 'fx-chip', 'fx-progress', 'fx-knob',
+  'fx-button', 'fx-badge', 'fx-input', 'fx-switch', 'fx-floatlabel',
+  'fx-progress', 'fx-knob', 'fx-stepper',
 ];
 
 async function renderHome(): Promise<void> {
@@ -240,16 +240,6 @@ async function renderHome(): Promise<void> {
       <div class="hero-cta">
         <fx-button id="hero-get-started" size="lg"><i slot="icon" class="fx-icon fx-icon-rocket_launch"></i>Get Started</fx-button>
         <a class="hero-link" href="#/fx-button">Ver componentes <span class="fx-icon fx-icon-arrow_outward"></span></a>
-      </div>
-      <div class="hero-stage">
-        <fx-button variant="primary">Primário</fx-button>
-        <fx-badge variant="success">Ativo</fx-badge>
-        <fx-chip icon="🔥">Fenix</fx-chip>
-        <fx-input placeholder="Buscar…"></fx-input>
-        <fx-switch checked>Dark mode</fx-switch>
-        <fx-slider label="Volume" style="width:170px"></fx-slider>
-        <span class="avatar-group"><fx-avatar>WR</fx-avatar><fx-avatar size="sm">AI</fx-avatar></span>
-        <fx-spinner></fx-spinner>
       </div>
     </section>
 
@@ -295,7 +285,7 @@ async function renderHome(): Promise<void> {
         <div class="usecase-card">
           <div class="usecase-preview">
             <div class="uc-stat"><b>87%</b><span class="uc-label">Meta do mês</span><fx-progress value="87" variant="success"></fx-progress></div>
-            <div class="uc-stat"><b>1.2k</b><span class="uc-label">Visitas hoje</span><fx-progress value="62" variant="info"></fx-progress></div>
+            <div class="uc-stat"><b>1.2k</b><span class="uc-label">Visitas hoje</span><fx-progress value="62" variant="success"></fx-progress></div>
             <fx-knob></fx-knob>
           </div>
           <b>Dashboards & painéis</b>
@@ -314,6 +304,20 @@ async function renderHome(): Promise<void> {
           <b>Formulários completos</b>
           <p>FloatLabel, validação, upload e autocomplete prontos para qualquer cadastro.</p>
           <a href="#/forms">Ver Formulários <span class="fx-icon fx-icon-arrow_forward"></span></a>
+        </div>
+        <div class="usecase-card">
+          <div class="usecase-preview">
+            <div class="uc-wizard">
+              <fx-stepper active="1" style="width:100%">
+                <div slot="step-0" step-title="Conta"><p>Crie sua conta.</p></div>
+                <div slot="step-1" step-title="Pagamento"><p>Escolha a forma de pagamento.</p></div>
+                <div slot="step-2" step-title="Confirmação"><p>Revise e confirme.</p></div>
+              </fx-stepper>
+            </div>
+          </div>
+          <b>Wizards & fluxos multi-etapa</b>
+          <p>Stepper com navegação integrada para checkout e onboarding, pronto para usar.</p>
+          <a href="#/fx-stepper">Ver fx-stepper <span class="fx-icon fx-icon-arrow_forward"></span></a>
         </div>
       </div>
     </section>
@@ -893,6 +897,7 @@ function buildSidebar(): void {
 	groups.set("Guia", [
 		{ id: "home", title: "Home" },
 		{ id: "installation", title: "Instalação" },
+		{ id: "typings", title: "Tipagens" },
 		{ id: "vue3", title: "Vue 3 / Nuxt" },
 		{ id: "integrations", title: "CDN / React / JSF" },
 		{ id: "auto-import", title: "Auto Import" },
@@ -986,7 +991,8 @@ function renderTyping(doc: ComponentDoc): string {
 	return [
 		"<h3>Tipagem TypeScript</h3>",
 		`<p>Todas as variantes e propriedades têm tipos prontos — importe de <code class="inline">@wrrdev/fenix-ui/vue</code>`,
-		`(Vue/Volar) ou <code class="inline">@wrrdev/fenix-ui/jsx</code> (React/TSX) e o editor autocompleta cada atributo:</p>`,
+		`(Vue/Volar), <code class="inline">@wrrdev/fenix-ui/react</code> (React com <code class="inline">"jsx": "react-jsx"</code>)`,
+		`ou <code class="inline">@wrrdev/fenix-ui/jsx</code> (React clássico/Preact/Vue JSX) e o editor autocompleta cada atributo:</p>`,
 		codeBlock(
 			`import type { Fx${pascal}Props } from '@wrrdev/fenix-ui/vue';\n\nconst props: Fx${pascal}Props = {\n${iface.split("\n").slice(0, 14).join("\n")}\n};`,
 		),
@@ -1288,6 +1294,7 @@ async function renderRoute(): Promise<void> {
 		await renderComponentPage(doc);
 	} else if (route === "home") await renderHome();
 	else if (route === "installation") await renderInstallation();
+	else if (route === "typings") renderTypings();
 	else if (route === "theming") await renderTheming();
 	else if (route === "auto-import") renderAutoImport();
 	else if (route === "icons") renderIcons();
@@ -1516,10 +1523,114 @@ export function Tabela({ dados }) {
 }`)}
     <div class="note">
       <strong>Tipagem TSX:</strong> importe <code>import '@wrrdev/fenix-ui/jsx';</code> uma vez para o
-      editor autocompletar todos os atributos <code>fx-*</code> no JSX/TSX. Com o plugin
+      editor autocompletar todos os atributos <code>fx-*</code> no JSX/TSX. Se o seu projeto React usa
+      <code>"jsx": "react-jsx"</code> no tsconfig, prefira <code>import '@wrrdev/fenix-ui/react';</code>.
+      Com o plugin
       <code>FenixAutoImport</code>, os imports dos subpaths são injetados automaticamente (Vite,
       Rollup e Webpack) — veja a página <a href="#/auto-import">Auto Import</a>.
     </div>
+  `;
+  wireCopyButtons(main);
+}
+
+/** Página Tipagens — guia de autocomplete/validação por framework. */
+function renderTypings(): void {
+  const main = document.getElementById('main')!;
+  main.innerHTML = `
+    <h2>Tipagens TypeScript por framework</h2>
+    <p class="lead">Todos os componentes <code>fx-*</code> têm tipos prontos: props com autocomplete
+    e validação, uniões (<code>FxSize</code>, <code>FxButtonVariant</code>, …) e tipagem imperativa via
+    <code>HTMLElementTagNameMap</code>. O subpath que você importa depende do framework —
+    escolha o seu abaixo.</p>
+
+    <table class="api" style="width:100%">
+      <thead><tr><th>Framework</th><th>Import (uma única vez)</th><th>O que habilita</th></tr></thead>
+      <tbody>
+        <tr><td><b>Vue 3 / Nuxt</b></td><td><code>@wrrdev/fenix-ui/vue</code></td><td>Autocomplete + validação nos templates SFC (Volar / vue-tsc)</td></tr>
+        <tr><td><b>React</b> (<code>"jsx": "react-jsx"</code>)</td><td><code>@wrrdev/fenix-ui/react</code></td><td>Autocomplete + validação em TSX via <code>React.JSX</code></td></tr>
+        <tr><td><b>React clássico / Preact / Vue JSX</b></td><td><code>@wrrdev/fenix-ui/jsx</code></td><td>Autocomplete + validação em TSX via <code>JSX</code> global</td></tr>
+        <tr><td><b>Angular</b></td><td><code>@wrrdev/fenix-ui/&lt;componente&gt;</code></td><td>Tipagem imperativa (<code>createElement</code>, classes, eventos); templates exigem <code>CUSTOM_ELEMENTS_SCHEMA</code></td></tr>
+        <tr><td><b>TS puro / HTML / JSF</b></td><td><code>@wrrdev/fenix-ui/&lt;componente&gt;</code></td><td>Tipagem imperativa via <code>HTMLElementTagNameMap</code> + tipos nomeados</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Requisito: moduleResolution</h3>
+    <p>Para o TypeScript resolver os <code>exports</code> do pacote, garanta no <code>tsconfig.json</code>:</p>
+    ${codeBlock(`{
+  "compilerOptions": {
+    "moduleResolution": "bundler" // ou "node16" / "nodenext"
+  }
+}`)}
+
+    <h3>Vue 3 / Nuxt</h3>
+    <p>Importe <code>./vue</code> uma única vez e informe ao compilador que <code>fx-*</code> são Web Components:</p>
+    ${codeBlock(`import { createApp } from 'vue';
+import '@wrrdev/fenix-ui/vue';    // tipos + autocomplete nos templates SFC
+
+const app = createApp(App);
+app.config.compilerOptions.isCustomElement = (tag) => tag.startsWith('fx-');
+app.mount('#app');`)}
+    <p>Tipos nomeados ficam disponíveis no mesmo subpath:</p>
+    ${codeBlock(`import type { FxButtonProps } from '@wrrdev/fenix-ui/vue';
+
+const props: FxButtonProps = { variant: 'primary', size: 'lg', loading: false };`)}
+
+    <h3>React com <code>"jsx": "react-jsx"</code> (padrão no Vite, CRA e Next)</h3>
+    <p>Nesse modo o TypeScript resolve o namespace <code>React.JSX</code> — que <strong>não</strong> herda
+    a augmentação global de <code>JSX</code>. Importe o subpath <code>./react</code>:</p>
+    ${codeBlock(`import '@wrrdev/fenix-ui/react';
+
+export function Demo() {
+  return <fx-button variant="primary" size="lg" icon="rocket_launch">Enviar</fx-button>;
+}`)}
+    <div class="note"><strong>Requisito:</strong> <code>@types/react</code> instalado no projeto —
+    a augmentação é aplicada ao módulo <code>react</code>.</div>
+
+    <h3>React clássico / Preact / Vue JSX</h3>
+    <p>Com <code>"jsx": "react"</code> (classic) ou runtimes que usam o namespace global <code>JSX</code>:</p>
+    ${codeBlock(`import '@wrrdev/fenix-ui/jsx';
+
+<fx-chip variant="success" removable>Filtro ativo</fx-chip>`)}
+
+    <h3>Angular (standalone)</h3>
+    <p>Importe os subpaths dos componentes que usa (direto ou via
+    <a href="#/auto-import">Auto Import</a>) e adicione <code>CUSTOM_ELEMENTS_SCHEMA</code>:</p>
+    ${codeBlock(`import { CUSTOM_ELEMENTS_SCHEMA, Component } from '@angular/core';
+import '@wrrdev/fenix-ui/stepper';
+import '@wrrdev/fenix-ui/button';
+
+@Component({
+  selector: 'app-demo',
+  template: \`
+    <fx-stepper active="0" show-numbers>
+      <div slot="step-0" step-title="Dados">Conteúdo do passo.</div>
+      <div slot="step-1" step-title="Confirmação">Revise e confirme.</div>
+    </fx-stepper>
+    <fx-button variant="primary">Confirmar</fx-button>
+  \`,
+  schemas: [CUSTOM_ELEMENTS_SCHEMA], // permite tags fx-* no template
+})
+export class DemoComponent {}`)}
+    <p>No código imperativo (TS), <code>createElement</code> e os elementos são tipados
+    pelo <code>HTMLElementTagNameMap</code>:</p>
+    ${codeBlock(`const stepper = document.createElement('fx-stepper');
+stepper.setAttribute('active', '0');
+stepper.addEventListener('change', (e) => console.log((e as CustomEvent).detail));`)}
+
+    <h3>Tipos nomeados e uniões</h3>
+    <p>Todos os subpaths de tipagem reexportam os mesmos tipos, então você pode importar
+    de <code>/vue</code>, <code>/react</code>, <code>/jsx</code> ou da entrada principal:</p>
+    ${codeBlock(`import type {
+  FxButtonProps, FxButtonVariant, FxSize, FxStepperProps, FxTableProps,
+} from '@wrrdev/fenix-ui';
+
+const variant: FxButtonVariant = 'primary';
+const size: FxSize = 'lg';
+const table: FxTableProps = { pagination: true, rows: 10 };`)}
+    <div class="note"><strong>Dica:</strong> com o plugin <code>FenixAutoImport</code>
+    (<a href="#/auto-import">Auto Import</a>) você escreve apenas as tags <code>fx-*</code> e os
+    imports dos subpaths (runtime) são injetados no build — os imports de tipagem acima continuam
+    sendo manuais e pontuais (um por projeto).</div>
   `;
   wireCopyButtons(main);
 }

@@ -476,16 +476,6 @@
       }
       .hero-link .fx-icon { font-size: 1.05em; transition: transform .2s; }
       .hero-link:hover .fx-icon { transform: translate(2px, -2px); }
-      .hero-stage {
-        display: flex; flex-wrap: wrap; gap: .9rem 1.1rem; align-items: center; justify-content: center;
-        width: 100%; max-width: 760px;
-        padding: 1.4rem 1.2rem;
-        border: 1px dashed var(--fx-border-default);
-        border-radius: var(--fx-radius-md);
-        background: color-mix(in srgb, var(--fx-surface-background) 65%, transparent);
-        backdrop-filter: blur(2px);
-        position: relative; z-index: 1;
-      }
 
       /* ---------- Home: seções, features e casos de uso ---------- */
       .home-section { width: 100%; margin-bottom: 3rem; }
@@ -540,6 +530,7 @@
       }
       .usecase-preview .uc-form { display: flex; flex-direction: column; gap: .65rem; width: 100%; max-width: 260px; }
       .usecase-preview .uc-form fx-floatlabel { display: block; }
+      .usecase-preview .uc-wizard { width: 100%; padding: .4rem 0; }
       .home-cta {
         width: 100%;
         display: flex; flex-direction: column; align-items: center; text-align: center;
@@ -584,7 +575,6 @@
       .install-card:hover .install-arrow { color: var(--fx-color-primary); transform: translateX(3px); }
       @media (max-width: 600px) {
         .home-hero { padding: 2.2rem 1rem 2rem; }
-        .hero-stage { gap: .7rem; }
       }
 
       /* ---------- Scroll fino e discreto ---------- */

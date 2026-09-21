@@ -32,6 +32,15 @@ export type FxTooltipPosition = 'top' | 'bottom' | 'left' | 'right';
 export type FxDrawerPosition = 'left' | 'right' | 'top' | 'bottom';
 export type FxDropdownPosition = 'left' | 'center' | 'right' | 'bottom-left' | 'bottom-right';
 export type FxPaginationPosition = 'left' | 'center' | 'right';
+export type FxChipVariant = 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info';
+export type FxAvatarVariant = 'image' | 'text' | 'icon';
+export type FxAvatarShape = 'circle' | 'rounded' | 'square';
+export type FxCardVariant = 'elevated' | 'flat' | 'outline' | 'ghost';
+export type FxPopoverTrigger = 'click' | 'hover';
+export type FxPopoverPosition = 'auto' | 'top' | 'bottom';
+export type FxMenuOrientation = 'horizontal' | 'vertical';
+export type FxTimelineOrientation = 'vertical' | 'horizontal';
+export type FxSelectionMode = 'single' | 'multiple';
 
 /* Props por componente */
 export interface FxButtonProps extends FxElementProps {
@@ -229,40 +238,207 @@ export interface FxFileUploadProps extends FxElementProps {
   progress?: number;
   full?: boolean;
 }
-/* Augmentation global de JSX (React/TSX, Preact, Vue JSX, …).
-   Cada tag fx-* recebe autocomplete + validação de atributos. */
+
+/* Props dos componentes de layout/dados/navegação/feedback */
+export interface FxSliderProps extends FxElementProps {
+  value?: number;
+  min?: number;
+  max?: number;
+  step?: number;
+  size?: FxSize;
+  'show-value'?: boolean;
+}
+export interface FxStepperProps extends FxElementProps {
+  active?: number;
+  linear?: boolean;
+  'show-numbers'?: boolean;
+}
+export interface FxChipProps extends FxElementProps {
+  variant?: FxChipVariant;
+  size?: FxSize;
+  icon?: string;
+  removable?: boolean;
+  selectable?: boolean;
+  selected?: boolean;
+}
+export interface FxAvatarProps extends FxElementProps {
+  variant?: FxAvatarVariant;
+  src?: string;
+  alt?: string;
+  size?: FxSize;
+  shape?: FxAvatarShape;
+}
+export interface FxCardProps extends FxElementProps {
+  variant?: FxCardVariant;
+  size?: FxSize;
+  padded?: boolean;
+  heading?: string;
+}
+export interface FxBreadcrumbProps extends FxElementProps {
+  size?: FxSize;
+  separator?: string;
+}
+export interface FxPopoverProps extends FxElementProps {
+  open?: boolean;
+  target?: string;
+  trigger?: FxPopoverTrigger;
+  position?: FxPopoverPosition;
+  dismissible?: boolean;
+}
+export interface FxRatingProps extends FxElementProps {
+  value?: number;
+  max?: number;
+  readonly?: boolean;
+  'allow-half'?: boolean;
+  size?: FxSize;
+}
+export interface FxMenuProps extends FxElementProps {
+  orientation?: FxMenuOrientation;
+  size?: FxSize;
+  titles?: string;
+}
+export interface FxToggleButtonGroupProps extends FxElementProps {
+  multiple?: boolean;
+  value?: string;
+  size?: FxSize;
+}
+export interface FxEmptyStateProps extends FxElementProps {
+  icon?: string;
+  heading?: string;
+  description?: string;
+}
+export interface FxPasswordStrengthProps extends FxElementProps {
+  value?: string;
+  size?: FxSize;
+}
+export interface FxTimelineProps extends FxElementProps {
+  orientation?: FxTimelineOrientation;
+  size?: FxSize;
+  marker?: string;
+}
+export interface FxCarouselProps extends FxElementProps {
+  active?: number;
+  'show-arrows'?: boolean;
+  'show-indicators'?: boolean;
+  loop?: boolean;
+  autoplay?: number;
+}
+export interface FxTreeProps extends FxElementProps {
+  data?: string;
+  'expand-all'?: boolean;
+  size?: FxSize;
+}
+export interface FxConfirmPopupProps extends FxElementProps {
+  open?: boolean;
+  target?: string;
+  message?: string;
+  icon?: string;
+  'accept-label'?: string;
+  'reject-label'?: string;
+  position?: FxPopoverPosition;
+}
+export interface FxKnobProps extends FxElementProps {
+  value?: number;
+  min?: number;
+  max?: number;
+  step?: number;
+  size?: FxSize;
+  'stroke-width'?: number;
+  'value-color'?: string;
+  'range-color'?: string;
+  'value-template'?: string;
+  readonly?: boolean;
+}
+export interface FxAccordionProps extends FxElementProps {
+  value?: string;
+  multiple?: boolean;
+}
+export interface FxAccordionPanelProps extends FxElementProps {
+  value?: string;
+  header?: string;
+}
+export interface FxOrderListProps extends FxElementProps {
+  data?: string;
+  'data-key'?: string;
+  filter?: boolean;
+  'filter-by'?: string;
+  'filter-placeholder'?: string;
+  dragdrop?: boolean;
+  striped?: boolean;
+  'selection-mode'?: FxSelectionMode;
+  'show-select-all'?: boolean;
+}
+export interface FxPickListProps extends FxElementProps {
+  source?: string;
+  target?: string;
+  'source-key'?: string;
+  'target-key'?: string;
+  filter?: boolean;
+  'filter-by'?: string;
+  'source-label'?: string;
+  'target-label'?: string;
+  'selection-mode'?: FxSelectionMode;
+  'show-select-all'?: boolean;
+  striped?: boolean;
+}
+/* Augmentation global de JSX (React clássico/TSX, Preact, Vue JSX, …).
+   Cada tag fx-* recebe autocomplete + validação de atributos.
+   A interface é exportada para que o módulo opt-in `@wrrdev/fenix-ui/react`
+   também registre as tags em React.JSX (usado quando "jsx": "react-jsx"). */
+export interface FxJsxIntrinsicElements {
+  'fx-button': FxButtonProps;
+  'fx-badge': FxBadgeProps;
+  'fx-spinner': FxSpinnerProps;
+  'fx-input': FxInputProps;
+  'fx-select': FxSelectProps;
+  'fx-switch': FxSwitchProps;
+  'fx-checkbox': FxCheckboxProps;
+  'fx-radio': FxRadioProps;
+  'fx-textarea': FxTextareaProps;
+  'fx-multiselect': FxMultiselectProps;
+  'fx-calendar': FxCalendarProps;
+  'fx-datepicker': FxDatepickerProps;
+  'fx-table': FxTableProps;
+  'fx-floatlabel': FxFloatlabelProps;
+  'fx-dialog': FxDialogProps;
+  'fx-drawer': FxDrawerProps;
+  'fx-toast': FxToastProps;
+  'fx-tooltip': FxTooltipProps;
+  'fx-tabs': FxTabsProps;
+  'fx-tab-panel': FxTabPanelProps;
+  'fx-progress': FxProgressProps;
+  'fx-skeleton': FxSkeletonProps;
+  'fx-alert': FxAlertProps;
+  'fx-dropdown': FxDropdownProps;
+  'fx-dropdown-item': FxDropdownItemProps;
+  'fx-pagination': FxPaginationProps;
+  'fx-autocomplete': FxAutocompleteProps;
+  'fx-fileupload': FxFileUploadProps;
+  'fx-slider': FxSliderProps;
+  'fx-chip': FxChipProps;
+  'fx-avatar': FxAvatarProps;
+  'fx-card': FxCardProps;
+  'fx-breadcrumb': FxBreadcrumbProps;
+  'fx-popover': FxPopoverProps;
+  'fx-stepper': FxStepperProps;
+  'fx-rating': FxRatingProps;
+  'fx-menu': FxMenuProps;
+  'fx-toggle-button-group': FxToggleButtonGroupProps;
+  'fx-empty-state': FxEmptyStateProps;
+  'fx-password-strength': FxPasswordStrengthProps;
+  'fx-timeline': FxTimelineProps;
+  'fx-carousel': FxCarouselProps;
+  'fx-tree': FxTreeProps;
+  'fx-confirmpopup': FxConfirmPopupProps;
+  'fx-knob': FxKnobProps;
+  'fx-accordion': FxAccordionProps;
+  'fx-accordion-panel': FxAccordionPanelProps;
+  'fx-orderlist': FxOrderListProps;
+  'fx-picklist': FxPickListProps;
+}
 declare global {
   namespace JSX {
-    interface IntrinsicElements {
-      'fx-button': FxButtonProps;
-      'fx-badge': FxBadgeProps;
-      'fx-spinner': FxSpinnerProps;
-      'fx-input': FxInputProps;
-      'fx-select': FxSelectProps;
-      'fx-switch': FxSwitchProps;
-      'fx-checkbox': FxCheckboxProps;
-      'fx-radio': FxRadioProps;
-      'fx-textarea': FxTextareaProps;
-      'fx-multiselect': FxMultiselectProps;
-      'fx-calendar': FxCalendarProps;
-      'fx-datepicker': FxDatepickerProps;
-      'fx-table': FxTableProps;
-      'fx-floatlabel': FxFloatlabelProps;
-      'fx-dialog': FxDialogProps;
-      'fx-drawer': FxDrawerProps;
-      'fx-toast': FxToastProps;
-      'fx-tooltip': FxTooltipProps;
-      'fx-tabs': FxTabsProps;
-      'fx-tab-panel': FxTabPanelProps;
-      'fx-progress': FxProgressProps;
-      'fx-skeleton': FxSkeletonProps;
-      'fx-alert': FxAlertProps;
-      'fx-dropdown': FxDropdownProps;
-      'fx-dropdown-item': FxDropdownItemProps;
-      'fx-pagination': FxPaginationProps;
-      'fx-autocomplete': FxAutocompleteProps;
-      'fx-fileupload': FxFileUploadProps;
-    }
+    interface IntrinsicElements extends FxJsxIntrinsicElements {}
   }
 }
 
@@ -286,5 +462,9 @@ declare global {
     'fx-datepicker': HTMLElement;
     'fx-table': HTMLElement;
     'fx-floatlabel': HTMLElement;
+    'fx-accordion': HTMLElement;
+    'fx-accordion-panel': HTMLElement;
+    'fx-orderlist': HTMLElement;
+    'fx-picklist': HTMLElement;
   }
 }
