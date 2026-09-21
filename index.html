@@ -23,12 +23,14 @@
       header {
         position: fixed; inset: 0 0 auto 0; height: var(--doc-header-h);
         display: flex; align-items: center; gap: 1rem; padding: 0 1.25rem;
-        background: var(--fx-color-primary);
+        background: color-mix(in srgb, var(--fx-color-primary), transparent 35%);
         color: #fff;
-        border-bottom: 1px solid var(--fx-border-default);
+        border-bottom: 1px solid color-mix(in srgb, var(--fx-border-default), transparent 40%);
         box-shadow: var(--fx-shadow-md);
         z-index: calc(var(--fx-z-dropdown, 1000) + 10);
-        transition: background .25s;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        transition: background .25s, backdrop-filter .25s;
       }
       header .spacer { flex: 1; }
       header select {
@@ -588,7 +590,7 @@
   </head>
   <body>
     <header>
-      <div class="bar-black" style="    background: black;
+      <div class="bar-black" style="    background: rgb(0, 0, 0);
                 width: 64px;
                 height: 100%;
                 margin: -20px;
