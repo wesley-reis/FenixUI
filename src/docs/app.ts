@@ -213,31 +213,182 @@ function wireCopyButtons(root: ParentNode): void {
 }
 
 /* ------------------------------------------------------------------ */
-/* Páginas: Introdução e Theming                                       */
+/* Página: Home (landing moderna)                                      */
 /* ------------------------------------------------------------------ */
 
-async function renderIntro(): Promise<void> {
-  // Componentes usados no exemplo desta página (carga lazy).
-  const tags = ['fx-button', 'fx-badge', 'fx-spinner'];
-  await Promise.all(tags.map((t) => componentLoaders[t]?.()));
-  await Promise.all(tags.map((t) => customElements.whenDefined(t)));
+/** Componentes usados no showcase da home (carga lazy). */
+const HOME_TAGS = [
+  'fx-button', 'fx-badge', 'fx-spinner', 'fx-input', 'fx-switch',
+  'fx-slider', 'fx-avatar', 'fx-chip', 'fx-progress', 'fx-knob',
+];
+
+async function renderHome(): Promise<void> {
+  await Promise.all(HOME_TAGS.map((t) => componentLoaders[t]?.()));
+  await Promise.all(HOME_TAGS.map((t) => customElements.whenDefined(t)));
+  const main = document.getElementById('main')!;
+  const version = typeof __APP_VERSION__ !== 'undefined' ? `v${__APP_VERSION__}` : '';
+  main.innerHTML = `
+    <section class="home-hero">
+      <div class="hero-eyebrow">
+        <fx-badge variant="warning" round>${version}</fx-badge>
+        <span>Web Components nativos · Shadow DOM · Design Tokens</span>
+      </div>
+      <h1 class="hero-title">Componentes que <span class="hero-grad">renascem</span> em qualquer stack.</h1>
+      <p class="hero-lead">FenixUI é um Design System de <strong>Web Components nativos</strong>: funciona com
+      Vue, React, Nuxt, JSF ou HTML puro — sem lock-in. Cada componente é importável isoladamente,
+      então o bundle do cliente contém apenas o que ele usa.</p>
+      <div class="hero-cta">
+        <fx-button id="hero-get-started" size="lg"><i slot="icon" class="fx-icon fx-icon-rocket_launch"></i>Get Started</fx-button>
+        <a class="hero-link" href="#/fx-button">Ver componentes <span class="fx-icon fx-icon-arrow_outward"></span></a>
+      </div>
+      <div class="hero-stage">
+        <fx-button variant="primary">Primário</fx-button>
+        <fx-badge variant="success">Ativo</fx-badge>
+        <fx-chip icon="🔥">Fenix</fx-chip>
+        <fx-input placeholder="Buscar…"></fx-input>
+        <fx-switch checked>Dark mode</fx-switch>
+        <fx-slider label="Volume" style="width:170px"></fx-slider>
+        <span class="avatar-group"><fx-avatar>WR</fx-avatar><fx-avatar size="sm">AI</fx-avatar></span>
+        <fx-spinner></fx-spinner>
+      </div>
+    </section>
+
+    <section class="home-section">
+      <h3 class="home-section-title">Por que FenixUI?</h3>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-icon"><span class="fx-icon fx-icon-bolt"></span></div>
+          <b>Web Components nativos</b>
+          <p>Shadow DOM, zero dependências e compatível com qualquer framework — ou nenhum.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon"><span class="fx-icon fx-icon-layers"></span></div>
+          <b>Tree-shaking por componente</b>
+          <p>Cada componente tem seu próprio subpath: só entra no bundle o que a aplicação usa.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon"><span class="fx-icon fx-icon-palette"></span></div>
+          <b>Design Tokens & temas</b>
+          <p>Visual dirigido por <code class="inline">--fx-*</code>: troque de tema em runtime, inclusive dentro do Shadow DOM.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon"><span class="fx-icon fx-icon-dark_mode"></span></div>
+          <b>Dark mode nativo</b>
+          <p>Modo claro/escuro com uma linha: <code class="inline">FenixUI.theme('dark')</code>.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon"><span class="fx-icon fx-icon-auto_awesome"></span></div>
+          <b>Ícones inclusos</b>
+          <p>Biblioteca self-hosted com milhares de glifos — nada para instalar além do pacote.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon"><span class="fx-icon fx-icon-extension"></span></div>
+          <b>Auto Import</b>
+          <p>Escreva as tags <code class="inline">fx-*</code> e o plugin injeta os imports em tempo de build.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="home-section">
+      <h3 class="home-section-title">Casos de uso</h3>
+      <div class="usecase-grid">
+        <div class="usecase-card">
+          <div class="usecase-preview">
+            <div class="uc-stat"><b>87%</b><span class="uc-label">Meta do mês</span><fx-progress value="87" variant="success"></fx-progress></div>
+            <div class="uc-stat"><b>1.2k</b><span class="uc-label">Visitas hoje</span><fx-progress value="62" variant="info"></fx-progress></div>
+            <fx-knob></fx-knob>
+          </div>
+          <b>Dashboards & painéis</b>
+          <p>Tabelas, indicadores e métricas com visual consistente e temas em runtime.</p>
+          <a href="#/fx-table">Ver fx-table <span class="fx-icon fx-icon-arrow_forward"></span></a>
+        </div>
+        <div class="usecase-card">
+          <div class="usecase-preview">
+            <div class="uc-form">
+              <fx-floatlabel variant="in"><fx-input full icon="mail" type="email"></fx-input><label>E-mail</label></fx-floatlabel>
+              <fx-floatlabel variant="in"><fx-input full icon="lock" type="password"></fx-input><label>Senha</label></fx-floatlabel>
+              <fx-switch size="sm" checked>Lembrar-me</fx-switch>
+              <fx-button size="sm" variant="primary">Entrar</fx-button>
+            </div>
+          </div>
+          <b>Formulários completos</b>
+          <p>FloatLabel, validação, upload e autocomplete prontos para qualquer cadastro.</p>
+          <a href="#/forms">Ver Formulários <span class="fx-icon fx-icon-arrow_forward"></span></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="home-cta">
+      <h3>Pronto para renascer?</h3>
+      <p>Instale em segundos e use em qualquer stack — comece agora.</p>
+      <fx-button id="home-cta-button" size="lg" variant="secondary"><i slot="icon" class="fx-icon fx-icon-rocket_launch"></i>Get Started</fx-button>
+    </section>
+  `;
+  const goInstall = (): void => {
+    window.location.hash = '#/installation';
+  };
+  document.getElementById('hero-get-started')?.addEventListener('click', goInstall);
+  document.getElementById('home-cta-button')?.addEventListener('click', goInstall);
+}
+
+/* ------------------------------------------------------------------ */
+/* Página: Instalação (cards por stack)                                */
+/* ------------------------------------------------------------------ */
+
+/** Logos em SVG inline das stacks com marca própria (Vue, React, Nuxt). */
+const INSTALL_SVGS: Record<string, string> = {
+  vue: '<svg viewBox="0 0 256 221" width="30" height="26" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid"><path fill="#41B883" d="M204.8 0H256L128 220.8 0 0h97.92L128 51.2 157.44 0h47.36Z"/><path fill="#41B883" d="m0 0 128 220.8L256 0h-51.2L128 132.48 50.56 0H0Z"/><path fill="#35495E" d="M50.56 0 128 133.12 204.8 0h-47.36L128 51.2 97.92 0H50.56Z"/></svg>',
+  react: '<svg viewBox="-11.5 -10.23174 23 20.46348" width="30" height="27" xmlns="http://www.w3.org/2000/svg"><circle r="2.05" fill="#61dafb"/><g stroke="#61dafb" stroke-width="1" fill="none"><ellipse rx="11" ry="4.2"/><ellipse rx="11" ry="4.2" transform="rotate(60)"/><ellipse rx="11" ry="4.2" transform="rotate(120)"/></g></svg>',
+  nuxt: '<svg viewBox="0 0 221 121" width="32" height="26" xmlns="http://www.w3.org/2000/svg"><path fill="#00DC82" d="M130.7 121h79.1c2.5 0 4.9-.6 7-1.9a13.9 13.9 0 0 0 5.1-19.1l-44.8-77.4a13.9 13.9 0 0 0-24.1 0l-11.4 19.8-22.3-38.5a13.9 13.9 0 0 0-24.2 0L.9 100a13.9 13.9 0 0 0 5.1 19.1c2.2 1.3 4.6 1.9 7.1 1.9h49.6c19.7 0 34.3-8.6 44.3-25.4l24.3-41.8 13-22.3 39 41.9h-56.5L130.7 121ZM63.4 103.5H22.1l62.7-107.3 31.2 53.7-20.9 34.9c-6.7 10.7-14.1 18.7-31.7 18.7Z"/></svg>',
+};
+
+/** Ícone Fenix + cor de destaque para stacks sem logo SVG. */
+const INSTALL_FX_ICONS: Record<string, { icon: string; color: string }> = {
+  npm: { icon: 'package', color: '#cb3837' },
+  cdn: { icon: 'cloud', color: '#f59e0b' },
+  jsf: { icon: 'globe', color: '#0ea5e9' },
+  dotnet: { icon: 'code', color: '#8b5cf6' },
+};
+
+/** Card de instalação: ícone + nome + descrição, clicável, leva à página da stack. */
+function installCard(href: string, key: string, name: string, desc: string): string {
+  const svg = INSTALL_SVGS[key];
+  const fx = INSTALL_FX_ICONS[key];
+  const icon = svg
+    ? `<div class="install-icon">${svg}</div>`
+    : `<div class="install-icon" style="color:${fx.color}"><span class="fx-icon fx-icon-${fx.icon}"></span></div>`;
+  return (
+    `<a class="install-card" href="${href}">` +
+    icon +
+    `<div class="install-body"><div class="install-name">${esc(name)}</div><div class="install-desc">${esc(desc)}</div></div>` +
+    `<span class="install-arrow fx-icon fx-icon-arrow_forward"></span>` +
+    `</a>`
+  );
+}
+
+/** Página Instalação — comando universal inline + cards que levam a cada stack. */
+async function renderInstallation(): Promise<void> {
   const main = document.getElementById('main')!;
   main.innerHTML = `
-    <h2>Introdução</h2>
-    <p class="lead">FenixUI é um Design System de <strong>Web Components nativos</strong> — funciona com
-    qualquer framework (ou sem nenhum). Cada componente é importável isoladamente, então o bundle do
-    cliente contém apenas o que ele usa.</p>
-    <h3>Instalação</h3>
+    <h2>Instalação</h2>
+    <p class="lead">Um único pacote em qualquer projeto. O comando abaixo é o ponto de partida —
+    depois, escolha sua stack nos cards para o passo a passo completo com o setup específico:</p>
     ${codeBlock('npm install @wrrdev/fenix-ui')}
-    <h3>Uso básico</h3>
+    <div class="note"><strong>Uso básico</strong> — importe o componente, aplique os tokens e pronto:</div>
     ${codeBlock("import '@wrrdev/fenix-ui/button';\nimport { FenixUI } from '@wrrdev/fenix-ui';\n\nFenixUI.theme('dark');")}
+    <h3>Escolha sua stack</h3>
+    <div class="install-grid">
+      ${installCard('#/vue3', 'vue', 'Vue 3', 'Plugin isCustomElement + tipos Volar e reatividade plena.')}
+      ${installCard('#/vue3', 'nuxt', 'Nuxt', 'compilerOptions no nuxt.config + plugin .client.ts para SSR.')}
+      ${installCard('#/integrations', 'react', 'React / Next.js', 'React 19+ nativo; <19 com ref + addEventListener.')}
+      ${installCard('#/integrations', 'cdn', 'CDN / HTML puro', 'Bundle UMD único via jsDelivr/unpkg — sem build.')}
+      ${installCard('#/integrations', 'jsf', 'JSF (Jakarta Faces)', 'XHTML bem-formado + h:outputScript no template.')}
+      ${installCard('#/integrations', 'dotnet', 'JSP / .NET', 'Razor, WebForms e MVC: HTML normal nas views.')}
+    </div>
+    <div class="note"><strong>Gerenciadores alternativos:</strong> <code class="inline">pnpm add @wrrdev/fenix-ui</code> ·
+    <code class="inline">yarn add @wrrdev/fenix-ui</code> — o pacote é o mesmo.</div>
     <h3>Componentes</h3>
-    <div class="demo"><div class="demo-stage">
-      <fx-button variant="primary">Button</fx-button>
-      <fx-badge variant="success">Badge</fx-badge>
-      <fx-spinner></fx-spinner>
-    </div></div>
-    <p>Consulte cada componente no menu lateral para exemplos interativos e API completa.</p>
+    <p>Consulte cada componente no menu lateral para exemplos interativos, playground ao vivo e API completa.</p>
   `;
   wireCopyButtons(main);
 }
@@ -740,7 +891,8 @@ function setupHeader(): void {
 function buildSidebar(): void {
 	const groups = new Map<string, { id: string; title: string }[]>();
 	groups.set("Guia", [
-		{ id: "introduction", title: "Introdução" },
+		{ id: "home", title: "Home" },
+		{ id: "installation", title: "Instalação" },
 		{ id: "vue3", title: "Vue 3 / Nuxt" },
 		{ id: "integrations", title: "CDN / React / JSF" },
 		{ id: "auto-import", title: "Auto Import" },
@@ -1120,7 +1272,7 @@ async function renderForms(): Promise<void> {
 }
 
 async function renderRoute(): Promise<void> {
-	const route = location.hash.replace(/^#\//, "") || "introduction";
+	const route = location.hash.replace(/^#\//, "") || "home";
 	document
 		.querySelectorAll("#sidebar a")
 		.forEach((a) =>
@@ -1134,13 +1286,15 @@ async function renderRoute(): Promise<void> {
 		// Import lazy + aguarda o render completo antes de resolver a rota.
 		await componentLoaders[route]?.();
 		await renderComponentPage(doc);
-	} else if (route === "theming") await renderTheming();
+	} else if (route === "home") await renderHome();
+	else if (route === "installation") await renderInstallation();
+	else if (route === "theming") await renderTheming();
 	else if (route === "auto-import") renderAutoImport();
 	else if (route === "icons") renderIcons();
 	else if (route === "forms") await renderForms();
 	else if (route === "vue3") renderVue3();
 	else if (route === "integrations") renderIntegrations();
-	else await renderIntro();
+	else await renderHome();
 }
 
 async function renderVue3(): Promise<void> {

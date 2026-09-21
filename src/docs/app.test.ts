@@ -32,7 +32,68 @@ async function navigate(route: string): Promise<void> {
 
 describe("docs app", () => {
 	beforeEach(async () => {
-		await navigate("introduction");
+		await navigate("home");
+	});
+
+	it("home é a rota padrão quando não há hash", async () => {
+		location.hash = "";
+		window.dispatchEvent(new Event("hashchange"));
+		await new Promise((r) => setTimeout(r, 0));
+		await app.currentRouteReady();
+		expect(main().querySelector(".home-hero")).toBeTruthy();
+		expect(main().querySelector(".hero-cta fx-button")).toBeTruthy();
+	});
+
+	it("home renderiza hero, features e casos de uso", async () => {
+		expect(main().querySelector(".home-hero")).toBeTruthy();
+		expect(main().querySelector(".hero-cta fx-button")).toBeTruthy();
+		expect(main().querySelectorAll(".feature-card").length).toBe(6);
+		expect(main().querySelectorAll(".usecase-card").length).toBe(2);
+	});
+
+	it("home: botão Get Started leva à página de instalação", async () => {
+		const btn = main().querySelector("#hero-get-started")!;
+		btn.dispatchEvent(new Event("click"));
+		await new Promise((r) => setTimeout(r, 0));
+		await app.currentRouteReady();
+		expect(location.hash).toBe("#/installation");
+		expect(main().querySelector(".install-grid")).toBeTruthy();
+	});
+
+	it("sidebar tem Home e Instalação (sem Introdução)", async () => {
+		const links = [...document.querySelectorAll("#sidebar a")].map((a) => ({
+			href: a.getAttribute("href"),
+			text: a.textContent,
+		}));
+		expect(links.map((l) => l.href)).toContain("#/home");
+		expect(links.map((l) => l.href)).toContain("#/installation");
+		const titles = links.map((l) => l.text);
+		expect(titles).toContain("Instalação");
+		expect(titles).not.toContain("Introdução");
+	});
+
+	it("página de instalação renderiza cards de todas as stacks", async () => {
+		await navigate("installation");
+		expect(main().querySelector("h2")?.textContent).toBe("Instalação");
+		const cards = [...main().querySelectorAll(".install-card")].map(
+			(c) => c.querySelector(".install-name")?.textContent,
+		);
+		expect(cards).toEqual([
+			"Vue 3",
+			"Nuxt",
+			"React / Next.js",
+			"CDN / HTML puro",
+			"JSF (Jakarta Faces)",
+			"JSP / .NET",
+		]);
+		// Cards clicáveis levam às páginas das stacks
+		const hrefs = [...main().querySelectorAll(".install-card")].map((c) =>
+			c.getAttribute("href"),
+		);
+		expect(hrefs).toContain("#/vue3");
+		expect(hrefs).toContain("#/integrations");
+		// Comando de instalação universal inline na própria página
+		expect(main().textContent).toContain("npm install @wrrdev/fenix-ui");
 	});
 
 	it("constrói a sidebar com todos os componentes", async () => {
@@ -128,7 +189,7 @@ describe("docs app", () => {
 			document.documentElement.style.getPropertyValue("--fx-color-primary"),
 		).toBe("#e11d48");
 		// ...e ao sair e voltar, também permanece
-		await navigate("introduction");
+		await navigate("installation");
 		await navigate("theming");
 		expect(
 			document.documentElement.style.getPropertyValue("--fx-color-primary"),
