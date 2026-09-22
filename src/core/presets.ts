@@ -32,7 +32,7 @@ export const themePresets = {
 	fenix: register({
 		name: "fenix",
 		label: "Fenix (padrão)",
-		tokens: {},
+		tokens: { effect: { "focus-ring": "none" } },
 	}),
 	seiya: register({
 		name: "seiya",

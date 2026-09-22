@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import './index';
+import { FxButton } from './button';
 
 function mount(attrs = ''): HTMLElement {
   const el = document.createElement('fx-button');
@@ -121,5 +122,11 @@ describe('fx-button', () => {
     el.addEventListener('click', () => clicked++);
     el.shadowRoot!.querySelector('button')!.click();
     expect(clicked).toBe(1);
+  });
+
+  it('foco respeita o token effect.focus-ring (sem outline fixo)', () => {
+    const styles = (FxButton as unknown as { styles: string }).styles;
+    expect(styles).not.toContain('outline: 2px solid');
+    expect(styles).toContain('box-shadow: var(--fx-effect-focus-ring, none)');
   });
 });

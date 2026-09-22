@@ -51,8 +51,8 @@ export class FxButton extends FxElement {
         box-shadow var(--fx-motion-duration-normal) var(--fx-motion-easing);
     }
     .btn:focus-visible {
-      outline: 2px solid var(--fx-color-primary);
-      outline-offset: 2px;
+      outline: none;
+      box-shadow: var(--fx-effect-focus-ring, none);
     }
     .btn:hover { filter: brightness(0.88); }
     .btn:active { transform: translateY(1px); }

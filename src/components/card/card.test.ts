@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import './index';
+import { FxCard } from './card';
+
 
 describe('fx-card', () => {
   it('registra o componente', () => {
@@ -33,5 +35,26 @@ describe('fx-card', () => {
       expect(card).toBeTruthy();
       el.remove();
     }
+  });
+
+  it('radius controla o arredondamento (size segue como alias legado)', () => {
+    const styles = (FxCard as unknown as { styles: string }).styles;
+    const observed = (FxCard as unknown as { observedAttributes: string[] }).observedAttributes;
+    expect(styles).toContain(":host([radius='sm'])");
+    expect(styles).toContain(":host([radius='lg'])");
+    expect(styles).toContain(":host([size='sm'])");
+    expect(observed).toContain('radius');
+  });
+
+  it('padded é observado e re-renderiza o shadow (padding interno)', () => {
+    const el = document.createElement('fx-card');
+    document.body.appendChild(el);
+    const before = el.shadowRoot!.querySelector('.body');
+    el.setAttribute('padded', '');
+    expect(el.hasAttribute('padded')).toBe(true);
+    // o atributo observado refaz o template do shadow
+    expect(el.shadowRoot!.querySelector('.body')).not.toBe(before);
+    expect((FxCard as unknown as { styles: string }).styles).toContain(':host([padded]) .body { padding:');
+    el.remove();
   });
 });

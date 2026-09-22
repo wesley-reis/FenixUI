@@ -36,6 +36,8 @@ export type FxChipVariant = 'primary' | 'secondary' | 'success' | 'warning' | 'd
 export type FxAvatarVariant = 'image' | 'text' | 'icon';
 export type FxAvatarShape = 'circle' | 'rounded' | 'square';
 export type FxCardVariant = 'elevated' | 'flat' | 'outline' | 'ghost';
+/** Arredondamento do container do card. */
+export type FxCardRadius = 'sm' | 'md' | 'lg';
 export type FxPopoverTrigger = 'click' | 'hover';
 export type FxPopoverPosition = 'auto' | 'top' | 'bottom';
 export type FxMenuOrientation = 'horizontal' | 'vertical';
@@ -270,6 +272,9 @@ export interface FxAvatarProps extends FxElementProps {
 }
 export interface FxCardProps extends FxElementProps {
   variant?: FxCardVariant;
+  /** Arredondamento do container (radius sm/md/lg). */
+  radius?: FxCardRadius;
+  /** @deprecated use `radius`. */
   size?: FxSize;
   padded?: boolean;
   heading?: string;

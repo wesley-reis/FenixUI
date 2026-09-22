@@ -4,6 +4,8 @@
  */
 import { describe, it, expect, beforeEach } from "vitest";
 import { applyPreset } from "../core/presets";
+import { componentDocs } from "./componentes";
+
 
 document.body.innerHTML = `
   <select id="preset-select"></select>
@@ -384,5 +386,109 @@ describe("docs app", () => {
 		form.querySelector("[data-save]")!.dispatchEvent(new Event("click"));
 		expect(input.hasAttribute("error")).toBe(false);
 		expect(alertEl.hidden).toBe(true);
+	});
+});
+
+/* ------------------------------------------------------------------ */
+/* Código de exemplo: destaque de sintaxe + botão copiar              */
+/* ------------------------------------------------------------------ */
+
+/** Texto puro do trecho destacado — é exatamente o que o usuário copia. */
+function plainCode(highlighted: string): string {
+	return highlighted
+		.replace(/<[^>]+>/g, "")
+		.replace(/&lt;/g, "<")
+		.replace(/&gt;/g, ">")
+		.replace(/&amp;/g, "&");
+}
+
+describe("docs: código de exemplo", () => {
+	it.each(componentDocs.map((d) => [d.tag, d] as const))(
+		"%s: o destaque preserva o código exatamente (tag e atributos não colam)",
+		(_tag, doc) => {
+			for (const src of [doc.demoHtml(""), doc.variantsHtml?.() ?? ""]) {
+				if (!src) continue;
+				const formatted = app.formatHtml(src);
+				expect(plainCode(app.highlightCode(formatted))).toBe(formatted);
+			}
+		},
+	);
+
+	it("mantém o espaço entre o nome da tag e o primeiro atributo", () => {
+		const out = app.highlightCode('<fx-input full icon="search"></fx-input>');
+		expect(out).toContain('<span class="tok-tagname">fx-input</span>');
+		expect(out).toContain('<span class="tok-attr"> full</span>');
+		expect(plainCode(out)).toBe('<fx-input full icon="search"></fx-input>');
+	});
+
+	it("destaca keywords, strings e comentários", () => {
+		const out = app.highlightCode("import { applyPreset } from '@wrrdev/fenix-ui'; // tema");
+		expect(out).toContain('class="tok-keyword"');
+		expect(out).toContain('class="tok-string"');
+		expect(out).toContain('class="tok-comment"');
+	});
+
+	it("o botão Copiar fica na barra do bloco, nunca sobre o código", async () => {
+		await navigate("fx-button");
+		const block = main().querySelector(".code-block")!;
+		const head = block.querySelector(".code-head");
+		expect(head?.querySelector(".copy-btn")).toBeTruthy();
+		// o <code> vive no <pre>, fora da barra que contém o botão
+		expect(head?.querySelector("code")).toBeNull();
+		expect(block.querySelector("pre > code")?.textContent?.trim().length).toBeGreaterThan(0);
+	});
+
+	it("copiar envia o texto do bloco para a área de transferência", async () => {
+		await navigate("fx-button");
+		const written: string[] = [];
+		Object.defineProperty(navigator, "clipboard", {
+			configurable: true,
+			value: {
+				writeText: (text: string) => {
+					written.push(text);
+					return Promise.resolve();
+				},
+			},
+		});
+		const block = main().querySelector(".code-block")!;
+		const btn = block.querySelector<HTMLButtonElement>(".copy-btn")!;
+		btn.dispatchEvent(new Event("click"));
+		expect(written[0]).toBe(block.querySelector("code")!.textContent);
+		expect(btn.textContent).toBe("Copiado!");
+	});
+});
+
+/* ------------------------------------------------------------------ */
+/* Playground do fx-card: padded e radius                              */
+/* ------------------------------------------------------------------ */
+
+describe("docs: playground do fx-card", () => {
+	it("o HTML do demo não fixa atributos que o playground controla", async () => {
+		await navigate("fx-card");
+		// `padded` vem do controle (ligado por padrão), não do demo
+		expect(main().querySelector("#stage fx-card")!.hasAttribute("padded")).toBe(true);
+	});
+
+	it("o toggle 'Padding interno' liga e desliga o atributo padded", async () => {
+		await navigate("fx-card");
+		const sw = main().querySelector('fx-switch[data-attr="padded"]') as any;
+		expect(sw).toBeTruthy();
+
+		sw.checked = false;
+		sw.dispatchEvent(new Event("change"));
+		expect(main().querySelector("#stage fx-card")!.hasAttribute("padded")).toBe(false);
+
+		sw.checked = true;
+		sw.dispatchEvent(new Event("change"));
+		expect(main().querySelector("#stage fx-card")!.hasAttribute("padded")).toBe(true);
+	});
+
+	it("o controle de raio aplica o atributo radius (renomeado de size)", async () => {
+		await navigate("fx-card");
+		const select = main().querySelector('fx-select[data-attr="radius"]') as any;
+		expect(select).toBeTruthy();
+		select.value = "lg";
+		select.dispatchEvent(new Event("change"));
+		expect(main().querySelector("#stage fx-card")!.getAttribute("radius")).toBe("lg");
 	});
 });

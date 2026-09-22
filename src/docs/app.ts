@@ -79,8 +79,80 @@ function initDataComponents(container: HTMLElement): void {
   });
 }
 
+/**
+ * Tokenizador de sintaxe leve para HTML/TS — envolve tokens em <span class>
+ * usando as CSS Variables do FenixUI (--fx-*), então as cores acompanham
+ * light/dark automaticamente. O texto fora dos tokens passa por `esc`.
+ */
+export function highlightCode(code: string): string {
+  // Ordem importa: comentários e tags primeiro; strings e keywords depois.
+  const RE =
+    /<!--[\s\S]*?-->|<\/?[\w-]+(?:"[^"]*"|'[^']*'|[^>"'])*\/?>|\/\*[\s\S]*?\*\/|\/\/[^\n\r]*|`[^`]*`|'(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"|\b(?:import|from|const|let|var|export|function|return|new|if|else|await|async|type|interface)\b/g;
+  const parts: string[] = [];
+  let last = 0;
+  let m: RegExpExecArray | null;
+  while ((m = RE.exec(code)) !== null) {
+    if (m.index > last) parts.push(esc(code.slice(last, m.index)));
+    const tok = m[0];
+    if (tok.startsWith('<!--') || tok.startsWith('/*') || tok.startsWith('//')) {
+      parts.push(`<span class="tok-comment">${esc(tok)}</span>`);
+    } else if (tok.startsWith('<')) {
+      parts.push(highlightTag(tok));
+    } else if (tok.startsWith('`') || tok.startsWith("'") || tok.startsWith('"')) {
+      parts.push(`<span class="tok-string">${esc(tok)}</span>`);
+    } else {
+      parts.push(`<span class="tok-keyword">${esc(tok)}</span>`);
+    }
+    last = RE.lastIndex;
+  }
+  if (last < code.length) parts.push(esc(code.slice(last)));
+  return parts.join('');
+}
+
+/**
+ * Destaca nome da tag, atributos e valores de uma tag HTML.
+ *
+ * O espaço entre o nome da tag e o primeiro atributo fica dentro do grupo
+ * `rest` (e é reemitido) — sem isso o código exibido sairia "colado":
+ * `<fx-inputfull icon="search">`.
+ */
+function highlightTag(tag: string): string {
+  // Tag de fechamento: </tag>
+  if (tag.startsWith('</')) {
+    const m = tag.match(/^<\/\s*([\w-]+)/);
+    return m
+      ? `<span class="tok-tag">&lt;/</span><span class="tok-tagname">${esc(m[1])}</span><span class="tok-tag">&gt;</span>`
+      : esc(tag);
+  }
+  // Tag de abertura / self-closing: <tag attr="v" flag />
+  const m = tag.match(/^<([\w-]+)((?:"[^"]*"|'[^']*'|[^>"'])*?)(\/?>)$/);
+  if (!m) return esc(tag);
+  const [, name, rest, close] = m;
+  let html = `<span class="tok-tag">&lt;</span><span class="tok-tagname">${esc(name)}</span>`;
+  // Atributos: mantém o espaço inicial, o `=`, o valor e flags booleanas.
+  const RE_ATTR = /(\s+)([\w-]+)(?:=("[^"]*"|'[^']*'|[^\s>]+))?/g;
+  let last = 0;
+  let am: RegExpExecArray | null;
+  while ((am = RE_ATTR.exec(rest)) !== null) {
+    if (am.index > last) html += esc(rest.slice(last, am.index));
+    html += `<span class="tok-attr">${esc(am[1])}${esc(am[2])}</span>`;
+    if (am[3] !== undefined) {
+      html += `<span class="tok-attr-eq">=</span><span class="tok-attr-val">${esc(am[3])}</span>`;
+    }
+    last = RE_ATTR.lastIndex;
+  }
+  if (last < rest.length) html += esc(rest.slice(last));
+  html += `<span class="tok-tag">${esc(close)}</span>`;
+  return html;
+}
+
 function codeBlock(code: string): string {
-  return `<div class="code-block"><pre><code>${esc(code)}</code></pre><button class="copy-btn">Copiar</button></div>`;
+  return (
+    `<div class="code-block">` +
+    `<div class="code-head"><button class="copy-btn">Copiar</button></div>` +
+    `<pre><code>${highlightCode(code)}</code></pre>` +
+    `</div>`
+  );
 }
 
 /** Formata HTML em múltiplas linhas com indentação para facilitar a leitura. */
@@ -205,7 +277,10 @@ function currentAttrs(doc: ComponentDoc): string {
 function wireCopyButtons(root: ParentNode): void {
   root.querySelectorAll<HTMLButtonElement>('.copy-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
-      navigator.clipboard.writeText(btn.parentElement!.querySelector('code')!.textContent ?? '');
+      // O botão vive na barra (.code-head); o código está no mesmo .code-block.
+      const block = btn.closest('.code-block');
+      const text = block?.querySelector('code')?.textContent ?? '';
+      navigator.clipboard?.writeText(text).catch(() => { /* clipboard indisponível */ });
       btn.textContent = 'Copiado!';
       setTimeout(() => (btn.textContent = 'Copiar'), 1200);
     });
@@ -555,6 +630,9 @@ FenixUI.setTokens({
       })
       .join('');
   };
+  // Referência guardada para repintar os swatches quando o modo mudar pelo
+  // toggle do header (ele não dispara 'change' nos selects desta página).
+  themingPaint = paint;
   const sync = (): void => {
     const p = (document.getElementById('th-preset') as HTMLSelectElement).value;
     const m = (document.getElementById('th-mode') as HTMLSelectElement).value as 'light' | 'dark';
@@ -725,6 +803,11 @@ function renderThemingSwatchesOnly(container: HTMLElement): void {
 
 let currentPreset = 'fenix';
 let currentMode: 'light' | 'dark' = 'light';
+/**
+ * Referência ao `paint()` da página de Temas. Permite repintar os swatches
+ * quando o modo é trocado pelo toggle do header (fora daquela página).
+ */
+let themingPaint: (() => void) | null = null;
 
 function syncHeaderControls(preset: string, mode: 'light' | 'dark'): void {
   currentPreset = preset;
@@ -885,6 +968,9 @@ function setupHeader(): void {
     currentMode = currentMode === 'dark' ? 'light' : 'dark';
     applyPreset(currentPreset, currentMode);
     syncHeaderControls(currentPreset, currentMode);
+    // Na página de Temas, repinta os swatches: o toggle do header não passa
+    // pelos selects da página (que são quem normalmente chama paint()).
+    if (themingPaint) themingPaint();
   });
 }
 
@@ -941,7 +1027,7 @@ function renderVariantCards(doc: ComponentDoc): string {
 			`<div class="example-card">` +
 				(title ? `<div class="example-title">${esc(title)}</div>` : "") +
 				`<div class="example-stage">${html}</div>` +
-				`<div class="code-block example-code"><pre><code>${esc(formatHtml(html))}</code></pre><button class="copy-btn">Copiar</button></div>` +
+				`<div class="code-block example-code"><div class="code-head"><button class="copy-btn">Copiar</button></div><pre><code>${highlightCode(formatHtml(html))}</code></pre></div>` +
 				`</div>`,
 		);
 	};
@@ -1076,7 +1162,7 @@ async function renderComponentPage(doc: ComponentDoc): Promise<void> {
 				/(\s(?:disabled|loading|checked|readonly|full|round))=""/g,
 				"$1",
 			);
-			codeEl.textContent = formatHtml(clean);
+			codeEl.innerHTML = highlightCode(formatHtml(clean));
 		}
 	};
 	main
@@ -1112,9 +1198,9 @@ function formModelCard(title: string, desc: string, html: string): string {
 	return (
 		`<div class="example-card">` +
 		`<div class="example-title">${esc(title)}</div>` +
-		`<p style="margin:0 0 12px;font-size:13px;color:var(--fx-text-muted); text-align:center">${esc(desc)}</p>` +
+		`<p style="margin:0 0 12px;font-size:13px;color:var(--fx-text-muted)">${esc(desc)}</p>` +
 		`<div class="example-stage">${html}</div>` +
-		`<div class="code-block example-code"><pre><code>${esc(formatHtml(html))}</code></pre><button class="copy-btn">Copiar</button></div>` +
+		`<div class="code-block example-code"><div class="code-head"><button class="copy-btn">Copiar</button></div><pre><code>${highlightCode(formatHtml(html))}</code></pre></div>` +
 		`</div>`
 	);
 }
@@ -1287,6 +1373,12 @@ async function renderRoute(): Promise<void> {
 				(a as HTMLAnchorElement).dataset.id === route,
 			),
 		);
+	const main = document.getElementById("main")!;
+	// Limpa o conteúdo já: evita conteúdo obsoleto durante o carregamento
+	// assíncrono e mantém sidebar e conteúdo sincronizados.
+	main.innerHTML = `<div class="loading-state">Carregando…</div>`;
+	// Reseta callbacks de páginas inativas (ex.: swatches da página de Temas).
+	if (route !== "theming") themingPaint = null;
 	const doc = components.find((c) => c.tag === route);
 	if (doc) {
 		// Import lazy + aguarda o render completo antes de resolver a rota.
