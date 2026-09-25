@@ -36,6 +36,9 @@ export class FxFileUpload extends FxElement {
       align-items: center;
       justify-content: center;
       gap: var(--fx-space-sm);
+      /* Largura acompanha o host: CSS externo/classe/inline no elemento esticam
+         o botão sem precisar do full (host é shrink-to-fit por padrão). */
+      width: 100%;
       min-height: var(--fx-size-md);
       padding: var(--fx-space-md) var(--fx-space-lg);
       font-family: inherit;
@@ -79,6 +82,8 @@ export class FxFileUpload extends FxElement {
       align-items: center;
       justify-content: center;
       gap: var(--fx-space-sm);
+      /* Acompanha a largura do host (definida por CSS externo/classe/inline). */
+      width: 100%;
       min-height: 100px;
       padding: var(--fx-space-lg);
       border: 2px dashed var(--fx-border-default);

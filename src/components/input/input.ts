@@ -11,6 +11,9 @@ import { FENIX_ICON_BASE_CSS, fenixIconHtml } from '../../icons/base-css';
  * placeholder, disabled, readonly, min, max, step, clearable,
  * full (largura 100% acompanhando o elemento pai), icon (nome do glifo Fenix Icons
  * ou emoji/texto livre) e icon-pos (left|right, padrão left).
+ * Largura: o default (260px; sm 220px / lg 300px) fica no HOST via tokens
+ * --fx-input-width(-sm|-lg) — CSS externo, classes e style inline no elemento
+ * vencem o default sem precisar de atributo.
  * Slots: `icon` (ícone customizado no lugar do atributo).
  * Eventos: `input` e `change` (composed, detail: { value }).
  */
@@ -18,6 +21,12 @@ export class FxInput extends FxElement {
   static override styles = css`
     :host {
       display: inline-block;
+      vertical-align: middle;
+      /* Largura padrão no HOST (e não no .field interno): assim CSS externo,
+         classes do framework (ex.: w-full) e style inline no elemento vencem
+         este default naturalmente — regras do documento têm precedência sobre
+         :host. Default global trocável via token: --fx-input-width (-sm/-lg). */
+      width: var(--fx-input-width, 260px);
       vertical-align: middle;
       font-family: var(--fx-font-family);
       font-size: var(--fx-font-size);
@@ -32,7 +41,8 @@ export class FxInput extends FxElement {
       border: 1px solid var(--fx-border-default);
       border-radius: var(--fx-radius-md);
       padding: var(--fx-space-md) var(--fx-space-lg);
-      width: 260px;
+      /* Acompanha a largura definida no :host. */
+      width: 100%;
       box-sizing: border-box;
       transition:
         border-color var(--fx-motion-duration-normal) var(--fx-motion-easing),
@@ -66,8 +76,10 @@ export class FxInput extends FxElement {
       border-color: var(--fx-color-success, #16a34a);
       box-shadow: 0 0 0 3px color-mix(in srgb, var(--fx-color-success, #16a34a) 18%, transparent);
     }
-    :host([size='sm']) .field { padding: var(--fx-space-sm) var(--fx-space-md); font-size: var(--fx-font-size); width: 220px; min-height: var(--fx-size-sm); }
-    :host([size='lg']) .field { padding: var(--fx-space-lg) var(--fx-space-xl); font-size: calc(var(--fx-font-size) + 4px); width: 300px; min-height: var(--fx-size-lg); }
+    :host([size='sm']) { width: var(--fx-input-width-sm, 220px); }
+    :host([size='sm']) .field { padding: var(--fx-space-sm) var(--fx-space-md); font-size: var(--fx-font-size); min-height: var(--fx-size-sm); }
+    :host([size='lg']) { width: var(--fx-input-width-lg, 300px); }
+    :host([size='lg']) .field { padding: var(--fx-space-lg) var(--fx-space-xl); font-size: calc(var(--fx-font-size) + 4px); min-height: var(--fx-size-lg); }
     /* Full width: o host estica até o pai e o campo interno acompanha
        (usar com um container de largura controlada, ex. w-full no Vue). */
     :host([full]) { display: block; width: 100%; }
@@ -75,7 +87,7 @@ export class FxInput extends FxElement {
     /* Clearable */
     :host([clearable]) { position: relative; display: inline-flex; }
     :host([clearable][full]) { display: block; }
-    .wrap { position: relative; display: inline-flex; align-items: center; }
+    .wrap { position: relative; display: inline-flex; align-items: center; width: 100%; }
     :host([full]) .wrap { display: flex; width: 100%; }
     :host([clearable]) .field { padding-right: var(--fx-space-xl); }
     :host([clearable][full]) .field { flex: 1 1 auto; }
@@ -85,6 +97,7 @@ export class FxInput extends FxElement {
       position: relative;
       display: inline-flex;
       box-sizing: border-box;
+      width: 100%;
     }
     .field-icon .field { flex: 1 1 auto; min-width: 0; }
     :host([full]) .field-icon { display: flex; width: 100%; }

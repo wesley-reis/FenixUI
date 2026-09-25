@@ -39,11 +39,20 @@ describe('applyPreset', () => {
     expect(listPresets().map((p) => p.name)).toContain('mascara-da-morte');
   });
 
-  it('preset desconhecido cai no padrão fenix (sem override)', () => {
+  it('preset desconhecido cai no padrão fenix (focus-ring desligado)', () => {
     applyPreset('inexistente', 'light');
     expect(document.documentElement.style.getPropertyValue('--fx-color-primary')).toBe(
       defaultTokens.color.primary,
     );
+    expect(document.documentElement.style.getPropertyValue('--fx-effect-focus-ring')).toBe('none');
+  });
+
+  it('preset Fenix (padrão) respeita focus-ring desligado', () => {
+    applyPreset('fenix', 'light');
+    expect(document.documentElement.style.getPropertyValue('--fx-effect-focus-ring')).toBe('none');
+    // ...e ao trocar de modo, o valor do preset permanece
+    applyPreset('fenix', 'dark');
+    expect(document.documentElement.style.getPropertyValue('--fx-effect-focus-ring')).toBe('none');
   });
 
   it('deepMerge mantém merge parcial profundo', () => {

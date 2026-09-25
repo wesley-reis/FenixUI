@@ -6,7 +6,8 @@ import { esc } from '../../core/sanitize';
 /**
  * <fx-card> — Container de conteúdo com cabeçalho, corpo e rodapé.
  *
- * Atributos: variant (elevated|flat|outline, padrão elevated), size (sm|md|lg),
+ * Atributos: variant (elevated|flat|outline|ghost, padrão elevated),
+ * radius (sm|md|lg — arredondamento; `size` segue aceito como alias legado),
  * padded (exibe padding interno), heading (rótulo opcional no cabeçalho).
  * Slots: `header`, padrão (conteúdo), `footer`.
  */
@@ -35,8 +36,11 @@ export class FxCard extends FxElement {
     :host([variant='outline']) .card { box-shadow: none; border-style: solid; border-width: 1px; }
     :host([variant='ghost']) .card { box-shadow: none; border-color: transparent; background: transparent; }
 
-    /* Tamanhos */
+    /* Raio do container: radius (nome atual) — size continua aceito
+       como alias legado para não quebrar quem já usava o atributo. */
+    :host([radius='sm']) .card,
     :host([size='sm']) .card { border-radius: var(--fx-radius-sm); }
+    :host([radius='lg']) .card,
     :host([size='lg']) .card { border-radius: var(--fx-radius-xl); }
 
     header {
@@ -65,7 +69,7 @@ export class FxCard extends FxElement {
   `;
 
   static override get observedAttributes(): string[] {
-    return ['variant', 'size', 'padded', 'heading'];
+    return ['variant', 'radius', 'size', 'padded', 'heading'];
   }
 
   protected override render(): void {

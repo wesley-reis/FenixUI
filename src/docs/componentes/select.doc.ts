@@ -107,7 +107,7 @@ export const selectDoc: ComponentDoc = {
 			name: "full",
 			type: "boolean",
 			default: "false",
-			desc: "Largura 100% acompanhando o elemento pai (host vira block; min-width do trigger é descartado).",
+			desc: "Largura 100% acompanhando o elemento pai (host vira block; min-width é descartado). Sem full, a largura também é controlável por CSS externo, classes ou style inline no elemento (ver Variáveis CSS).",
 		},
 		{
 			name: "error",
@@ -134,5 +134,9 @@ export const selectDoc: ComponentDoc = {
 			name: "(padrão)",
 			desc: "Elementos <option> nativos, espelhados para dentro do componente.",
 		},
+	],
+	cssVars: [
+		{ name: "--fx-select-width", type: "largura CSS", default: "max-content", desc: "Largura do campo (aplicada no host): por padrão acompanha o conteúdo. CSS externo, classes e style inline no elemento definem a largura (o trigger acompanha)." },
+		{ name: "--fx-select-min-width / -sm", type: "largura CSS", default: "200px / 180px", desc: "Largura mínima do campo (md/lg e sm)." },
 	],
 };

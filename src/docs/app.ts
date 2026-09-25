@@ -79,8 +79,80 @@ function initDataComponents(container: HTMLElement): void {
   });
 }
 
+/**
+ * Tokenizador de sintaxe leve para HTML/TS — envolve tokens em <span class>
+ * usando as CSS Variables do FenixUI (--fx-*), então as cores acompanham
+ * light/dark automaticamente. O texto fora dos tokens passa por `esc`.
+ */
+export function highlightCode(code: string): string {
+  // Ordem importa: comentários e tags primeiro; strings e keywords depois.
+  const RE =
+    /<!--[\s\S]*?-->|<\/?[\w-]+(?:"[^"]*"|'[^']*'|[^>"'])*\/?>|\/\*[\s\S]*?\*\/|\/\/[^\n\r]*|`[^`]*`|'(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"|\b(?:import|from|const|let|var|export|function|return|new|if|else|await|async|type|interface)\b/g;
+  const parts: string[] = [];
+  let last = 0;
+  let m: RegExpExecArray | null;
+  while ((m = RE.exec(code)) !== null) {
+    if (m.index > last) parts.push(esc(code.slice(last, m.index)));
+    const tok = m[0];
+    if (tok.startsWith('<!--') || tok.startsWith('/*') || tok.startsWith('//')) {
+      parts.push(`<span class="tok-comment">${esc(tok)}</span>`);
+    } else if (tok.startsWith('<')) {
+      parts.push(highlightTag(tok));
+    } else if (tok.startsWith('`') || tok.startsWith("'") || tok.startsWith('"')) {
+      parts.push(`<span class="tok-string">${esc(tok)}</span>`);
+    } else {
+      parts.push(`<span class="tok-keyword">${esc(tok)}</span>`);
+    }
+    last = RE.lastIndex;
+  }
+  if (last < code.length) parts.push(esc(code.slice(last)));
+  return parts.join('');
+}
+
+/**
+ * Destaca nome da tag, atributos e valores de uma tag HTML.
+ *
+ * O espaço entre o nome da tag e o primeiro atributo fica dentro do grupo
+ * `rest` (e é reemitido) — sem isso o código exibido sairia "colado":
+ * `<fx-inputfull icon="search">`.
+ */
+function highlightTag(tag: string): string {
+  // Tag de fechamento: </tag>
+  if (tag.startsWith('</')) {
+    const m = tag.match(/^<\/\s*([\w-]+)/);
+    return m
+      ? `<span class="tok-tag">&lt;/</span><span class="tok-tagname">${esc(m[1])}</span><span class="tok-tag">&gt;</span>`
+      : esc(tag);
+  }
+  // Tag de abertura / self-closing: <tag attr="v" flag />
+  const m = tag.match(/^<([\w-]+)((?:"[^"]*"|'[^']*'|[^>"'])*?)(\/?>)$/);
+  if (!m) return esc(tag);
+  const [, name, rest, close] = m;
+  let html = `<span class="tok-tag">&lt;</span><span class="tok-tagname">${esc(name)}</span>`;
+  // Atributos: mantém o espaço inicial, o `=`, o valor e flags booleanas.
+  const RE_ATTR = /(\s+)([\w-]+)(?:=("[^"]*"|'[^']*'|[^\s>]+))?/g;
+  let last = 0;
+  let am: RegExpExecArray | null;
+  while ((am = RE_ATTR.exec(rest)) !== null) {
+    if (am.index > last) html += esc(rest.slice(last, am.index));
+    html += `<span class="tok-attr">${esc(am[1])}${esc(am[2])}</span>`;
+    if (am[3] !== undefined) {
+      html += `<span class="tok-attr-eq">=</span><span class="tok-attr-val">${esc(am[3])}</span>`;
+    }
+    last = RE_ATTR.lastIndex;
+  }
+  if (last < rest.length) html += esc(rest.slice(last));
+  html += `<span class="tok-tag">${esc(close)}</span>`;
+  return html;
+}
+
 function codeBlock(code: string): string {
-  return `<div class="code-block"><pre><code>${esc(code)}</code></pre><button class="copy-btn">Copiar</button></div>`;
+  return (
+    `<div class="code-block">` +
+    `<div class="code-head"><button class="copy-btn">Copiar</button></div>` +
+    `<pre><code>${highlightCode(code)}</code></pre>` +
+    `</div>`
+  );
 }
 
 /** Formata HTML em múltiplas linhas com indentação para facilitar a leitura. */
@@ -205,7 +277,10 @@ function currentAttrs(doc: ComponentDoc): string {
 function wireCopyButtons(root: ParentNode): void {
   root.querySelectorAll<HTMLButtonElement>('.copy-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
-      navigator.clipboard.writeText(btn.parentElement!.querySelector('code')!.textContent ?? '');
+      // O botão vive na barra (.code-head); o código está no mesmo .code-block.
+      const block = btn.closest('.code-block');
+      const text = block?.querySelector('code')?.textContent ?? '';
+      navigator.clipboard?.writeText(text).catch(() => { /* clipboard indisponível */ });
       btn.textContent = 'Copiado!';
       setTimeout(() => (btn.textContent = 'Copiar'), 1200);
     });
@@ -213,31 +288,186 @@ function wireCopyButtons(root: ParentNode): void {
 }
 
 /* ------------------------------------------------------------------ */
-/* Páginas: Introdução e Theming                                       */
+/* Página: Home (landing moderna)                                      */
 /* ------------------------------------------------------------------ */
 
-async function renderIntro(): Promise<void> {
-  // Componentes usados no exemplo desta página (carga lazy).
-  const tags = ['fx-button', 'fx-badge', 'fx-spinner'];
-  await Promise.all(tags.map((t) => componentLoaders[t]?.()));
-  await Promise.all(tags.map((t) => customElements.whenDefined(t)));
+/** Componentes usados no showcase da home (carga lazy). */
+const HOME_TAGS = [
+  'fx-button', 'fx-badge', 'fx-input', 'fx-switch', 'fx-floatlabel',
+  'fx-progress', 'fx-knob', 'fx-stepper',
+];
+
+async function renderHome(): Promise<void> {
+  await Promise.all(HOME_TAGS.map((t) => componentLoaders[t]?.()));
+  await Promise.all(HOME_TAGS.map((t) => customElements.whenDefined(t)));
+  const main = document.getElementById('main')!;
+  const version = typeof __APP_VERSION__ !== 'undefined' ? `v${__APP_VERSION__}` : '';
+  main.innerHTML = `
+    <section class="home-hero">
+      <div class="hero-eyebrow">
+        <fx-badge variant="warning" round>${version}</fx-badge>
+        <span>Web Components nativos · Shadow DOM · Design Tokens</span>
+      </div>
+      <h1 class="hero-title">Componentes que <span class="hero-grad">renascem</span> em qualquer stack.</h1>
+      <p class="hero-lead">FenixUI é um Design System de <strong>Web Components nativos</strong>: funciona com
+      Vue, React, Nuxt, JSF ou HTML puro — sem lock-in. Cada componente é importável isoladamente,
+      então o bundle do cliente contém apenas o que ele usa.</p>
+      <div class="hero-cta">
+        <fx-button id="hero-get-started" size="lg"><i slot="icon" class="fx-icon fx-icon-rocket_launch"></i>Get Started</fx-button>
+        <a class="hero-link" href="#/fx-button">Ver componentes <span class="fx-icon fx-icon-arrow_outward"></span></a>
+      </div>
+    </section>
+
+    <section class="home-section">
+      <h3 class="home-section-title">Por que FenixUI?</h3>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-icon"><span class="fx-icon fx-icon-bolt"></span></div>
+          <b>Web Components nativos</b>
+          <p>Shadow DOM, zero dependências e compatível com qualquer framework — ou nenhum.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon"><span class="fx-icon fx-icon-layers"></span></div>
+          <b>Tree-shaking por componente</b>
+          <p>Cada componente tem seu próprio subpath: só entra no bundle o que a aplicação usa.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon"><span class="fx-icon fx-icon-palette"></span></div>
+          <b>Design Tokens & temas</b>
+          <p>Visual dirigido por <code class="inline">--fx-*</code>: troque de tema em runtime, inclusive dentro do Shadow DOM.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon"><span class="fx-icon fx-icon-dark_mode"></span></div>
+          <b>Dark mode nativo</b>
+          <p>Modo claro/escuro com uma linha: <code class="inline">FenixUI.theme('dark')</code>.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon"><span class="fx-icon fx-icon-auto_awesome"></span></div>
+          <b>Ícones inclusos</b>
+          <p>Biblioteca self-hosted com milhares de glifos — nada para instalar além do pacote.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon"><span class="fx-icon fx-icon-extension"></span></div>
+          <b>Auto Import</b>
+          <p>Escreva as tags <code class="inline">fx-*</code> e o plugin injeta os imports em tempo de build.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="home-section">
+      <h3 class="home-section-title">Casos de uso</h3>
+      <div class="usecase-grid">
+        <div class="usecase-card">
+          <div class="usecase-preview">
+            <div class="uc-stat"><b>87%</b><span class="uc-label">Meta do mês</span><fx-progress value="87" variant="success"></fx-progress></div>
+            <div class="uc-stat"><b>1.2k</b><span class="uc-label">Visitas hoje</span><fx-progress value="62" variant="success"></fx-progress></div>
+            <fx-knob></fx-knob>
+          </div>
+          <b>Dashboards & painéis</b>
+          <p>Tabelas, indicadores e métricas com visual consistente e temas em runtime.</p>
+          <a href="#/fx-table">Ver fx-table <span class="fx-icon fx-icon-arrow_forward"></span></a>
+        </div>
+        <div class="usecase-card">
+          <div class="usecase-preview">
+            <div class="uc-form">
+              <fx-floatlabel variant="in"><fx-input full icon="mail" type="email"></fx-input><label>E-mail</label></fx-floatlabel>
+              <fx-floatlabel variant="in"><fx-input full icon="lock" type="password"></fx-input><label>Senha</label></fx-floatlabel>
+              <fx-switch size="sm" checked>Lembrar-me</fx-switch>
+              <fx-button size="sm" variant="primary">Entrar</fx-button>
+            </div>
+          </div>
+          <b>Formulários completos</b>
+          <p>FloatLabel, validação, upload e autocomplete prontos para qualquer cadastro.</p>
+          <a href="#/forms">Ver Formulários <span class="fx-icon fx-icon-arrow_forward"></span></a>
+        </div>
+        <div class="usecase-card">
+          <div class="usecase-preview">
+            <div class="uc-wizard">
+              <fx-stepper active="1" style="width:100%">
+                <div slot="step-0" step-title="Conta"><p>Crie sua conta.</p></div>
+                <div slot="step-1" step-title="Pagamento"><p>Escolha a forma de pagamento.</p></div>
+                <div slot="step-2" step-title="Confirmação"><p>Revise e confirme.</p></div>
+              </fx-stepper>
+            </div>
+          </div>
+          <b>Wizards & fluxos multi-etapa</b>
+          <p>Stepper com navegação integrada para checkout e onboarding, pronto para usar.</p>
+          <a href="#/fx-stepper">Ver fx-stepper <span class="fx-icon fx-icon-arrow_forward"></span></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="home-cta">
+      <h3>Pronto para renascer?</h3>
+      <p>Instale em segundos e use em qualquer stack — comece agora.</p>
+      <fx-button id="home-cta-button" size="lg" variant="secondary"><i slot="icon" class="fx-icon fx-icon-rocket_launch"></i>Get Started</fx-button>
+    </section>
+  `;
+  const goInstall = (): void => {
+    window.location.hash = '#/installation';
+  };
+  document.getElementById('hero-get-started')?.addEventListener('click', goInstall);
+  document.getElementById('home-cta-button')?.addEventListener('click', goInstall);
+}
+
+/* ------------------------------------------------------------------ */
+/* Página: Instalação (cards por stack)                                */
+/* ------------------------------------------------------------------ */
+
+/** Logos em SVG inline das stacks com marca própria (Vue, React, Nuxt). */
+const INSTALL_SVGS: Record<string, string> = {
+  vue: '<svg viewBox="0 0 256 221" width="30" height="26" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid"><path fill="#41B883" d="M204.8 0H256L128 220.8 0 0h97.92L128 51.2 157.44 0h47.36Z"/><path fill="#41B883" d="m0 0 128 220.8L256 0h-51.2L128 132.48 50.56 0H0Z"/><path fill="#35495E" d="M50.56 0 128 133.12 204.8 0h-47.36L128 51.2 97.92 0H50.56Z"/></svg>',
+  react: '<svg viewBox="-11.5 -10.23174 23 20.46348" width="30" height="27" xmlns="http://www.w3.org/2000/svg"><circle r="2.05" fill="#61dafb"/><g stroke="#61dafb" stroke-width="1" fill="none"><ellipse rx="11" ry="4.2"/><ellipse rx="11" ry="4.2" transform="rotate(60)"/><ellipse rx="11" ry="4.2" transform="rotate(120)"/></g></svg>',
+  nuxt: '<svg viewBox="0 0 221 121" width="32" height="26" xmlns="http://www.w3.org/2000/svg"><path fill="#00DC82" d="M130.7 121h79.1c2.5 0 4.9-.6 7-1.9a13.9 13.9 0 0 0 5.1-19.1l-44.8-77.4a13.9 13.9 0 0 0-24.1 0l-11.4 19.8-22.3-38.5a13.9 13.9 0 0 0-24.2 0L.9 100a13.9 13.9 0 0 0 5.1 19.1c2.2 1.3 4.6 1.9 7.1 1.9h49.6c19.7 0 34.3-8.6 44.3-25.4l24.3-41.8 13-22.3 39 41.9h-56.5L130.7 121ZM63.4 103.5H22.1l62.7-107.3 31.2 53.7-20.9 34.9c-6.7 10.7-14.1 18.7-31.7 18.7Z"/></svg>',
+};
+
+/** Ícone Fenix + cor de destaque para stacks sem logo SVG. */
+const INSTALL_FX_ICONS: Record<string, { icon: string; color: string }> = {
+  npm: { icon: 'package', color: '#cb3837' },
+  cdn: { icon: 'cloud', color: '#f59e0b' },
+  jsf: { icon: 'globe', color: '#0ea5e9' },
+  dotnet: { icon: 'code', color: '#8b5cf6' },
+};
+
+/** Card de instalação: ícone + nome + descrição, clicável, leva à página da stack. */
+function installCard(href: string, key: string, name: string, desc: string): string {
+  const svg = INSTALL_SVGS[key];
+  const fx = INSTALL_FX_ICONS[key];
+  const icon = svg
+    ? `<div class="install-icon">${svg}</div>`
+    : `<div class="install-icon" style="color:${fx.color}"><span class="fx-icon fx-icon-${fx.icon}"></span></div>`;
+  return (
+    `<a class="install-card" href="${href}">` +
+    icon +
+    `<div class="install-body"><div class="install-name">${esc(name)}</div><div class="install-desc">${esc(desc)}</div></div>` +
+    `<span class="install-arrow fx-icon fx-icon-arrow_forward"></span>` +
+    `</a>`
+  );
+}
+
+/** Página Instalação — comando universal inline + cards que levam a cada stack. */
+async function renderInstallation(): Promise<void> {
   const main = document.getElementById('main')!;
   main.innerHTML = `
-    <h2>Introdução</h2>
-    <p class="lead">FenixUI é um Design System de <strong>Web Components nativos</strong> — funciona com
-    qualquer framework (ou sem nenhum). Cada componente é importável isoladamente, então o bundle do
-    cliente contém apenas o que ele usa.</p>
-    <h3>Instalação</h3>
+    <h2>Instalação</h2>
+    <p class="lead">Um único pacote em qualquer projeto. O comando abaixo é o ponto de partida —
+    depois, escolha sua stack nos cards para o passo a passo completo com o setup específico:</p>
     ${codeBlock('npm install @wrrdev/fenix-ui')}
-    <h3>Uso básico</h3>
+    <div class="note"><strong>Uso básico</strong> — importe o componente, aplique os tokens e pronto:</div>
     ${codeBlock("import '@wrrdev/fenix-ui/button';\nimport { FenixUI } from '@wrrdev/fenix-ui';\n\nFenixUI.theme('dark');")}
+    <h3>Escolha sua stack</h3>
+    <div class="install-grid">
+      ${installCard('#/vue3', 'vue', 'Vue 3', 'Plugin isCustomElement + tipos Volar e reatividade plena.')}
+      ${installCard('#/vue3', 'nuxt', 'Nuxt', 'compilerOptions no nuxt.config + plugin .client.ts para SSR.')}
+      ${installCard('#/integrations', 'react', 'React / Next.js', 'React 19+ nativo; <19 com ref + addEventListener.')}
+      ${installCard('#/integrations', 'cdn', 'CDN / HTML puro', 'Bundle UMD único via jsDelivr/unpkg — sem build.')}
+      ${installCard('#/integrations', 'jsf', 'JSF (Jakarta Faces)', 'XHTML bem-formado + h:outputScript no template.')}
+      ${installCard('#/integrations', 'dotnet', 'JSP / .NET', 'Razor, WebForms e MVC: HTML normal nas views.')}
+    </div>
+    <div class="note"><strong>Gerenciadores alternativos:</strong> <code class="inline">pnpm add @wrrdev/fenix-ui</code> ·
+    <code class="inline">yarn add @wrrdev/fenix-ui</code> — o pacote é o mesmo.</div>
     <h3>Componentes</h3>
-    <div class="demo"><div class="demo-stage">
-      <fx-button variant="primary">Button</fx-button>
-      <fx-badge variant="success">Badge</fx-badge>
-      <fx-spinner></fx-spinner>
-    </div></div>
-    <p>Consulte cada componente no menu lateral para exemplos interativos e API completa.</p>
+    <p>Consulte cada componente no menu lateral para exemplos interativos, playground ao vivo e API completa.</p>
   `;
   wireCopyButtons(main);
 }
@@ -400,6 +630,9 @@ FenixUI.setTokens({
       })
       .join('');
   };
+  // Referência guardada para repintar os swatches quando o modo mudar pelo
+  // toggle do header (ele não dispara 'change' nos selects desta página).
+  themingPaint = paint;
   const sync = (): void => {
     const p = (document.getElementById('th-preset') as HTMLSelectElement).value;
     const m = (document.getElementById('th-mode') as HTMLSelectElement).value as 'light' | 'dark';
@@ -570,6 +803,11 @@ function renderThemingSwatchesOnly(container: HTMLElement): void {
 
 let currentPreset = 'fenix';
 let currentMode: 'light' | 'dark' = 'light';
+/**
+ * Referência ao `paint()` da página de Temas. Permite repintar os swatches
+ * quando o modo é trocado pelo toggle do header (fora daquela página).
+ */
+let themingPaint: (() => void) | null = null;
 
 function syncHeaderControls(preset: string, mode: 'light' | 'dark'): void {
   currentPreset = preset;
@@ -730,6 +968,9 @@ function setupHeader(): void {
     currentMode = currentMode === 'dark' ? 'light' : 'dark';
     applyPreset(currentPreset, currentMode);
     syncHeaderControls(currentPreset, currentMode);
+    // Na página de Temas, repinta os swatches: o toggle do header não passa
+    // pelos selects da página (que são quem normalmente chama paint()).
+    if (themingPaint) themingPaint();
   });
 }
 
@@ -740,7 +981,9 @@ function setupHeader(): void {
 function buildSidebar(): void {
 	const groups = new Map<string, { id: string; title: string }[]>();
 	groups.set("Guia", [
-		{ id: "introduction", title: "Introdução" },
+		{ id: "home", title: "Home" },
+		{ id: "installation", title: "Instalação" },
+		{ id: "typings", title: "Tipagens" },
 		{ id: "vue3", title: "Vue 3 / Nuxt" },
 		{ id: "integrations", title: "CDN / React / JSF" },
 		{ id: "auto-import", title: "Auto Import" },
@@ -784,7 +1027,7 @@ function renderVariantCards(doc: ComponentDoc): string {
 			`<div class="example-card">` +
 				(title ? `<div class="example-title">${esc(title)}</div>` : "") +
 				`<div class="example-stage">${html}</div>` +
-				`<div class="code-block example-code"><pre><code>${esc(formatHtml(html))}</code></pre><button class="copy-btn">Copiar</button></div>` +
+				`<div class="code-block example-code"><div class="code-head"><button class="copy-btn">Copiar</button></div><pre><code>${highlightCode(formatHtml(html))}</code></pre></div>` +
 				`</div>`,
 		);
 	};
@@ -834,7 +1077,8 @@ function renderTyping(doc: ComponentDoc): string {
 	return [
 		"<h3>Tipagem TypeScript</h3>",
 		`<p>Todas as variantes e propriedades têm tipos prontos — importe de <code class="inline">@wrrdev/fenix-ui/vue</code>`,
-		`(Vue/Volar) ou <code class="inline">@wrrdev/fenix-ui/jsx</code> (React/TSX) e o editor autocompleta cada atributo:</p>`,
+		`(Vue/Volar), <code class="inline">@wrrdev/fenix-ui/react</code> (React com <code class="inline">"jsx": "react-jsx"</code>)`,
+		`ou <code class="inline">@wrrdev/fenix-ui/jsx</code> (React clássico/Preact/Vue JSX) e o editor autocompleta cada atributo:</p>`,
 		codeBlock(
 			`import type { Fx${pascal}Props } from '@wrrdev/fenix-ui/vue';\n\nconst props: Fx${pascal}Props = {\n${iface.split("\n").slice(0, 14).join("\n")}\n};`,
 		),
@@ -918,7 +1162,7 @@ async function renderComponentPage(doc: ComponentDoc): Promise<void> {
 				/(\s(?:disabled|loading|checked|readonly|full|round))=""/g,
 				"$1",
 			);
-			codeEl.textContent = formatHtml(clean);
+			codeEl.innerHTML = highlightCode(formatHtml(clean));
 		}
 	};
 	main
@@ -954,9 +1198,9 @@ function formModelCard(title: string, desc: string, html: string): string {
 	return (
 		`<div class="example-card">` +
 		`<div class="example-title">${esc(title)}</div>` +
-		`<p style="margin:0 0 12px;font-size:13px;color:var(--fx-text-muted); text-align:center">${esc(desc)}</p>` +
+		`<p style="margin:0 0 12px;font-size:13px;color:var(--fx-text-muted)">${esc(desc)}</p>` +
 		`<div class="example-stage">${html}</div>` +
-		`<div class="code-block example-code"><pre><code>${esc(formatHtml(html))}</code></pre><button class="copy-btn">Copiar</button></div>` +
+		`<div class="code-block example-code"><div class="code-head"><button class="copy-btn">Copiar</button></div><pre><code>${highlightCode(formatHtml(html))}</code></pre></div>` +
 		`</div>`
 	);
 }
@@ -1120,7 +1364,7 @@ async function renderForms(): Promise<void> {
 }
 
 async function renderRoute(): Promise<void> {
-	const route = location.hash.replace(/^#\//, "") || "introduction";
+	const route = location.hash.replace(/^#\//, "") || "home";
 	document
 		.querySelectorAll("#sidebar a")
 		.forEach((a) =>
@@ -1129,18 +1373,27 @@ async function renderRoute(): Promise<void> {
 				(a as HTMLAnchorElement).dataset.id === route,
 			),
 		);
+	const main = document.getElementById("main")!;
+	// Limpa o conteúdo já: evita conteúdo obsoleto durante o carregamento
+	// assíncrono e mantém sidebar e conteúdo sincronizados.
+	main.innerHTML = `<div class="loading-state">Carregando…</div>`;
+	// Reseta callbacks de páginas inativas (ex.: swatches da página de Temas).
+	if (route !== "theming") themingPaint = null;
 	const doc = components.find((c) => c.tag === route);
 	if (doc) {
 		// Import lazy + aguarda o render completo antes de resolver a rota.
 		await componentLoaders[route]?.();
 		await renderComponentPage(doc);
-	} else if (route === "theming") await renderTheming();
+	} else if (route === "home") await renderHome();
+	else if (route === "installation") await renderInstallation();
+	else if (route === "typings") renderTypings();
+	else if (route === "theming") await renderTheming();
 	else if (route === "auto-import") renderAutoImport();
 	else if (route === "icons") renderIcons();
 	else if (route === "forms") await renderForms();
 	else if (route === "vue3") renderVue3();
 	else if (route === "integrations") renderIntegrations();
-	else await renderIntro();
+	else await renderHome();
 }
 
 async function renderVue3(): Promise<void> {
@@ -1362,10 +1615,114 @@ export function Tabela({ dados }) {
 }`)}
     <div class="note">
       <strong>Tipagem TSX:</strong> importe <code>import '@wrrdev/fenix-ui/jsx';</code> uma vez para o
-      editor autocompletar todos os atributos <code>fx-*</code> no JSX/TSX. Com o plugin
+      editor autocompletar todos os atributos <code>fx-*</code> no JSX/TSX. Se o seu projeto React usa
+      <code>"jsx": "react-jsx"</code> no tsconfig, prefira <code>import '@wrrdev/fenix-ui/react';</code>.
+      Com o plugin
       <code>FenixAutoImport</code>, os imports dos subpaths são injetados automaticamente (Vite,
       Rollup e Webpack) — veja a página <a href="#/auto-import">Auto Import</a>.
     </div>
+  `;
+  wireCopyButtons(main);
+}
+
+/** Página Tipagens — guia de autocomplete/validação por framework. */
+function renderTypings(): void {
+  const main = document.getElementById('main')!;
+  main.innerHTML = `
+    <h2>Tipagens TypeScript por framework</h2>
+    <p class="lead">Todos os componentes <code>fx-*</code> têm tipos prontos: props com autocomplete
+    e validação, uniões (<code>FxSize</code>, <code>FxButtonVariant</code>, …) e tipagem imperativa via
+    <code>HTMLElementTagNameMap</code>. O subpath que você importa depende do framework —
+    escolha o seu abaixo.</p>
+
+    <table class="api" style="width:100%">
+      <thead><tr><th>Framework</th><th>Import (uma única vez)</th><th>O que habilita</th></tr></thead>
+      <tbody>
+        <tr><td><b>Vue 3 / Nuxt</b></td><td><code>@wrrdev/fenix-ui/vue</code></td><td>Autocomplete + validação nos templates SFC (Volar / vue-tsc)</td></tr>
+        <tr><td><b>React</b> (<code>"jsx": "react-jsx"</code>)</td><td><code>@wrrdev/fenix-ui/react</code></td><td>Autocomplete + validação em TSX via <code>React.JSX</code></td></tr>
+        <tr><td><b>React clássico / Preact / Vue JSX</b></td><td><code>@wrrdev/fenix-ui/jsx</code></td><td>Autocomplete + validação em TSX via <code>JSX</code> global</td></tr>
+        <tr><td><b>Angular</b></td><td><code>@wrrdev/fenix-ui/&lt;componente&gt;</code></td><td>Tipagem imperativa (<code>createElement</code>, classes, eventos); templates exigem <code>CUSTOM_ELEMENTS_SCHEMA</code></td></tr>
+        <tr><td><b>TS puro / HTML / JSF</b></td><td><code>@wrrdev/fenix-ui/&lt;componente&gt;</code></td><td>Tipagem imperativa via <code>HTMLElementTagNameMap</code> + tipos nomeados</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Requisito: moduleResolution</h3>
+    <p>Para o TypeScript resolver os <code>exports</code> do pacote, garanta no <code>tsconfig.json</code>:</p>
+    ${codeBlock(`{
+  "compilerOptions": {
+    "moduleResolution": "bundler" // ou "node16" / "nodenext"
+  }
+}`)}
+
+    <h3>Vue 3 / Nuxt</h3>
+    <p>Importe <code>./vue</code> uma única vez e informe ao compilador que <code>fx-*</code> são Web Components:</p>
+    ${codeBlock(`import { createApp } from 'vue';
+import '@wrrdev/fenix-ui/vue';    // tipos + autocomplete nos templates SFC
+
+const app = createApp(App);
+app.config.compilerOptions.isCustomElement = (tag) => tag.startsWith('fx-');
+app.mount('#app');`)}
+    <p>Tipos nomeados ficam disponíveis no mesmo subpath:</p>
+    ${codeBlock(`import type { FxButtonProps } from '@wrrdev/fenix-ui/vue';
+
+const props: FxButtonProps = { variant: 'primary', size: 'lg', loading: false };`)}
+
+    <h3>React com <code>"jsx": "react-jsx"</code> (padrão no Vite, CRA e Next)</h3>
+    <p>Nesse modo o TypeScript resolve o namespace <code>React.JSX</code> — que <strong>não</strong> herda
+    a augmentação global de <code>JSX</code>. Importe o subpath <code>./react</code>:</p>
+    ${codeBlock(`import '@wrrdev/fenix-ui/react';
+
+export function Demo() {
+  return <fx-button variant="primary" size="lg" icon="rocket_launch">Enviar</fx-button>;
+}`)}
+    <div class="note"><strong>Requisito:</strong> <code>@types/react</code> instalado no projeto —
+    a augmentação é aplicada ao módulo <code>react</code>.</div>
+
+    <h3>React clássico / Preact / Vue JSX</h3>
+    <p>Com <code>"jsx": "react"</code> (classic) ou runtimes que usam o namespace global <code>JSX</code>:</p>
+    ${codeBlock(`import '@wrrdev/fenix-ui/jsx';
+
+<fx-chip variant="success" removable>Filtro ativo</fx-chip>`)}
+
+    <h3>Angular (standalone)</h3>
+    <p>Importe os subpaths dos componentes que usa (direto ou via
+    <a href="#/auto-import">Auto Import</a>) e adicione <code>CUSTOM_ELEMENTS_SCHEMA</code>:</p>
+    ${codeBlock(`import { CUSTOM_ELEMENTS_SCHEMA, Component } from '@angular/core';
+import '@wrrdev/fenix-ui/stepper';
+import '@wrrdev/fenix-ui/button';
+
+@Component({
+  selector: 'app-demo',
+  template: \`
+    <fx-stepper active="0" show-numbers>
+      <div slot="step-0" step-title="Dados">Conteúdo do passo.</div>
+      <div slot="step-1" step-title="Confirmação">Revise e confirme.</div>
+    </fx-stepper>
+    <fx-button variant="primary">Confirmar</fx-button>
+  \`,
+  schemas: [CUSTOM_ELEMENTS_SCHEMA], // permite tags fx-* no template
+})
+export class DemoComponent {}`)}
+    <p>No código imperativo (TS), <code>createElement</code> e os elementos são tipados
+    pelo <code>HTMLElementTagNameMap</code>:</p>
+    ${codeBlock(`const stepper = document.createElement('fx-stepper');
+stepper.setAttribute('active', '0');
+stepper.addEventListener('change', (e) => console.log((e as CustomEvent).detail));`)}
+
+    <h3>Tipos nomeados e uniões</h3>
+    <p>Todos os subpaths de tipagem reexportam os mesmos tipos, então você pode importar
+    de <code>/vue</code>, <code>/react</code>, <code>/jsx</code> ou da entrada principal:</p>
+    ${codeBlock(`import type {
+  FxButtonProps, FxButtonVariant, FxSize, FxStepperProps, FxTableProps,
+} from '@wrrdev/fenix-ui';
+
+const variant: FxButtonVariant = 'primary';
+const size: FxSize = 'lg';
+const table: FxTableProps = { pagination: true, rows: 10 };`)}
+    <div class="note"><strong>Dica:</strong> com o plugin <code>FenixAutoImport</code>
+    (<a href="#/auto-import">Auto Import</a>) você escreve apenas as tags <code>fx-*</code> e os
+    imports dos subpaths (runtime) são injetados no build — os imports de tipagem acima continuam
+    sendo manuais e pontuais (um por projeto).</div>
   `;
   wireCopyButtons(main);
 }

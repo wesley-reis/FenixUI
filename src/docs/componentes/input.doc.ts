@@ -45,6 +45,12 @@ export const inputDoc: ComponentDoc = {
 					</div>
 				</div>
 			</div>
+			<h4>Largura customizada (CSS externo, classes ou style inline — sem atributo)</h4>
+			<p style="font-size:12px;color:var(--fx-text-muted);margin:0 0 8px">O default (260px; sm 220px / lg 300px) fica no <code>:host</code>: qualquer largura definida no elemento vence o default. Para trocar globalmente, defina <code>--fx-input-width</code> no root do tema.</p>
+			<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+				<fx-input style="width: 180px" placeholder="style width 180px"></fx-input>
+				<fx-input size="lg" style="width: 100%" placeholder="size lg + width 100%"></fx-input>
+			</div>
 			<h4>Validação (error / success)</h4>
 			<p style="font-size:12px;color:var(--fx-text-muted);margin:0">Borda vermelha com <code>error</code>/<code>invalid</code>, verde com <code>success</code>/<code>valid</code>. Combine com <code>fx-alert</code> no submit (ver página Formulários).</p>
 			<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
@@ -146,7 +152,7 @@ export const inputDoc: ComponentDoc = {
 			name: "full",
 			type: "boolean",
 			default: "false",
-			desc: "Largura 100% acompanhando o elemento pai (host vira block). Ocupa a linha inteira; para manter um fx-button na mesma linha, use o elemento pai com display:flex — o input estica (flex) e o botão mantém o tamanho.",
+			desc: "Largura 100% acompanhando o elemento pai (host vira block). Ocupa a linha inteira; para manter um fx-button na mesma linha, use o elemento pai com display:flex — o input estica (flex) e o botão mantém o tamanho. Sem full, a largura também pode ser definida por CSS externo, classes do framework ou style inline no elemento (o default vive no host via --fx-input-width).",
 		},
 		{
 			name: "error / invalid",
@@ -197,6 +203,18 @@ export const inputDoc: ComponentDoc = {
 			type: "tamanho CSS",
 			default: "calc(var(--fx-font-size) + 6px)",
 			desc: "Tamanho do ícone dentro do campo (via attr icon ou slot icon). Aumente para ícones maiores, ex.: style=\"--fx-input-icon-size: 24px\".",
+		},
+		{
+			name: "--fx-input-width",
+			type: "largura CSS",
+			default: "260px",
+			desc: "Largura padrão do campo (aplicada no host). CSS externo, classes e style inline no elemento vencem o default; defina no root/preset para mudar globalmente.",
+		},
+		{
+			name: "--fx-input-width-sm / -lg",
+			type: "largura CSS",
+			default: "220px / 300px",
+			desc: "Larguras padrão para size sm e lg (mesma regra de sobrescrita).",
 		},
 	],
 };

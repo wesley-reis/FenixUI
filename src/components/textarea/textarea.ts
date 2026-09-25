@@ -15,6 +15,10 @@ export class FxTextarea extends FxElement {
     :host {
       display: inline-block;
       vertical-align: middle;
+      /* Largura padrão no HOST: CSS externo, classes e style inline no elemento
+         vencem este default naturalmente (regras do documento > :host). */
+      width: var(--fx-textarea-width, 260px);
+      vertical-align: middle;
       font-family: var(--fx-font-family);
       font-size: var(--fx-font-size);
     }
@@ -27,7 +31,8 @@ export class FxTextarea extends FxElement {
       border: 1px solid var(--fx-border-default);
       border-radius: var(--fx-radius-md);
       padding: var(--fx-space-md) var(--fx-space-lg);
-      width: 260px;
+      /* Acompanha a largura definida no :host. */
+      width: 100%;
       min-height: calc(var(--fx-size-md) + 40px);
       resize: vertical;
       box-sizing: border-box;
@@ -56,8 +61,10 @@ export class FxTextarea extends FxElement {
       border-color: var(--fx-color-success, #16a34a);
       box-shadow: 0 0 0 3px color-mix(in srgb, var(--fx-color-success, #16a34a) 18%, transparent);
     }
-    :host([size='sm']) .field { min-height: var(--fx-size-sm); padding: var(--fx-space-sm) var(--fx-space-md); width: 220px; }
-    :host([size='lg']) .field { width: 300px; min-height: calc(var(--fx-size-lg) + 80px); }
+    :host([size='sm']) { width: var(--fx-textarea-width-sm, 220px); }
+    :host([size='sm']) .field { min-height: var(--fx-size-sm); padding: var(--fx-space-sm) var(--fx-space-md); }
+    :host([size='lg']) { width: var(--fx-textarea-width-lg, 300px); }
+    :host([size='lg']) .field { min-height: calc(var(--fx-size-lg) + 80px); }
     /* Full width: o host estica até o pai e o campo interno acompanha. */
     :host([full]) { display: block; width: 100%; }
     :host([full]) .field { width: 100%; }

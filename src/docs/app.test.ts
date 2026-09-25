@@ -4,6 +4,8 @@
  */
 import { describe, it, expect, beforeEach } from "vitest";
 import { applyPreset } from "../core/presets";
+import { componentDocs } from "./componentes";
+
 
 document.body.innerHTML = `
   <select id="preset-select"></select>
@@ -32,7 +34,79 @@ async function navigate(route: string): Promise<void> {
 
 describe("docs app", () => {
 	beforeEach(async () => {
-		await navigate("introduction");
+		await navigate("home");
+	});
+
+	it("home é a rota padrão quando não há hash", async () => {
+		location.hash = "";
+		window.dispatchEvent(new Event("hashchange"));
+		await new Promise((r) => setTimeout(r, 0));
+		await app.currentRouteReady();
+		expect(main().querySelector(".home-hero")).toBeTruthy();
+		expect(main().querySelector(".hero-cta fx-button")).toBeTruthy();
+	});
+
+	it("home renderiza hero, features e casos de uso", async () => {
+		expect(main().querySelector(".home-hero")).toBeTruthy();
+		expect(main().querySelector(".hero-cta fx-button")).toBeTruthy();
+		expect(main().querySelectorAll(".feature-card").length).toBe(6);
+		expect(main().querySelectorAll(".usecase-card").length).toBe(3);
+	});
+
+	it("página Tipagens cobre todos os frameworks", async () => {
+		await navigate("typings");
+		const html = main().innerHTML;
+		for (const sub of ["@wrrdev/fenix-ui/vue", "@wrrdev/fenix-ui/react", "@wrrdev/fenix-ui/jsx"]) {
+			expect(html.includes(sub), `página Tipagens sem '${sub}'`).toBe(true);
+		}
+		expect(html.includes("CUSTOM_ELEMENTS_SCHEMA"), "página Tipagens sem Angular (CUSTOM_ELEMENTS_SCHEMA)").toBe(true);
+		expect(html.includes("HTMLElementTagNameMap"), "página Tipagens sem tipagem imperativa").toBe(true);
+		expect(main().querySelectorAll(".code-block").length).toBeGreaterThanOrEqual(6);
+	});
+
+	it("home: botão Get Started leva à página de instalação", async () => {
+		const btn = main().querySelector("#hero-get-started")!;
+		btn.dispatchEvent(new Event("click"));
+		await new Promise((r) => setTimeout(r, 0));
+		await app.currentRouteReady();
+		expect(location.hash).toBe("#/installation");
+		expect(main().querySelector(".install-grid")).toBeTruthy();
+	});
+
+	it("sidebar tem Home e Instalação (sem Introdução)", async () => {
+		const links = [...document.querySelectorAll("#sidebar a")].map((a) => ({
+			href: a.getAttribute("href"),
+			text: a.textContent,
+		}));
+		expect(links.map((l) => l.href)).toContain("#/home");
+		expect(links.map((l) => l.href)).toContain("#/installation");
+		const titles = links.map((l) => l.text);
+		expect(titles).toContain("Instalação");
+		expect(titles).not.toContain("Introdução");
+	});
+
+	it("página de instalação renderiza cards de todas as stacks", async () => {
+		await navigate("installation");
+		expect(main().querySelector("h2")?.textContent).toBe("Instalação");
+		const cards = [...main().querySelectorAll(".install-card")].map(
+			(c) => c.querySelector(".install-name")?.textContent,
+		);
+		expect(cards).toEqual([
+			"Vue 3",
+			"Nuxt",
+			"React / Next.js",
+			"CDN / HTML puro",
+			"JSF (Jakarta Faces)",
+			"JSP / .NET",
+		]);
+		// Cards clicáveis levam às páginas das stacks
+		const hrefs = [...main().querySelectorAll(".install-card")].map((c) =>
+			c.getAttribute("href"),
+		);
+		expect(hrefs).toContain("#/vue3");
+		expect(hrefs).toContain("#/integrations");
+		// Comando de instalação universal inline na própria página
+		expect(main().textContent).toContain("npm install @wrrdev/fenix-ui");
 	});
 
 	it("constrói a sidebar com todos os componentes", async () => {
@@ -128,7 +202,7 @@ describe("docs app", () => {
 			document.documentElement.style.getPropertyValue("--fx-color-primary"),
 		).toBe("#e11d48");
 		// ...e ao sair e voltar, também permanece
-		await navigate("introduction");
+		await navigate("installation");
 		await navigate("theming");
 		expect(
 			document.documentElement.style.getPropertyValue("--fx-color-primary"),
@@ -312,5 +386,109 @@ describe("docs app", () => {
 		form.querySelector("[data-save]")!.dispatchEvent(new Event("click"));
 		expect(input.hasAttribute("error")).toBe(false);
 		expect(alertEl.hidden).toBe(true);
+	});
+});
+
+/* ------------------------------------------------------------------ */
+/* Código de exemplo: destaque de sintaxe + botão copiar              */
+/* ------------------------------------------------------------------ */
+
+/** Texto puro do trecho destacado — é exatamente o que o usuário copia. */
+function plainCode(highlighted: string): string {
+	return highlighted
+		.replace(/<[^>]+>/g, "")
+		.replace(/&lt;/g, "<")
+		.replace(/&gt;/g, ">")
+		.replace(/&amp;/g, "&");
+}
+
+describe("docs: código de exemplo", () => {
+	it.each(componentDocs.map((d) => [d.tag, d] as const))(
+		"%s: o destaque preserva o código exatamente (tag e atributos não colam)",
+		(_tag, doc) => {
+			for (const src of [doc.demoHtml(""), doc.variantsHtml?.() ?? ""]) {
+				if (!src) continue;
+				const formatted = app.formatHtml(src);
+				expect(plainCode(app.highlightCode(formatted))).toBe(formatted);
+			}
+		},
+	);
+
+	it("mantém o espaço entre o nome da tag e o primeiro atributo", () => {
+		const out = app.highlightCode('<fx-input full icon="search"></fx-input>');
+		expect(out).toContain('<span class="tok-tagname">fx-input</span>');
+		expect(out).toContain('<span class="tok-attr"> full</span>');
+		expect(plainCode(out)).toBe('<fx-input full icon="search"></fx-input>');
+	});
+
+	it("destaca keywords, strings e comentários", () => {
+		const out = app.highlightCode("import { applyPreset } from '@wrrdev/fenix-ui'; // tema");
+		expect(out).toContain('class="tok-keyword"');
+		expect(out).toContain('class="tok-string"');
+		expect(out).toContain('class="tok-comment"');
+	});
+
+	it("o botão Copiar fica na barra do bloco, nunca sobre o código", async () => {
+		await navigate("fx-button");
+		const block = main().querySelector(".code-block")!;
+		const head = block.querySelector(".code-head");
+		expect(head?.querySelector(".copy-btn")).toBeTruthy();
+		// o <code> vive no <pre>, fora da barra que contém o botão
+		expect(head?.querySelector("code")).toBeNull();
+		expect(block.querySelector("pre > code")?.textContent?.trim().length).toBeGreaterThan(0);
+	});
+
+	it("copiar envia o texto do bloco para a área de transferência", async () => {
+		await navigate("fx-button");
+		const written: string[] = [];
+		Object.defineProperty(navigator, "clipboard", {
+			configurable: true,
+			value: {
+				writeText: (text: string) => {
+					written.push(text);
+					return Promise.resolve();
+				},
+			},
+		});
+		const block = main().querySelector(".code-block")!;
+		const btn = block.querySelector<HTMLButtonElement>(".copy-btn")!;
+		btn.dispatchEvent(new Event("click"));
+		expect(written[0]).toBe(block.querySelector("code")!.textContent);
+		expect(btn.textContent).toBe("Copiado!");
+	});
+});
+
+/* ------------------------------------------------------------------ */
+/* Playground do fx-card: padded e radius                              */
+/* ------------------------------------------------------------------ */
+
+describe("docs: playground do fx-card", () => {
+	it("o HTML do demo não fixa atributos que o playground controla", async () => {
+		await navigate("fx-card");
+		// `padded` vem do controle (ligado por padrão), não do demo
+		expect(main().querySelector("#stage fx-card")!.hasAttribute("padded")).toBe(true);
+	});
+
+	it("o toggle 'Padding interno' liga e desliga o atributo padded", async () => {
+		await navigate("fx-card");
+		const sw = main().querySelector('fx-switch[data-attr="padded"]') as any;
+		expect(sw).toBeTruthy();
+
+		sw.checked = false;
+		sw.dispatchEvent(new Event("change"));
+		expect(main().querySelector("#stage fx-card")!.hasAttribute("padded")).toBe(false);
+
+		sw.checked = true;
+		sw.dispatchEvent(new Event("change"));
+		expect(main().querySelector("#stage fx-card")!.hasAttribute("padded")).toBe(true);
+	});
+
+	it("o controle de raio aplica o atributo radius (renomeado de size)", async () => {
+		await navigate("fx-card");
+		const select = main().querySelector('fx-select[data-attr="radius"]') as any;
+		expect(select).toBeTruthy();
+		select.value = "lg";
+		select.dispatchEvent(new Event("change"));
+		expect(main().querySelector("#stage fx-card")!.getAttribute("radius")).toBe("lg");
 	});
 });

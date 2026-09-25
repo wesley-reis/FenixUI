@@ -106,7 +106,7 @@ export const multiselectDoc: ComponentDoc = {
 			name: "full",
 			type: "boolean",
 			default: "false",
-			desc: "Largura 100% acompanhando o elemento pai (host vira block; largura fixa do trigger é sobrescrita).",
+			desc: "Largura 100% acompanhando o elemento pai (host vira block; largura fixa do trigger é sobrescrita). Sem full, a largura também é controlável por CSS externo, classes ou style inline no elemento (ver Variáveis CSS).",
 		},
 		{
 			name: "error",
@@ -133,5 +133,9 @@ export const multiselectDoc: ComponentDoc = {
 			name: "(padrão)",
 			desc: "Elementos <option> nativos, espelhados para dentro do componente.",
 		},
+	],
+	cssVars: [
+		{ name: "--fx-multiselect-width", type: "largura CSS", default: "240px", desc: "Largura padrão do trigger (aplicada no host). CSS externo, classes e style inline no elemento vencem o default." },
+		{ name: "--fx-multiselect-width-sm / -lg", type: "largura CSS", default: "200px / 280px", desc: "Larguras padrão para size sm e lg." },
 	],
 };

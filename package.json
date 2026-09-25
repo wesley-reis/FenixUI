@@ -1,6 +1,6 @@
 {
   "name": "@wrrdev/fenix-ui",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "description": "FenixUI Design System Web nativo (Web Components + Shadow DOM + Design Tokens) com tree-shaking por componente.",
   "type": "module",
   "license": "ISC",
@@ -48,6 +48,7 @@
   "devDependencies": {
     "@babel/types": "^8.0.4",
     "@types/node": "^22.7.4",
+    "@types/react": "18.3.31",
     "jsdom": "^25.0.1",
     "typescript": "^5.6.2",
     "vite": "^5.4.8",
@@ -224,10 +225,6 @@
       "types": "./dist/components/dropdown/index.d.ts",
       "import": "./dist/components/dropdown/index.js"
     },
-    "./sidebar": {
-      "types": "./dist/components/sidebar/index.d.ts",
-      "import": "./dist/components/sidebar/index.js"
-    },
     "./pagination": {
       "types": "./dist/components/pagination/index.d.ts",
       "import": "./dist/components/pagination/index.js"
@@ -275,6 +272,10 @@
     "./vue": {
       "types": "./dist/core/vue.d.ts",
       "import": "./dist/core/vue.js"
+    },
+    "./react": {
+      "types": "./dist/core/react.d.ts",
+      "import": "./dist/core/react.js"
     },
     "./components/*": {
       "types": "./dist/components/*/index.d.ts",
