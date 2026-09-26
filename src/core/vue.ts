@@ -33,6 +33,7 @@ import type {
   FxEmptyStateProps,
   FxFileUploadProps,
   FxFloatlabelProps,
+  FxIconProps,
   FxInputProps,
   FxKnobProps,
   FxMenuProps,
@@ -99,6 +100,7 @@ declare module '@vue/runtime-core' {
     'fx-slider': FxComp<FxSliderProps>;
     'fx-chip': FxComp<FxChipProps>;
     'fx-avatar': FxComp<FxAvatarProps>;
+    'fx-icon': FxComp<FxIconProps>;
     'fx-card': FxComp<FxCardProps>;
     'fx-breadcrumb': FxComp<FxBreadcrumbProps>;
     'fx-popover': FxComp<FxPopoverProps>;
@@ -153,6 +155,7 @@ declare module '@vue/runtime-dom' {
     'fx-slider': FxSliderProps;
     'fx-chip': FxChipProps;
     'fx-avatar': FxAvatarProps;
+    'fx-icon': FxIconProps;
     'fx-card': FxCardProps;
     'fx-breadcrumb': FxBreadcrumbProps;
     'fx-popover': FxPopoverProps;

@@ -21,6 +21,8 @@ export class FxToggleButtonGroup extends FxElement {
       min-height: var(--fx-size-md);
       padding: var(--fx-space-sm) var(--fx-space-lg);
       font-weight: var(--fx-font-weight);
+      /* Altura determinística: a caixa fica EXATAMENTE no token --fx-size-*. */
+      line-height: var(--fx-font-line-height);
       color: var(--fx-text-default);
       background: var(--fx-surface-background);
       border: 1px solid var(--fx-border-default);
@@ -30,7 +32,7 @@ export class FxToggleButtonGroup extends FxElement {
       transition: background var(--fx-motion-duration-fast) var(--fx-motion-easing), border-color var(--fx-motion-duration-fast) var(--fx-motion-easing), color var(--fx-motion-duration-fast) var(--fx-motion-easing);
     }
     :host([size='sm']) .option { min-height: var(--fx-size-sm); padding: var(--fx-space-xs) var(--fx-space-md); font-size: calc(var(--fx-font-size) - 2px); }
-    :host([size='lg']) .option { min-height: var(--fx-size-lg); padding: var(--fx-space-md) var(--fx-space-xl); font-size: calc(var(--fx-font-size) + 2px); }
+    :host([size='lg']) .option { min-height: var(--fx-size-lg); padding: var(--fx-space-sm) var(--fx-space-xl); font-size: calc(var(--fx-font-size) + 2px); }
     .option:hover { border-color: var(--fx-color-primary); }
     .option.active {
       background: var(--fx-color-primary);

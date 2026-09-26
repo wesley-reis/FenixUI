@@ -43,6 +43,8 @@ export class FxDatepicker extends FxElement {
       min-height: var(--fx-size-md, 40px);
       min-width: 150px;
       padding: var(--fx-space-xs) var(--fx-space-md);
+      /* Altura determinística: a caixa fica EXATAMENTE no token --fx-size-*. */
+      line-height: var(--fx-font-line-height);
       background-color: var(--fx-surface-background);
       border: 1px solid var(--fx-border-default);
       border-radius: var(--fx-radius-md);
@@ -51,9 +53,9 @@ export class FxDatepicker extends FxElement {
         border-color var(--fx-motion-duration-normal) var(--fx-motion-easing),
         box-shadow var(--fx-motion-duration-normal) var(--fx-motion-easing);
     }
-    :host([size='sm']) .field { min-height: 32px; min-width: 180px; }
-    :host([size='md']) .field { min-height: 40px; }
-    :host([size='lg']) .field { min-height: 48px; min-width: 220px; font-size: calc(var(--fx-font-size) + 4px); }
+    :host([size='sm']) .field { min-height: var(--fx-size-sm); min-width: 180px; }
+    :host([size='md']) .field { min-height: var(--fx-size-md); }
+    :host([size='lg']) .field { min-height: var(--fx-size-lg); min-width: 220px; font-size: calc(var(--fx-font-size) + 4px); }
     /* Range e multiple exibem mais de uma data: campo mais largo */
     :host([mode='range']) .field { min-width: 250px; }
     :host([mode='multiple']) .field { min-width: 220px; }
@@ -64,28 +66,31 @@ export class FxDatepicker extends FxElement {
        descartados para permitir layouts estreitos sob controle do pai). */
     :host([full]) { display: block; width: 100%; }
     :host([full]) .field { min-width: 0; }
-    /* Validação */
+    /* Validação — borda e brilho JÁ EM REPOUSO (igual ao fx-input); o brilho
+       segue o token --fx-effect-error-ring, que acompanha effect.focus-ring. */
     :host([error]) .field,
     :host([invalid]) .field {
       border-color: var(--fx-color-danger, #dc2626);
+      box-shadow: var(--fx-effect-error-ring, 0 0 0 3px color-mix(in srgb, var(--fx-color-danger, #dc2626) 18%, transparent));
     }
     :host([error]) .field:focus-within,
     :host([invalid]) .field:focus-within,
     :host([error][open]) .field,
     :host([invalid][open]) .field {
       border-color: var(--fx-color-danger, #dc2626);
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--fx-color-danger, #dc2626) 18%, transparent);
+      box-shadow: var(--fx-effect-error-ring, 0 0 0 3px color-mix(in srgb, var(--fx-color-danger, #dc2626) 18%, transparent));
     }
     :host([success]) .field,
     :host([valid]) .field {
       border-color: var(--fx-color-success, #16a34a);
+      box-shadow: var(--fx-effect-success-ring, 0 0 0 3px color-mix(in srgb, var(--fx-color-success, #16a34a) 18%, transparent));
     }
     :host([success]) .field:focus-within,
     :host([valid]) .field:focus-within,
     :host([success][open]) .field,
     :host([valid][open]) .field {
       border-color: var(--fx-color-success, #16a34a);
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--fx-color-success, #16a34a) 18%, transparent);
+      box-shadow: var(--fx-effect-success-ring, 0 0 0 3px color-mix(in srgb, var(--fx-color-success, #16a34a) 18%, transparent));
     }
     .field:hover { border-color: var(--fx-border-hover); }
     .field:focus-within {

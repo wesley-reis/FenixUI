@@ -41,6 +41,9 @@ export class FxSelect extends FxElement {
       /* Acompanha a largura definida no :host. */
       width: 100%;
       font: inherit;
+      /* Altura/linha determinísticas: a caixa fica no token --fx-size-*
+         (o line-height fixo impede que a herança da página estoure o min-height). */
+      line-height: var(--fx-font-line-height);
       font-weight: var(--fx-font-weight);
       color: var(--fx-text-default);
       text-align: left;
@@ -68,28 +71,31 @@ export class FxSelect extends FxElement {
     :host([full]) { min-width: 0; }
     :host([full]) .trigger { width: 100%; min-width: 0; }
     :host([full]) .panel { width: 100%; }
-        /* Validação */
+        /* Validação — borda e brilho JÁ EM REPOUSO (igual ao fx-input); o
+           brilho segue --fx-effect-error-ring, que acompanha effect.focus-ring. */
     :host([error]) .trigger,
     :host([invalid]) .trigger {
       border-color: var(--fx-color-danger, #dc2626);
+      box-shadow: var(--fx-effect-error-ring, 0 0 0 3px color-mix(in srgb, var(--fx-color-danger, #dc2626) 18%, transparent));
     }
     :host([error]) .trigger:focus-visible,
     :host([invalid]) .trigger:focus-visible,
     :host([error][open]) .trigger,
     :host([invalid][open]) .trigger {
       border-color: var(--fx-color-danger, #dc2626);
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--fx-color-danger, #dc2626) 18%, transparent);
+      box-shadow: var(--fx-effect-error-ring, 0 0 0 3px color-mix(in srgb, var(--fx-color-danger, #dc2626) 18%, transparent));
     }
     :host([success]) .trigger,
     :host([valid]) .trigger {
       border-color: var(--fx-color-success, #16a34a);
+      box-shadow: var(--fx-effect-success-ring, 0 0 0 3px color-mix(in srgb, var(--fx-color-success, #16a34a) 18%, transparent));
     }
     :host([success]) .trigger:focus-visible,
     :host([valid]) .trigger:focus-visible,
     :host([success][open]) .trigger,
     :host([valid][open]) .trigger {
       border-color: var(--fx-color-success, #16a34a);
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--fx-color-success, #16a34a) 18%, transparent);
+      box-shadow: var(--fx-effect-success-ring, 0 0 0 3px color-mix(in srgb, var(--fx-color-success, #16a34a) 18%, transparent));
     }
     :host([disabled]) .trigger,
     .trigger[aria-disabled='true'] { opacity: 0.55; cursor: not-allowed; background-color: var(--fx-surface-surface-hover); }

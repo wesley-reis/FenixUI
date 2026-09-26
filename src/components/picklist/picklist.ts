@@ -137,7 +137,7 @@ export class FxPickList extends FxElement {
     .filter-input:focus {
       outline: none;
       border-color: var(--picklist-primary);
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--picklist-primary) 20%, transparent);
+      box-shadow: var(--fx-effect-focus-ring, none);
     }
     .filter-input::placeholder {
       color: var(--picklist-text-muted);
@@ -234,7 +234,7 @@ export class FxPickList extends FxElement {
     }
     button.control-btn:focus-visible {
       outline: none;
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--picklist-primary) 30%, transparent);
+      box-shadow: var(--fx-effect-focus-ring, none);
     }
     button.control-btn:disabled {
       opacity: 0.3;

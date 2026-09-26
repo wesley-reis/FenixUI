@@ -63,4 +63,33 @@ describe('Motor de tema (runtime)', () => {
     configure({ theme: 'dark' });
     expect(spy.hit).toBe(1);
   });
+
+  it('focus-ring desligado desliga também os anéis de validação (error/success)', () => {
+    setTokens({ effect: { 'focus-ring': 'none' } });
+    const root = document.documentElement.style;
+    expect(root.getPropertyValue('--fx-effect-focus-ring')).toBe('none');
+    expect(root.getPropertyValue('--fx-effect-error-ring')).toBe('none');
+    expect(root.getPropertyValue('--fx-effect-success-ring')).toBe('none');
+  });
+
+  it('focus-ring ligado mantém os brilhos de validação padrão', () => {
+    resetTheme();
+    const root = document.documentElement.style;
+    expect(root.getPropertyValue('--fx-effect-focus-ring')).toContain('color-mix');
+    expect(root.getPropertyValue('--fx-effect-error-ring')).toContain('color-mix');
+    expect(root.getPropertyValue('--fx-effect-success-ring')).toContain('color-mix');
+  });
+
+  it('error-ring/success-ring explícitos têm prioridade sobre a derivação', () => {
+    setTokens({ effect: { 'focus-ring': 'none', 'error-ring': '0 0 0 2px red' } });
+    const root = document.documentElement.style;
+    expect(root.getPropertyValue('--fx-effect-error-ring')).toBe('0 0 0 2px red');
+    expect(root.getPropertyValue('--fx-effect-success-ring')).toBe('none');
+  });
+
+  it('derivação não contamina os tokens base (referência de effect)', () => {
+    setTokens({ effect: { 'focus-ring': 'none' } });
+    expect(defaultTokens.effect['error-ring']).toContain('color-mix');
+    expect(defaultTokens.effect['focus-ring']).toContain('color-mix');
+  });
 });

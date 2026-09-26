@@ -43,7 +43,7 @@ export class FxOrderList extends FxElement {
     .select-all-bar input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--orderlist-primary); cursor: pointer; }
     .filter-wrapper { margin-bottom: var(--fx-space-xs, 4px); }
     .filter-input { width: 100%; padding: var(--fx-space-sm, 10px) var(--fx-space-md, 14px); padding-left: 42px; border: 1.5px solid var(--orderlist-border); border-radius: var(--orderlist-radius); font-family: inherit; font-size: inherit; color: var(--orderlist-text); background: var(--orderlist-bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E") no-repeat 14px center; transition: var(--orderlist-transition); }
-    .filter-input:focus { outline: none; border-color: var(--orderlist-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--orderlist-primary) 20%, transparent); }
+    .filter-input:focus { outline: none; border-color: var(--orderlist-primary); box-shadow: var(--fx-effect-focus-ring, none); }
     .filter-input::placeholder { color: var(--orderlist-text-muted); }
     .main-row { display: flex; align-items: stretch; gap: var(--fx-space-sm, 8px); }
     .list { list-style: none; margin: 0; padding: 0; border: 1px solid var(--orderlist-border); border-radius: var(--orderlist-radius); overflow: hidden; box-shadow: var(--orderlist-shadow); max-height: 450px; overflow-y: auto; flex: 1; }
@@ -86,7 +86,7 @@ export class FxOrderList extends FxElement {
     button.control-btn { display: flex; align-items: center; justify-content: center; width: 42px; height: 38px; padding: 0; border: none; border-radius: 8px; background: transparent; color: var(--orderlist-text-muted); cursor: pointer; font-size: 16px; line-height: 1; transition: var(--orderlist-transition); position: relative; }
     button.control-btn:hover:not(:disabled) { background: var(--orderlist-bg-hover); color: var(--orderlist-primary); transform: scale(1.1); }
     button.control-btn:active:not(:disabled) { transform: scale(0.92); background: color-mix(in srgb, var(--orderlist-primary) 15%, transparent); }
-    button.control-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--orderlist-primary) 30%, transparent); }
+    button.control-btn:focus-visible { outline: none; box-shadow: var(--fx-effect-focus-ring, none); }
     button.control-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
     .control-btn-icon { font-size: 18px; line-height: 1; }
     /* Tooltip nos botoes */

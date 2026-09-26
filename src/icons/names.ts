@@ -4286,5 +4286,3 @@ export const FENIX_ICON_NAMES: readonly string[] = [
   'zoom_out',
   'zoom_out_map',
 ];
-
-export type FenixIconName = (typeof FENIX_ICON_NAMES)[number];

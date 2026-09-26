@@ -36,7 +36,9 @@ export class FxButton extends FxElement {
       font-size: var(--fx-font-size);
       font-weight: var(--fx-font-weight);
       line-height: var(--fx-font-line-height);
-      padding: var(--fx-space-md) var(--fx-space-xl);
+      /* Padding vertical limitado ao orçamento do token --fx-size-*: a altura
+         fica EXATAMENTE em sm 32 / md 40 / lg 48 (mesma medida dos campos). */
+      padding: var(--fx-space-sm) var(--fx-space-xl);
       border-radius: var(--fx-radius-md);
       border: 1px solid transparent;
       color: #fff;
@@ -59,8 +61,8 @@ export class FxButton extends FxElement {
 
     /* Tamanhos — alturas vindas dos tokens (personalizáveis por preset) */
     .btn { min-height: var(--fx-size-md); }
-    :host([size='sm']) .btn { padding: var(--fx-space-sm) var(--fx-space-lg); font-size: var(--fx-font-size); min-height: var(--fx-size-sm); }
-    :host([size='lg']) .btn { padding: var(--fx-space-lg) var(--fx-space-xl); font-size: calc(var(--fx-font-size) + 4px); min-height: var(--fx-size-lg); }
+    :host([size='sm']) .btn { padding: var(--fx-space-xs) var(--fx-space-lg); font-size: var(--fx-font-size); min-height: var(--fx-size-sm); }
+    :host([size='lg']) .btn { padding: var(--fx-space-sm) var(--fx-space-xl); font-size: calc(var(--fx-font-size) + 4px); min-height: var(--fx-size-lg); }
 
     /* Full width */
     :host([full]) .btn { width: 100%; }

@@ -5,7 +5,7 @@ import { esc } from '../../core/sanitize';
 import { FENIX_ICON_BASE_CSS, fenixIconHtml } from '../../icons/base-css';
 
 /**
- * <fx-fileupload> — Seletor de arquivos com upload e progresso (estilo FileUpload do PrimeVue).
+ * <fx-fileupload> — Seletor de arquivos com upload e progresso.
  *
  * Atributos:
  *  - mode (basic|advanced — `basic`: botão; `advanced`: dropzone com drag & drop);
@@ -40,10 +40,12 @@ export class FxFileUpload extends FxElement {
          o botão sem precisar do full (host é shrink-to-fit por padrão). */
       width: 100%;
       min-height: var(--fx-size-md);
-      padding: var(--fx-space-md) var(--fx-space-lg);
+      /* Padding vertical no orçamento do token --fx-size-* ⇒ altura padrão. */
+      padding: var(--fx-space-sm) var(--fx-space-lg);
       font-family: inherit;
       font-size: inherit;
       font-weight: var(--fx-font-weight);
+      line-height: var(--fx-font-line-height);
       color: var(--fx-text-default);
       background-color: var(--fx-surface-background);
       border: 1px solid var(--fx-border-default);
@@ -70,8 +72,8 @@ export class FxFileUpload extends FxElement {
     :host([severity='info']) .btn { background: var(--fx-color-info); border-color: transparent; color: #fff; }
     :host([severity]) .btn:hover { filter: brightness(0.88); }
     :host([severity]) .btn:focus-visible { border-color: transparent; }
-    :host([size='sm']) .btn { min-height: var(--fx-size-sm); padding: var(--fx-space-sm) var(--fx-space-md); font-size: calc(var(--fx-font-size) - 2px); }
-    :host([size='lg']) .btn { min-height: var(--fx-size-lg); padding: var(--fx-space-lg) var(--fx-space-xl); font-size: calc(var(--fx-font-size) + 4px); }
+    :host([size='sm']) .btn { min-height: var(--fx-size-sm); padding: var(--fx-space-xs) var(--fx-space-md); font-size: calc(var(--fx-font-size) - 2px); }
+    :host([size='lg']) .btn { min-height: var(--fx-size-lg); padding: var(--fx-space-sm) var(--fx-space-xl); font-size: calc(var(--fx-font-size) + 4px); }
     :host([size='sm']) .drop { min-height: 72px; }
     :host([size='lg']) .drop { min-height: 132px; }
 

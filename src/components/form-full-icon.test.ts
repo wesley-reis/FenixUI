@@ -312,3 +312,62 @@ describe('form validation states (error / success)', () => {
     expect(el.shadowRoot!.querySelector('.trigger')).toBeTruthy();
   });
 });
+
+describe('anéis de validação seguem effect.focus-ring (tokens)', () => {
+  beforeEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  // Componentes com estados error/success usados nos modelos da página Formulários.
+  const RING_CASES = [
+    'fx-input',
+    'fx-textarea',
+    'fx-autocomplete',
+    'fx-select',
+    'fx-multiselect',
+    'fx-datepicker',
+  ];
+
+  it.each(RING_CASES)('%s usa --fx-effect-error-ring/-success-ring nos estados', (tag) => {
+    const el = mount(`<${tag}></${tag}>`) as unknown as HTMLElement;
+    const css = shadowCss(el);
+    expect(css).toContain('var(--fx-effect-error-ring');
+    expect(css).toContain('var(--fx-effect-success-ring');
+  });
+
+  it.each(RING_CASES)('%s não fixa brilho de validação ignorando o token do tema', (tag) => {
+    const el = mount(`<${tag}></${tag}>`) as unknown as HTMLElement;
+    const css = shadowCss(el);
+    // Brilho hardcoded venceria qualquer configuração de effect.focus-ring.
+    expect(css).not.toMatch(/box-shadow:\s*0 0 0 3px color-mix\(in srgb, var\(--fx-color-(danger|success)/);
+  });
+
+  it.each(RING_CASES)('%s mantém a borda de validação mesmo sem o anel', (tag) => {
+    const el = mount(`<${tag}></${tag}>`) as unknown as HTMLElement;
+    const css = shadowCss(el);
+    // O erro/sucesso precisa continuar visível (border-color) com o anel desligado.
+    expect(css).toMatch(/:host\(\[error\]\)[^{]*\{[^}]*border-color: var\(--fx-color-danger/);
+    expect(css).toMatch(/:host\(\[success\]\)[^{]*\{[^}]*border-color: var\(--fx-color-success/);
+  });
+
+  // Padrão do projeto: TODOS os campos com validação exibem o anel de erro
+  // JÁ EM REPOUSO (não só no foco/abertura) — com o focus-ring ligado o brilho
+  // aparece ao salvar o form; com ele desligado o token vira 'none'.
+  const REST_GLOW_CASES: Array<[string, string]> = [
+    ['fx-input', '.field'],
+    ['fx-textarea', '.field'],
+    ['fx-autocomplete', '.field'],
+    ['fx-select', '.trigger'],
+    ['fx-multiselect', '.trigger'],
+    ['fx-datepicker', '.field'],
+  ];
+
+  it.each(REST_GLOW_CASES)('%s aplica o anel de error já em repouso', (tag, inner) => {
+    const el = mount(`<${tag}></${tag}>`) as unknown as HTMLElement;
+    const css = shadowCss(el);
+    const re = new RegExp(
+      `:host\\(\\[error\\]\\) ${inner.replace('.', '\\.')}[^{]*\\{[^}]*box-shadow: var\\(--fx-effect-error-ring`,
+    );
+    expect(css).toMatch(re);
+  });
+});

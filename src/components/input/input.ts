@@ -34,13 +34,17 @@ export class FxInput extends FxElement {
     .field {
       font-family: inherit;
       font-size: inherit;
+      /* Altura determinística: com line-height fixo, o padding vertical cabe no
+         token --fx-size-* e a caixa fica EXATAMENTE no tamanho padrão
+         (sm 32 / md 40 / lg 48), igual para todos os campos. */
+      line-height: var(--fx-font-line-height);
       min-height: var(--fx-size-md);
       font-weight: var(--fx-font-weight);
       color: var(--fx-text-default);
       background-color: var(--fx-surface-background);
       border: 1px solid var(--fx-border-default);
       border-radius: var(--fx-radius-md);
-      padding: var(--fx-space-md) var(--fx-space-lg);
+      padding: var(--fx-space-sm) var(--fx-space-lg);
       /* Acompanha a largura definida no :host. */
       width: 100%;
       box-sizing: border-box;
@@ -61,25 +65,27 @@ export class FxInput extends FxElement {
       cursor: not-allowed;
       background-color: var(--fx-surface-surface-hover);
     }
-    /* Validação: sobrescrevem a borda/foco via token do preset. */
+    /* Validação: borda sempre; o brilho (anel) segue o token do preset
+       --fx-effect-error-ring, que acompanha effect.focus-ring — anel
+       desligado ⇒ erro só com a borda vermelha, ligado ⇒ soma o brilho. */
     :host([error]) .field,
     :host([invalid]) .field,
     :host([error]) .field:focus-visible,
     :host([invalid]) .field:focus-visible {
       border-color: var(--fx-color-danger, #dc2626);
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--fx-color-danger, #dc2626) 18%, transparent);
+      box-shadow: var(--fx-effect-error-ring, 0 0 0 3px color-mix(in srgb, var(--fx-color-danger, #dc2626) 18%, transparent));
     }
     :host([success]) .field,
     :host([valid]) .field,
     :host([success]) .field:focus-visible,
     :host([valid]) .field:focus-visible {
       border-color: var(--fx-color-success, #16a34a);
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--fx-color-success, #16a34a) 18%, transparent);
+      box-shadow: var(--fx-effect-success-ring, 0 0 0 3px color-mix(in srgb, var(--fx-color-success, #16a34a) 18%, transparent));
     }
     :host([size='sm']) { width: var(--fx-input-width-sm, 220px); }
-    :host([size='sm']) .field { padding: var(--fx-space-sm) var(--fx-space-md); font-size: var(--fx-font-size); min-height: var(--fx-size-sm); }
+    :host([size='sm']) .field { padding: var(--fx-space-xs) var(--fx-space-md); font-size: var(--fx-font-size); min-height: var(--fx-size-sm); }
     :host([size='lg']) { width: var(--fx-input-width-lg, 300px); }
-    :host([size='lg']) .field { padding: var(--fx-space-lg) var(--fx-space-xl); font-size: calc(var(--fx-font-size) + 4px); min-height: var(--fx-size-lg); }
+    :host([size='lg']) .field { padding: var(--fx-space-sm) var(--fx-space-xl); font-size: calc(var(--fx-font-size) + 4px); min-height: var(--fx-size-lg); }
     /* Full width: o host estica até o pai e o campo interno acompanha
        (usar com um container de largura controlada, ex. w-full no Vue). */
     :host([full]) { display: block; width: 100%; }
