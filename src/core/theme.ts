@@ -54,6 +54,7 @@ export function applyTokens(
 ): void {
   const base = themeName === 'dark' ? darkTokens : defaultTokens;
   const finalTokens = deepMerge(base, overrides);
+  syncValidationRings(finalTokens, overrides);
   const vars = tokenCssVars(finalTokens);
   for (const [name, value] of Object.entries(vars)) {
     target.style.setProperty(name, value);
@@ -61,6 +62,32 @@ export function applyTokens(
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('fenix:theme', { detail: { theme: themeName, tokens: finalTokens } }));
   }
+}
+
+/** Valores de `effect['focus-ring']` que significam "anel de foco desligado". */
+const RING_OFF_VALUES = new Set(['', 'none', '0', 'unset', 'initial']);
+
+/**
+ * Os anéis de validação (`error-ring`/`success-ring`) acompanham `focus-ring`:
+ *  - anel de foco LIGADO   → estados error/success exibem o brilho junto da borda;
+ *  - anel de foco DESLIGADO → o erro/sucesso continua visível (border-color +
+ *    mensagem/alerta), mas SEM o anel/brilho ao redor do campo.
+ * Um override explícito de `error-ring`/`success-ring` tem prioridade sobre a
+ * derivação. Nunca muta os tokens base (referência compartilhada com lightTokens).
+ */
+function syncValidationRings(
+  tokens: FenixTokens,
+  overrides: DeepPartial<FenixTokens> | null,
+): void {
+  const focusRing = String(tokens.effect['focus-ring'] ?? '').trim();
+  if (!RING_OFF_VALUES.has(focusRing)) return;
+  const explicit = (key: 'error-ring' | 'success-ring'): boolean =>
+    Boolean(overrides?.effect && Object.prototype.hasOwnProperty.call(overrides.effect, key));
+  tokens.effect = {
+    ...tokens.effect,
+    'error-ring': explicit('error-ring') ? tokens.effect['error-ring'] : 'none',
+    'success-ring': explicit('success-ring') ? tokens.effect['success-ring'] : 'none',
+  };
 }
 
 export interface ConfigureOptions {

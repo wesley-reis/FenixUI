@@ -18,6 +18,12 @@ describe('FxPickList', () => {
     expect(element).toBeInstanceOf(FxPickList);
   });
 
+  it('foco do filtro e dos botões respeita o token effect.focus-ring', () => {
+    const css = (element.shadowRoot!.querySelector('style')?.textContent ?? '').replace(/\s+/g, ' ');
+    expect(css).toContain('box-shadow: var(--fx-effect-focus-ring, none)');
+    expect(css).not.toContain('box-shadow: 0 0 0 3px');
+  });
+
   it('should have default source and target as empty arrays', () => {
     expect(element.source).toEqual([]);
     expect(element.target).toEqual([]);

@@ -26,6 +26,7 @@ import { fileuploadDoc } from './fileupload.doc';
 import { sliderDoc } from './slider.doc';
 import { chipDoc } from './chip.doc';
 import { avatarDoc } from './avatar.doc';
+import { iconDoc } from './icon.doc';
 import { cardDoc } from './card.doc';
 import { breadcrumbDoc } from './breadcrumb.doc';
 import { popoverDoc } from './popover.doc';
@@ -74,6 +75,7 @@ export const componentDocs: ComponentDoc[] = [
 	sliderDoc,
 	chipDoc,
 	avatarDoc,
+	iconDoc,
 	cardDoc,
 	breadcrumbDoc,
 	popoverDoc,
@@ -123,6 +125,7 @@ export const componentLoaders: Record<string, () => Promise<unknown>> = {
 	'fx-slider': () => import('../../components/slider'),
 	'fx-chip': () => import('../../components/chip'),
 	'fx-avatar': () => import('../../components/avatar'),
+	'fx-icon': () => import('../../components/icon'),
 	'fx-card': () => import('../../components/card'),
 	'fx-breadcrumb': () => import('../../components/breadcrumb'),
 	'fx-popover': () => import('../../components/popover'),

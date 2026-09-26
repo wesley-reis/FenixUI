@@ -181,6 +181,8 @@ FenixUI.configure({
     effect: {
       ripple: '1',                // '0' desativa o ripple do fx-button
       'focus-ring': 'none',       // campos sem anel de foco/sobra
+      // error-ring/success-ring acompanham o focus-ring automaticamente:
+      // desligado, a validação error/success mostra só a borda (sem brilho).
     },
   },
 });
@@ -392,6 +394,9 @@ FenixUI.setTokens({
   effect: {
     ripple: '0',        // desativa o efeito ripple do fx-button
     'focus-ring': 'none', // campos sem anel de foco/sobra
+    // 'error-ring' e 'success-ring' acompanham o focus-ring (desligado ⇒
+    // validação error/success apenas com a borda, sem brilho) — ou defina
+    // explicitamente um brilho próprio.
   },
 });
 ```

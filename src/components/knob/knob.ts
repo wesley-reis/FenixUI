@@ -6,7 +6,7 @@ import { esc } from '../../core/sanitize';
 /**
  * <fx-knob> - Controle giratorio circular para ajuste de valor.
  *
- * Similar ao Knob do PrimeVue, permite ajustar um valor arrastando o mouse
+ * permite ajustar um valor arrastando o mouse
  * ou usando as setas do teclado. Exibe um arco de progresso circular com
  * o valor central configuravel via valueTemplate.
  *
@@ -79,7 +79,9 @@ export class FxKnob extends FxElement {
       outline: none;
     }
     .knob:focus-visible svg {
-      filter: drop-shadow(var(--fx-effect-focus-ring, 0 0 0 3px color-mix(in srgb, var(--fx-color-primary) 22%, transparent)));
+      /* Mesmo fallback none dos demais componentes: sem motor de tema (ou com
+         effect.focus-ring desligado) não há anel de foco. */
+      filter: drop-shadow(var(--fx-effect-focus-ring, none));
     }
   `;
 

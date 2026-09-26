@@ -6,6 +6,14 @@ describe('fx-knob', () => {
     expect(customElements.get('fx-knob')).toBeDefined();
   });
 
+  it('anel de foco respeita o token effect.focus-ring (fallback none)', () => {
+    const el = document.createElement('fx-knob');
+    document.body.appendChild(el);
+    const css = (el.shadowRoot!.querySelector('style')?.textContent ?? '').replace(/\s+/g, ' ');
+    expect(css).toContain('drop-shadow(var(--fx-effect-focus-ring, none))');
+    el.remove();
+  });
+
   it('exibe valor padrao', () => {
     const el = document.createElement('fx-knob');
     document.body.appendChild(el);

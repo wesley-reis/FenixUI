@@ -13,6 +13,7 @@
  */
 
 import type { FxElementProps, FxSize } from './types';
+import type { FenixIconName } from '../icons/types';
 
 /** Marcador de runtime: permite `import '@wrrdev/fenix-ui/jsx'` como side-effect import. */
 export const FX_JSX_TYPES = true as const;
@@ -270,6 +271,26 @@ export interface FxAvatarProps extends FxElementProps {
   size?: FxSize;
   shape?: FxAvatarShape;
 }
+/**
+ * <fx-icon> — glifo da Fenix Icons com autocomplete no editor.
+ *
+ * `name` é uma união literal com TODOS os nomes da fonte (+4.000): o editor
+ * (Volar/vue-tsc, React/TSX) sugere os válidos ao digitar. A tipagem aceita
+ * qualquer string (escotilha `(string & {})`), então nomes montados por
+ * variável/dynamic imports continuam compilando sem erro.
+ */
+export interface FxIconProps extends FxElementProps {
+  /** Nome do glifo (ex.: `home`). Texto livre/emoji também é aceito. */
+  name?: FenixIconName;
+  /** Tamanho do glifo. Sem atributo, herda o tamanho do texto (1em). */
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  /** Nome acessível; sem label o ícone é aria-hidden (decorativo). */
+  label?: string;
+  /** Variante preenchida. */
+  fill?: boolean;
+  /** Traço mais pesado. */
+  bold?: boolean;
+}
 export interface FxCardProps extends FxElementProps {
   variant?: FxCardVariant;
   /** Arredondamento do container (radius sm/md/lg). */
@@ -422,6 +443,7 @@ export interface FxJsxIntrinsicElements {
   'fx-slider': FxSliderProps;
   'fx-chip': FxChipProps;
   'fx-avatar': FxAvatarProps;
+  'fx-icon': FxIconProps;
   'fx-card': FxCardProps;
   'fx-breadcrumb': FxBreadcrumbProps;
   'fx-popover': FxPopoverProps;

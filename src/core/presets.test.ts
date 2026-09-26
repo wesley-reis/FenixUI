@@ -55,6 +55,21 @@ describe('applyPreset', () => {
     expect(document.documentElement.style.getPropertyValue('--fx-effect-focus-ring')).toBe('none');
   });
 
+  it('preset com focus-ring desligado deriva error-ring/success-ring = none', () => {
+    applyPreset('fenix', 'light');
+    const root = document.documentElement.style;
+    expect(root.getPropertyValue('--fx-effect-error-ring')).toBe('none');
+    expect(root.getPropertyValue('--fx-effect-success-ring')).toBe('none');
+  });
+
+  it('preset sem focus-ring override mantém os brilhos de validação', () => {
+    // Hyoga não define focus-ring → herda o default (anel ligado).
+    applyPreset('hyoga', 'light');
+    const root = document.documentElement.style;
+    expect(root.getPropertyValue('--fx-effect-focus-ring')).toContain('color-mix');
+    expect(root.getPropertyValue('--fx-effect-error-ring')).toContain('color-mix');
+  });
+
   it('deepMerge mantém merge parcial profundo', () => {
     const merged = deepMerge({ a: { b: 1, c: 2 } }, { a: { b: 9 } });
     expect(merged).toEqual({ a: { b: 9, c: 2 } });

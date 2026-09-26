@@ -19,7 +19,14 @@ export interface FenixTokens {
   /** Sombras */ shadow: Record<'sm' | 'md' | 'lg', string>;
   /** Motion */ motion: Record<'duration-fast' | 'duration-normal' | 'easing', string>;
   /** Efeitos visuais configuráveis (ripple, anel de foco dos campos). */
-  effect: { ripple: string; 'focus-ring': string };
+  effect: {
+    ripple: string;
+    'focus-ring': string;
+    /** Brilho/anel dos estados de validação — acompanha `focus-ring` (ver applyTokens). */
+    'error-ring': string;
+    /** Brilho/anel do estado de sucesso — acompanha `focus-ring` (ver applyTokens). */
+    'success-ring': string;
+  };
   /** Z-index */ z: Record<'base' | 'dropdown' | 'modal' | 'toast', string>;
 }
 
@@ -72,6 +79,16 @@ export const lightTokens: FenixTokens = {
 		/** Anel de foco dos campos de formulário. Use 'none' para campos sem sobra. */
 		"focus-ring":
 			"0 0 0 3px color-mix(in srgb, var(--fx-color-primary) 22%, transparent)",
+		/**
+		 * Brilho dos estados `error`/`invalid`. Acompanha `focus-ring`: quando o
+		 * anel de foco está desligado, `applyTokens` força 'none' — o erro segue
+		 * visível pela borda (border-color) e pela mensagem, mas sem o anel.
+		 */
+		"error-ring":
+			"0 0 0 3px color-mix(in srgb, var(--fx-color-danger, #dc2626) 18%, transparent)",
+		/** Brilho dos estados `success`/`valid` — acompanha `focus-ring` igualmente. */
+		"success-ring":
+			"0 0 0 3px color-mix(in srgb, var(--fx-color-success, #16a34a) 18%, transparent)",
 	},
 	z: { base: "auto", dropdown: "1000", modal: "1100", toast: "1200" },
 };

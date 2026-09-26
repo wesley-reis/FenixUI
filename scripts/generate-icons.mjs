@@ -1,6 +1,10 @@
 /**
- * Gera `src/icons/names.ts` a partir do arquivo de codepoints da fonte
+ * Gera a lista de nomes de ícones a partir do arquivo de codepoints da fonte
  * Material Symbols Rounded (Apache 2.0), que alimenta a "Fenix Icons".
+ *
+ * Saídas:
+ *  - src/icons/names.ts       → lista em tempo de execução (readonly string[])
+ *  - src/icons/name-union.ts  → união literal (autocomplete do editor/TypeScript)
  *
  * Uso: npm run icons:generate
  */
@@ -27,9 +31,25 @@ const body = `/**
 export const FENIX_ICON_NAMES: readonly string[] = [
 ${names.map((n) => `  '${n}',`).join('\n')}
 ];
+`;
 
-export type FenixIconName = (typeof FENIX_ICON_NAMES)[number];
+// União literal: é ela que dá AUTOCOMPLETE dos nomes no editor (Vue/React/TS).
+// Vive em arquivo próprio (tipos não dependem de runtime) e é reexportada por
+// src/icons/types.ts como FenixIconName.
+const union = `/**
+ * GERADO AUTOMATICAMENTE por scripts/generate-icons.mjs — não editar manualmente.
+ * Fonte dos nomes: Material Symbols Rounded (Apache 2.0).
+ *
+ * União literal de TODOS os nomes de glifos: é o que alimenta o autocomplete
+ * do atributo name do <fx-icon> (Volar/vue-tsc, React/TSX) — ${names.length} opções.
+ * A lista em tempo de execução fica em ./names.ts.
+ */
+
+/** Nome de glifo conhecido da fonte Fenix Icons. */
+export type FenixIconKnownName =
+${names.map((n) => `  | '${n}'`).join('\n')};
 `;
 
 writeFileSync(`${here}/../src/icons/names.ts`, body);
-console.log(`✔ ${names.length} nomes de ícones gerados em src/icons/names.ts`);
+writeFileSync(`${here}/../src/icons/name-union.ts`, union);
+console.log(`✔ ${names.length} nomes de ícones gerados em src/icons/names.ts e src/icons/name-union.ts`);

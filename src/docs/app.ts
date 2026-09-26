@@ -544,10 +544,10 @@ FenixUI.setTokens({
         { name: 'font', type: 'family, size, weight, line-height', default: 'Inter 14px 500', desc: 'Tipografia global.' },
         { name: 'space', type: 'xs…xl', default: '4–24px', desc: 'Espaçamentos internos.' },
         { name: 'radius', type: 'none, sm, md, lg, full', default: '0–9999px', desc: 'Arredondamento (botões, campos, badges…).' },
-        { name: 'size', type: 'sm, md, lg', default: '32 / 40 / 48px', desc: 'Altura dos controles (button, input, select, multiselect) — personalize a escala de tamanhos no preset.' },
+        { name: 'size', type: 'sm, md, lg', default: '32 / 40 / 48px', desc: 'Altura EXATA dos controles (button, input, select, multiselect, datepicker…) — mesmo valor para todos os campos no mesmo size; personalize a escala no preset.' },
         { name: 'shadow', type: 'sm, md, lg', default: 'elevações suaves', desc: 'Sombras de elevação.' },
         { name: 'motion', type: 'duration-fast, duration-normal, easing', default: '120/240ms', desc: 'Velocidade e curva das transições.' },
-        { name: 'effect', type: `ripple ('1'/'0'), focus-ring`, default: 'ligados', desc: 'Ripple do botão e anel de foco dos campos — desative para visual sem sobra.' },
+        { name: 'effect', type: `ripple ('1'/'0'), focus-ring, error-ring, success-ring`, default: 'ligados', desc: 'Ripple do botão, anel de foco e brilhos de validação. error-ring/success-ring acompanham focus-ring: desligado ⇒ validação apenas com a borda vermelha/verde (sem brilho).' },
         { name: 'z', type: 'base, dropdown, modal, toast', default: '1000–1200', desc: 'Camadas de sobreposição.' },
       ],
       columns({ name: 'Grupo', type: 'Chaves', default: 'Padrão' }),
@@ -1334,7 +1334,7 @@ async function renderForms(): Promise<void> {
 	await Promise.all(FORMS_TAGS.map((t) => customElements.whenDefined(t)));
 	main.innerHTML = `
     <h2>Formulários</h2>
-    <p class="lead">Modelos prontos de cadastro combinando os componentes do FenixUI: use <code>full</code> para os campos acompanharem o container, CSS grid para múltiplos campos por linha e <code>error</code>/<code>error-text</code> para a validação. Clique em <strong>Salvar</strong> com campos vazios para ver a validação em ação.</p>
+    <p class="lead">Modelos prontos de cadastro combinando os componentes do FenixUI: use <code>full</code> para os campos acompanharem o container, CSS grid para múltiplos campos por linha e <code>error</code>/<code>error-text</code> para a validação. Clique em <strong>Salvar</strong> com campos vazios para ver a validação em ação. A borda e o brilho de <code>error</code>/<code>success</code> seguem o token <code>effect.focus-ring</code>: com o anel desligado os campos validados exibem apenas a borda vermelha/verde (sem sobra), e com o anel ligado o brilho é somado.</p>
     <style>
       /* hidden precisa vencer o display do host do alert */
       .example-stage fx-alert[hidden] { display: none !important; }
@@ -1901,8 +1901,31 @@ import '@wrrdev/fenix-ui/icons';
       </tbody>
     </table>
 
-    <h3>4. Todos os ícones</h3>
-    <p>Busque e clique no ícone para abrir as opções de cópia — nome do glifo, classe ou tag pronta.
+    <h3>4. Autocomplete no editor (<code>&lt;fx-icon&gt;</code>)</h3>
+    <p>As classes acima são CSS puro: nenhum editor consegue adivinhar o nome do glifo enquanto você digita.
+    Para isso existe o elemento <code>&lt;fx-icon&gt;</code>, com o atributo <code>name</code>
+    <strong>tipado</strong> — o editor (Volar/vue-tsc, React/TSX) lista os <b>${FENIX_ICON_NAMES.length}</b> nomes
+    válidos da fonte e o <code>FenixAutoImport</code> injeta o import sozinho.</p>
+    <pre><code>&lt;!-- Vue 3 (SFC): digite name=" e o editor completa com os glifos --&gt;
+&lt;fx-icon name="home" /&gt;
+&lt;fx-icon name="settings" size="lg" label="Configurações" /&gt;
+
+&lt;!-- React / TSX --&gt;
+&lt;fx-icon name="delete" label="Excluir" /&gt;</code></pre>
+    <p>Habilite as tipagens uma única vez no projeto:</p>
+    <pre><code>// main.ts (Vue 3)
+import '@wrrdev/fenix-ui/vue';   // autocomplete dos elementos fx-* (inclusive fx-icon)
+import '@wrrdev/fenix-ui/icon';  // o elemento em si — o auto-import já injeta</code></pre>
+    <div class="note">
+      <strong>Hover:</strong> passe o mouse sobre o nome sugerido e o editor mostra a assinatura do atributo.
+      <strong>Dica de ouro:</strong> instale a fonte do pacote
+      (<code>node_modules/@wrrdev/fenix-ui/dist/icons/fenix-icons.woff2</code>) no sistema e ative
+      <em>ligaduras de fonte</em> no editor — as sugestões passam a aparecer <strong>desenhadas como o próprio
+      ícone</strong>, e o texto <code>home</code> escrito no código também vira o glifo.
+    </div>
+
+    <h3>5. Todos os ícones</h3>
+    <p>Busque, passe o mouse para pré-visualizar e clique no ícone para abrir as opções de cópia — nome do glifo, classe ou tag pronta.
     <b>Atenção:</b> a classe <code>fx-icon-&lt;nome&gt;</code> sozinha não renderiza — ela precisa da classe
     base <code>fx-icon</code> (que aplica a fonte). Na modal, prefira a opção <i>Classe completa</i>.</p>
     <span id="icon-count" class="icon-count"></span>
@@ -1916,10 +1939,16 @@ import '@wrrdev/fenix-ui/icons';
         <ul id="icon-cats" class="icon-cats"></ul>
       </aside>
     </div>
+    <div id="icon-preview" class="icon-preview" hidden aria-hidden="true"></div>
     <style>
       .icon-layout {
         display: grid; grid-template-columns: minmax(0, 1fr) 190px;
         gap: 20px; align-items: start;
+        /* Largura DEFINIDA (independente do conteúdo): no main (flex column)
+           os filhos recebem margin-inline:auto, o que os torna fit-content —
+           sem este width:100% a página e o input de busca encolhiam toda vez
+           que a busca devolvia poucos ícones (ou o pager era ocultado). */
+        width: 100%;
       }
       .icon-aside {
         position: sticky; top: 16px;
@@ -1955,6 +1984,18 @@ import '@wrrdev/fenix-ui/icons';
       .icon-cell .fx-icon { font-size: 26px; color: var(--fx-text-default); }
       .icon-cell span { font-size: 10px; color: var(--fx-text-muted); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .icon-cell.copied { border-color: var(--fx-color-success); }
+      /* Preview no hover: passar o mouse num ícone mostra o glifo + a classe. */
+      .icon-preview {
+        position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+        z-index: var(--fx-z-toast, 1200);
+        display: flex; align-items: center; gap: 10px;
+        padding: 10px 16px; border-radius: var(--fx-radius-md);
+        background: var(--fx-surface-background); border: 1px solid var(--fx-border-default);
+        box-shadow: var(--fx-shadow-lg); font-size: 13px; pointer-events: none;
+      }
+      .icon-preview[hidden] { display: none; }
+      .icon-preview .fx-icon { font-size: 30px; }
+      .icon-preview code { color: var(--fx-text-muted); }
       #icon-pager { margin-top: 4px; }
       @media (max-width: 900px) {
         .icon-layout { grid-template-columns: 1fr; }
@@ -2024,6 +2065,17 @@ import '@wrrdev/fenix-ui/icons';
     const cell = (e.target as HTMLElement).closest<HTMLElement>('.icon-cell');
     if (!cell?.dataset.icon) return;
     void openIconCopyModal(cell.dataset.icon);
+  });
+  // Preview no hover: mostra o glifo em tamanho grande + a classe exata.
+  const preview = document.getElementById('icon-preview')!;
+  grid.addEventListener('mouseover', (e) => {
+    const cell = (e.target as HTMLElement).closest<HTMLElement>('.icon-cell');
+    if (!cell?.dataset.icon) return;
+    preview.innerHTML = `<i class="fx-icon fx-icon-${esc(cell.dataset.icon)}"></i><code>.fx-icon-${esc(cell.dataset.icon)}</code>`;
+    preview.hidden = false;
+  });
+  grid.addEventListener('mouseleave', () => {
+    preview.hidden = true;
   });
   renderGrid();
 }

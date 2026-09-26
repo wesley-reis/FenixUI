@@ -25,6 +25,8 @@ export class FxTextarea extends FxElement {
     .field {
       font-family: inherit;
       font-size: inherit;
+      /* Altura determinística: a caixa fica EXATAMENTE no token --fx-size-*. */
+      line-height: var(--fx-font-line-height);
       font-weight: var(--fx-font-weight);
       color: var(--fx-text-default);
       background-color: var(--fx-surface-background);
@@ -53,16 +55,18 @@ export class FxTextarea extends FxElement {
       cursor: not-allowed;
       background-color: var(--fx-surface-surface-hover);
     }
+    /* Validação: borda sempre; brilho (anel) via token que acompanha
+       effect.focus-ring — desligado ⇒ erro só com a borda vermelha. */
     :host([error]) .field, :host([invalid]) .field {
       border-color: var(--fx-color-danger, #dc2626);
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--fx-color-danger, #dc2626) 18%, transparent);
+      box-shadow: var(--fx-effect-error-ring, 0 0 0 3px color-mix(in srgb, var(--fx-color-danger, #dc2626) 18%, transparent));
     }
     :host([success]) .field, :host([valid]) .field {
       border-color: var(--fx-color-success, #16a34a);
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--fx-color-success, #16a34a) 18%, transparent);
+      box-shadow: var(--fx-effect-success-ring, 0 0 0 3px color-mix(in srgb, var(--fx-color-success, #16a34a) 18%, transparent));
     }
     :host([size='sm']) { width: var(--fx-textarea-width-sm, 220px); }
-    :host([size='sm']) .field { min-height: var(--fx-size-sm); padding: var(--fx-space-sm) var(--fx-space-md); }
+    :host([size='sm']) .field { min-height: var(--fx-size-sm); padding: var(--fx-space-xs) var(--fx-space-md); }
     :host([size='lg']) { width: var(--fx-textarea-width-lg, 300px); }
     :host([size='lg']) .field { min-height: calc(var(--fx-size-lg) + 80px); }
     /* Full width: o host estica até o pai e o campo interno acompanha. */

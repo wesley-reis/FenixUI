@@ -390,6 +390,43 @@ describe("docs app", () => {
 });
 
 /* ------------------------------------------------------------------ */
+/* Página de Ícones: busca mantém a largura da página e do input       */
+/* ------------------------------------------------------------------ */
+
+describe("docs: página de ícones", () => {
+  it("o layout tem largura definida — a busca não encolhe a página nem o input", async () => {
+    await navigate("icons");
+    await new Promise((r) => setTimeout(r, 50));
+    const css = (main().querySelector("style")?.textContent ?? "").replace(/\s+/g, " ");
+    // Largura definitiva: independente da quantidade de resultados (fit-content
+    // do main > * com margin-inline:auto faria a página encolher na busca).
+    expect(css).toMatch(/\.icon-layout \{[^}]*width: 100%/);
+    // O input mantém 100% da coluna com teto fixo (nunca encolhe abaixo dele).
+    expect(css).toMatch(/\.icon-search \{[^}]*width: 100%; max-width: 420px/);
+    // Os ícones continuam reflowando nas colunas (auto-fill) do grid estável.
+    expect(css).toContain("repeat(auto-fill, minmax(96px, 1fr))");
+    expect(main().querySelector("#icon-search")).toBeTruthy();
+    expect(main().querySelector("#icon-grid")).toBeTruthy();
+  });
+
+  it("a busca filtra os ícones sem re-renderizar a página", async () => {
+    await navigate("icons");
+    await new Promise((r) => setTimeout(r, 50));
+    const input = main().querySelector<HTMLInputElement>("#icon-search")!;
+    const grid = main().querySelector("#icon-grid")!;
+    const before = grid.querySelectorAll(".icon-cell").length;
+    expect(before).toBeGreaterThan(0);
+
+    input.value = "home";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    const after = grid.querySelectorAll(".icon-cell").length;
+    expect(after).toBeGreaterThan(0);
+    expect(after).toBeLessThanOrEqual(before);
+    expect([...grid.querySelectorAll(".icon-cell span")].every((s) => s.textContent!.includes("home"))).toBe(true);
+  });
+});
+
+/* ------------------------------------------------------------------ */
 /* Código de exemplo: destaque de sintaxe + botão copiar              */
 /* ------------------------------------------------------------------ */
 

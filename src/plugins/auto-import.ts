@@ -24,6 +24,7 @@ export const fenixComponentMap: Record<string, string> = {
   'fx-slider': '@wrrdev/fenix-ui/slider',
   'fx-chip': '@wrrdev/fenix-ui/chip',
   'fx-avatar': '@wrrdev/fenix-ui/avatar',
+  'fx-icon': '@wrrdev/fenix-ui/icon',
   'fx-card': '@wrrdev/fenix-ui/card',
   'fx-breadcrumb': '@wrrdev/fenix-ui/breadcrumb',
   'fx-popover': '@wrrdev/fenix-ui/popover',
