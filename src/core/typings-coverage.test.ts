@@ -102,4 +102,19 @@ describe('cobertura de tipagens (TS / React / Vue / Angular)', () => {
       });
     expect(broken).toEqual([]);
   });
+  it('todo componente é reexportado no índice principal (senão o dist não emite o subpath)', () => {
+    // O build ESM usa `preserveModules` com o entry src/index.ts: módulo fora do
+    // grafo do entry NÃO é emitido. O auto-import (e o import manual) aponta para
+    // dist/components/<dir>/index.js — sem o reexport, o arquivo não existe e o
+    // `import '@wrrdev/fenix-ui/<dir>'` falha no projeto consumidor.
+    const index = read('src/index.ts');
+    for (const dir of componentDirs) {
+      expect(
+        index.includes(`'./components/${dir}'`),
+        `src/index.ts sem export de ./components/${dir}`,
+      ).toBe(true);
+    }
+  });
+
+
 });

@@ -19,6 +19,9 @@ export * from './core/sanitize';
 export * from './core/types';
 export * from './core/jsx';
 
+// tipagens da biblioteca de ícones (nomes de glifo aceitos pelo <fx-icon name="…">)
+export type * from './icons/types';
+
 // componentes
 export * from './components/button';
 export * from './components/badge';
@@ -40,6 +43,7 @@ export * from './components/fileupload';
 export * from './components/slider';
 export * from './components/chip';
 export * from './components/avatar';
+export * from './components/icon';
 export * from './components/card';
 export * from './components/breadcrumb';
 export * from './components/popover';

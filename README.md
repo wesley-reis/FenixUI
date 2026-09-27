@@ -18,8 +18,8 @@ import { FenixUI } from '@wrrdev/fenix-ui';  // API de tema/tokens (índice)
 FenixUI.theme('dark');
 ```
 
-> 📦 npm: [`@wrrdev/fenix-ui`](https://www.npmjs.com/package/@wrrdev/fenix-ui) — **v1.1.7**, acesso público.
-> Subpaths disponíveis: `./theme`, `./tokens`, `./jsx`, `./vue`, `./button`, `./badge`, `./spinner`, `./select`, `./input`, `./switch`, `./textarea`, `./checkbox`, `./radio`, `./calendar`, `./datepicker`, `./multiselect`, `./table`, `./floatlabel`, `./dialog`, `./toast`, `./tooltip`, `./tabs`, `./progress`, `./skeleton`, `./alert`, `./drawer`, `./dropdown`, `./sidebar`, `./pagination`, `./autocomplete`, `./auto-import` e o curinga `./components/*`.
+> 📦 npm: [`@wrrdev/fenix-ui`](https://www.npmjs.com/package/@wrrdev/fenix-ui) — **v1.1.8**, acesso público.
+> Subpaths disponíveis: `./theme`, `./tokens`, `./jsx`, `./vue`, `./react`, `./button`, `./badge`, `./spinner`, `./select`, `./input`, `./switch`, `./textarea`, `./checkbox`, `./radio`, `./calendar`, `./datepicker`, `./multiselect`, `./table`, `./floatlabel`, `./dialog`, `./toast`, `./tooltip`, `./tabs`, `./progress`, `./skeleton`, `./alert`, `./drawer`, `./dropdown`, `./icon`, `./icons`, `./pagination`, `./autocomplete`, `./knob`, `./orderlist`, `./picklist`, `./auto-import` e o curinga `./components/*`.
 
 
 ## Consumo
@@ -65,7 +65,7 @@ Carregue o bundle **UMD** único: ele registra todos os componentes e expõe os 
 <fx-toast></fx-toast>
 
 <!--
-  🔗 Links diretos para CDN (versão 1.1.7):
+  🔗 Links diretos para CDN (versão 1.1.8):
   • https://cdn.jsdelivr.net/npm/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js
   • https://unpkg.com/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js
 -->
@@ -77,6 +77,14 @@ Cansado de importar componente por componente? O plugin `FenixAutoImport` percor
 (`.ts`, `.js`, `.tsx`, `.jsx`, `.vue`, `.html`, `.svelte`) em busca de tags `fx-*` conhecidas e injeta
 o `import` do subpath de cada componente **automaticamente** — mantendo o tree-shaking: só entra no
 bundle o que é usado, e ele não duplica imports já existentes.
+- **Vue / Svelte (SFC):** o import entra **dentro do `<script>`** — com CRLF (Windows) e mesmo em
+  arquivos que só têm `<template>` (o plugin cria o bloco `<script>`).
+- **Vue:** nos arquivos `.vue` o plugin injeta também `import '@wrrdev/fenix-ui/vue'`, a augmentação
+  que habilita autocomplete/validação dos atributos `fx-*` no Volar/vue-tsc — sem passo manual no
+  `main.ts` (desligue com `FenixAutoImport({ vueTypes: false })`).
+- **Ícones:** `<fx-icon name="home" />` injeta `@wrrdev/fenix-ui/icon` (componente com `name` tipado
+  e `@font-face` leve); a classe `class="fx-icon fx-icon-home"` injeta `@wrrdev/fenix-ui/icons` (CSS
+  completo, com as ~4.300 classes por glifo).
 
 ### Instale
 
@@ -145,6 +153,10 @@ export default defineConfig({
 | `fx-dropdown-item` | `@wrrdev/fenix-ui/dropdown` |
 | `fx-pagination` | `@wrrdev/fenix-ui/pagination` |
 | `fx-autocomplete` | `@wrrdev/fenix-ui/autocomplete` |
+| `fx-icon` | `@wrrdev/fenix-ui/icon` |
+| `fx-icon` / `fx-icon-*` (classe) | `@wrrdev/fenix-ui/icons` |
+| `fx-knob` | `@wrrdev/fenix-ui/knob` |
+| `fx-accordion` / `fx-accordion-panel` | `@wrrdev/fenix-ui/accordion` |
 
 ### Compatibilidade com frameworks
 
@@ -312,6 +324,9 @@ Importe o subpath `./vue` **uma única vez** no `main.ts`:
 ```ts
 import '@wrrdev/fenix-ui/vue'; // habilita autocomplete de fx-* nos templates SFC
 ```
+
+> Com o plugin `FenixAutoImport` este import é injetado automaticamente em cada arquivo `.vue`
+> (com os tipos) — o passo manual no `main.ts` continua valendo para projetos sem o plugin.
 
 **Configuração essencial do Vue 3** — diga ao compilador que `fx-*` são Web Components:
 

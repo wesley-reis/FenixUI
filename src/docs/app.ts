@@ -1411,6 +1411,12 @@ async function renderVue3(): Promise<void> {
 
     <h3>2. Configure o Vue (main.ts)</h3>
     <p>Dois passos no <code>main.ts</code> — o plugin <code>isCustomElement</code> e o import de tipos:</p>
+    <div class="note">
+      <strong>Com <code>FenixAutoImport</code>:</strong> os imports dos componentes e o
+      <code>@wrrdev/fenix-ui/vue</code> (tipos) entram automaticamente em cada arquivo
+      <code>.vue</code> — sobra só o <code>isCustomElement</code>. Veja
+      <a href="#/auto-import">Auto Import</a>.
+    </div>
     ${codeBlock(`import { createApp } from 'vue';
 import App from './App.vue';
 import '@wrrdev/fenix-ui';            // registra todos os componentes
@@ -1766,6 +1772,21 @@ export default defineConfig({
       <code>import '@wrrdev/fenix-ui/&lt;componente&gt;'</code> após os imports existentes.
       Se você já importou um subpath manualmente, ele não duplica. Arquivos em
       <code>node_modules</code>, <code>.d.ts</code> e CSS são ignorados.
+    </div>
+
+    <h3>Vue / SFC (Vite)</h3>
+    <p>Em arquivos <code>.vue</code>/<code>.svelte</code> o import entra <strong>dentro do
+    <code>&lt;script&gt;</code></strong> — funciona com CRLF (Windows) e o plugin cria o bloco
+    quando o SFC só tem <code>&lt;template&gt;</code>. Nos arquivos <code>.vue</code>, o plugin injeta
+    também <code>import '@wrrdev/fenix-ui/vue'</code>: é a augmentação que habilita o
+    autocomplete/validação dos atributos <code>fx-*</code> no Volar/vue-tsc, sem passo manual no
+    <code>main.ts</code> (para desligar: <code>FenixAutoImport({ vueTypes: false })</code>).</p>
+
+    <div class="note">
+      <strong>Ícones:</strong> <code>&lt;fx-icon name="home" /&gt;</code> injeta
+      <code>@wrrdev/fenix-ui/icon</code> — o componente carrega apenas o <code>@font-face</code>
+      (leve). As ~4.300 regras <code>.fx-icon-&lt;nome&gt;</code>
+      (<code>@wrrdev/fenix-ui/icons</code>) só entram quando a <em>classe</em> é usada no código.
     </div>
 
     <h3>Componentes suportados</h3>

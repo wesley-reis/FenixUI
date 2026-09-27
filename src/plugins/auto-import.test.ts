@@ -63,3 +63,115 @@ describe('auto-import (plugin)', () => {
     expect(shouldTransform('/app/src/style.css')).toBe(false);
   });
 });
+
+/* ------------------------------------------------------------------ */
+/* Arquivos com markup: SFC (Vue/Svelte) e HTML                        */
+/* ------------------------------------------------------------------ */
+
+describe('auto-import (SFC Vue/Svelte e HTML)', () => {
+  /** SFC típico de projeto Windows (CRLF) — o cenário que o plugin perdia. */
+  const vueCrlf = [
+    '<template>',
+    '  <fx-icon name="home" />',
+    '</template>',
+    '',
+    '<script setup lang="ts">',
+    'import { ref } from "vue";',
+    'const a = ref(0);',
+    '</script>',
+    '',
+  ].join('\r\n');
+
+  it('.vue com CRLF: injeta DENTRO do <script setup> e preserva o CRLF', () => {
+    const out = transformSource(vueCrlf, {}, 'D:/app/src/App.vue');
+    const at = out.indexOf("import '@wrrdev/fenix-ui/icon';");
+    expect(at).toBeGreaterThan(out.indexOf('<script setup'));
+    expect(at).toBeLessThan(out.indexOf('const a'));
+    // Nada fora do <script>: o compilador de SFC descartaria o import.
+    expect(at).toBeLessThan(out.indexOf('</script>'));
+    expect(out.slice(0, out.indexOf('<template>'))).not.toContain('import ');
+  });
+
+  it('.vue só com <template>: cria o bloco <script> para o import não ser descartado', () => {
+    const code = ['<template>', '  <fx-button variant="primary">Ok</fx-button>', '</template>', ''].join('\n');
+    const out = transformSource(code, {}, '/app/src/Card.vue');
+    expect(out.startsWith('<script>')).toBe(true);
+    expect(out).toContain("import '@wrrdev/fenix-ui/button';");
+    expect(out.indexOf("import '@wrrdev/fenix-ui/button';")).toBeLessThan(out.indexOf('<template>'));
+    expect(out.trimEnd().endsWith('</template>')).toBe(true);
+  });
+
+  it('.vue: injeta a augmentação de tipos do Vue (autocomplete/validação no Volar)', () => {
+    const out = transformSource('<template>\n  <fx-badge>x</fx-badge>\n</template>\n', {}, '/app/src/Card.vue');
+    expect(out).toContain("import '@wrrdev/fenix-ui/vue';");
+  });
+
+  it('vueTypes: false desliga a injeção dos tipos do Vue', () => {
+    const out = transformSource(
+      '<template>\n  <fx-badge>x</fx-badge>\n</template>\n',
+      { vueTypes: false },
+      '/app/src/Card.vue',
+    );
+    expect(out).not.toContain('/vue');
+  });
+
+  it('vueTypes respeita o packageName customizado', () => {
+    const out = transformSource(
+      '<template>\n  <fx-badge>x</fx-badge>\n</template>\n',
+      { packageName: '@acme/ui' },
+      '/app/src/Card.vue',
+    );
+    expect(out).toContain("import '@acme/ui/badge';");
+    expect(out).toContain("import '@acme/ui/vue';");
+  });
+
+  it('não injeta tipos do Vue em arquivos que não são .vue', () => {
+    const out = transformSource(`const t = '<fx-badge>x</fx-badge>';`, {}, '/app/src/badge.ts');
+    expect(out).not.toContain('/vue');
+  });
+
+  it('.svelte: injeta dentro do <script lang="ts">', () => {
+    const out = transformSource(
+      '<script lang="ts">\n  let a = 1;\n</script>\n\n<fx-spinner />\n',
+      {},
+      '/app/src/App.svelte',
+    );
+    const at = out.indexOf("import '@wrrdev/fenix-ui/spinner';");
+    expect(at).toBeGreaterThan(out.indexOf('<script'));
+    expect(at).toBeLessThan(out.indexOf('let a'));
+  });
+
+  it('HTML: usa o <script> inline existente e ignora blocos com src=', () => {
+    const code =
+      '<body>\n<fx-alert>x</fx-alert>\n' +
+      '<script type="module" src="/src/main.ts"></script>\n' +
+      '<script>\nconsole.log(1);\n</script>\n</body>\n';
+    const out = transformSource(code, {}, '/app/index.html');
+    const at = out.indexOf("import '@wrrdev/fenix-ui/alert';");
+    expect(at).toBeGreaterThan(out.indexOf('<script>'));
+    expect(at).toBeLessThan(out.indexOf('console.log(1)'));
+    expect(out).not.toContain('main.ts"></script>\nimport');
+  });
+
+  it('HTML sem <script>: cria <script type="module"> antes do </body>', () => {
+    const out = transformSource('<body>\n<fx-button>Ok</fx-button>\n</body>\n', {}, '/app/index.html');
+    expect(out).toContain('<script type="module">');
+    expect(out.indexOf('<script type="module">')).toBeLessThan(out.indexOf('</body>'));
+  });
+
+  it('<fx-icon> (componente) NÃO puxa o CSS completo dos ícones', () => {
+    const out = transformSource(`const t = '<fx-icon name="home" />';`, {}, '/app/src/icon.ts');
+    expect(out).toContain("import '@wrrdev/fenix-ui/icon';");
+    expect(out).not.toContain('fenix-ui/icons');
+  });
+
+  it('classes fx-icon-* continuam puxando o CSS completo dos ícones', () => {
+    const out = transformSource(`const t = '<i class="fx-icon fx-icon-home"></i>';`, {}, '/app/src/icon.ts');
+    expect(out).toContain("import '@wrrdev/fenix-ui/icons';");
+  });
+
+  it('não confunde nomes compostos (meu-fx-icon) com a biblioteca de ícones', () => {
+    const out = transformSource(`const t = '<i class="meu-fx-icon"></i>';`, {}, '/app/src/icon.ts');
+    expect(out).not.toContain('fenix-ui/icons');
+  });
+});
