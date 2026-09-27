@@ -59,48 +59,128 @@ export const fenixComponentMap: Record<string, string> = {
 
 const TAG_RE = /<(fx-[a-z][a-z-]*)(?=[\s/>])/g;
 
-/** Detecta uso da biblioteca de ícones por classe (fx-icon / fx-icon-home etc.). */
-export const FENIX_ICON_CLASS_RE = /\bfx-icon(?:-[a-z0-9_]+)*\b/;
+/**
+ * Detecta o uso da biblioteca de ícones por CLASSE (`class="fx-icon fx-icon-home"`).
+ *
+ * O prefixo `(?:^|[^</\w-])` ignora a TAG `<fx-icon…>` / `</fx-icon>`: o
+ * componente carrega o @font-face leve por conta própria e não precisa das
+ * ~4.300 regras `.fx-icon-<nome>` que o subpath `/icons` injeta. Também ignora
+ * nomes compostos (`meu-fx-icon`), `fx-icons`, `fx-iconHome` etc.
+ */
+export const FENIX_ICON_CLASS_RE = /(?:^|[^</\w-])fx-icon(?:-[a-z0-9_]+)*\b/;
 
 export interface AutoImportOptions {
   /** Prefixo do pacote (padrão '@wrrdev/fenix-ui'). */
   packageName?: string;
+  /**
+   * Em arquivos `.vue`, injeta também `import '@wrrdev/fenix-ui/vue'` junto com
+   * o primeiro componente detectado. É a augmentação que habilita o
+   * autocomplete/validação dos atributos `fx-*` no Volar/vue-tsc — sem passo
+   * manual no `main.ts`. Padrão: `true`.
+   */
+  vueTypes?: boolean;
+}
+
+/* ------------------------------------------------------------------ */
+/* Injeção em arquivos com markup (SFC Vue/Svelte e HTML)              */
+/* ------------------------------------------------------------------ */
+
+/** Bloco `<script>` INLINE (sem `src=`) — é dentro dele que o import entra. */
+const INLINE_SCRIPT_RE = /<script\b(?![^>]*\bsrc=)[^>]*>/i;
+
+/** Arquivo com markup (SFC Vue/Svelte ou HTML) — detectado pelo id ou conteúdo. */
+function isMarkup(id: string, code: string): boolean {
+  return (
+    /\.(vue|svelte|html?)$/i.test(id) ||
+    /^\s*<(?:template|script|style|!doctype|html)\b/i.test(code)
+  );
+}
+
+/** Quebra de linha do arquivo — preserva o CRLF de projetos Windows. */
+function eolOf(code: string): string {
+  return code.includes('\r\n') ? '\r\n' : '\n';
+}
+
+/**
+ * Injeta os imports como primeira linha do bloco `<script>`.
+ *
+ * Tolerante a CRLF e a conteúdo na mesma linha da tag (`<script setup>const a=1`)
+ * — a versão antiga exigia `>\n` e, no Windows, colava os imports FORA do
+ * `<script>`, onde o compilador de SFC os descarta (componente nunca registrado).
+ */
+function injectIntoScriptBlock(code: string, lines: string[]): string | null {
+  const open = INLINE_SCRIPT_RE.exec(code);
+  if (!open) return null;
+  const at = open.index + open[0].length;
+  const br = eolOf(code);
+  return `${code.slice(0, at)}${br}${lines.join(br)}${code.slice(at)}`;
+}
+
+/**
+ * Cria o bloco `<script>` quando o arquivo não tem nenhum.
+ *
+ * Um `import` fora de `<script>` é descartado pelo compilador de SFC — este é o
+ * único fallback válido para um `.vue`/`.svelte` que só tem `<template>`.
+ */
+function createScriptBlock(code: string, lines: string[], html: boolean): string {
+  const br = eolOf(code);
+  const body = `${br}${lines.join(br)}${br}`;
+  if (!html) return `<script>${body}</script>${br}${code}`;
+  // HTML: `<script type="module">` inline (o Vite transforma) antes do </body>.
+  const block = `<script type="module">${body}</script>${br}`;
+  const bodyAt = code.search(/<\/body\s*>/i);
+  if (bodyAt >= 0) return `${code.slice(0, bodyAt)}${block}${code.slice(bodyAt)}`;
+  return `${block}${code}`;
 }
 
 /**
  * Injeta `import '<subpath>'` para cada componente fx-* usado no código
  * que ainda não foi importado. Retorna o código transformado ou o original.
+ *
+ * `id` (caminho do módulo, opcional) habilita os tratamentos de arquivo com
+ * markup: injeção dentro do `<script>` e augmentação de tipos do Vue (SFC).
  */
-export function transformSource(code: string, options: AutoImportOptions = {}): string {
+export function transformSource(
+  code: string,
+  options: AutoImportOptions = {},
+  id = '',
+): string {
   const pkg = options.packageName ?? '@wrrdev/fenix-ui';
   // Subpaths do mapa são reescritos quando um pacote custom é informado.
   const resolve = (sub: string): string =>
     pkg === '@wrrdev/fenix-ui' ? sub : sub.replace('@wrrdev/fenix-ui', pkg);
+  const hasImport = (target: string): boolean =>
+    code.includes(`'${target}'`) || code.includes(`"${target}"`);
 
   // Componentes usados e ainda não importados explicitamente.
   const needed = new Set<string>();
   for (const m of code.matchAll(TAG_RE)) {
     const sub = fenixComponentMap[m[1]];
-    if (sub) {
-      const target = resolve(sub);
-      if (!code.includes(`'${target}'`) && !code.includes(`"${target}"`)) {
-        needed.add(target);
-      }
-    }
+    if (!sub) continue;
+    const target = resolve(sub);
+    if (!hasImport(target)) needed.add(target);
   }
   // Biblioteca de ícones: classes fx-icon / fx-icon-<nome> injetam o subpath /icons.
   const iconsSub = resolve('@wrrdev/fenix-ui/icons');
-  if (FENIX_ICON_CLASS_RE.test(code) && !code.includes(`'${iconsSub}'`) && !code.includes(`"${iconsSub}"`)) {
+  if (FENIX_ICON_CLASS_RE.test(code) && !hasImport(iconsSub)) {
     needed.add(iconsSub);
+  }
+
+  const markup = isMarkup(id, code);
+  // Vue (SFC): a augmentação de tipos entra junto do primeiro import injetado.
+  const vueSub = resolve('@wrrdev/fenix-ui/vue');
+  if (options.vueTypes !== false && /\.vue$/i.test(id) && needed.size > 0 && !hasImport(vueSub)) {
+    needed.add(vueSub);
   }
   if (!needed.size) return code;
 
   const lines = [...needed].map((s) => `import '${s}';`);
 
-  // Arquivo único (.vue): injeta logo após a abertura do <script>.
-  const vueScript = /(<script[^>]*>)\n/.exec(code);
-  if (vueScript) {
-    return code.replace(vueScript[0], `${vueScript[1]}\n${lines.join('\n')}\n`);
+  // SFC (Vue/Svelte) e HTML: o import precisa ficar DENTRO de um <script>.
+  if (markup) {
+    const injected = injectIntoScriptBlock(code, lines);
+    if (injected) return injected;
+    return createScriptBlock(code, lines, /\.html?$/i.test(id));
   }
 
   // TS/JS: injeta após o último import existente (ou no topo).

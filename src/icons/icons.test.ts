@@ -129,4 +129,22 @@ describe('Fenix Icons', () => {
     expect(known).toBe('home');
     expect(typeof dynamic).toBe('string');
   });
+  it('auto-import: <fx-icon> não injeta o CSS completo (o componente carrega o @font-face leve)', () => {
+    const out = transformSource(`const t = '<fx-icon name="home" />';\n`);
+    expect(out).toContain("import '@wrrdev/fenix-ui/icon'");
+    expect(out).not.toContain("import '@wrrdev/fenix-ui/icons'");
+  });
+
+  it('auto-import: o CSS completo continua sendo injetado quando a CLASSE é usada', () => {
+    const out = transformSource(
+      `const t = '<fx-icon name="home" /><i class="fx-icon fx-icon-home"></i>';\n`,
+    );
+    expect(out).toContain("import '@wrrdev/fenix-ui/icons'");
+  });
+
+  it('auto-import: não confunde a tag de fechamento </fx-icon> com a classe', () => {
+    const out = transformSource(`const t = '<fx-icon name="home"></fx-icon>';\n`);
+    expect(out).not.toContain("import '@wrrdev/fenix-ui/icons'");
+  });
+
 });
