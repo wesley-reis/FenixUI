@@ -48,6 +48,19 @@ describe('<fx-drawer>', () => {
     expect(closed).toBe(true);
   });
 
+  it('header é sticky com fundo opaco acima do conteúdo (z-index)', async () => {
+    el.title = 'Meu painel';
+    el.open = true;
+    await new Promise((r) => setTimeout(r, 0));
+    // Contrato visual: o conteúdo que rola por baixo não pode passar
+    // por cima do header — position sticky + background + z-index.
+    expect(FxDrawer.styles).toMatch(/\.header\s*\{[^}]*position:\s*sticky/);
+    expect(FxDrawer.styles).toMatch(
+      /\.header\s*\{[^}]*background:\s*var\(--fx-surface-background\)/,
+    );
+    expect(FxDrawer.styles).toMatch(/\.header\s*\{[^}]*z-index:\s*1/);
+  });
+
   it('position normalizada para right quando inválida', async () => {
     el.setAttribute('position', 'diagonal');
     await new Promise((r) => setTimeout(r, 0));

@@ -19,6 +19,18 @@ export { componentLoaders };
 import { esc } from './shared';
 import type { ApiRow, ComponentDoc } from './types';
 import { defineFxTooltipDirective } from '../components/tooltip/directive';
+import {
+	buildSidebarGroups,
+	buildToc,
+	clearToc,
+	mountTopbar,
+	renderSidebar,
+	syncRoute,
+} from './shell';
+import { codeBlock, highlightCode } from './ui/code';
+import { routeFromHash, startRouter } from './router';
+
+export { highlightCode };
 
 /** Versão do pacote, injetada em build via `define` (vite.docs.config.ts / vite.config.ts). */
 declare const __APP_VERSION__: string;
@@ -79,81 +91,8 @@ function initDataComponents(container: HTMLElement): void {
   });
 }
 
-/**
- * Tokenizador de sintaxe leve para HTML/TS — envolve tokens em <span class>
- * usando as CSS Variables do FenixUI (--fx-*), então as cores acompanham
- * light/dark automaticamente. O texto fora dos tokens passa por `esc`.
- */
-export function highlightCode(code: string): string {
-  // Ordem importa: comentários e tags primeiro; strings e keywords depois.
-  const RE =
-    /<!--[\s\S]*?-->|<\/?[\w-]+(?:"[^"]*"|'[^']*'|[^>"'])*\/?>|\/\*[\s\S]*?\*\/|\/\/[^\n\r]*|`[^`]*`|'(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"|\b(?:import|from|const|let|var|export|function|return|new|if|else|await|async|type|interface)\b/g;
-  const parts: string[] = [];
-  let last = 0;
-  let m: RegExpExecArray | null;
-  while ((m = RE.exec(code)) !== null) {
-    if (m.index > last) parts.push(esc(code.slice(last, m.index)));
-    const tok = m[0];
-    if (tok.startsWith('<!--') || tok.startsWith('/*') || tok.startsWith('//')) {
-      parts.push(`<span class="tok-comment">${esc(tok)}</span>`);
-    } else if (tok.startsWith('<')) {
-      parts.push(highlightTag(tok));
-    } else if (tok.startsWith('`') || tok.startsWith("'") || tok.startsWith('"')) {
-      parts.push(`<span class="tok-string">${esc(tok)}</span>`);
-    } else {
-      parts.push(`<span class="tok-keyword">${esc(tok)}</span>`);
-    }
-    last = RE.lastIndex;
-  }
-  if (last < code.length) parts.push(esc(code.slice(last)));
-  return parts.join('');
-}
-
-/**
- * Destaca nome da tag, atributos e valores de uma tag HTML.
- *
- * O espaço entre o nome da tag e o primeiro atributo fica dentro do grupo
- * `rest` (e é reemitido) — sem isso o código exibido sairia "colado":
- * `<fx-inputfull icon="search">`.
- */
-function highlightTag(tag: string): string {
-  // Tag de fechamento: </tag>
-  if (tag.startsWith('</')) {
-    const m = tag.match(/^<\/\s*([\w-]+)/);
-    return m
-      ? `<span class="tok-tag">&lt;/</span><span class="tok-tagname">${esc(m[1])}</span><span class="tok-tag">&gt;</span>`
-      : esc(tag);
-  }
-  // Tag de abertura / self-closing: <tag attr="v" flag />
-  const m = tag.match(/^<([\w-]+)((?:"[^"]*"|'[^']*'|[^>"'])*?)(\/?>)$/);
-  if (!m) return esc(tag);
-  const [, name, rest, close] = m;
-  let html = `<span class="tok-tag">&lt;</span><span class="tok-tagname">${esc(name)}</span>`;
-  // Atributos: mantém o espaço inicial, o `=`, o valor e flags booleanas.
-  const RE_ATTR = /(\s+)([\w-]+)(?:=("[^"]*"|'[^']*'|[^\s>]+))?/g;
-  let last = 0;
-  let am: RegExpExecArray | null;
-  while ((am = RE_ATTR.exec(rest)) !== null) {
-    if (am.index > last) html += esc(rest.slice(last, am.index));
-    html += `<span class="tok-attr">${esc(am[1])}${esc(am[2])}</span>`;
-    if (am[3] !== undefined) {
-      html += `<span class="tok-attr-eq">=</span><span class="tok-attr-val">${esc(am[3])}</span>`;
-    }
-    last = RE_ATTR.lastIndex;
-  }
-  if (last < rest.length) html += esc(rest.slice(last));
-  html += `<span class="tok-tag">${esc(close)}</span>`;
-  return html;
-}
-
-function codeBlock(code: string): string {
-  return (
-    `<div class="code-block">` +
-    `<div class="code-head"><button class="copy-btn">Copiar</button></div>` +
-    `<pre><code>${highlightCode(code)}</code></pre>` +
-    `</div>`
-  );
-}
+/* Realce de sintaxe + highlightTag + codeBlock extraídos para ./ui/code.ts
+   (Fase 0). `highlightCode` continua exportado aqui — contrato dos testes. */
 
 /** Formata HTML em múltiplas linhas com indentação para facilitar a leitura. */
 const VOID_TAGS = /^(input|br|hr|img|meta|link)\b/i;
@@ -942,28 +881,7 @@ function setupSearch(): void {
 }
 
 function setupHeader(): void {
-  // Versão dinâmica lida do package.json em build (injetada via `define`).
-  const versionBadge = document.getElementById('version-badge');
-  if (versionBadge && typeof __APP_VERSION__ !== 'undefined') {
-    versionBadge.textContent = `v${__APP_VERSION__}`;
-  }
-
-  // Menu lateral no mobile: hamburger abre, overlay/link fecha.
-  const toggle = document.getElementById('sidebar-toggle');
-  const overlay = document.getElementById('sidebar-overlay');
-  const closeSidebar = (): void => {
-    document.body.classList.remove('sidebar-open');
-    toggle?.setAttribute('aria-expanded', 'false');
-  };
-  toggle?.addEventListener('click', () => {
-    const open = document.body.classList.toggle('sidebar-open');
-    toggle.setAttribute('aria-expanded', String(open));
-  });
-  overlay?.addEventListener('click', closeSidebar);
-  document.getElementById('sidebar')?.addEventListener('click', (e) => {
-    if ((e.target as HTMLElement).closest('a')) closeSidebar();
-  });
-
+  // Versão, drawer mobile e skip-link vivem no shell (./shell.ts → mountTopbar).
   document.getElementById('mode-toggle')!.addEventListener('click', () => {
     currentMode = currentMode === 'dark' ? 'light' : 'dark';
     applyPreset(currentPreset, currentMode);
@@ -978,35 +896,11 @@ function setupHeader(): void {
 /* Roteamento (hash) + sidebar                                         */
 /* ------------------------------------------------------------------ */
 
-function buildSidebar(): void {
-	const groups = new Map<string, { id: string; title: string }[]>();
-	groups.set("Guia", [
-		{ id: "home", title: "Home" },
-		{ id: "installation", title: "Instalação" },
-		{ id: "typings", title: "Tipagens" },
-		{ id: "vue3", title: "Vue 3 / Nuxt" },
-		{ id: "integrations", title: "CDN / React / JSF" },
-		{ id: "auto-import", title: "Auto Import" },
-		{ id: "icons", title: "Ícones" },
-		{ id: "theming", title: "Temas" },
-		{ id: "forms", title: "Formulários" },
-	]);
-	for (const c of components) {
-		if (!groups.has(c.group)) groups.set(c.group, []);
-		groups.get(c.group)!.push({ id: c.tag, title: c.title });
-	}
-	document.getElementById("sidebar")!.innerHTML = [...groups.entries()]
-		.map(
-			([group, items]) =>
-				`<div class="group">${group}</div>` +
-				items
-					.map(
-						(i) => `<a href="#/${i.id}" data-id="${i.id}">${i.title}</a>`,
-					)
-					.join(""),
-		)
-		.join("");
-}
+/**
+ * Montagem da sidebar agrupada virou responsabilidade do shell
+ * (`./shell.ts` → buildSidebarGroups + renderSidebar), incluindo os
+ * grupos colapsáveis em <details> e a persistência do estado.
+ */
 
 /**
  * Converte o HTML de variantes em cards "modelo + código": cada elemento
@@ -1364,15 +1258,10 @@ async function renderForms(): Promise<void> {
 }
 
 async function renderRoute(): Promise<void> {
-	const route = location.hash.replace(/^#\//, "") || "home";
-	document
-		.querySelectorAll("#sidebar a")
-		.forEach((a) =>
-			a.classList.toggle(
-				"active",
-				(a as HTMLAnchorElement).dataset.id === route,
-			),
-		);
+	const route = routeFromHash();
+	// Estado ativo (sidebar, nav da topbar, <title>) + TOC zerado por rota.
+	syncRoute(route, components);
+	clearToc();
 	const main = document.getElementById("main")!;
 	// Limpa o conteúdo já: evita conteúdo obsoleto durante o carregamento
 	// assíncrono e mantém sidebar e conteúdo sincronizados.
@@ -1394,6 +1283,8 @@ async function renderRoute(): Promise<void> {
 	else if (route === "vue3") renderVue3();
 	else if (route === "integrations") renderIntegrations();
 	else await renderHome();
+	// TOC por página (h2/h3) — montado só após o conteúdo existir.
+	buildToc();
 }
 
 async function renderVue3(): Promise<void> {
@@ -2418,9 +2309,10 @@ document.addEventListener('click', (e: MouseEvent) => {
 
 applyPreset('fenix', 'light');
 setupHeader();
+mountTopbar();
 setupSearch();
 setupThemeDrawer();
-buildSidebar();
+renderSidebar(buildSidebarGroups(components));
 defineFxTooltipDirective();
 
 /** Promise resolvida quando o render da rota atual finaliza — útil para testes. */
@@ -2428,15 +2320,14 @@ let routeResolve: (() => void) | null = null;
 let _routeReady: Promise<void> = Promise.resolve();
 export const currentRouteReady = (): Promise<void> => _routeReady;
 
-/** Único listener de hashchange: controla a promise de render e despacha a rota. */
-window.addEventListener('hashchange', () => {
+/** Despacha o render da rota e controla a promise de `currentRouteReady()`. */
+const runRoute = (): void => {
   _routeReady = new Promise<void>((r) => (routeResolve = r));
   renderRoute().then(() => routeResolve?.()).catch(() => routeResolve?.());
-});
+};
 
-/** Disparo inicial na primeira carga. */
-_routeReady = new Promise<void>((r) => (routeResolve = r));
-renderRoute().then(() => routeResolve?.()).catch(() => routeResolve?.());
+// Listener único de hashchange + carga inicial (./router.ts).
+startRouter(runRoute);
 
 
 

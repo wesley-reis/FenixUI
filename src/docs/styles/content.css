@@ -1,0 +1,388 @@
+/**
+ * Estilo conteúdo das páginas (tipografia, demos, exemplos, código, tabelas) da documentação.
+ * Extraído do CSS inline do index.html — cores/tokens vêm sempre
+ * das variáveis --fx-* do tema ativo (nunca hex fixo), para que o
+ * customizador de temas siga funcionando sobre a doc inteira.
+ */
+/* ---------- Drawer de customização de tema ---------- */
+.theme-drawer-body { display: flex; flex-direction: column; height: 100%; }
+.theme-drawer-body fx-tabs { flex: 1; min-height: 0; }
+.theme-drawer-body .tab-content {
+  padding: var(--fx-space-md) 0;
+  overflow-y: auto;
+  flex: 1;
+}
+.theme-drawer-body .controls-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--fx-space-md);
+}
+.theme-drawer-body .controls-grid > .control-item { min-width: 0; }
+/* Selects/inputs têm larguras intrínsecas (fx-select: max-content com mín
+   200px; fx-input: 260px fixos no host): dentro das células do grid eles
+   precisam ser fluidos — sem isso encavalam e cortam em colunas estreitas. */
+.theme-drawer-body .controls-grid fx-select,
+.theme-drawer-body .controls-grid fx-input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+/* Mesma razão nos campos soltos da aba Preset (o drawer pode ter 300px). */
+.theme-drawer-body .tab-content > .control-item > fx-input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+.theme-drawer-body .control-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fx-space-xs);
+}
+.theme-drawer-body .control-item label {
+  font-size: .78rem;
+  color: var(--fx-text-muted);
+  font-weight: 500;
+}
+.theme-drawer-body input[type="color"] {
+  width: 100%;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--fx-border-default);
+  border-radius: var(--fx-radius-sm);
+  background: none;
+  cursor: pointer;
+}
+.theme-drawer-body .preview-section {
+  margin-top: var(--fx-space-md);
+  padding: var(--fx-space-md);
+  border: 1px solid var(--fx-border-default);
+  border-radius: var(--fx-radius-md);
+  background: var(--fx-surface-surface, var(--fx-surface-background));
+}
+.theme-drawer-body .preview-section h4 {
+  margin: 0 0 var(--fx-space-sm);
+  font-size: .85rem;
+  color: var(--fx-text-muted);
+}
+.theme-drawer-body .preview-stage {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--fx-space-sm);
+  align-items: center;
+}
+.theme-drawer-body .preset-json {
+  background: var(--fx-surface-surface, var(--fx-surface-background));
+  border: 1px solid var(--fx-border-default);
+  border-radius: var(--fx-radius-md);
+  padding: var(--fx-space-md);
+  font-family: ui-monospace, monospace;
+  font-size: .78rem;
+  max-height: 300px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+.theme-drawer-body .drawer-footer {
+  display: flex;
+  gap: var(--fx-space-sm);
+  align-items: center;
+  margin-top: var(--fx-space-md);
+  padding-top: var(--fx-space-md);
+  border-top: 1px solid var(--fx-border-default);
+}
+.theme-drawer-body .drawer-footer .spacer { flex: 1; }
+.theme-drawer-body .drawer-footer .status {
+  font-size: .78rem;
+  color: var(--fx-text-muted);
+}
+/* Selects dentro do drawer: dropdown abre para cima (não há espaço embaixo) */
+.theme-drawer-body fx-select {
+  position: relative;
+}
+.theme-drawer-body fx-select .panel {
+  top: auto;
+  bottom: calc(100% + 4px);
+}
+/* (badge de versão do header antigo removido — o topbar novo usa o tema) */
+
+/* ---------- Conteúdo ---------- */
+main h2 { font-size: 1.65rem; margin: 0 0 .35rem; letter-spacing: -.03em; }
+main h3 { margin: 2.2rem 0 .6rem; font-size: 1.05rem; }
+/* h4 é usado em quase todas as páginas de componente como subtítulo de
+   seção ("Tamanhos", "Estados", "Validação"…): estilo unificado. */
+main h4 { margin: 1.6rem 0 .5rem; font-size: .95rem; font-weight: 700; letter-spacing: .01em; }
+main .lead { color: var(--fx-text-muted); margin-top: 0; }
+main p { line-height: 1.6; }
+/* Caixa de nota (initNote e avisos das páginas-guia) */
+main .note {
+  border-left: 3px solid var(--fx-color-primary);
+  background: color-mix(in srgb, var(--fx-color-primary) 7%, transparent);
+  border-radius: var(--fx-radius-sm);
+  padding: .8rem 1rem; margin: 0 0 1.6rem;
+  font-size: .92rem; line-height: 1.6;
+}
+main .note code {
+  background: color-mix(in srgb, var(--fx-color-primary) 14%, transparent);
+  padding: .1em .35em; border-radius: 4px;
+}
+code.inline { background: var(--fx-surface-surface-hover, var(--fx-surface-background)); padding: .12em .4em; border-radius: 5px;
+  font-size: .86em; font-family: ui-monospace, Consolas, monospace; }
+
+.demo {
+  border: 1px solid var(--fx-border-default); border-radius: var(--fx-radius-md);
+  background: var(--fx-surface-surface, var(--fx-surface-background)); margin-bottom: .5rem;
+}
+.demo-stage { padding: 1.5rem; display: flex; flex-wrap: wrap; gap: .8rem; align-items: center; transition: background .25s; }
+.demo-controls { display: flex; flex-wrap: wrap; gap: .8rem 1.4rem; padding: .8rem 1.5rem;
+  border-top: 1px dashed var(--fx-border-default); font-size: .85rem; }
+.demo-controls label { display: inline-flex; align-items: center; gap: .45rem; cursor: pointer; }
+.demo-controls select { font: inherit; padding: .15rem .4rem; }
+.demo-controls {
+  background: color-mix(in srgb, var(--fx-surface-surface-hover, var(--fx-surface-background)) 45%, transparent);
+}
+
+/* ---------- Cards de exemplo: modelo + código em par ---------- */
+.examples { display: flex; flex-direction: column; gap: 1.25rem; margin-bottom: 2rem; }
+.example-card {
+  border: 1px solid var(--fx-border-default); border-radius: var(--fx-radius-md);
+  background: var(--fx-surface-surface, var(--fx-surface-background));
+  transition: box-shadow .2s var(--fx-motion-easing, ease), border-color .2s var(--fx-motion-easing, ease);
+}
+.example-card:hover {
+  box-shadow: var(--fx-shadow-md);
+  border-color: color-mix(in srgb, var(--fx-color-primary) 35%, var(--fx-border-default));
+}
+.example-title {
+  padding: .7rem 1.1rem .4rem; font-weight: 700;
+  color: color-mix(in srgb, var(--fx-color-primary) 80%, var(--fx-text-default));
+  text-transform: uppercase; letter-spacing: .06em; font-size: .74rem;
+  text-align: center;
+}
+.example-stage {
+  padding: 1.4rem 1.1rem; display: flex; flex-wrap: wrap; gap: .8rem; align-items: center;
+  background:
+    repeating-conic-gradient(color-mix(in srgb, var(--fx-border-default) 30%, transparent) 0% 25%, transparent 0% 50%)
+    0 0 / 18px 18px;
+}
+/* O palco é flex: um título/parágrafo no nível de topo do bloco precisa de
+   linha própria (sem isso o h4 fica AO LADO dos campos, espremido). */
+.example-stage > h3,
+.example-stage > h4,
+.example-stage > p,
+.example-stage > strong,
+.example-stage > .note,
+.demo-stage > h3,
+.demo-stage > h4,
+.demo-stage > p,
+.demo-stage > .note { flex-basis: 100%; margin: 0; }
+.example-code { margin: 0 !important; border-top: 1px dashed var(--fx-border-default); }
+.example-code pre { border: none; border-radius: 0; background: color-mix(in srgb, var(--fx-surface-surface-hover, var(--fx-surface-background)) 60%, transparent); }
+.example-code .copy-btn { opacity: 1; }
+.code-block { margin: 0 0 1.8rem; }
+/* Barra de ações do bloco: reserva espaço p/ o botão Copiar acima do
+   código — o botão NUNCA fica por cima dele, mesmo em linhas longas
+   (o <pre> rola na horizontal sem passar por baixo do botão). */
+.code-block .code-head {
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: .5rem; min-height: 1.7rem; margin-bottom: .3rem;
+}
+.code-block pre {
+  margin: 0; background: var(--fx-surface-surface-hover, var(--fx-surface-background)); border: 1px solid var(--fx-border-default);
+  border-radius: var(--fx-radius-md); padding: 1rem 1.1rem; overflow-x: auto;
+  font-size: .84rem; line-height: 1.55; font-family: ui-monospace, Consolas, monospace;
+  white-space: pre; word-break: normal; word-wrap: normal;
+}
+.example-code .code-head { min-height: 0; margin-bottom: 0; padding: .4rem .8rem 0; }
+.copy-btn { font-size: .74rem; padding: .25rem .6rem;
+  border-radius: 6px; border: 1px solid var(--fx-border-default); background: var(--fx-surface-surface, var(--fx-surface-background));
+  color: var(--fx-text-muted); cursor: pointer; opacity: 0; transition: opacity .15s; }
+.code-block:hover .copy-btn { opacity: 1; }
+.copy-btn:hover { color: var(--fx-text-default); }
+/* Syntax highlighting — cores usam CSS Variables do FenixUI (light/dark automático) */
+pre code .tok-tag { color: var(--fx-text-muted); }
+pre code .tok-tagname { color: var(--fx-color-primary); font-weight: 700; }
+pre code .tok-attr { color: var(--fx-color-info); }
+pre code .tok-attr-eq { color: var(--fx-color-info); }
+pre code .tok-attr-val { color: var(--fx-color-warning); }
+pre code .tok-string { color: var(--fx-color-warning); }
+pre code .tok-keyword { color: var(--fx-color-info); font-weight: 600; }
+pre code .tok-comment { color: var(--fx-text-muted); opacity: .7; }
+
+table.api { width: 100%; border-collapse: collapse; font-size: .87rem; margin-bottom: 2rem; }
+table.api th, table.api td { text-align: left; padding: .55rem .75rem; border-bottom: 1px solid var(--fx-border-default); vertical-align: top; }
+table.api th { color: var(--fx-text-muted); font-weight: 600; font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; }
+table.api td:first-child code.inline { white-space: nowrap; }
+table.api .type { color: var(--fx-color-info); font-family: ui-monospace, Consolas, monospace; font-size: .8rem; }
+table.api .default { color: var(--fx-text-muted); }
+
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: .8rem; }
+.swatch { border: 1px solid var(--fx-border-default); border-radius: var(--fx-radius-md); overflow: hidden; background: var(--fx-surface-surface, var(--fx-surface-background)); }
+.swatch .chip { height: 56px; }
+.swatch .meta { padding: .5rem .6rem; font-size: .75rem; font-family: ui-monospace, monospace; }
+.swatch .meta b { display: block; font-size: .8rem; }
+
+/* ---------- Home: hero moderno ---------- */
+.home-hero {
+  width: 100%;
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center;
+  padding: 3.5rem 2rem 3rem;
+  margin-bottom: 3rem;
+  border: 1px solid var(--fx-border-default);
+  border-radius: calc(var(--fx-radius-lg) + 8px);
+  background:
+    radial-gradient(60% 90% at 50% 0%, color-mix(in srgb, var(--fx-color-primary) 16%, transparent), transparent 70%),
+    color-mix(in srgb, var(--fx-color-primary) 5%, var(--fx-surface-surface, var(--fx-surface-background)));
+  overflow: hidden;
+  position: relative;
+}
+.home-hero::after {
+  content: "";
+  position: absolute; inset: auto -20% -55% -20%; height: 70%;
+  background: radial-gradient(50% 100% at 50% 100%, color-mix(in srgb, var(--fx-color-primary) 12%, transparent), transparent 70%);
+  pointer-events: none;
+}
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: .6rem;
+  font-size: .82rem; color: var(--fx-text-muted);
+  letter-spacing: .04em; text-transform: uppercase;
+  margin-bottom: 1.2rem;
+}
+.hero-eyebrow fx-badge { --fx-color-warning: var(--fx-color-primary); --fx-text-default: #fff; }
+.hero-title {
+  font-size: clamp(2rem, 5vw, 3.1rem); line-height: 1.12;
+  letter-spacing: -.04em; font-weight: 800;
+  margin: 0 0 1rem; max-width: 820px;
+}
+.hero-grad {
+  background: linear-gradient(92deg, var(--fx-color-primary), var(--fx-color-secondary));
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.home-hero .hero-lead {
+  font-size: 1.06rem; line-height: 1.65; color: var(--fx-text-muted);
+  max-width: 680px; margin: 0 0 1.8rem;
+}
+.hero-cta { display: flex; align-items: center; gap: 1.2rem; flex-wrap: wrap; justify-content: center; margin-bottom: 2.4rem; }
+.hero-cta fx-button { --fx-shadow-md: 0 10px 28px -8px color-mix(in srgb, var(--fx-color-primary) 55%, transparent); }
+.hero-link {
+  display: inline-flex; align-items: center; gap: .4rem;
+  font-weight: 600; font-size: .95rem;
+  color: var(--fx-color-primary); text-decoration: none;
+  padding: .55rem .4rem; border-radius: var(--fx-radius-sm);
+}
+.hero-link .fx-icon { font-size: 1.05em; transition: transform .2s; }
+.hero-link:hover .fx-icon { transform: translate(2px, -2px); }
+
+/* ---------- Home: seções, features e casos de uso ---------- */
+.home-section { width: 100%; margin-bottom: 3rem; }
+.home-section-title {
+  text-align: center; font-size: 1.5rem; letter-spacing: -.03em;
+  margin: 0 0 1.6rem;
+}
+.feature-grid, .usecase-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+}
+.feature-card, .usecase-card {
+  border: 1px solid var(--fx-border-default); border-radius: var(--fx-radius-md);
+  background: var(--fx-surface-surface, var(--fx-surface-background));
+  padding: 1.3rem 1.2rem;
+  transition: box-shadow .2s var(--fx-motion-easing, ease), transform .2s var(--fx-motion-easing, ease), border-color .2s var(--fx-motion-easing, ease);
+}
+.feature-card:hover, .usecase-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--fx-shadow-md);
+  border-color: color-mix(in srgb, var(--fx-color-primary) 35%, var(--fx-border-default));
+}
+.feature-card b { display: block; margin-bottom: .35rem; font-size: .98rem; }
+.feature-card p { margin: 0; color: var(--fx-text-muted); font-size: .88rem; line-height: 1.55; }
+.feature-icon {
+  width: 42px; height: 42px; border-radius: var(--fx-radius-md);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: .9rem;
+  background: color-mix(in srgb, var(--fx-color-primary) 12%, transparent);
+  color: var(--fx-color-primary);
+}
+.feature-icon .fx-icon { font-size: 22px; }
+.usecase-card b { display: block; margin: .9rem 0 .3rem; font-size: 1rem; }
+.usecase-card p { margin: 0 0 .7rem; color: var(--fx-text-muted); font-size: .88rem; line-height: 1.55; }
+.usecase-card a {
+  display: inline-flex; align-items: center; gap: .35rem;
+  color: var(--fx-color-primary); text-decoration: none; font-weight: 600; font-size: .88rem;
+}
+.usecase-card a .fx-icon { font-size: 1em; transition: transform .2s; }
+.usecase-card a:hover .fx-icon { transform: translateX(3px); }
+.usecase-preview {
+  display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: center;
+  padding: 1.2rem .8rem;
+  border: 1px dashed var(--fx-border-default); border-radius: var(--fx-radius-sm);
+  background: color-mix(in srgb, var(--fx-surface-surface-hover, var(--fx-surface-background)) 40%, transparent);
+}
+.usecase-preview .uc-stat { flex: 1 1 130px; min-width: 0; }
+.usecase-preview .uc-stat b { margin: 0; font-size: 1.25rem; letter-spacing: -.02em; }
+.usecase-preview .uc-stat .uc-label {
+  display: block; font-size: .72rem; color: var(--fx-text-muted);
+  margin: .1rem 0 .45rem; text-transform: uppercase; letter-spacing: .05em;
+}
+.usecase-preview .uc-form { display: flex; flex-direction: column; gap: .65rem; width: 100%; max-width: 260px; min-width: 0; }
+.usecase-preview .uc-form > * { min-width: 0; }
+.usecase-preview .uc-form fx-floatlabel { display: block; }
+/* O host do fx-input tem 260px fixos por padrão: dentro do card ele é fluido. */
+.usecase-preview .uc-form fx-input { display: block; width: 100%; min-width: 0; }
+.usecase-preview .uc-wizard { width: 100%; padding: .4rem 0; }
+.home-cta {
+  width: 100%;
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  padding: 2.4rem 1.5rem;
+  border: 1px solid var(--fx-border-default); border-radius: var(--fx-radius-lg);
+  background: color-mix(in srgb, var(--fx-color-primary) 7%, var(--fx-surface-surface, var(--fx-surface-background)));
+  margin-bottom: 1rem;
+}
+.home-cta h3 { margin: 0 0 .3rem; font-size: 1.4rem; letter-spacing: -.02em; }
+.home-cta p { margin: 0 0 1.3rem; color: var(--fx-text-muted); }
+
+/* ---------- Instalação: cards por stack ---------- */
+.install-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: .9rem; margin-bottom: 1.6rem;
+}
+.install-card {
+  display: flex; align-items: center; gap: .95rem;
+  padding: 1.05rem 1.1rem;
+  border: 1px solid var(--fx-border-default); border-radius: var(--fx-radius-md);
+  background: var(--fx-surface-surface, var(--fx-surface-background));
+  text-decoration: none; color: inherit;
+  transition: box-shadow .2s var(--fx-motion-easing, ease), transform .2s var(--fx-motion-easing, ease), border-color .2s var(--fx-motion-easing, ease);
+}
+.install-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--fx-shadow-md);
+  border-color: color-mix(in srgb, var(--fx-color-primary) 40%, var(--fx-border-default));
+}
+.install-icon {
+  flex: none;
+  width: 52px; height: 52px; border-radius: var(--fx-radius-md);
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--fx-surface-surface-hover, var(--fx-surface-background)) 70%, transparent);
+  border: 1px solid var(--fx-border-default);
+}
+.install-icon .fx-icon { font-size: 26px; }
+.install-body { flex: 1; min-width: 0; }
+.install-name { font-weight: 700; font-size: .98rem; margin-bottom: .15rem; }
+.install-desc { font-size: .82rem; color: var(--fx-text-muted); line-height: 1.45; }
+.install-arrow { flex: none; color: var(--fx-text-muted); font-size: 18px; transition: transform .2s, color .2s; }
+.install-card:hover .install-arrow { color: var(--fx-color-primary); transform: translateX(3px); }
+@media (max-width: 600px) {
+  .home-hero { padding: 2.2rem 1rem 2rem; }
+}
+
+/* ---------- Scroll fino e discreto ---------- */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(128, 128, 128, .25); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(128, 128, 128, .45); }
+::-webkit-scrollbar-corner { background: transparent; }
+* { scrollbar-width: thin; scrollbar-color: rgba(128, 128, 128, .25) transparent; }
