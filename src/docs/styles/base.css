@@ -1,0 +1,18 @@
+/**
+ * Estilo base (tokens de layout da doc + reset) da documentação.
+ * Extraído do CSS inline do index.html — cores/tokens vêm sempre
+ * das variáveis --fx-* do tema ativo (nunca hex fixo), para que o
+ * customizador de temas siga funcionando sobre a doc inteira.
+ */
+:root {
+  /* A logo é a referência de escala: a altura do header deriva dela. */
+  --doc-logo-h: 34px;
+  --doc-header-h: calc(var(--doc-logo-h) + 16px);
+  --doc-sidebar-w: 250px;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+@media (max-width: 767px) {
+  :root { --doc-logo-h: 26px; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--fx-surface-background); color: var(--fx-text-default); transition: background .25s; }

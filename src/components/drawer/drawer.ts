@@ -99,6 +99,10 @@ export class FxDrawer extends FxElement {
 			position: sticky;
 			top: 0;
 			background: var(--fx-surface-background);
+			/* O conteúdo do drawer (ex.: abas da customização de tema)
+			   rola por trás do header: sem z-index o texto passava POR CIMA
+			   e o header parecia transparente. */
+			z-index: 1;
 		}
 		.title {
 			font-weight: 700;
