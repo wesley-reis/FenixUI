@@ -2,6 +2,8 @@ import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from "../../core/sanitize";
+import { FENIX_ICON_BASE_CSS, fenixIconHtml } from '../../icons/base-css';
+import { loadFenixIconsFont } from '../../icons/font';
 import { renderCell } from "./expr";
 import "../select";
 
@@ -12,24 +14,34 @@ import "../select";
  *
  * Colunas (light DOM):
  *   <fx-column field="nome" header="Nome" sortable filterable align="left">
- *     opcional: <template>R$ {{value}}</template> para render customizado
+ *     opcional: <fx-cell>R$ {{value}}</fx-cell> para render customizado
  *     ou conteúdo direto (HTML + {{ }}) como template alternativo
  *   </fx-column>
  *
+ *   IMPORTANTE (frameworks): use <fx-cell>, NÃO <template>. A tag nativa
+ *   <template> é reservada — o Vue 3 a transforma em bloco do compilador e o
+ *   React gerencia os filhos, então o innerHTML chega vazio. <fx-cell> é uma
+ *   tag própria, sem significado especial para nenhum framework. A forma
+ *   antiga com <template> continua funcionando (compatibilidade) e há ainda
+ *   a opção `template="#id"` apontando para um <template> externo.
+ *
  * Toolbar (opcional):
- *   <template slot="toolbar">
+ *   <fx-toolbar>
  *     <input data-search-fields="nome,cargo" placeholder="Buscar…">
  *     <button>Nova ação</button>
- *   </template>
+ *   </fx-toolbar>
+ *   (legado ainda aceito: <template slot="toolbar">…</template>)
  *
  * Dados: propriedade `data` (array de objetos) ou atributo `data` (JSON).
  *
  * Atributos: pagination, rows, rows-options, pagination-position (left|center|right),
- * striped, empty-message, lazy, total, loading, loading-message.
+ * striped, hover, empty-message, lazy, total, loading, loading-message,
+ * sort-field, sort-order.
  * Eventos: page-change, sort-change, row-click, filter-change (todos composed).
  */
 export class FxTable extends FxElement {
 	static override styles = css`
+		${FENIX_ICON_BASE_CSS}
 		:host {
 			display: block;
 			font-family: var(--fx-font-family);
@@ -106,17 +118,14 @@ export class FxTable extends FxElement {
 			transition: background-color var(--fx-motion-duration-fast)
 				var(--fx-motion-easing);
 		}
-		tbody tr:hover {
-			background: color-mix(
-				in srgb,
-				var(--fx-color-primary) 8%,
-				transparent
-			);
-		}
+		/* Listrado: alterna a superfície (cinza). Antes usava
+		   --fx-surface-background, que é a MESMA cor do fundo do :host e
+		   portanto pintava branco sobre branco (listrado invisível). */
 		:host([striped]) tbody tr:nth-child(even) {
-			background: var(--fx-surface-background);
+			background: var(--fx-surface-surface, #f8fafc);
 		}
-		:host([striped]) tbody tr:hover {
+		/* O hover é opt-in via atributo (o clique na linha continua sempre ativo). */
+		:host([hover]) tbody tr:hover {
 			background: color-mix(
 				in srgb,
 				var(--fx-color-primary) 8%,
@@ -146,6 +155,9 @@ export class FxTable extends FxElement {
 			font-size: calc(var(--fx-font-size) - 2px);
 		}
 		.pg-btn {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
 			min-width: var(--fx-size-sm);
 			height: var(--fx-size-sm);
 			font: inherit;
@@ -158,6 +170,12 @@ export class FxTable extends FxElement {
 			cursor: pointer;
 			transition: border-color var(--fx-motion-duration-fast)
 				var(--fx-motion-easing);
+		}
+		/* O glifo precisa de 1px a mais que o dígito: a altura de traço do ícone é
+		   maior que a do número, então igualar os dois font-size deixa a seta
+		   visivelmente maior que o texto. */
+		.pg-btn .fx-icon {
+			font-size: calc(var(--fx-font-size) - 1px);
 		}
 		.pg-btn:hover:not(:disabled):not([aria-current="true"]) {
 			border-color: var(--fx-color-primary);
@@ -239,12 +257,16 @@ export class FxTable extends FxElement {
 			"rows",
 			"rows-options",
 			"striped",
+			"hover",
+			"toolbar",
 			"empty-message",
 			"pagination-position",
 			"lazy",
 			"total",
 			"loading",
 			"loading-message",
+			"sort-field",
+			"sort-order",
 		];
 	}
 
@@ -291,11 +313,11 @@ export class FxTable extends FxElement {
 		sortable: boolean;
 		filterable: boolean;
 		align: string;
-		template?: HTMLTemplateElement;
+		template?: HTMLElement;
 		directTemplate?: string;
 	}[] {
 		return [...this.querySelectorAll("fx-column")].map((c) => {
-			const tpl = c.querySelector("template");
+			const tpl = this._resolveCellTemplate(c);
 			const direct = tpl ? undefined : c.innerHTML.trim();
 			const align = c.getAttribute("align") ?? "left";
 			return {
@@ -310,14 +332,71 @@ export class FxTable extends FxElement {
 		});
 	}
 
-	private get toolbarTemplate(): HTMLTemplateElement | null {
-		return this.querySelector(
-			'template[slot="toolbar"]',
-		) as HTMLTemplateElement | null;
+	/**
+	 * Resolve o template de célula de uma `<fx-column>`, em ordem de prioridade:
+	 *
+	 * 1. `<fx-cell>` — **recomendado**. Tag própria, sem significado especial
+	 *    para Vue/React/Angular/Svelte: nenhum framework a intercepta, então o
+	 *    `innerHTML` sempre chega intacto ao componente. O light DOM do
+	 *    `<fx-table>` não é exibido (a tabela não usa `<slot>`), então o
+	 *    conteúdo-fonte nunca aparece na tela.
+	 * 2. `template="#id"` (ou `template="id"`) — aponta para um `<template>`
+	 *    declarado **fora** da tabela, útil em React/Angular, onde é mais
+	 *    simples manter o markup num único lugar.
+	 * 3. `<template>` dentro da coluna — forma **legada**, mantida por
+	 *    compatibilidade. Em Vue 3 ela vira um bloco do compilador e em React os
+	 *    filhos são gerenciados pelo framework; nos dois casos o `innerHTML`
+	 *    chega vazio e a célula não renderiza. Prefira `<fx-cell>`.
+	 */
+	private _resolveCellTemplate(c: Element): HTMLElement | null {
+		const cell = c.querySelector<HTMLElement>(":scope > fx-cell");
+		if (cell) return cell;
+		const ref = c.getAttribute("template");
+		if (ref) {
+			const alvo = this._resolveRef(ref);
+			if (alvo) return alvo;
+		}
+		return c.querySelector<HTMLElement>("template");
+	}
+
+	private get toolbarTemplate(): HTMLElement | null {
+		// Mesma lógica da célula: `<fx-toolbar>` > `toolbar="#id"` > legado.
+		const bar = this.querySelector<HTMLElement>(":scope > fx-toolbar");
+		if (bar) return bar;
+		const ref = this.getAttr("toolbar");
+		if (ref) {
+			const alvo = this._resolveRef(ref);
+			if (alvo) return alvo;
+		}
+		return this.querySelector<HTMLElement>('template[slot="toolbar"]');
+	}
+
+	/**
+	 * Resolve `ref` para um elemento: `#id`/`id` ⇒ `getElementById` no
+	 * documento; qualquer outro valor é tratado como seletor CSS relativo à
+	 * própria tabela. Valores inválidos devolvem `null` (sem exceção).
+	 */
+	private _resolveRef(ref: string): HTMLElement | null {
+		const valor = ref.trim();
+		if (!valor) return null;
+		const doc = this.ownerDocument;
+		if (valor.startsWith('#')) return doc?.getElementById(valor.slice(1)) ?? null;
+		if (/^[.#[>]/.test(valor)) {
+			try {
+				return this.querySelector<HTMLElement>(valor);
+			} catch {
+				return null; // seletor inválido — degrada para o próximo fallback
+			}
+		}
+		return doc?.getElementById(valor) ?? null;
 	}
 
 	protected override connectedCallback(): void {
 		this._parseDataAttribute();
+		this._parseSortAttributes();
+		// O pager usa glifos da Fenix Icons: garante o @font-face mesmo quando o
+		// app não importou `@wrrdev/fenix-ui/icons` (idempotente).
+		loadFenixIconsFont();
 		super.connectedCallback();
 		this._columnObserver = new MutationObserver(() => this.render());
 		this._columnObserver.observe(this, { childList: true, subtree: true });
@@ -326,6 +405,14 @@ export class FxTable extends FxElement {
 	protected override disconnectedCallback(): void {
 		this._columnObserver?.disconnect();
 		super.disconnectedCallback();
+	}
+
+	/** Ordenação inicial via `sort-field` / `sort-order` (documentados na API). */
+	private _parseSortAttributes(): void {
+		const field = this.getAttr("sort-field");
+		if (field) this.sortField = field;
+		const order = this.getAttr("sort-order");
+		if (order === "asc" || order === "desc") this.sortDir = order === "asc" ? 1 : -1;
 	}
 
 	private _parseDataAttribute(): void {
@@ -409,7 +496,7 @@ export class FxTable extends FxElement {
 	private cellHtml(
 		col: {
 			field: string;
-			template?: HTMLTemplateElement;
+			template?: HTMLElement;
 			directTemplate?: string;
 		},
 		row: Record<string, unknown>,
@@ -464,11 +551,11 @@ export class FxTable extends FxElement {
 			: `
       <div class="pager" part="pager">
         <span class="info">Página ${this.page + 1} de ${pages} · ${total} registros</span>
-        <button type="button" class="pg-btn" data-pg="first" ${this.page === 0 ? "disabled" : ""}>«</button>
-        <button type="button" class="pg-btn" data-pg="prev" ${this.page === 0 ? "disabled" : ""}>‹</button>
+        <button type="button" class="pg-btn" part="first" aria-label="Primeira página" data-pg="first" ${this.page === 0 ? "disabled" : ""}>${fenixIconHtml("first_page")}</button>
+        <button type="button" class="pg-btn" part="prev" aria-label="Página anterior" data-pg="prev" ${this.page === 0 ? "disabled" : ""}>${fenixIconHtml("navigate_before")}</button>
         ${Array.from({ length: pages }, (_, p) => `<button type="button" class="pg-btn" data-pg="${p}" aria-current="${p === this.page}">${p + 1}</button>`).join("")}
-        <button type="button" class="pg-btn" data-pg="next" ${this.page >= pages - 1 ? "disabled" : ""}>›</button>
-        <button type="button" class="pg-btn" data-pg="last" ${this.page >= pages - 1 ? "disabled" : ""}>»</button>
+        <button type="button" class="pg-btn" part="next" aria-label="Próxima página" data-pg="next" ${this.page >= pages - 1 ? "disabled" : ""}>${fenixIconHtml("navigate_next")}</button>
+        <button type="button" class="pg-btn" part="last" aria-label="Última página" data-pg="last" ${this.page >= pages - 1 ? "disabled" : ""}>${fenixIconHtml("last_page")}</button>
         <label class="info">${esc("Por página:")}
           <fx-select class="rows-sel" size="sm" value="${this.rowsPerPage}" aria-label="Itens por página">${this.getAttr(
 					"rows-options",

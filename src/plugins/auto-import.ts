@@ -55,6 +55,9 @@ export const fenixComponentMap: Record<string, string> = {
   'fx-orderlist': '@wrrdev/fenix-ui/orderlist',
   'fx-picklist': '@wrrdev/fenix-ui/picklist',
   'fx-column': '@wrrdev/fenix-ui/table',
+  // Subtags do <fx-table>: usar uma delas isolada já exige o módulo da tabela.
+  'fx-cell': '@wrrdev/fenix-ui/table',
+  'fx-toolbar': '@wrrdev/fenix-ui/table',
 };
 
 const TAG_RE = /<(fx-[a-z][a-z-]*)(?=[\s/>])/g;

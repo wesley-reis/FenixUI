@@ -2,6 +2,8 @@
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from '../../core/sanitize';
+import { FENIX_ICON_BASE_CSS, fenixIconHtml } from '../../icons/base-css';
+import { loadFenixIconsFont } from '../../icons/font';
 import '../select';
 
 /**
@@ -13,6 +15,7 @@ import '../select';
  */
 export class FxPagination extends FxElement {
   static override styles = css`
+    ${FENIX_ICON_BASE_CSS}
     :host {
       display: flex;
       align-items: center;
@@ -24,6 +27,9 @@ export class FxPagination extends FxElement {
     :host([position='center']) { justify-content: center; }
     :host([position='right']) { justify-content: flex-end; }
     .nav {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       min-width: var(--fx-size-sm);
       height: var(--fx-size-sm);
       border: 1px solid var(--fx-border-default);
@@ -38,6 +44,10 @@ export class FxPagination extends FxElement {
         border-color var(--fx-motion-duration-fast) var(--fx-motion-easing),
         background var(--fx-motion-duration-fast) var(--fx-motion-easing);
     }
+    /* O glifo precisa de 1px a mais que o dígito: a altura de traço do ícone é
+       maior que a do número, então igualar os dois font-size deixa a seta
+       visivelmente maior que o texto. */
+    .nav .fx-icon { font-size: calc(var(--fx-font-size) - 1px); }
     .nav:hover:not([disabled]):not(.active) { border-color: var(--fx-color-primary); color: var(--fx-color-primary); }
     .nav[disabled] { opacity: 0.5; cursor: not-allowed; }
     .nav.active {
@@ -72,6 +82,13 @@ export class FxPagination extends FxElement {
     return Math.max(1, Math.ceil(this.total / this.rows));
   }
 
+  protected override connectedCallback(): void {
+    // O pager usa glifos da Fenix Icons: garante o @font-face mesmo quando o
+    // app não importou `@wrrdev/fenix-ui/icons` (idempotente).
+    loadFenixIconsFont();
+    super.connectedCallback();
+  }
+
   protected override render(): void {
     const pages = this.pages;
     const current = Math.min(Math.max(1, this.page), pages);
@@ -86,11 +103,13 @@ export class FxPagination extends FxElement {
 
     this.setTemplate(`
       <span class="info">${this.total ? `${from}-${to} de ${this.total}` : '0 itens'}</span>
-      <button type="button" class="nav" part="prev" data-go="${current - 1}" ${current <= 1 ? 'disabled' : ''}>‹</button>
+      <button type="button" class="nav" part="first" aria-label="Primeira página" data-go="1" ${current <= 1 ? 'disabled' : ''}>${fenixIconHtml('first_page')}</button>
+      <button type="button" class="nav" part="prev" aria-label="Página anterior" data-go="${current - 1}" ${current <= 1 ? 'disabled' : ''}>${fenixIconHtml('navigate_before')}</button>
       ${window_[0] !== 1 && pages > 5 ? `<button type="button" class="nav" data-go="1">1</button>` : ''}
       ${window_.map((p) => `<button type="button" class="nav ${p === current ? 'active' : ''}" data-go="${p}">${p}</button>`).join('')}
       ${window_[window_.length - 1] !== pages && pages > 5 ? `<button type="button" class="nav" data-go="${pages}">${pages}</button>` : ''}
-      <button type="button" class="nav" part="next" data-go="${current + 1}" ${current >= pages ? 'disabled' : ''}>›</button>
+      <button type="button" class="nav" part="next" aria-label="Próxima página" data-go="${current + 1}" ${current >= pages ? 'disabled' : ''}>${fenixIconHtml('navigate_next')}</button>
+      <button type="button" class="nav" part="last" aria-label="Última página" data-go="${pages}" ${current >= pages ? 'disabled' : ''}>${fenixIconHtml('last_page')}</button>
       ${opts.length ? `
         <fx-select class="rows-sel" part="rows" size="sm" value="${this.rows}" aria-label="Itens por página">
           ${opts.map((o) => `<option value="${esc(o)}">${esc(o)}</option>`).join('')}

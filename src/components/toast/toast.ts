@@ -4,7 +4,9 @@
  * Atributos: kind (success|error|info|warning), title, message,
  * position (top-left|top-center|top-right|bottom-left|bottom-center|bottom-right),
  * duration (ms; 0 = fixo até fechar), mode ('light'|'dark' — força o esquema de
- * cores do card independentemente do tema global).
+ * cores do card independentemente do tema global), progress (booleano ou
+ * 'always'|'hover'|'paused' — barra de contagem regressiva na cor do kind),
+ * progress-origin (left|right — lado pelo qual a barra esvazia; padrão left).
  */
 const POSITIONS = [
   'top-left', 'top-center', 'top-right',
@@ -92,11 +94,100 @@ const CARD_CSS = `
   color: var(--fx-text-muted, #64748b); font-size: 15px; padding: 2px 4px; border-radius: 4px;
 }
 .close:hover { color: var(--fx-color-danger, #f43f5e); background: var(--fx-surface-surface-hover, rgba(0,0,0,.05)); }
+
+/* --- Barra de contagem regressiva (atributo progress) ---
+   Fica na base do card e esvazia durante a duração, na cor do kind (--kind) —
+   ou seja, acompanha success/error/warning/info sem configuração extra.
+
+   O lado é configurável pelo atributo progress-origin (padrão: left):
+     left  → a barra drena da direita para a esquerda (ancorada à esquerda)
+     right → a barra drena da esquerda para a direita (ancorada à direita)
+   A origem entra como custom property, então os keyframes são compartilhados.
+
+   Usa escalaX em vez de width: a animação escreve só na compositor, sem
+   reflow por frame. */
+.card { position: relative; overflow: hidden; }
+.progress {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 3px;
+  background: var(--kind);
+  transform-origin: var(--toast-progress-origin, left center);
+  transform: scaleX(1);
+  border-radius: 0 0 var(--fx-radius-md, 8px) var(--fx-radius-md, 8px);
+  pointer-events: none;
+  will-change: transform;
+}
+.progress.run { animation: fx-toast-drain var(--toast-duration, 4000ms) linear forwards; }
+/* No modo hover a animação fica parada até o cursor/foco entrar no card. */
+.card:hover .progress.run,
+.card:focus-within .progress.run { animation-play-state: running; }
+@keyframes fx-toast-drain {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
+/* A barra só começa a correr no 2º frame: no 1º ela já apareceria zerada
+   (o elemento acabou de ser inserido e a animação aplica o estado final). */
+.card.entering .progress { animation: none; }
+/* Ao dispensar, congela a barra: ela some junto com o card em .2s. */
+.card.leaving .progress { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  .progress.run { animation-duration: 0.01ms; }
+}
 `;
 
 export class FxToast extends HTMLElement {
   static get observedAttributes() {
-    return ['kind', 'title', 'message', 'duration', 'icon', 'mode'];
+    return ['kind', 'title', 'message', 'duration', 'icon', 'mode', 'progress', 'progress-origin'];
+  }
+
+  /**
+   * Exibe a barra de contagem regressiva na base do card.
+   *
+   * A barra esvazia da esquerda para a direita durante exatamente `duration`
+   * e usa a cor do `kind`. Com `duration="0"` (toast fixo) a barra é
+   * omitida — não há tempo restante a representar.
+   *
+   * - `'always'` (ou atributo vazio): barra sempre correndo.
+   * - `'hover'`: a barra só corre enquanto o cursor estiver sobre o toast;
+   *   ao sair, a animação pausa, então dá tempo de ler a mensagem.
+   * - `'paused'`: barra visível, porém parada.
+   */
+  get progress(): 'always' | 'hover' | 'paused' | undefined {
+    if (!this.hasAttribute('progress')) return undefined;
+    const v = this.getAttribute('progress');
+    return v === 'hover' || v === 'paused' ? v : 'always';
+  }
+  set progress(value: 'always' | 'hover' | 'paused' | undefined) {
+    if (value) this.setAttribute('progress', value);
+    else this.removeAttribute('progress');
+  }
+
+  /**
+   * Lado a partir do qual a barra esvazia.
+   *
+   * - `'left'` (padrão): a barra fica ancorada à esquerda e drena da direita
+   *   para a esquerda.
+   * - `'right'`: a barra fica ancorada à direita e drena da esquerda para a
+   *   direita (espelhado).
+   *
+   * Só tem efeito junto com `progress`; qualquer valor fora da lista cai em
+   * `'left'`.
+   */
+  get progressOrigin(): 'left' | 'right' {
+    return this.getAttribute('progress-origin') === 'right' ? 'right' : 'left';
+  }
+  set progressOrigin(value: 'left' | 'right') {
+    this.setAttribute('progress-origin', value);
+  }
+
+  /** Duração efetiva em ms (0 = fixo). Mesma regra usada no timer. */
+  private get safeDuration(): number {
+    const dur = Number(this.getAttribute('duration') ?? '4000');
+    if (dur === 0) return 0;
+    return Math.max(Number.isNaN(dur) ? 4000 : dur, 1000);
   }
 
   /** Esquema de cores forçado do card: 'light' | 'dark' | undefined (segue o tema). */
@@ -118,18 +209,63 @@ export class FxToast extends HTMLElement {
 
   connectedCallback() {
     if (!this.shadowRoot!.firstChild) this.#render();
-    const dur = Number(this.getAttribute('duration') ?? '4000');
     // Durações mínimas: valores muito baixos (ex.: digitação parcial no
     // playground) são elevados para 1s; 0 permanece fixo até fechar.
-    const safe = dur === 0 ? 0 : Math.max(Number.isNaN(dur) ? 4000 : dur, 1000);
-    if (!Number.isNaN(safe) && safe > 0 && !this.timer) {
+    const safe = this.safeDuration;
+    if (safe > 0 && !this.timer) {
       this.timer = setTimeout(() => this.dismiss(), safe);
     }
+    this.#syncProgress();
   }
 
   disconnectedCallback() {
     if (this.timer) clearTimeout(this.timer);
     this.timer = null;
+  }
+
+  attributeChangedCallback(name: string) {
+    // A duração é lida em dois lugares (timer + barra): se mudar com o toast
+    // na tela, ambos precisam se realinhar.
+    if (name === 'duration' || name === 'progress' || name === 'progress-origin' || name === 'kind') {
+      this.#syncProgress();
+    }
+  }
+
+  /**
+   * Aplica (ou remove) a barra de contagem regressiva.
+   *
+   * A barra só existe com `progress` e `duration > 0`. O tempo da animação
+   * vem de `--toast-duration`, sempre igual ao do `setTimeout` que fecha o
+   * toast — assim a barra e o desaparecimento nunca desalinham.
+   */
+  #syncProgress(): void {
+    const card = this.shadowRoot?.querySelector<HTMLElement>('.card');
+    if (!card) return;
+    const bar = this.shadowRoot!.querySelector<HTMLElement>('.progress');
+    const mode = this.progress;
+    const dur = this.safeDuration;
+    const shouldShow = !!mode && dur > 0;
+
+    if (!shouldShow) {
+      bar?.remove();
+      card.classList.remove('entering');
+      return;
+    }
+    if (!bar) {
+      this.shadowRoot!.querySelector('.card')!.insertAdjacentHTML('beforeend', '<span class="progress" part="progress" aria-hidden="true"></span>');
+    }
+    const el = this.shadowRoot!.querySelector<HTMLElement>('.progress')!;
+    el.style.setProperty('--toast-duration', `${dur}ms`);
+    // `left` (padrão) => origem à esquerda; `right` espelha a drenagem.
+    el.style.setProperty('--toast-progress-origin', `${this.progressOrigin} center`);
+    el.classList.remove('run');
+    // `paused` mantém a barra cheia e imóvel; `always` e `hover` deixam a
+    // animação correr (no `hover`, o CSS só a dispara sob :hover do host).
+    if (mode !== 'paused') el.classList.add('run');
+    // 1 frame sem animação para o browser registrar o estado inicial cheio
+    // antes de a barra começar a esvaziar.
+    card.classList.add('entering');
+    requestAnimationFrame(() => requestAnimationFrame(() => card.classList.remove('entering')));
   }
 
   dismiss() {
@@ -205,6 +341,19 @@ export interface ToastOptions {
   position?: ToastPosition;
   /** Tempo em ms até sumir. 0 = fixo até fechar. Padrão: 4000 */
   duration?: number;
+  /**
+   * Barra de contagem regressiva na base do card, na cor do `kind`.
+   * `'always'` (padrão) corre sempre; `'hover'` só enquanto o cursor estiver
+   * sobre o toast; `'paused'` exibe a barra cheia, porém imóvel.
+   * Sem efeito com `duration: 0` (não há tempo restante a representar).
+   */
+  progress?: 'always' | 'hover' | 'paused';
+  /**
+   * Lado a partir do qual a barra esvazia. `'left'` (padrão) deixa a barra
+   * ancorada à esquerda; `'right'` a ancora à direita (espelhado).
+   * Só tem efeito junto com `progress`.
+   */
+  progressOrigin?: 'left' | 'right';
   /** Força o esquema de cores do card, independentemente do tema global. */
   mode?: 'light' | 'dark';
 }
@@ -227,6 +376,8 @@ class ToastApi {
     el.setAttribute('position', o.position ?? 'top-right');
     el.setAttribute('duration', String(o.duration ?? 4000));
     if (o.mode) el.setAttribute('mode', o.mode);
+    if (o.progress) el.setAttribute('progress', o.progress);
+    if (o.progressOrigin) el.setAttribute('progress-origin', o.progressOrigin);
     regionFor(o.position ?? 'top-right').appendChild(el);
     this.map.set(id, el);
     return id;

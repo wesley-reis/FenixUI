@@ -32,6 +32,59 @@ describe('fx-pagination', () => {
     el.remove();
   });
 
+  it('oferece primeira/última página com glifos próprios', () => {
+    const el = document.createElement('fx-pagination');
+    el.setAttribute('page', '2');
+    el.setAttribute('total', '250');
+    el.setAttribute('rows', '10'); // 25 páginas
+    document.body.appendChild(el);
+    const root = el.shadowRoot!;
+    const ico = (part: string) => root.querySelector(`[part="${part}"] .fx-icon`)?.textContent;
+    expect(ico('first')).toBe('first_page');
+    expect(ico('prev')).toBe('navigate_before');
+    expect(ico('next')).toBe('navigate_next');
+    expect(ico('last')).toBe('last_page');
+    // Setas duplas no mesmo padrão do <fx-table>.
+    expect(root.querySelector('[part="first"]')?.getAttribute('data-go')).toBe('1');
+    expect(root.querySelector('[part="last"]')?.getAttribute('data-go')).toBe('25');
+    el.remove();
+  });
+
+  it('desabilita primeira/última nas extremidades', () => {
+    const el = document.createElement('fx-pagination');
+    el.setAttribute('page', '1');
+    el.setAttribute('total', '250');
+    document.body.appendChild(el);
+    expect(el.shadowRoot!.querySelector('[part="first"]')?.hasAttribute('disabled')).toBe(true);
+    expect(el.shadowRoot!.querySelector('[part="prev"]')?.hasAttribute('disabled')).toBe(true);
+    el.setAttribute('page', '25');
+    expect(el.shadowRoot!.querySelector('[part="last"]')?.hasAttribute('disabled')).toBe(true);
+    expect(el.shadowRoot!.querySelector('[part="next"]')?.hasAttribute('disabled')).toBe(true);
+    el.remove();
+  });
+
+  it('navega para a última página pelo botão last', async () => {
+    const el = document.createElement('fx-pagination');
+    el.setAttribute('page', '1');
+    el.setAttribute('total', '250');
+    el.setAttribute('rows', '10');
+    document.body.appendChild(el);
+    let detail: any = null;
+    el.addEventListener('page-change', (e) => { detail = (e as CustomEvent).detail; });
+    (el.shadowRoot!.querySelector('[part="last"]') as HTMLButtonElement).click();
+    await Promise.resolve();
+    expect(detail?.page).toBe(25);
+    el.remove();
+  });
+
+  it('o glifo da seta tem 1px a mais que o dígito (altura óptica)', () => {
+    const el = document.createElement('fx-pagination');
+    document.body.appendChild(el);
+    const styles = (el.constructor as any).styles as string;
+    expect(styles).toMatch(/\.nav \.fx-icon\s*\{\s*font-size:\s*calc\(var\(--fx-font-size\) - 1px\)/s);
+    el.remove();
+  });
+
   it('usa <fx-select> temático e emite page-change ao trocar itens por página', async () => {
     const el = document.createElement('fx-pagination');
     el.setAttribute('page', '1');

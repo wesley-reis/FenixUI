@@ -140,6 +140,99 @@ describe('fx-table — templates de célula', () => {
     expect(el.shadowRoot!.querySelector('td')?.innerHTML).not.toContain('<img');
   });
 });
+
+/* ---- Template de célula imune a frameworks (Vue/React/Angular) ---- */
+
+describe('fx-table — <fx-cell> (template seguro para frameworks)', () => {
+  beforeEach(() => { document.body.innerHTML = ''; });
+
+  it('<fx-cell> renderiza igual ao <template> legado', () => {
+    const el = mount(`<fx-table><fx-column field="salario" header="Salário"><fx-cell>R$ {{ value | number }}</fx-cell></fx-column></fx-table>`,
+      [{ id: 1, salario: 1234.5 }]);
+    expect(el.shadowRoot!.querySelector('td')!.textContent).toContain('R$');
+    expect(el.shadowRoot!.querySelector('td')!.textContent).toContain('1.234,5');
+  });
+
+  it('<fx-cell> aceita pipes, ternários e row.*', () => {
+    const el = mount(
+      `<fx-table><fx-column field="salario" header="S"><fx-cell>{{ value >= 6000 ? 'Sênior' : 'Júnior' }} de {{ row.cargo }}</fx-cell></fx-column></fx-table>`,
+      [{ id: 1, salario: 7000, cargo: 'Dev' }]);
+    expect(el.shadowRoot!.querySelector('td')!.textContent).toBe('Sênior de Dev');
+  });
+
+  it('<fx-cell> não é renderizado na tela (light DOM do fx-table é inerte)', () => {
+    const el = mount(`<fx-table><fx-column field="nome" header="Nome"><fx-cell>{{ value }}</fx-cell></fx-column></fx-table>`, ROWS);
+    // O conteúdo-fonte só existe na coluna; a tabela usa shadow root sem <slot>.
+    expect(el.querySelector('fx-cell')?.textContent).toBe('{{ value }}');
+    expect(el.shadowRoot!.querySelector('slot')).toBeNull();
+    expect(el.shadowRoot!.textContent).toContain('Ana');
+  });
+
+  it('<fx-cell> tem precedência sobre <template> quando ambos existem', () => {
+    const el = mount(
+      `<fx-table><fx-column field="nome" header="Nome"><template>LEGADO</template><fx-cell>NOVO</fx-cell></fx-column></fx-table>`, ROWS);
+    expect(el.shadowRoot!.querySelector('td')!.textContent).toBe('NOVO');
+  });
+
+  it('template="#id" aponta para um <template> declarado fora da tabela', () => {
+    const tpl = document.createElement('template');
+    tpl.id = 'tpl-externo';
+    tpl.innerHTML = 'R$ {{ value | number }}';
+    document.body.appendChild(tpl);
+    const el = mount(`<fx-table><fx-column field="salario" header="S" template="#tpl-externo"></fx-column></fx-table>`,
+      [{ id: 1, salario: 99.9 }]);
+    expect(el.shadowRoot!.querySelector('td')!.textContent).toContain('99,9');
+    tpl.remove();
+  });
+
+  it('template="id" (sem #) também resolve', () => {
+    const tpl = document.createElement('template');
+    tpl.id = 'tpl-sem-hash';
+    tpl.innerHTML = 'VIA ID';
+    document.body.appendChild(tpl);
+    const el = mount(`<fx-table><fx-column field="nome" header="Nome" template="tpl-sem-hash"></fx-column></fx-table>`, ROWS);
+    expect(el.shadowRoot!.querySelector('td')!.textContent).toBe('VIA ID');
+    tpl.remove();
+  });
+
+  it('template com id inexistente não quebra a renderização', () => {
+    const el = mount(`<fx-table><fx-column field="nome" header="Nome" template="#nao-existe"></fx-column></fx-table>`, ROWS);
+    expect(el.shadowRoot!.querySelectorAll('tbody tr').length).toBe(ROWS.length);
+    expect(el.shadowRoot!.textContent).toContain('Ana');
+  });
+
+  it('seletor CSS inválido em template degrada sem lançar erro', () => {
+    const el = mount(`<fx-table><fx-column field="nome" header="Nome" template="[[["></fx-column></fx-table>`, ROWS);
+    expect(el.shadowRoot!.textContent).toContain('Ana');
+  });
+
+  it('<template> legado continua funcionando (compatibilidade)', () => {
+    const el = mount(`<fx-table><fx-column field="nome" header="Nome"><template>LEGADO</template></fx-column></fx-table>`, ROWS);
+    expect(el.shadowRoot!.querySelector('td')!.textContent).toBe('LEGADO');
+  });
+
+  it('<fx-toolbar> substitui <template slot="toolbar">', () => {
+    const el = mount(`<fx-table><fx-toolbar><input data-search-fields="nome"><button>Exportar</button></fx-toolbar>${COLS}</fx-table>`, ROWS);
+    const bar = el.shadowRoot!.querySelector('.toolbar')!;
+    expect(bar.querySelector('[data-search-fields]')).toBeTruthy();
+    expect(bar.textContent).toContain('Exportar');
+  });
+
+  it('<template slot="toolbar"> legado continua funcionando', () => {
+    const el = mount(`<fx-table><template slot="toolbar"><button>Exportar</button></template>${COLS}</fx-table>`, ROWS);
+    expect(el.shadowRoot!.querySelector('.toolbar')!.textContent).toContain('Exportar');
+  });
+
+  it('toolbar="#id" aponta para um elemento externo', () => {
+    const bar = document.createElement('div');
+    bar.id = 'bar-externa';
+    bar.innerHTML = '<button>Salvar</button>';
+    document.body.appendChild(bar);
+    const el = mount(`<fx-table toolbar="#bar-externa">${COLS}</fx-table>`, ROWS);
+    expect(el.shadowRoot!.querySelector('.toolbar')!.textContent).toContain('Salvar');
+    bar.remove();
+  });
+});
 /* ---- Header, ordenação e toolbar ---- */
 
 describe('fx-table — header, sort e toolbar', () => {
@@ -176,6 +269,55 @@ describe('fx-table — header, sort e toolbar', () => {
     const el = mount(`<fx-table pagination rows="2">${COLS}</fx-table>`, ROWS);
     const style = el.shadowRoot!.querySelector('style')!.textContent;
     expect(style).toContain('.pg-btn:hover:not(:disabled):not([aria-current=');
+  });
+
+  it('striped usa a superfície cinza (nunca a cor do fundo do host)', () => {
+    const el = mount(`<fx-table striped>${COLS}</fx-table>`, ROWS);
+    const style = el.shadowRoot!.querySelector('style')!.textContent;
+    // Regressão: usava --fx-surface-background, que é a MESMA cor do :host —
+    // pintava branco sobre branco e o listrado não aparecia.
+    const regra = style.match(/:host\(\[striped\]\) tbody tr:nth-child\(even\)\s*\{[^}]*\}/s)?.[0];
+    expect(regra).toBeTruthy();
+    expect(regra).toContain('var(--fx-surface-surface');
+    expect(regra).not.toContain('--fx-surface-background');
+  });
+
+  it('hover das linhas é opt-in pelo atributo hover', () => {
+    const el = mount(`<fx-table hover>${COLS}</fx-table>`, ROWS);
+    const style = el.shadowRoot!.querySelector('style')!.textContent;
+    expect(style).toContain(':host([hover]) tbody tr:hover');
+    // Não pode sobrar hover de linha incondicional (fora do :host([hover])).
+    const regras = style.match(/[^\n]*tbody tr:hover/g) ?? [];
+    expect(regras).toHaveLength(1);
+    expect(regras[0]).toContain(':host([hover])');
+    expect(el.hasAttribute('hover')).toBe(true);
+  });
+
+  it('o pager usa glifos da Fenix Icons (não caracteres Unicode)', () => {
+    const el = mount(`<fx-table pagination rows="2">${COLS}</fx-table>`, ROWS);
+    const root = el.shadowRoot!;
+    const ico = (sel: string) => root.querySelector(`${sel} .fx-icon`)?.textContent;
+    expect(ico('[data-pg="first"]')).toBe('first_page');
+    expect(ico('[data-pg="prev"]')).toBe('navigate_before');
+    expect(ico('[data-pg="next"]')).toBe('navigate_next');
+    expect(ico('[data-pg="last"]')).toBe('last_page');
+    // Glifos Unicode («, ‹, ›, ») não podem mais aparecer no pager.
+    expect(root.querySelector('.pager')!.textContent).not.toMatch(/[«‹›»]/);
+  });
+
+  it('o glifo do pager tem 1px a mais que o dígito (altura óptica)', () => {
+    const el = mount(`<fx-table pagination rows="2">${COLS}</fx-table>`, ROWS);
+    const style = el.shadowRoot!.querySelector('style')!.textContent;
+    expect(style).toMatch(/\.pg-btn \.fx-icon\s*\{\s*font-size:\s*calc\(var\(--fx-font-size\) - 1px\)/s);
+  });
+
+  it('honra a ordenação inicial via sort-field / sort-order', () => {
+    const el = mount(`<fx-table sort-field="nome" sort-order="asc">${COLS}</fx-table>`, ROWS);
+    const celulas = [...el.shadowRoot!.querySelectorAll('tbody tr td:first-child')].map((td) => td.textContent);
+    expect(celulas).toEqual([...celulas].sort((a, b) => a!.localeCompare(b!, 'pt-BR')));
+    const desc = mount(`<fx-table sort-field="nome" sort-order="desc">${COLS}</fx-table>`, ROWS);
+    const c2 = [...desc.shadowRoot!.querySelectorAll('tbody tr td:first-child')].map((td) => td.textContent);
+    expect(c2).toEqual([...c2].sort((a, b) => b!.localeCompare(a!, 'pt-BR')));
   });
 
   it('renderiza a toolbar acima do header', () => {

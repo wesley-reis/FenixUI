@@ -166,11 +166,50 @@ export interface FxTableProps extends FxElementProps {
   rows?: number;
   'rows-options'?: string;
   striped?: boolean;
+  hover?: boolean;
   'empty-message'?: string;
   'pagination-position'?: FxPaginationPosition;
   total?: number;
   page?: number;
+  lazy?: boolean;
+  loading?: boolean;
+  'loading-message'?: string;
+  'sort-field'?: string;
+  'sort-order'?: 'asc' | 'desc' | '';
+  /** Referência ao markup da toolbar: `#id`/`id` de um elemento fora da tabela. */
+  toolbar?: string;
 }
+/**
+ * <fx-column> — declaração de coluna (light DOM do <fx-table>).
+ *
+ * O template de célula vai em `<fx-cell>` (tag imune a Vue/React/Angular) ou,
+ * em markup estático, em `template="#id"`. A forma antiga com `<template>`
+ * dentro da coluna continua aceita.
+ */
+export interface FxColumnProps extends FxElementProps {
+  field?: string;
+  header?: string;
+  sortable?: boolean;
+  filterable?: boolean;
+  align?: 'left' | 'center' | 'right' | 'justify' | 'start' | 'end';
+  /** Referência a um elemento de template: `#id` ou `id`. */
+  template?: string;
+}
+/**
+ * <fx-cell> — template de renderização de uma célula.
+ *
+ * Substitui o `<template>` nativo, que é interceptado por Vue/React/Angular.
+ * Aceita expressões `{{ }}`, pipes e acesso a `row.*`. Não tem atributos
+ * próprios: o conteúdo vem de `children`.
+ */
+export interface FxCellProps extends FxElementProps {}
+/**
+ * <fx-toolbar> — barra de ações acima do header do <fx-table>.
+ *
+ * Substitui `<template slot="toolbar">`. Inputs com `data-search-fields`
+ * viram busca global. Sem atributos próprios.
+ */
+export interface FxToolbarProps extends FxElementProps {}
 export interface FxFloatlabelProps extends FxElementProps {
   variant?: FxFloatlabelVariant;
   full?: boolean;
@@ -191,7 +230,22 @@ export interface FxToastProps extends FxElementProps {
   position?: FxToastPosition;
   /** Força o esquema de cores do card independentemente do tema global. */
   mode?: 'light' | 'dark';
+  /**
+   * Barra de contagem regressiva na base do card, na cor do `kind`.
+   * Vazio ou `'always'` = corre sempre; `'hover'` = só sob cursor/foco;
+   * `'paused'` = barra cheia e imóvel. Sem efeito com `duration: 0`.
+   */
+  progress?: FxToastProgress | boolean;
+  /**
+   * Lado a partir do qual a barra esvazia. `'left'` (padrão) ancora a barra à
+   * esquerda; `'right'` a ancora à direita (espelhado). Exige `progress`.
+   */
+  'progress-origin'?: FxToastOrigin;
 }
+/** Modos da barra de contagem regressiva do <fx-toast>. */
+export type FxToastProgress = 'always' | 'hover' | 'paused';
+/** Lado pelo qual a barra de contagem do <fx-toast> esvazia. */
+export type FxToastOrigin = 'left' | 'right';
 export interface FxTooltipProps extends FxElementProps { content?: string; position?: FxTooltipPosition; }
 export interface FxTabsProps extends FxElementProps { value?: string; }
 export interface FxTabPanelProps extends FxElementProps { tab?: string; hidden?: boolean; }
@@ -425,6 +479,9 @@ export interface FxJsxIntrinsicElements {
   'fx-calendar': FxCalendarProps;
   'fx-datepicker': FxDatepickerProps;
   'fx-table': FxTableProps;
+  'fx-column': FxColumnProps;
+  'fx-cell': FxCellProps;
+  'fx-toolbar': FxToolbarProps;
   'fx-floatlabel': FxFloatlabelProps;
   'fx-dialog': FxDialogProps;
   'fx-drawer': FxDrawerProps;
@@ -493,5 +550,11 @@ declare global {
     'fx-accordion-panel': HTMLElement;
     'fx-orderlist': HTMLElement;
     'fx-picklist': HTMLElement;
+    /* Subtags do <fx-table>: não são custom elements (ficam inertes no light
+       DOM), mas precisam existir no mapa para `createElement('fx-cell')` não
+       cair no overload genérico de `createElement(tag: string)`. */
+    'fx-column': HTMLElement;
+    'fx-cell': HTMLElement;
+    'fx-toolbar': HTMLElement;
   }
 }

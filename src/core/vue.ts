@@ -22,8 +22,10 @@ import type {
   FxCalendarProps,
   FxCardProps,
   FxCarouselProps,
+  FxCellProps,
   FxCheckboxProps,
   FxChipProps,
+  FxColumnProps,
   FxConfirmPopupProps,
   FxDatepickerProps,
   FxDialogProps,
@@ -59,6 +61,7 @@ import type {
   FxTimelineProps,
   FxToastProps,
   FxToggleButtonGroupProps,
+  FxToolbarProps,
   FxTooltipProps,
   FxTreeProps,
 } from './jsx';
@@ -82,6 +85,9 @@ declare module '@vue/runtime-core' {
     'fx-calendar': FxComp<FxCalendarProps>;
     'fx-datepicker': FxComp<FxDatepickerProps>;
     'fx-table': FxComp<FxTableProps>;
+    'fx-column': FxComp<FxColumnProps>;
+    'fx-cell': FxComp<FxCellProps>;
+    'fx-toolbar': FxComp<FxToolbarProps>;
     'fx-floatlabel': FxComp<FxFloatlabelProps>;
     'fx-dialog': FxComp<FxDialogProps>;
     'fx-drawer': FxComp<FxDrawerProps>;
@@ -137,6 +143,9 @@ declare module '@vue/runtime-dom' {
     'fx-calendar': FxCalendarProps;
     'fx-datepicker': FxDatepickerProps;
     'fx-table': FxTableProps;
+    'fx-column': FxColumnProps;
+    'fx-cell': FxCellProps;
+    'fx-toolbar': FxToolbarProps;
     'fx-floatlabel': FxFloatlabelProps;
     'fx-dialog': FxDialogProps;
     'fx-drawer': FxDrawerProps;

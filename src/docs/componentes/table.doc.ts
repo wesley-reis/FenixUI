@@ -12,7 +12,7 @@ export const tableDoc: ComponentDoc = {
 	lead: "Tabela estilo DataTable com ordenação, filtro no header, paginação e clique na linha. Colunas declaradas como <fx-column> dentro do componente, com suporte a templates de célula personalizados (formatação de moeda, data, ícones e condicionais).",
 	imports: ["import '@wrrdev/fenix-ui/table';"],
 	initNote:
-		"Cada coluna pode ter um template de célula próprio: dentro do <fx-column>, use <code>&lt;template&gt;</code> (ou o próprio conteúdo) com expressões <code>{{ }}</code>. Pipes disponíveis: <code>currency</code>, <code>date</code>, <code>dateTime</code>, <code>number</code>; além de ternários (<code>{{ value &gt; 1000 ? 'alto' : 'baixo' }}</code>) e acesso a campos da linha via <code>{{ row.campo }}</code>.",
+		"Personalização de célula: use <code>&lt;fx-cell&gt;</code> em vez de <code>&lt;template&gt;</code>. A tag nativa <code>&lt;template&gt;</code> é reservada e frameworks como Vue e React a interceptam, fazendo a célula renderizar vazia. Dentro do <code>&lt;fx-cell&gt;</code> use expressões <code>{{ }}</code> com pipes (currency, date, dateTime, number), ternários (<code>{{ value &gt; 1000 ? 'alto' : 'baixo' }}</code>) e acesso a campos da linha via <code>{{ row.campo }}</code>. A forma antiga com <code>&lt;template&gt;</code> continua funcionando em HTML puro, e há ainda <code>template=\"#id\"</code> na coluna para reaproveitar um <code>&lt;template&gt;</code> declarado fora da tabela.",
 	demoHtml: (a) => {
 		const data = [
 			{
@@ -113,7 +113,7 @@ export const tableDoc: ComponentDoc = {
 			},
 		];
 		const json = JSON.stringify(data).replace(/"/g, "&quot;");
-		return `<fx-table ${a} data="${json}"><template slot="toolbar"><input data-search-fields="nome,cargo,departamento" placeholder="Buscar por nome, cargo ou departamento…" style="padding:6px 10px;border:1px solid var(--fx-border-default);border-radius:var(--fx-radius-sm);font-family:inherit;font-size:inherit;min-width:220px"><button type="button" style="padding:6px 12px;font-family:inherit;font-size:inherit;border:1px solid var(--fx-border-default);border-radius:var(--fx-radius-sm);background:var(--fx-surface-background);cursor:pointer">Exportar</button></template><fx-column field="nome" header="Nome" sortable filterable></fx-column><fx-column field="cargo" header="Cargo" sortable filterable></fx-column><fx-column field="departamento" header="Departamento" filterable></fx-column><fx-column field="salario" header="Salário" sortable><template>R$ {{ value | number }}</template></fx-column><fx-column field="ativo" header="Ativo"></fx-column></fx-table>`;
+		return `<fx-table ${a} data="${json}"><fx-toolbar><input data-search-fields="nome,cargo,departamento" placeholder="Buscar por nome, cargo ou departamento…" style="padding:6px 10px;border:1px solid var(--fx-border-default);border-radius:var(--fx-radius-sm);font-family:inherit;font-size:inherit;min-width:220px"><button type="button" style="padding:6px 12px;font-family:inherit;font-size:inherit;border:1px solid var(--fx-border-default);border-radius:var(--fx-radius-sm);background:var(--fx-surface-background);cursor:pointer">Exportar</button></fx-toolbar><fx-column field="nome" header="Nome" sortable filterable></fx-column><fx-column field="cargo" header="Cargo" sortable filterable></fx-column><fx-column field="departamento" header="Departamento" filterable></fx-column><fx-column field="salario" header="Salário" sortable><fx-cell>R$ {{ value | number }}</fx-cell></fx-column><fx-column field="ativo" header="Ativo"></fx-column></fx-table>`;
 	},
 	variantsHtml: () => {
 		const small = JSON.stringify([
@@ -133,8 +133,10 @@ export const tableDoc: ComponentDoc = {
 			`<h4>Paginação centralizada</h4><fx-table data="${small}" pagination rows="3" pagination-position="center">${cols}</fx-table>`,
 			`<h4>Listrada + hover + paginação à direita</h4><fx-table data="${small}" striped hover pagination rows="3" pagination-position="right">${cols}</fx-table>`,
 			`<h4>Vazia com mensagem customizada</h4><fx-table data='[]' empty-message="Nenhum funcionário encontrado">${cols}</fx-table>`,
-			`<h4>Templates de célula (moeda, data, ícone dinâmico)</h4><fx-table data="${small}"><fx-column field="nome" header="Nome"></fx-column><fx-column field="cargo" header="Cargo"></fx-column><fx-column field="salario" header="Salário (formatado)"><template>R$ {{ value | number }}</template></fx-column><fx-column field="salario" header="Faixa"><template>{{ value >= 6000 ? 'Sênior' : 'Júnior' }}</template></fx-column></fx-table>`,
-			`<h4>Toolbar acima do header (busca global + ação)</h4><fx-table data="${small}"><template slot="toolbar"><input data-search-fields="nome,cargo" placeholder="Buscar por nome ou cargo…" style="padding:6px 10px;border:1px solid var(--fx-border-default);border-radius:var(--fx-radius-sm);font-family:inherit;font-size:inherit"><button type="button" style="padding:6px 12px;font-family:inherit;font-size:inherit;border:1px solid var(--fx-border-default);border-radius:var(--fx-radius-sm);background:var(--fx-surface-background);cursor:pointer">Exportar</button></template><fx-column field="nome" header="Nome" sortable></fx-column><fx-column field="cargo" header="Cargo" sortable></fx-column><fx-column field="salario" header="Salário" sortable><template>R$ {{ value | number }}</template></fx-column></fx-table>`,
+			`<h4>Templates de célula (moeda, faixa)</h4><fx-table data="${small}"><fx-column field="nome" header="Nome"></fx-column><fx-column field="cargo" header="Cargo"></fx-column><fx-column field="salario" header="Salário (formatado)"><fx-cell>R$ {{ value | number }}</fx-cell></fx-column><fx-column field="salario" header="Faixa"><fx-cell>{{ value >= 6000 ? 'Sênior' : 'Júnior' }}</fx-cell></fx-column></fx-table>`,
+			`<h4>Toolbar com <fx-toolbar> (forma segura em Vue/React)</h4><fx-table data="${small}"><fx-toolbar><input data-search-fields="nome,cargo" placeholder="Buscar por nome ou cargo…" style="padding:6px 10px;border:1px solid var(--fx-border-default);border-radius:var(--fx-radius-sm);font-family:inherit;font-size:inherit"><button type="button" style="padding:6px 12px;font-family:inherit;font-size:inherit;border:1px solid var(--fx-border-default);border-radius:var(--fx-radius-sm);background:var(--fx-surface-background);cursor:pointer">Exportar</button></fx-toolbar><fx-column field="nome" header="Nome" sortable></fx-column><fx-column field="cargo" header="Cargo" sortable></fx-column><fx-column field="salario" header="Salário" sortable><fx-cell>R$ {{ value | number }}</fx-cell></fx-column></fx-table>`,
+			`<h4>Template reutilizado fora da tabela (template="#id")</h4><template id="doc-tpl-salario">R$ {{ value | number }}</template><fx-table data="${small}"><fx-column field="nome" header="Nome"></fx-column><fx-column field="salario" header="Salário" template="#doc-tpl-salario"></fx-column></fx-table>`,
+			`<h4>Forma legada com &lt;template&gt; (apenas HTML puro)</h4><fx-table data="${small}"><fx-column field="nome" header="Nome"></fx-column><fx-column field="salario" header="Salário"><template>R$ {{ value | number }}</template></fx-column></fx-table>`,
 			`<h4>Carregando (atributo loading — para buscas sob demanda)</h4><fx-table data="${small}" loading>${cols}</fx-table>`,
 		].join("");
 	},
@@ -231,6 +233,12 @@ export const tableDoc: ComponentDoc = {
 			desc: "Total de registros no servidor (usado pelo pager em modo lazy).",
 		},
 		{
+			name: "toolbar",
+			type: "string",
+			default: "''",
+			desc: "Referência ao markup da toolbar declarado fora da tabela (`#id` ou `id`). Útil em React/Angular. Sem o atributo, use <fx-toolbar> como filho direto.",
+		},
+		{
 			name: "loading",
 			type: "boolean",
 			default: "false",
@@ -261,16 +269,24 @@ export const tableDoc: ComponentDoc = {
 	],
 	slots: [
 		{
-			name: "fx-column > <template>",
-			desc: "Template HTML da célula da coluna. Aceita expressões {{ }} com pipes (currency, date, dateTime, number), condicionais ternários e acesso a row.campo. Ex.: <template>R$ {{ value | currency }}</template>",
+			name: "fx-column > <fx-cell>",
+			desc: "Template HTML da célula da coluna. <b>Forma recomendada</b>: <fx-cell> é uma tag própria, sem significado especial para Vue, React, Angular ou Svelte — ao contrário de <template>, que esses frameworks interceptam e deixam a célula vazia. Aceita expressões {{ }} com pipes (currency, date, dateTime, number), condicionais ternários e acesso a row.campo. Ex.: <fx-cell>R$ {{ value | currency }}</fx-cell>",
+		},
+		{
+			name: "fx-column template=\"#id\"",
+			desc: "Aponta a coluna para um elemento de template declarado fora da tabela (<template id=\"…\">). Útil em React/Angular, onde é mais simples manter o markup num único lugar. Aceita #id ou id; se o id não existir, cai para o conteúdo direto.",
+		},
+		{
+			name: "fx-column > <template> (legado)",
+			desc: "Forma antiga, ainda suportada em HTML puro. Não use em Vue/React: o compilador transforma <template> em bloco e o innerHTML chega vazio.",
 		},
 		{
 			name: "fx-column > conteúdo",
-			desc: "Se não houver <template>, o conteúdo direto do <fx-column> é usado como template. Ex.: <fx-column field=\"status\"><i class=\"pi pi-{{ row.ativo ? 'check' : 'times' }}\"></i> {{ value }}</fx-column>",
+			desc: "Se não houver <fx-cell>, <template> nem template=\"#id\", o conteúdo direto do <fx-column> é usado como template. Ex.: <fx-column field=\"status\"><i class=\"pi pi-{{ row.ativo ? 'check' : 'times' }}\"></i> {{ value }}</fx-column>",
 		},
 		{
-			name: "template[slot='toolbar']",
-			desc: 'Toolbar opcional renderizada acima do header. Inputs com data-search-fields="campo1,campo2…" viram busca global (filtrando por esses campos; sem o atributo, busca em todas as colunas). Demais elementos (botões etc.) aparecem como estão.',
+			name: "<fx-toolbar>",
+			desc: "Toolbar opcional renderizada acima do header (substitui <template slot=\"toolbar\">). Inputs com data-search-fields=\"campo1,campo2…\" viram busca global (filtrando por esses campos; sem o atributo, busca em todas as colunas). Demais elementos (botões etc.) aparecem como estão.",
 		},
 	],
 };
