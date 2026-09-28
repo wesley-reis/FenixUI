@@ -34,10 +34,15 @@ const componentDirs = readdirSync(resolve(root, 'src/components'), { withFileTyp
   .map((d) => d.name);
 
 /** Subtags extras registradas manualmente (auto-import.ts) fora dos diretórios. */
-const extraTags = ['fx-accordion-panel', 'fx-column'];
+const extraTags = ['fx-accordion-panel', 'fx-column', 'fx-cell', 'fx-toolbar'];
 
-/** Tags que não recebem props/JSX próprios (internos/slot-only). */
-const excludedFromJsx: string[] = ['fx-column'];
+/**
+ * Tags que não recebem props/JSX próprios.
+ * Vazio: `fx-column`, `fx-cell` e `fx-toolbar` já têm tipagem completa
+ * (FxColumnProps / FxCellProps / FxToolbarProps) e são cobertas pelos testes
+ * abaixo — sem isso, uma regressão passaria despercebida.
+ */
+const excludedFromJsx: string[] = [];
 
 const tagsFromDirs = componentDirs.map((dir) => {
   // convenção: diretório toggle-button-group => tag fx-toggle-button-group
@@ -84,6 +89,36 @@ describe('cobertura de tipagens (TS / React / Vue / Angular)', () => {
     for (const dir of componentDirs) {
       expect(pkg.exports[`./${dir}`], `package.json sem export "./${dir}"`).toBeDefined();
     }
+  });
+
+  it('cada tag está em algum HTMLElementTagNameMap (tipagem imperativa)', () => {
+    // O mapa pode estar no jsx.ts (fallback para HTMLElement) OU no index.ts
+    // do próprio componente (quando ele exporta a classe concreta). Basta
+    // estar em um dos dois para `createElement('fx-x')` devolver algo tipado
+    // em vez de cair no overload genérico `createElement(tag: string)`.
+    const mapBlock = jsxSource.match(/interface HTMLElementTagNameMap \{([\s\S]*?)\n  \}/);
+    expect(mapBlock).toBeTruthy();
+    const ownMaps = readdirSync(resolve(root, 'src/components'), { withFileTypes: true })
+      .filter((d) => d.isDirectory())
+      .map((d) => read(`src/components/${d.name}/index.ts`))
+      .join('\n');
+    for (const tag of allTags) {
+      const found = mapBlock![1].includes(`'${tag}':`) || ownMaps.includes(`'${tag}':`);
+      expect(found, `HTMLElementTagNameMap sem '${tag}' (nem no jsx.ts nem no index.ts do componente)`).toBe(true);
+    }
+  });
+
+  it('as uniões novas do toast (progress/progressOrigin) são exportadas', () => {
+    expect(jsxSource.includes('export type FxToastProgress')).toBe(true);
+    expect(jsxSource.includes('export type FxToastOrigin')).toBe(true);
+    // O índice principal e os subpaths /vue e /react reexportam tudo de jsx.ts.
+    expect(read('src/index.ts')).toContain("export * from './core/jsx'");
+    for (const f of ['src/core/vue.ts', 'src/core/react.ts']) {
+      expect(read(f), `${f} sem reexport dos tipos nomeados`).toContain("export type * from './jsx'");
+    }
+    // E o atributo novo precisa estar na interface, não só no componente.
+    expect(jsxSource).toMatch(/interface FxToastProps[\s\S]*'progress-origin'\?: FxToastOrigin;/);
+    expect(jsxSource).toMatch(/interface FxToastProps[\s\S]*progress\?: FxToastProgress \| boolean;/);
   });
 
   it('auto-import: fenixComponentMap cobre todos os componentes e subtags', async () => {
