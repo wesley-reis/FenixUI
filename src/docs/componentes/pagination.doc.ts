@@ -13,7 +13,7 @@ export const paginationDoc: ComponentDoc = {
 	imports: ["import '@wrrdev/fenix-ui/pagination';"],
 	demoHtml: (a) => `<fx-pagination ${a}></fx-pagination>`,
 	variantsHtml: () =>
-		`<h4>Alinhamentos</h4><fx-pagination total="120" rows="10" page="1" position="left"></fx-pagination><fx-pagination total="120" rows="10" page="3" position="center"></fx-pagination><fx-pagination total="120" rows="10" page="7" position="right"></fx-pagination>`,
+		`<h4>Alinhamentos</h4><fx-pagination total="120" rows="10" page="1" position="left"></fx-pagination><fx-pagination total="120" rows="10" page="3" position="center"></fx-pagination><fx-pagination total="120" rows="10" page="7" position="right"></fx-pagination><h4>Poucas páginas (primeira/última desabilitadas)</h4><fx-pagination total="25" rows="10" page="1"></fx-pagination><h4>Última página (primeira/última habilitadas)</h4><fx-pagination total="250" rows="10" page="25"></fx-pagination>`,
 	controls: [
 		{ kind: "text", attr: "total", label: "Total de itens", value: "87" },
 		{

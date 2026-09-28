@@ -178,6 +178,55 @@ describe('fx-table — header, sort e toolbar', () => {
     expect(style).toContain('.pg-btn:hover:not(:disabled):not([aria-current=');
   });
 
+  it('striped usa a superfície cinza (nunca a cor do fundo do host)', () => {
+    const el = mount(`<fx-table striped>${COLS}</fx-table>`, ROWS);
+    const style = el.shadowRoot!.querySelector('style')!.textContent;
+    // Regressão: usava --fx-surface-background, que é a MESMA cor do :host —
+    // pintava branco sobre branco e o listrado não aparecia.
+    const regra = style.match(/:host\(\[striped\]\) tbody tr:nth-child\(even\)\s*\{[^}]*\}/s)?.[0];
+    expect(regra).toBeTruthy();
+    expect(regra).toContain('var(--fx-surface-surface');
+    expect(regra).not.toContain('--fx-surface-background');
+  });
+
+  it('hover das linhas é opt-in pelo atributo hover', () => {
+    const el = mount(`<fx-table hover>${COLS}</fx-table>`, ROWS);
+    const style = el.shadowRoot!.querySelector('style')!.textContent;
+    expect(style).toContain(':host([hover]) tbody tr:hover');
+    // Não pode sobrar hover de linha incondicional (fora do :host([hover])).
+    const regras = style.match(/[^\n]*tbody tr:hover/g) ?? [];
+    expect(regras).toHaveLength(1);
+    expect(regras[0]).toContain(':host([hover])');
+    expect(el.hasAttribute('hover')).toBe(true);
+  });
+
+  it('o pager usa glifos da Fenix Icons (não caracteres Unicode)', () => {
+    const el = mount(`<fx-table pagination rows="2">${COLS}</fx-table>`, ROWS);
+    const root = el.shadowRoot!;
+    const ico = (sel: string) => root.querySelector(`${sel} .fx-icon`)?.textContent;
+    expect(ico('[data-pg="first"]')).toBe('first_page');
+    expect(ico('[data-pg="prev"]')).toBe('navigate_before');
+    expect(ico('[data-pg="next"]')).toBe('navigate_next');
+    expect(ico('[data-pg="last"]')).toBe('last_page');
+    // Glifos Unicode («, ‹, ›, ») não podem mais aparecer no pager.
+    expect(root.querySelector('.pager')!.textContent).not.toMatch(/[«‹›»]/);
+  });
+
+  it('o glifo do pager tem 1px a mais que o dígito (altura óptica)', () => {
+    const el = mount(`<fx-table pagination rows="2">${COLS}</fx-table>`, ROWS);
+    const style = el.shadowRoot!.querySelector('style')!.textContent;
+    expect(style).toMatch(/\.pg-btn \.fx-icon\s*\{\s*font-size:\s*calc\(var\(--fx-font-size\) - 1px\)/s);
+  });
+
+  it('honra a ordenação inicial via sort-field / sort-order', () => {
+    const el = mount(`<fx-table sort-field="nome" sort-order="asc">${COLS}</fx-table>`, ROWS);
+    const celulas = [...el.shadowRoot!.querySelectorAll('tbody tr td:first-child')].map((td) => td.textContent);
+    expect(celulas).toEqual([...celulas].sort((a, b) => a!.localeCompare(b!, 'pt-BR')));
+    const desc = mount(`<fx-table sort-field="nome" sort-order="desc">${COLS}</fx-table>`, ROWS);
+    const c2 = [...desc.shadowRoot!.querySelectorAll('tbody tr td:first-child')].map((td) => td.textContent);
+    expect(c2).toEqual([...c2].sort((a, b) => b!.localeCompare(a!, 'pt-BR')));
+  });
+
   it('renderiza a toolbar acima do header', () => {
     const el = mount(`<fx-table><template slot="toolbar"><button>Exportar</button></template>${COLS}</fx-table>`, ROWS);
     expect(el.shadowRoot!.querySelector('.toolbar')).toBeTruthy();

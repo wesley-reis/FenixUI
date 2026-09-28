@@ -2,6 +2,8 @@ import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from "../../core/sanitize";
+import { FENIX_ICON_BASE_CSS, fenixIconHtml } from '../../icons/base-css';
+import { loadFenixIconsFont } from '../../icons/font';
 import { renderCell } from "./expr";
 import "../select";
 
@@ -25,11 +27,13 @@ import "../select";
  * Dados: propriedade `data` (array de objetos) ou atributo `data` (JSON).
  *
  * Atributos: pagination, rows, rows-options, pagination-position (left|center|right),
- * striped, empty-message, lazy, total, loading, loading-message.
+ * striped, hover, empty-message, lazy, total, loading, loading-message,
+ * sort-field, sort-order.
  * Eventos: page-change, sort-change, row-click, filter-change (todos composed).
  */
 export class FxTable extends FxElement {
 	static override styles = css`
+		${FENIX_ICON_BASE_CSS}
 		:host {
 			display: block;
 			font-family: var(--fx-font-family);
@@ -106,17 +110,14 @@ export class FxTable extends FxElement {
 			transition: background-color var(--fx-motion-duration-fast)
 				var(--fx-motion-easing);
 		}
-		tbody tr:hover {
-			background: color-mix(
-				in srgb,
-				var(--fx-color-primary) 8%,
-				transparent
-			);
-		}
+		/* Listrado: alterna a superfície (cinza). Antes usava
+		   --fx-surface-background, que é a MESMA cor do fundo do :host e
+		   portanto pintava branco sobre branco (listrado invisível). */
 		:host([striped]) tbody tr:nth-child(even) {
-			background: var(--fx-surface-background);
+			background: var(--fx-surface-surface, #f8fafc);
 		}
-		:host([striped]) tbody tr:hover {
+		/* O hover é opt-in via atributo (o clique na linha continua sempre ativo). */
+		:host([hover]) tbody tr:hover {
 			background: color-mix(
 				in srgb,
 				var(--fx-color-primary) 8%,
@@ -146,6 +147,9 @@ export class FxTable extends FxElement {
 			font-size: calc(var(--fx-font-size) - 2px);
 		}
 		.pg-btn {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
 			min-width: var(--fx-size-sm);
 			height: var(--fx-size-sm);
 			font: inherit;
@@ -158,6 +162,12 @@ export class FxTable extends FxElement {
 			cursor: pointer;
 			transition: border-color var(--fx-motion-duration-fast)
 				var(--fx-motion-easing);
+		}
+		/* O glifo precisa de 1px a mais que o dígito: a altura de traço do ícone é
+		   maior que a do número, então igualar os dois font-size deixa a seta
+		   visivelmente maior que o texto. */
+		.pg-btn .fx-icon {
+			font-size: calc(var(--fx-font-size) - 1px);
 		}
 		.pg-btn:hover:not(:disabled):not([aria-current="true"]) {
 			border-color: var(--fx-color-primary);
@@ -239,12 +249,15 @@ export class FxTable extends FxElement {
 			"rows",
 			"rows-options",
 			"striped",
+			"hover",
 			"empty-message",
 			"pagination-position",
 			"lazy",
 			"total",
 			"loading",
 			"loading-message",
+			"sort-field",
+			"sort-order",
 		];
 	}
 
@@ -318,6 +331,10 @@ export class FxTable extends FxElement {
 
 	protected override connectedCallback(): void {
 		this._parseDataAttribute();
+		this._parseSortAttributes();
+		// O pager usa glifos da Fenix Icons: garante o @font-face mesmo quando o
+		// app não importou `@wrrdev/fenix-ui/icons` (idempotente).
+		loadFenixIconsFont();
 		super.connectedCallback();
 		this._columnObserver = new MutationObserver(() => this.render());
 		this._columnObserver.observe(this, { childList: true, subtree: true });
@@ -326,6 +343,14 @@ export class FxTable extends FxElement {
 	protected override disconnectedCallback(): void {
 		this._columnObserver?.disconnect();
 		super.disconnectedCallback();
+	}
+
+	/** Ordenação inicial via `sort-field` / `sort-order` (documentados na API). */
+	private _parseSortAttributes(): void {
+		const field = this.getAttr("sort-field");
+		if (field) this.sortField = field;
+		const order = this.getAttr("sort-order");
+		if (order === "asc" || order === "desc") this.sortDir = order === "asc" ? 1 : -1;
 	}
 
 	private _parseDataAttribute(): void {
@@ -464,11 +489,11 @@ export class FxTable extends FxElement {
 			: `
       <div class="pager" part="pager">
         <span class="info">Página ${this.page + 1} de ${pages} · ${total} registros</span>
-        <button type="button" class="pg-btn" data-pg="first" ${this.page === 0 ? "disabled" : ""}>«</button>
-        <button type="button" class="pg-btn" data-pg="prev" ${this.page === 0 ? "disabled" : ""}>‹</button>
+        <button type="button" class="pg-btn" part="first" aria-label="Primeira página" data-pg="first" ${this.page === 0 ? "disabled" : ""}>${fenixIconHtml("first_page")}</button>
+        <button type="button" class="pg-btn" part="prev" aria-label="Página anterior" data-pg="prev" ${this.page === 0 ? "disabled" : ""}>${fenixIconHtml("navigate_before")}</button>
         ${Array.from({ length: pages }, (_, p) => `<button type="button" class="pg-btn" data-pg="${p}" aria-current="${p === this.page}">${p + 1}</button>`).join("")}
-        <button type="button" class="pg-btn" data-pg="next" ${this.page >= pages - 1 ? "disabled" : ""}>›</button>
-        <button type="button" class="pg-btn" data-pg="last" ${this.page >= pages - 1 ? "disabled" : ""}>»</button>
+        <button type="button" class="pg-btn" part="next" aria-label="Próxima página" data-pg="next" ${this.page >= pages - 1 ? "disabled" : ""}>${fenixIconHtml("navigate_next")}</button>
+        <button type="button" class="pg-btn" part="last" aria-label="Última página" data-pg="last" ${this.page >= pages - 1 ? "disabled" : ""}>${fenixIconHtml("last_page")}</button>
         <label class="info">${esc("Por página:")}
           <fx-select class="rows-sel" size="sm" value="${this.rowsPerPage}" aria-label="Itens por página">${this.getAttr(
 					"rows-options",
