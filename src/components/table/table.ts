@@ -14,15 +14,23 @@ import "../select";
  *
  * Colunas (light DOM):
  *   <fx-column field="nome" header="Nome" sortable filterable align="left">
- *     opcional: <template>R$ {{value}}</template> para render customizado
+ *     opcional: <fx-cell>R$ {{value}}</fx-cell> para render customizado
  *     ou conteúdo direto (HTML + {{ }}) como template alternativo
  *   </fx-column>
  *
+ *   IMPORTANTE (frameworks): use <fx-cell>, NÃO <template>. A tag nativa
+ *   <template> é reservada — o Vue 3 a transforma em bloco do compilador e o
+ *   React gerencia os filhos, então o innerHTML chega vazio. <fx-cell> é uma
+ *   tag própria, sem significado especial para nenhum framework. A forma
+ *   antiga com <template> continua funcionando (compatibilidade) e há ainda
+ *   a opção `template="#id"` apontando para um <template> externo.
+ *
  * Toolbar (opcional):
- *   <template slot="toolbar">
+ *   <fx-toolbar>
  *     <input data-search-fields="nome,cargo" placeholder="Buscar…">
  *     <button>Nova ação</button>
- *   </template>
+ *   </fx-toolbar>
+ *   (legado ainda aceito: <template slot="toolbar">…</template>)
  *
  * Dados: propriedade `data` (array de objetos) ou atributo `data` (JSON).
  *
@@ -250,6 +258,7 @@ export class FxTable extends FxElement {
 			"rows-options",
 			"striped",
 			"hover",
+			"toolbar",
 			"empty-message",
 			"pagination-position",
 			"lazy",
@@ -304,11 +313,11 @@ export class FxTable extends FxElement {
 		sortable: boolean;
 		filterable: boolean;
 		align: string;
-		template?: HTMLTemplateElement;
+		template?: HTMLElement;
 		directTemplate?: string;
 	}[] {
 		return [...this.querySelectorAll("fx-column")].map((c) => {
-			const tpl = c.querySelector("template");
+			const tpl = this._resolveCellTemplate(c);
 			const direct = tpl ? undefined : c.innerHTML.trim();
 			const align = c.getAttribute("align") ?? "left";
 			return {
@@ -323,10 +332,63 @@ export class FxTable extends FxElement {
 		});
 	}
 
-	private get toolbarTemplate(): HTMLTemplateElement | null {
-		return this.querySelector(
-			'template[slot="toolbar"]',
-		) as HTMLTemplateElement | null;
+	/**
+	 * Resolve o template de célula de uma `<fx-column>`, em ordem de prioridade:
+	 *
+	 * 1. `<fx-cell>` — **recomendado**. Tag própria, sem significado especial
+	 *    para Vue/React/Angular/Svelte: nenhum framework a intercepta, então o
+	 *    `innerHTML` sempre chega intacto ao componente. O light DOM do
+	 *    `<fx-table>` não é exibido (a tabela não usa `<slot>`), então o
+	 *    conteúdo-fonte nunca aparece na tela.
+	 * 2. `template="#id"` (ou `template="id"`) — aponta para um `<template>`
+	 *    declarado **fora** da tabela, útil em React/Angular, onde é mais
+	 *    simples manter o markup num único lugar.
+	 * 3. `<template>` dentro da coluna — forma **legada**, mantida por
+	 *    compatibilidade. Em Vue 3 ela vira um bloco do compilador e em React os
+	 *    filhos são gerenciados pelo framework; nos dois casos o `innerHTML`
+	 *    chega vazio e a célula não renderiza. Prefira `<fx-cell>`.
+	 */
+	private _resolveCellTemplate(c: Element): HTMLElement | null {
+		const cell = c.querySelector<HTMLElement>(":scope > fx-cell");
+		if (cell) return cell;
+		const ref = c.getAttribute("template");
+		if (ref) {
+			const alvo = this._resolveRef(ref);
+			if (alvo) return alvo;
+		}
+		return c.querySelector<HTMLElement>("template");
+	}
+
+	private get toolbarTemplate(): HTMLElement | null {
+		// Mesma lógica da célula: `<fx-toolbar>` > `toolbar="#id"` > legado.
+		const bar = this.querySelector<HTMLElement>(":scope > fx-toolbar");
+		if (bar) return bar;
+		const ref = this.getAttr("toolbar");
+		if (ref) {
+			const alvo = this._resolveRef(ref);
+			if (alvo) return alvo;
+		}
+		return this.querySelector<HTMLElement>('template[slot="toolbar"]');
+	}
+
+	/**
+	 * Resolve `ref` para um elemento: `#id`/`id` ⇒ `getElementById` no
+	 * documento; qualquer outro valor é tratado como seletor CSS relativo à
+	 * própria tabela. Valores inválidos devolvem `null` (sem exceção).
+	 */
+	private _resolveRef(ref: string): HTMLElement | null {
+		const valor = ref.trim();
+		if (!valor) return null;
+		const doc = this.ownerDocument;
+		if (valor.startsWith('#')) return doc?.getElementById(valor.slice(1)) ?? null;
+		if (/^[.#[>]/.test(valor)) {
+			try {
+				return this.querySelector<HTMLElement>(valor);
+			} catch {
+				return null; // seletor inválido — degrada para o próximo fallback
+			}
+		}
+		return doc?.getElementById(valor) ?? null;
 	}
 
 	protected override connectedCallback(): void {
@@ -434,7 +496,7 @@ export class FxTable extends FxElement {
 	private cellHtml(
 		col: {
 			field: string;
-			template?: HTMLTemplateElement;
+			template?: HTMLElement;
 			directTemplate?: string;
 		},
 		row: Record<string, unknown>,

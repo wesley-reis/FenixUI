@@ -166,11 +166,44 @@ export interface FxTableProps extends FxElementProps {
   rows?: number;
   'rows-options'?: string;
   striped?: boolean;
+  hover?: boolean;
   'empty-message'?: string;
   'pagination-position'?: FxPaginationPosition;
   total?: number;
   page?: number;
+  lazy?: boolean;
+  loading?: boolean;
+  'loading-message'?: string;
+  'sort-field'?: string;
+  'sort-order'?: 'asc' | 'desc' | '';
+  /** Referência ao markup da toolbar: `#id`/`id` de um elemento fora da tabela. */
+  toolbar?: string;
 }
+/**
+ * <fx-column> — declaração de coluna (light DOM do <fx-table>).
+ *
+ * O template de célula vai em `<fx-cell>` (tag imune a Vue/React/Angular) ou,
+ * em markup estático, em `template="#id"`. A forma antiga com `<template>`
+ * dentro da coluna continua aceita.
+ */
+export interface FxColumnProps extends FxElementProps {
+  field?: string;
+  header?: string;
+  sortable?: boolean;
+  filterable?: boolean;
+  align?: 'left' | 'center' | 'right' | 'justify' | 'start' | 'end';
+  /** Referência a um elemento de template: `#id` ou `id`. */
+  template?: string;
+}
+/**
+ * <fx-cell> — template de renderização de uma célula.
+ *
+ * Substitui o `<template>` nativo, que é interceptado por Vue/React.
+ * Aceita expressões `{{ }}`, pipes e acesso a `row.*`.
+ */
+export type FxCellProps = FxElementProps;
+/** <fx-toolbar> — barra de ações acima do header (substitui `<template slot="toolbar">`). */
+export type FxToolbarProps = FxElementProps;
 export interface FxFloatlabelProps extends FxElementProps {
   variant?: FxFloatlabelVariant;
   full?: boolean;
@@ -425,6 +458,9 @@ export interface FxJsxIntrinsicElements {
   'fx-calendar': FxCalendarProps;
   'fx-datepicker': FxDatepickerProps;
   'fx-table': FxTableProps;
+  'fx-column': FxColumnProps;
+  'fx-cell': FxCellProps;
+  'fx-toolbar': FxToolbarProps;
   'fx-floatlabel': FxFloatlabelProps;
   'fx-dialog': FxDialogProps;
   'fx-drawer': FxDrawerProps;
