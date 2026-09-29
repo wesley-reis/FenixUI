@@ -349,6 +349,24 @@ Requisitos:
 - Volar / vue-tsc (já incluído no `@vue/language-tools` usado pelo VS Code + Volar);
 - no `tsconfig`, `"moduleResolution": "bundler"`.
 
+#### Reduzindo o peso da fonte de ícones (opcional)
+
+A fonte embarca **todos** os ~4.300 glifos, o que dá ~5 MB. Ela já usa
+`font-display: swap` (o ícone aparece na hora com a fonte de fallback — nunca
+mais a tela em branco esperando o download). Se o seu app usa apenas algumas
+dezenas de ícones, gere um *subset* e aponte a biblioteca para ele:
+
+```ts
+import { setFenixIconsFontUrl } from '@wrrdev/fenix-ui/icons';
+
+setFenixIconsFontUrl('/fonts/fenix-icons-subset.woff2');
+```
+
+Isso derruba a fonte para algumas dezenas de KB. **A tipagem não muda**:
+`FenixIconName` continua sugerindo todos os nomes no editor — garanta apenas
+que o subset contenha os glifos que o app usa. Chame a função antes do primeiro
+`<fx-icon>` ser montado; use `setFenixIconsFontUrl('')` para voltar ao padrão.
+
 Com isso o editor mostra as propriedades de cada componente (`variant`, `size`, `loading`, …)
 nos templates. Para além do autocomplete, **validar** valores inválidos (ex.: `variant="foo"`),
 ative o modo estrito do Volar no `tsconfig.json`:

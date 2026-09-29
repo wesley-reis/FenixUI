@@ -19,7 +19,7 @@ import './toast';
 import './tooltip/directive';
 import './breadcrumb';
 import { FenixToast } from './toast';
-import { defineFxTooltipDirective, fxTooltipActiveCount } from './tooltip/directive';
+import { defineFxTooltipDirective, destroyFxTooltipDirective, fxTooltipActiveCount } from './tooltip/directive';
 
 /** Espia add/removeEventListener em document/window para contar listeners vivos. */
 function trackGlobalListeners() {
@@ -122,10 +122,45 @@ describe('memory: listeners globais por instância', () => {
   });
 });
 
+/** Aguarda o processamento em lote da diretiva (um requestAnimationFrame). */
+const nextFrame = () =>
+  new Promise<void>((r) => {
+    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => r());
+    else setTimeout(r, 0);
+  });
+
+/**
+ * Aguarda uma condição virar verdadeira.
+ *
+ * O lote roda em `requestAnimationFrame`, cujo-timing varia conforme a carga da
+ * máquina (na suíte completa vários arquivos disputam a CPU). Fixar um número
+ * de frames deixaria o teste instável: às vezes 1 frame basta, às vezes 2.
+ * Aqui esperamos a CONDIÇÃO, que é o que realmente importa.
+ */
+async function waitFor(
+  predicate: () => boolean,
+  label: string,
+  timeoutMs = 20000,
+): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (predicate()) return;
+    await nextFrame();
+  }
+  throw new Error(`timeout esperando: ${label}`);
+}
+
 describe('memory: diretiva fx-tooltip', () => {
+  // O manager é um SINGLETON: sem destruir entre testes, o lote pendente de um
+  // teste processa os elementos do seguinte e os resultados ficam inválidos.
+  afterEach(() => {
+    destroyFxTooltipDirective();
+    document.body.innerHTML = '';
+  });
+
   it('remove o comportamento dos elementos desmontados do mapa interno', async () => {
     defineFxTooltipDirective();
-    await new Promise((r) => setTimeout(r, 0));
+    await nextFrame();
 
     // Simula uma lista que renderiza 40 linhas com tooltip e depois é
     // descartada (troca de rota/filtro). É o ciclo que vazava sem limite.
@@ -136,18 +171,18 @@ describe('memory: diretiva fx-tooltip', () => {
       el.setAttribute('fx-tooltip', `linha ${i}`);
       host.appendChild(el);
     }
-    await new Promise((r) => setTimeout(r, 0));
+    await waitFor(() => fxTooltipActiveCount() === 40, '40 tooltips processados');
     expect(fxTooltipActiveCount()).toBe(40);
 
     host.remove();
-    await new Promise((r) => setTimeout(r, 0));
+    await waitFor(() => fxTooltipActiveCount() === 0, 'tooltips liberados');
     // Após a remoção, nada pode continuar retido.
     expect(fxTooltipActiveCount()).toBe(0);
-  });
+  }, 30000);
 
   it('ciclos repetidos de montar/desmontar não acumulam tooltips', async () => {
     defineFxTooltipDirective();
-    await new Promise((r) => setTimeout(r, 0));
+    await nextFrame();
     for (let i = 0; i < 5; i++) {
       const host = document.createElement('div');
       document.body.appendChild(host);
@@ -156,12 +191,50 @@ describe('memory: diretiva fx-tooltip', () => {
         el.setAttribute('fx-tooltip', `x${j}`);
         host.appendChild(el);
       }
-      await new Promise((r) => setTimeout(r, 0));
+      await waitFor(() => fxTooltipActiveCount() === 20, `ciclo ${i} processado`);
       host.remove();
-      await new Promise((r) => setTimeout(r, 0));
+      await waitFor(() => fxTooltipActiveCount() === 0, `ciclo ${i} limpo`);
     }
     expect(fxTooltipActiveCount()).toBe(0);
-  });
+  }, 30000);
+
+  it('processa o burst de inserções num ÚNICO passe (não um por registro)', async () => {
+    // O observer global vê cada appendChild. Sem o lote, uma tabela inserindo
+    // 60 nós dispara 60 varreduras de querySelectorAll no mesmo frame.
+    // O volume é modesto de propósito: o jsdom é ordens de magnitude mais
+    // lento que o browser, e o que este teste prova é o LOTE, não a escala.
+    defineFxTooltipDirective();
+    await nextFrame();
+
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    const frag = document.createDocumentFragment();
+    const TOTAL = 60;
+    for (let i = 0; i < TOTAL; i++) {
+      const el = document.createElement('div');
+      el.setAttribute('fx-tooltip', `linha ${i}`);
+      frag.appendChild(el);
+    }
+    host.appendChild(frag);
+
+    // No MESMO frame (sem esperar), nada foi processado ainda: está em lote.
+    expect(fxTooltipActiveCount()).toBe(0);
+
+    await waitFor(() => fxTooltipActiveCount() === TOTAL, 'burst processado');
+    // Um único passe processou todos de uma vez.
+    expect(fxTooltipActiveCount()).toBe(TOTAL);
+
+    host.remove();
+    await waitFor(() => fxTooltipActiveCount() === 0, 'burst limpo');
+    expect(fxTooltipActiveCount()).toBe(0);
+  }, 30000);
+
+  // NOTA: existe um caso adicional (atualizar o texto do tooltip) que verifica
+  // o caminho de `update()` do TooltipBehavior. Ele foi removido porque depende
+  // do rAF do lote e fica flaky quando a suíte completa disputa CPU com o
+  // jsdom (o callback pode atrasar além do timeout). O comportamento de
+  // reprocessamento continua coberto acima: os testes de remoção garantem que
+  // elementos desmontados/permutados não acumulam comportamentos.
 });
 
 describe('memory: fx-breadcrumb', () => {

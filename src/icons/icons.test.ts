@@ -9,6 +9,7 @@ import {
   buildFenixIconsFontCss,
   loadFenixIcons,
   loadFenixIconsFont,
+  setFenixIconsFontUrl,
   __resetFenixIconsFontInjection,
   __resetFenixIconsInjection,
   isFenixIconName,
@@ -18,6 +19,8 @@ import { transformSource } from '../plugins/auto-import';
 describe('Fenix Icons', () => {
   beforeEach(() => {
     __resetFenixIconsInjection();
+    // Volta a URL para a do build: os testes de subset não podem vazar estado.
+    setFenixIconsFontUrl('');
     document.getElementById('fenix-icons')?.remove();
     document.getElementById('fenix-icons-font')?.remove();
   });
@@ -62,6 +65,53 @@ describe('Fenix Icons', () => {
 
   it('CSS base é compatível com Shadow DOM (usa var com fallback)', () => {
     expect(FENIX_ICON_BASE_CSS).toContain('var(--fx-icon-font');
+  });
+
+  it('usa font-display:swap (nunca block, que deixa o glifo invisível)', () => {
+    // `block` segura a renderização do texto até a fonte baixar: em 3G/4G a
+    // tela fica branca por segundos. `swap` mostra fallback imediatamente.
+    const css = buildFenixIconsFontCss();
+    expect(css).toContain('font-display:swap');
+    expect(css).not.toContain('font-display:block');
+    expect(buildFenixIconsCss()).toContain('font-display:swap');
+  });
+
+  it('setFenixIconsFontUrl aponta o @font-face para um subset próprio', async () => {
+    // Caso 1: chamado ANTES de injetar — o CSS já nasce com a nova URL.
+    setFenixIconsFontUrl('/fonts/subset.woff2');
+    loadFenixIconsFont();
+    const style = document.getElementById('fenix-icons-font')!;
+    expect(style.textContent).toContain("url('/fonts/subset.woff2')");
+    expect(style.textContent).toContain('font-display:swap');
+
+    // Caso 2: chamado DEPOIS de injetar — reinjeta com a URL nova.
+    setFenixIconsFontUrl('/fonts/subset2.woff2');
+    const after = document.getElementById('fenix-icons-font')!;
+    expect(after.textContent).toContain("url('/fonts/subset2.woff2')");
+    expect(after.textContent).not.toContain('subset.woff2\'');
+    // Não duplica o <style> ao trocar a URL.
+    expect(document.querySelectorAll('style#fenix-icons-font').length).toBe(1);
+  });
+
+  it('setFenixIconsFontUrl também reinyeta o CSS completo', () => {
+    loadFenixIcons();
+    setFenixIconsFontUrl('/fonts/full-subset.woff2');
+    const full = document.getElementById('fenix-icons')!;
+    expect(full.textContent).toContain("url('/fonts/full-subset.woff2')");
+    // As regras por ícone continuam lá (a tipagem/nomes não mudam).
+    expect(full.textContent).toContain('.fx-icon-home::before');
+    expect(document.querySelectorAll('style#fenix-icons').length).toBe(1);
+  });
+
+  it('a tipagem dos ícones NÃO muda com o subset (lista completa preservada)', () => {
+    // O subset é só uma otimização de bytes: o contrato de tipos continua
+    // incluindo todos os ~4.200 nomes, para nenhum `name` quebrar no editor.
+    expect(FENIX_ICON_NAMES.length).toBeGreaterThan(4000);
+    setFenixIconsFontUrl('/fonts/subset.woff2');
+    const css = buildFenixIconsCss();
+    for (const name of ['home', 'settings', 'first_page']) {
+      expect(css).toContain(`.fx-icon-${name}::before{content:"${name}"}`);
+    }
   });
 
   it('auto-import injeta @wrrdev/fenix-ui/icons para classes fx-icon-*', () => {

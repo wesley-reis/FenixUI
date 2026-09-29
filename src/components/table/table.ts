@@ -528,6 +528,16 @@ export class FxTable extends FxElement {
 		return esc(String(row[col.field] ?? ""));
 	}
 
+	/**
+	 * Assinatura da "casca" da tabela: tudo que NÃO depende das linhas
+	 * (colunas, toolbar, filtros, paginação, loading).
+	 *
+	 * Serve para o caminho rápido: quando só `data` muda, a casca é idêntica e
+	 * podemos trocar apenas o `<tbody>`, sem recriar `<style>`, `<thead>`,
+	 * toolbar e paginação — nem religar todos os listeners.
+	 */
+	private _shellKey = '';
+
 	protected override render(): void {
 		const cols = this.columns.filter((c) => c.field);
 		const { rows, total } = this.computeRows();
@@ -594,6 +604,28 @@ export class FxTable extends FxElement {
 		const loadingHtml = loading
 			? `<div class="loading-overlay" part="loading-overlay"><div class="tbl-spinner" part="spinner"></div><span class="loading-text">${esc(this.getAttr("loading-message", "Carregando…"))}</span></div>`
 			: "";
+
+		// Caminho rápido: se a casca não mudou (só `data` foi substituído),
+		// troca APENAS o <tbody>. Evita recriar <style>/<thead>/toolbar/pager e
+		// religar todos os listeners a cada atribuição de `data` — que é o
+		// gargalo em tabelas grandes (busca por tecla, paginação, reload).
+		const shellKey = [
+			toolbarHtml,
+			headHtml,
+			filterRow,
+			pagerHtml,
+			loadingHtml,
+			cols.length,
+		].join("|");
+		if (shellKey === this._shellKey) {
+			const tbody = this.root.querySelector("tbody");
+			if (tbody) {
+				tbody.innerHTML = bodyHtml;
+				this._bindRowClicks(rows);
+				return;
+			}
+		}
+		this._shellKey = shellKey;
 
 		this.setTemplate(`
       ${toolbarHtml}
@@ -725,6 +757,18 @@ export class FxTable extends FxElement {
 			});
 
 		// Clique na linha.
+		this._bindRowClicks(rows);
+
+		this._restoreToolbarSearch();
+	}
+
+	/**
+	 * Liga o clique das linhas ao evento `row-click`.
+	 *
+	 * Extraído do render para ser reaproveitado no caminho rápido (troca só do
+	 * <tbody>): os <tr> são novos, então precisam ser rebound.
+	 */
+	private _bindRowClicks(rows: Record<string, unknown>[]): void {
 		this.root
 			.querySelectorAll<HTMLTableRowElement>("tbody tr[data-index]")
 			.forEach((tr) => {
@@ -741,8 +785,6 @@ export class FxTable extends FxElement {
 					);
 				});
 			});
-
-		this._restoreToolbarSearch();
 	}
 
 	private _restoreToolbarSearch(): void {
