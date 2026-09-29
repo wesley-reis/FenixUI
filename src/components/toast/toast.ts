@@ -15,6 +15,13 @@ const POSITIONS = [
 export type ToastPosition = (typeof POSITIONS)[number];
 type ToastKind = 'success' | 'error' | 'info' | 'warning';
 
+/**
+ * Evento interno disparado quando o <fx-toast> sai do DOM.
+ * A API `FenixToast` o escuta para remover a entrada do mapa interno —
+ * é o que impede o acúmulo de toasts já dispensados.
+ */
+const REMOVED_EVENT = 'fx-toast:removed';
+
 const KIND_COLOR: Record<ToastKind, string> = {
   success: 'var(--fx-color-success, #10b981)',
   error: 'var(--fx-color-danger, #f43f5e)',
@@ -218,9 +225,18 @@ export class FxToast extends HTMLElement {
     this.#syncProgress();
   }
 
+  /**
+   * Limpa recursos ao sair do DOM e avisa a API imperativa (`FenixToast`).
+   *
+   * O aviso é essencial: `dismiss()` (timer ou botão de fechar) tira o
+   * elemento do DOM mas, sem isto, `ToastApi.map` continuaria segurando uma
+   * referência forte para cada toast já dispensado — crescimento de memória
+   * sem limite em uso prolongado.
+   */
   disconnectedCallback() {
     if (this.timer) clearTimeout(this.timer);
     this.timer = null;
+    this.dispatchEvent(new CustomEvent(REMOVED_EVENT, { bubbles: false, composed: false }));
   }
 
   attributeChangedCallback(name: string) {
@@ -379,6 +395,11 @@ class ToastApi {
     if (o.progress) el.setAttribute('progress', o.progress);
     if (o.progressOrigin) el.setAttribute('progress-origin', o.progressOrigin);
     regionFor(o.position ?? 'top-right').appendChild(el);
+    // O toast avisa quando sai do DOM (timer esgotado, botão de fechar ou
+    // remoção externa). Sem este sync o mapa retém cada toast da sessão.
+    el.addEventListener(REMOVED_EVENT, () => {
+      if (this.map.get(id) === el) this.map.delete(id);
+    });
     this.map.set(id, el);
     return id;
   }

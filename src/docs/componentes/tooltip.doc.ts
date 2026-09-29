@@ -32,7 +32,7 @@ export const tooltipDoc: ComponentDoc = {
 		"// Para usar como diretiva (atributo fx-tooltip):",
 		"import { defineFxTooltipDirective } from '@wrrdev/fenix-ui/tooltip';",
 	],
-	initNote: "O componente <fx-tooltip> funciona automaticamente com o import. A diretiva (atributo fx-tooltip='texto') requer inicialização explícita: chame <code>defineFxTooltipDirective()</code> uma vez na aplicação para ativar o MutationObserver que observa elementos com o atributo fx-tooltip.",
+	initNote: "O componente <fx-tooltip> funciona automaticamente com o import. A diretiva (atributo fx-tooltip='texto') requer inicialização explícita: chame <code>defineFxTooltipDirective()</code> uma vez na aplicação para ativar o MutationObserver que observa elementos com o atributo fx-tooltip. O observer trabalha em lote (um passe por frame), então em listas dinâmicas um tooltip recém-inserido pode aparecer no frame seguinte. Para desligar a diretiva e liberar listeners, chame <code>destroyFxTooltipDirective()</code>.",
 	demoHtml: (a) =>
 		`<div style="display:flex;flex-direction:column;gap:24px">
 			<!-- Componente wrapper dinâmico (controles interativos) -->

@@ -1814,7 +1814,24 @@ import '@wrrdev/fenix-ui/icons';
       </tbody>
     </table>
 
-    <h3>4. Autocomplete no editor (<code>&lt;fx-icon&gt;</code>)</h3>
+    <h3>4. Reduzindo o peso da fonte (opcional)</h3>
+    <p>A fonte embarca <b>todos</b> os ${FENIX_ICON_NAMES.length} glifos — por isso ela tem cerca de <b>5 MB</b>.
+    Ela usa <code>font-display: swap</code>, ou seja, o ícone aparece de imediato com a fonte de fallback e
+    troca quando a fonte carrega (nunca mais a tela em branco esperando download).</p>
+    <p>Se o seu app usa apenas algumas dezenas de ícones, o ideal é gerar um <b>subset</b> e apontar a
+    biblioteca para ele:</p>
+    <pre><code>import { setFenixIconsFontUrl } from '@wrrdev/fenix-ui/icons';
+
+// aponte para o seu subset (gerado com pyftsubset, fonttools, etc.)
+setFenixIconsFontUrl('/fonts/fenix-icons-subset.woff2');</code></pre>
+    <div class="note">
+      <strong>A tipagem não muda:</strong> <code>FenixIconName</code> continua listando os
+      ${FENIX_ICON_NAMES.length} nomes no editor, mesmo usando um subset. Garanta que o subset contenha
+      todos os glifos que o seu app realmente usa. Chame a função <strong>antes</strong> do primeiro
+      <code>&lt;fx-icon&gt;</code> ser montado; para voltar ao padrão, chame <code>setFenixIconsFontUrl('')</code>.
+    </div>
+
+    <h3>5. Autocomplete no editor (<code>&lt;fx-icon&gt;</code>)</h3>
     <p>As classes acima são CSS puro: nenhum editor consegue adivinhar o nome do glifo enquanto você digita.
     Para isso existe o elemento <code>&lt;fx-icon&gt;</code>, com o atributo <code>name</code>
     <strong>tipado</strong> — o editor (Volar/vue-tsc, React/TSX) lista os <b>${FENIX_ICON_NAMES.length}</b> nomes
@@ -1837,7 +1854,7 @@ import '@wrrdev/fenix-ui/icon';  // o elemento em si — o auto-import já injet
       ícone</strong>, e o texto <code>home</code> escrito no código também vira o glifo.
     </div>
 
-    <h3>5. Todos os ícones</h3>
+    <h3>6. Todos os ícones</h3>
     <p>Busque, passe o mouse para pré-visualizar e clique no ícone para abrir as opções de cópia — nome do glifo, classe ou tag pronta.
     <b>Atenção:</b> a classe <code>fx-icon-&lt;nome&gt;</code> sozinha não renderiza — ela precisa da classe
     base <code>fx-icon</code> (que aplica a fonte). Na modal, prefira a opção <i>Classe completa</i>.</p>

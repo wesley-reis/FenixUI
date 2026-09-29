@@ -73,5 +73,5 @@ export const iconDoc: ComponentDoc = {
 		{ name: "--fx-icon-size", desc: "Tamanho padrão do glifo (usado quando não há size). Também -sm/-md/-lg/-xl." },
 	],
 	initNote:
-		"Import único por projeto (o FenixAutoImport já injeta automaticamente ao detectar <fx-icon>). O elemento carrega apenas o @font-face — leve, sem as ~4.300 classes por ícone.",
+		"Import único por projeto (o FenixAutoImport já injeta automaticamente ao detectar <fx-icon>). O elemento carrega apenas o @font-face — leve, sem as ~4.300 classes por ícone. A fonte usa <code>font-display: swap</code>, então o glifo aparece na hora com a fonte de fallback e troca quando a fonte carrega (sem tela em branco). Para reduzir os ~5 MB, gere um subset e aponte com <code>setFenixIconsFontUrl()</code> de <code>@wrrdev/fenix-ui/icons</code> — a tipagem dos nomes continua a mesma.",
 };

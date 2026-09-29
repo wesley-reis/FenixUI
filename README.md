@@ -18,7 +18,7 @@ import { FenixUI } from '@wrrdev/fenix-ui';  // API de tema/tokens (índice)
 FenixUI.theme('dark');
 ```
 
-> 📦 npm: [`@wrrdev/fenix-ui`](https://www.npmjs.com/package/@wrrdev/fenix-ui) — **v1.1.10**, acesso público.
+> 📦 npm: [`@wrrdev/fenix-ui`](https://www.npmjs.com/package/@wrrdev/fenix-ui) — **v1.1.11**, acesso público.
 > Subpaths disponíveis: `./theme`, `./tokens`, `./jsx`, `./vue`, `./react`, `./button`, `./badge`, `./spinner`, `./select`, `./input`, `./switch`, `./textarea`, `./checkbox`, `./radio`, `./calendar`, `./datepicker`, `./multiselect`, `./table`, `./floatlabel`, `./dialog`, `./toast`, `./tooltip`, `./tabs`, `./progress`, `./skeleton`, `./alert`, `./drawer`, `./dropdown`, `./icon`, `./icons`, `./pagination`, `./autocomplete`, `./knob`, `./orderlist`, `./picklist`, `./auto-import` e o curinga `./components/*`.
 
 
@@ -65,7 +65,7 @@ Carregue o bundle **UMD** único: ele registra todos os componentes e expõe os 
 <fx-toast></fx-toast>
 
 <!--
-  🔗 Links diretos para CDN (versão 1.1.10):
+  🔗 Links diretos para CDN (versão 1.1.11):
   • https://cdn.jsdelivr.net/npm/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js
   • https://unpkg.com/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js
 -->
@@ -348,6 +348,24 @@ Requisitos:
 - `vue` ≥ 3.5 (usa `IntrinsicElementAttributes`);
 - Volar / vue-tsc (já incluído no `@vue/language-tools` usado pelo VS Code + Volar);
 - no `tsconfig`, `"moduleResolution": "bundler"`.
+
+#### Reduzindo o peso da fonte de ícones (opcional)
+
+A fonte embarca **todos** os ~4.300 glifos, o que dá ~5 MB. Ela já usa
+`font-display: swap` (o ícone aparece na hora com a fonte de fallback — nunca
+mais a tela em branco esperando o download). Se o seu app usa apenas algumas
+dezenas de ícones, gere um *subset* e aponte a biblioteca para ele:
+
+```ts
+import { setFenixIconsFontUrl } from '@wrrdev/fenix-ui/icons';
+
+setFenixIconsFontUrl('/fonts/fenix-icons-subset.woff2');
+```
+
+Isso derruba a fonte para algumas dezenas de KB. **A tipagem não muda**:
+`FenixIconName` continua sugerindo todos os nomes no editor — garanta apenas
+que o subset contenha os glifos que o app usa. Chame a função antes do primeiro
+`<fx-icon>` ser montado; use `setFenixIconsFontUrl('')` para voltar ao padrão.
 
 Com isso o editor mostra as propriedades de cada componente (`variant`, `size`, `loading`, …)
 nos templates. Para além do autocomplete, **validar** valores inválidos (ex.: `variant="foo"`),

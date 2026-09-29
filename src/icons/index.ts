@@ -19,32 +19,37 @@ import { FENIX_ICON_NAMES } from './names';
 import { FENIX_ICON_BASE_CSS } from './base-css';
 import {
   FENIX_ICONS_STYLE_ID,
-  buildFenixIconsFontFaceCss,
+  buildFullCss,
   __resetFenixIconsFontInjection,
+  __setFenixIconNames,
 } from './font';
 
 export { FENIX_ICON_NAMES } from './names';
 export type { FenixIconName, FenixIconKnownName } from './types';
 export { FENIX_ICON_BASE_CSS, FENIX_ICON_FONT_FAMILY, isFenixIconName } from './base-css';
 // Carregamento leve da fonte (usado pelo <fx-icon>) — ver ./font.
-export { buildFenixIconsFontCss, loadFenixIconsFont, __resetFenixIconsFontInjection } from './font';
+export {
+  buildFenixIconsFontCss,
+  loadFenixIconsFont,
+  setFenixIconsFontUrl,
+  __resetFenixIconsFontInjection,
+} from './font';
 
 /** CSS base compartilhado (usado também dentro dos Shadow DOMs dos componentes). */
 export const FENIX_ICON_DOC_BASE_CSS = FENIX_ICON_BASE_CSS;
 
-/** Gera as regras `fx-icon-<nome>::before { content: '<nome>' }` (via ligaduras). */
-function buildClassRules(): string {
-  let rules = '';
-  for (const name of FENIX_ICON_NAMES) {
-    rules += `.fx-icon-${name}::before{content:"${name}"}`;
-  }
-  return rules;
+/**
+ * Monta o CSS completo (@font-face + base + classes por ícone).
+ *
+ * A montagem mora em ./font para que `setFenixIconsFontUrl` consiga recriar o
+ * estilo injetado já com a nova URL, sem duplicar a lógica das ligaduras.
+ */
+export function buildFenixIconsCss(): string {
+  return buildFullCss(FENIX_ICON_NAMES);
 }
 
-/** Monta o CSS completo (@font-face + base + classes por ícone). */
-export function buildFenixIconsCss(): string {
-  return buildFenixIconsFontFaceCss() + FENIX_ICON_DOC_BASE_CSS + buildClassRules();
-}
+// Habilita a reinjeção do CSS completo quando a URL da fonte mudar em runtime.
+__setFenixIconNames(FENIX_ICON_NAMES);
 
 let injected = false;
 

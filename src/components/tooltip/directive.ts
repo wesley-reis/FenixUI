@@ -142,6 +142,22 @@ class FxTooltipManager {
     return FxTooltipManager.instance;
   }
 
+  /** Quantos tooltips estão ativos agora (0 se a diretiva nunca foi iniciada). */
+  public static peekActiveCount(): number {
+    return FxTooltipManager.instance?.behaviors.size ?? 0;
+  }
+
+  /**
+   * Quantos tooltips estão ativamente gerenciados.
+   *
+   * Deve acompanhar o número de elementos `[fx-tooltip]` no documento: um
+   * valor crescente depois de trocar de tela significa comportamento retido
+   * (vazamento). Usado nos testes de regressão e no diagnóstico em produção.
+   */
+  public get activeCount(): number {
+    return this.behaviors.size;
+  }
+
   private injectStyles(): void {
     if (document.getElementById('fx-tooltip-directive-styles')) return;
     this.injectedStyles = document.createElement('style');
@@ -152,31 +168,75 @@ class FxTooltipManager {
 
   private observe(): void {
     this.observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        if (mutation.type === 'childList') {
-          mutation.addedNodes.forEach((node) => {
-            if (node instanceof HTMLElement) {
-              this.processElement(node);
-              node.querySelectorAll<HTMLElement>('[fx-tooltip]').forEach((el) => this.processElement(el));
-            }
-          });
-        }
-        if (mutation.type === 'attributes' && mutation.target instanceof HTMLElement) {
-          const target = mutation.target;
-          if (target.hasAttribute('fx-tooltip')) {
-            this.processElement(target);
-          } else if (this.behaviors.has(target)) {
-            this.removeBehavior(target);
-          }
-        }
-      }
+      // NÃO processa aqui: enfileira e faz UM passe por frame.
+      //
+      // O observer escuta `childList + subtree` no <body> inteiro, então numa
+      // tela grande (tabela, lista virtualizada) um único gesto do usuário pode
+      // gerar dezenas de registros. Processar cada record na hora repete
+      // `querySelectorAll` sobre a mesma subárvore várias vezes e trava o
+      // main thread. O lote garante no máximo 1 varredura por frame.
+      this._pending.added.push(...mutations);
+      if (this._flushScheduled) return;
+      this._flushScheduled = true;
+      const run = () => {
+        this._flushScheduled = false;
+        const batch = this._pending;
+        this._pending = { added: [] };
+        this._flush(batch.added);
+      };
+      if (typeof requestAnimationFrame === 'function') requestAnimationFrame(run);
+      else setTimeout(run, 0);
     });
     this.observer.observe(document.body, {
       childList: true,
       subtree: true,
       attributes: true,
+      // `attributeFilter` é o que mantém o custo baixo: o browser só notifica
+      // mudanças nestes 3 atributos, e não em qualquer atributo da página.
       attributeFilter: ['fx-tooltip', 'fx-tooltip-position', 'fx-tooltip-html'],
     });
+  }
+
+  private _pending: { added: MutationRecord[] } = { added: [] };
+  private _flushScheduled = false;
+
+  /** Um passe de verificação sobre todos os registros acumulados. */
+  private _flush(records: MutationRecord[]): void {
+    // Sets evitam processar o mesmo elemento várias vezes quando ele aparece
+    // em mais de um registro (comum com inserções aninhadas).
+    const toProcess = new Set<HTMLElement>();
+    const toRemove = new Set<HTMLElement>();
+
+    for (const mutation of records) {
+      if (mutation.type === 'childList') {
+        mutation.addedNodes.forEach((node) => {
+          if (node instanceof HTMLElement) {
+            toProcess.add(node);
+            node.querySelectorAll<HTMLElement>('[fx-tooltip]').forEach((el) => toProcess.add(el));
+          }
+        });
+        // SEMPRE trate as remoções: sem isso, cada elemento que já teve
+        // `fx-tooltip` fica preso no Map (elemento + listeners + bubble)
+        // mesmo depois de desmontado. Em app grande/uso prolongado isso
+        // cresce sem limite.
+        mutation.removedNodes.forEach((node) => {
+          if (node instanceof HTMLElement) {
+            toRemove.add(node);
+            node.querySelectorAll<HTMLElement>('[fx-tooltip]').forEach((el) => toRemove.add(el));
+          }
+        });
+      }
+      if (mutation.type === 'attributes' && mutation.target instanceof HTMLElement) {
+        const target = mutation.target;
+        if (target.hasAttribute('fx-tooltip')) toProcess.add(target);
+        else toRemove.add(target);
+      }
+    }
+
+    // Remoções primeiro: um elemento que saiu e voltou no mesmo frame deve
+    // acabar com o comportamento novo, não ser destruído por engano.
+    toRemove.forEach((el) => this.removeBehavior(el));
+    toProcess.forEach((el) => this.processElement(el));
   }
 
   private processExistingElements(): void {
@@ -204,6 +264,10 @@ class FxTooltipManager {
   }
 
   public destroy(): void {
+    // Descarta o lote pendente: um flush depois do destroy recriaria
+    // comportamentos em elementos já desmontados.
+    this._pending.added = [];
+    this._flushScheduled = false;
     if (this.observer) {
       this.observer.disconnect();
       this.observer = null;
@@ -338,6 +402,17 @@ export function defineFxTooltipDirective(): void {
   } else {
     FxTooltipManager.getInstance();
   }
+}
+
+/**
+ * Quantos tooltips a diretiva mantém vivos agora.
+ *
+ * Deve igualar o nº de elementos `[fx-tooltip]` no documento. Se crescer após
+ * trocar de tela, há comportamento retido (vazamento). Pensado para diagnóstico
+ * em produção e para os testes de regressão.
+ */
+export function fxTooltipActiveCount(): number {
+  return FxTooltipManager.peekActiveCount();
 }
 
 /**
