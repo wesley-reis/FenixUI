@@ -111,22 +111,35 @@ export class FxBreadcrumb extends FxElement {
   }
 
   private _items: Element[] = [];
+  /** Observer de upgrade dos filhos; precisa ser solto no disconnect. */
+  private _childObserver?: MutationObserver;
 
   protected override connectedCallback(): void {
     super.connectedCallback();
     // filhos podem não estar disponíveis ainda (innerHTML do playground)
     const obs = new MutationObserver(() => {
       if (this.children.length > 0) {
-        obs.disconnect();
+        this._stopObservingChildren();
         this._decorateItems();
       }
     });
+    this._childObserver = obs;
     obs.observe(this, { childList: true });
     // se já tem filhos, decora na hora
-    if (this.children.length > 0) this._decorateItems();
+    if (this.children.length > 0) {
+      this._stopObservingChildren();
+      this._decorateItems();
+    }
+  }
+
+  /** Desconecta o observer de filhos (evita trabalho eterno após o connect). */
+  private _stopObservingChildren(): void {
+    this._childObserver?.disconnect();
+    this._childObserver = undefined;
   }
 
   protected override disconnectedCallback(): void {
+    this._stopObservingChildren();
     super.disconnectedCallback();
     this._items = [];
   }

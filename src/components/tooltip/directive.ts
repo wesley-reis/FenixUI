@@ -142,6 +142,22 @@ class FxTooltipManager {
     return FxTooltipManager.instance;
   }
 
+  /** Quantos tooltips estão ativos agora (0 se a diretiva nunca foi iniciada). */
+  public static peekActiveCount(): number {
+    return FxTooltipManager.instance?.behaviors.size ?? 0;
+  }
+
+  /**
+   * Quantos tooltips estão ativamente gerenciados.
+   *
+   * Deve acompanhar o número de elementos `[fx-tooltip]` no documento: um
+   * valor crescente depois de trocar de tela significa comportamento retido
+   * (vazamento). Usado nos testes de regressão e no diagnóstico em produção.
+   */
+  public get activeCount(): number {
+    return this.behaviors.size;
+  }
+
   private injectStyles(): void {
     if (document.getElementById('fx-tooltip-directive-styles')) return;
     this.injectedStyles = document.createElement('style');
@@ -158,6 +174,18 @@ class FxTooltipManager {
             if (node instanceof HTMLElement) {
               this.processElement(node);
               node.querySelectorAll<HTMLElement>('[fx-tooltip]').forEach((el) => this.processElement(el));
+            }
+          });
+          // SEMPRE trate as remoções: sem isso, cada elemento que já teve
+          // `fx-tooltip` fica preso no Map (elemento + listeners + bubble)
+          // mesmo depois de desmontado. Em app grande/uso prolongado isso
+          // cresce sem limite.
+          mutation.removedNodes.forEach((node) => {
+            if (node instanceof HTMLElement) {
+              this.removeBehavior(node);
+              node
+                .querySelectorAll<HTMLElement>('[fx-tooltip]')
+                .forEach((el) => this.removeBehavior(el));
             }
           });
         }
@@ -338,6 +366,17 @@ export function defineFxTooltipDirective(): void {
   } else {
     FxTooltipManager.getInstance();
   }
+}
+
+/**
+ * Quantos tooltips a diretiva mantém vivos agora.
+ *
+ * Deve igualar o nº de elementos `[fx-tooltip]` no documento. Se crescer após
+ * trocar de tela, há comportamento retido (vazamento). Pensado para diagnóstico
+ * em produção e para os testes de regressão.
+ */
+export function fxTooltipActiveCount(): number {
+  return FxTooltipManager.peekActiveCount();
 }
 
 /**
