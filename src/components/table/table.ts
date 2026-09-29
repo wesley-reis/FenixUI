@@ -25,6 +25,22 @@ import "../select";
  *   antiga com <template> continua funcionando (compatibilidade) e há ainda
  *   a opção `template="#id"` apontando para um <template> externo.
  *
+ * ⚠️ REGRA DO v-pre (Vue) — o conteúdo do <fx-cell> é TEXTO CRU:
+ *   {{ }} é avaliado pelo motor de expressões do <fx-table> (./expr.ts) e
+ *   NÃO pelo Vue. Sem `v-pre`, o compilador do Vue consome a interpolação
+ *   antes: emite `_toDisplayString(_ctx.value | _ctx.number)`, o conteúdo
+ *   chega sem as chaves no innerHTML e o vue-tsc acusa `value`/`number`
+ *   inexistentes no escopo. → SEMPRE use <fx-cell v-pre> no Vue.
+ *
+ *   Cada framework tem a sua neutralização (todas verificadas por compilador):
+ *   - Vue 3 / Nuxt .... v-pre        <fx-cell v-pre>{{ value }}</fx-cell>
+ *   - React / JSX ..... string JS     <fx-cell>{'{{ value }}'}</fx-cell>
+ *                      (o `{{ }}` solto é ERRO de sintaxe no parser JSX)
+ *   - Angular ......... ngNonBindable <fx-cell ngNonBindable>…</fx-cell>
+ *   - Svelte .......... string JS ou entidades HTML
+ *                      {'{{ value }}'}  ou  &lbrace;&lbrace; value &rbrace;&rbrace;
+ *   - HTML/CDN/JSF/JSP  nada         <fx-cell>{{ value }}</fx-cell>
+ *
  * Toolbar (opcional):
  *   <fx-toolbar>
  *     <input data-search-fields="nome,cargo" placeholder="Buscar…">
@@ -340,6 +356,12 @@ export class FxTable extends FxElement {
 	 *    `innerHTML` sempre chega intacto ao componente. O light DOM do
 	 *    `<fx-table>` não é exibido (a tabela não usa `<slot>`), então o
 	 *    conteúdo-fonte nunca aparece na tela.
+	 *
+	 *    ⚠️ O conteúdo é TEXTO CRU para o motor de expressões: o `{{ }}` NÃO é
+	 *    interpretado pelo framework hospedeiro. Cada um precisa neutralizar a
+	 *    própria sintaxe antes (ver o cabeçalho do arquivo): `v-pre` no Vue,
+	 *    `{'{{ }}'}` no JSX, `ngNonBindable` no Angular, string/entidades no
+	 *    Svelte. Sem isso o template não chega ao `renderCell`.
 	 * 2. `template="#id"` (ou `template="id"`) — aponta para um `<template>`
 	 *    declarado **fora** da tabela, útil em React/Angular, onde é mais
 	 *    simples manter o markup num único lugar.

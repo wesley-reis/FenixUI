@@ -34,6 +34,12 @@ export interface ComponentDoc {
   slots?: ApiRow[];
   cssVars?: ApiRow[];
   initNote?: string;
+  /**
+   * Seções extras em HTML puro, renderizadas depois das tabelas de API e
+   * antes da tipagem. Usadas por componentes com regras que não cabem em
+   * `initNote` (ex.: o `v-pre` do <fx-cell> e as variáveis do template).
+   */
+  extraSections?: { title: string; html: string }[];
   directiveInfo?: {
     name: string;
     description: string;

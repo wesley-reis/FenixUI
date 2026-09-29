@@ -196,11 +196,32 @@ export interface FxColumnProps extends FxElementProps {
   template?: string;
 }
 /**
- * <fx-cell> — template de renderização de uma célula.
+ * <fx-cell> — template de renderização de uma célula do <fx-table>.
  *
  * Substitui o `<template>` nativo, que é interceptado por Vue/React/Angular.
  * Aceita expressões `{{ }}`, pipes e acesso a `row.*`. Não tem atributos
  * próprios: o conteúdo vem de `children`.
+ *
+ * ⚠️ SÓ FUNCIONA DENTRO DE <fx-column> (filho direto), que por sua vez só
+ *    existe dentro de <fx-table>. Fora da tabela a tag é inerte.
+ *
+ * ⚠️ O conteúdo é TEXTO CRU: o `{{ }}` é avaliado pelo motor do <fx-table>,
+ *    não pelo framework. O TypeScript não consegue tipar isso (é uma string),
+ *    então cada stack precisa neutralizar a própria sintaxe de template:
+ *
+ *    - Vue 3 / Nuxt ... <fx-cell v-pre>{{ value }}</fx-cell>
+ *      Sem `v-pre` o Vue compila a interpolação (`_toDisplayString(_ctx.value)`),
+ *      o texto não chega ao componente e o vue-tsc acusa `value` inexistente.
+ *    - React / JSX .... <fx-cell>{'{{ value }}'}</fx-cell>
+ *      O `{{ }}` solto é ERRO de sintaxe no parser JSX — deve ser string JS.
+ *    - Angular ........ <fx-cell ngNonBindable>…</fx-cell>
+ *    - Svelte ......... <fx-cell>{'{{ value }}'}</fx-cell>
+ *                      ou &lbrace;&lbrace; value &rbrace;&rbrace;
+ *    - HTML/CDN ....... <fx-cell>{{ value }}</fx-cell> (nada a fazer)
+ *
+ *    Variáveis do escopo: `value` (campo da coluna), `row` (objeto da linha,
+ *    `row.campo`), literais `true`/`false`/`null`, pipes `currency`, `number`,
+ *    `date`, `dateTime`, operadores `+ - * /`, comparações e ternário `? :`.
  */
 export interface FxCellProps extends FxElementProps {}
 /**
