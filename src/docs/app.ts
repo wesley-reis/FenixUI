@@ -1036,6 +1036,7 @@ async function renderComponentPage(doc: ComponentDoc): Promise<void> {
     ${doc.events?.length ? apiTable("Eventos", doc.events, COLS_EVENT) : ""}
     ${doc.slots?.length ? apiTable("Slots", doc.slots, COLS_SLOT) : ""}
     ${doc.cssVars?.length ? apiTable("Variáveis CSS", doc.cssVars, COLS_CSSVAR) : ""}
+    ${doc.extraSections?.map((s) => `<h3>${esc(s.title)}</h3>${s.html}`).join("\n    ") ?? ""}
     ${renderTyping(doc)}
   `;
 

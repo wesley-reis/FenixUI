@@ -4,6 +4,7 @@
  * Gerado a partir do split de src/docs/app.ts — edite aqui os metadados.
  */
 import type { ComponentDoc } from '../types';
+import { FX_CELL_FRAMEWORK_SECTIONS } from './table-cell-rules';
 
 export const tableDoc: ComponentDoc = {
 	tag: "fx-table",
@@ -12,7 +13,7 @@ export const tableDoc: ComponentDoc = {
 	lead: "Tabela estilo DataTable com ordenação, filtro no header, paginação e clique na linha. Colunas declaradas como <fx-column> dentro do componente, com suporte a templates de célula personalizados (formatação de moeda, data, ícones e condicionais).",
 	imports: ["import '@wrrdev/fenix-ui/table';"],
 	initNote:
-		"Personalização de célula: use <code>&lt;fx-cell&gt;</code> em vez de <code>&lt;template&gt;</code>. A tag nativa <code>&lt;template&gt;</code> é reservada e frameworks como Vue e React a interceptam, fazendo a célula renderizar vazia. Dentro do <code>&lt;fx-cell&gt;</code> use expressões <code>{{ }}</code> com pipes (currency, date, dateTime, number), ternários (<code>{{ value &gt; 1000 ? 'alto' : 'baixo' }}</code>) e acesso a campos da linha via <code>{{ row.campo }}</code>. A forma antiga com <code>&lt;template&gt;</code> continua funcionando em HTML puro, e há ainda <code>template=\"#id\"</code> na coluna para reaproveitar um <code>&lt;template&gt;</code> declarado fora da tabela.",
+		"Personalização de célula: use <code>&lt;fx-cell&gt;</code> em vez de <code>&lt;template&gt;</code>. A tag nativa <code>&lt;template&gt;</code> é reservada e frameworks como Vue e React a interceptam, fazendo a célula renderizar vazia. Dentro do <code>&lt;fx-cell&gt;</code> use expressões <code>{{ }}</code> com pipes (currency, date, dateTime, number), ternários (<code>{{ value &gt; 1000 ? 'alto' : 'baixo' }}</code>) e acesso a campos da linha via <code>{{ row.campo }}</code>. <b>Atenção:</b> o conteúdo do <code>&lt;fx-cell&gt;</code> é <b>texto cru</b> — o <code>{{ }}</code> é avaliado pelo motor do <code>fx-table</code>, não pelo seu framework. Cada stack precisa neutralizar a própria sintaxe de template (<code>v-pre</code> no Vue, string JS no React/Svelte, <code>ngNonBindable</code> no Angular). Veja a tabela <b>Regras por framework</b> abaixo.",
 	demoHtml: (a) => {
 		const data = [
 			{
@@ -270,7 +271,7 @@ export const tableDoc: ComponentDoc = {
 	slots: [
 		{
 			name: "fx-column > <fx-cell>",
-			desc: "Template HTML da célula da coluna. <b>Forma recomendada</b>: <fx-cell> é uma tag própria, sem significado especial para Vue, React, Angular ou Svelte — ao contrário de <template>, que esses frameworks interceptam e deixam a célula vazia. Aceita expressões {{ }} com pipes (currency, date, dateTime, number), condicionais ternários e acesso a row.campo. Ex.: <fx-cell>R$ {{ value | currency }}</fx-cell>",
+			desc: "Template HTML da célula da coluna. <b>Só funciona dentro de <fx-table></b>, como filho direto de <fx-column> — fora da tabela a tag é inerte. <b>Forma recomendada</b>: <fx-cell> é uma tag própria, sem significado especial para Vue, React, Angular ou Svelte — ao contrário de <template>, que esses frameworks interceptam e deixam a célula vazia. Aceita expressões {{ }} com pipes (currency, date, dateTime, number), condicionais ternários e acesso a row.campo. <b>O conteúdo é texto cru</b>: cada framework precisa neutralizar a própria sintaxe de template (veja <i>Regras por framework</i>). Ex.: <fx-cell v-pre>R$ {{ value | currency }}</fx-cell>",
 		},
 		{
 			name: "fx-column template=\"#id\"",
@@ -289,4 +290,5 @@ export const tableDoc: ComponentDoc = {
 			desc: "Toolbar opcional renderizada acima do header (substitui <template slot=\"toolbar\">). Inputs com data-search-fields=\"campo1,campo2…\" viram busca global (filtrando por esses campos; sem o atributo, busca em todas as colunas). Demais elementos (botões etc.) aparecem como estão.",
 		},
 	],
+	extraSections: FX_CELL_FRAMEWORK_SECTIONS,
 };
