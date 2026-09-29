@@ -400,3 +400,155 @@ describe('fx-table — modo lazy (busca no servidor)', () => {
   });
 });
 
+/* ---- Bordas: arredondamento (rounded) e remoção das laterais (no-borders-x) ---- */
+
+describe('fx-table — bordas e arredondamento', () => {
+  beforeEach(() => { document.body.innerHTML = ''; });
+
+  it('o padrão é rounded="md" via --fx-table-radius', () => {
+    const el = mount(`<fx-table>${COLS}</fx-table>`, ROWS);
+    const style = el.shadowRoot!.querySelector('style')!.textContent!;
+    expect(style).toContain('--fx-table-radius: var(--fx-radius-md);');
+  });
+
+  it('rounded aceita none|sm|md|lg (radius como alias)', () => {
+    ['none', 'sm', 'md', 'lg'].forEach((v) => {
+      const a = mount(`<fx-table rounded="${v}">${COLS}</fx-table>`, ROWS);
+      const b = mount(`<fx-table radius="${v}">${COLS}</fx-table>`, ROWS);
+      const esperado =
+        v === 'none' ? 'var(--fx-radius-none, 0)' : `var(--fx-radius-${v})`;
+      for (const el of [a, b]) {
+        const style = el.shadowRoot!.querySelector('style')!.textContent!;
+        expect(style).toContain(esperado);
+      }
+    });
+  });
+
+  it('rounded="none" zera o raio e as regras de borda usam a variável', () => {
+    const el = mount(`<fx-table rounded="none">${COLS}</fx-table>`, ROWS);
+    const style = el.shadowRoot!.querySelector('style')!.textContent!;
+    const regra = style.match(/:host\(\[rounded="none"\]\)[^{]*\{[^}]*\}/s)?.[0];
+    expect(regra).toContain('--fx-table-radius: var(--fx-radius-none, 0)');
+    // A moldura, a tabela, a toolbar e o pager leem a variável (nada de
+    // --fx-radius-md hardcoded, que era a causa do raio fixo).
+    expect(style).not.toMatch(/\.frame\s*\{[^}]*--fx-radius-md/s);
+    expect(style).toMatch(/\.frame\s*\{[^}]*border-radius:\s*var\(--fx-table-radius\)/s);
+    expect(style).toMatch(/\.scroll\s*\{[^}]*var\(--fx-table-radius\)/s);
+    expect(style).toMatch(/\.pager\s*\{[^}]*var\(--fx-table-radius\)/s);
+  });
+
+  it('no-borders-x remove só as bordas laterais da moldura e da toolbar', () => {
+    const el = mount(`<fx-table no-borders-x><fx-toolbar>x</fx-toolbar>${COLS}</fx-table>`, ROWS);
+    const style = el.shadowRoot!.querySelector('style')!.textContent!;
+    const regra = style.match(/:host\(\[no-borders-x\]\)[^{]*\{[^}]*\}/s)?.[0];
+    expect(regra).toBeTruthy();
+    expect(regra).toContain('border-left: none');
+    expect(regra).toContain('border-right: none');
+    // Topo e base continuam: as regras não podem zerar border-top/bottom.
+    expect(regra).not.toContain('border-top: none');
+    expect(regra).not.toContain('border-bottom: none');
+  });
+
+  it('rounded e no-borders-x são observedAttributes (reagem a mudança em runtime)', () => {
+    const el = mount(`<fx-table>${COLS}</fx-table>`, ROWS) as any;
+    const obs = (el.constructor as typeof HTMLElement & { observedAttributes: string[] }).observedAttributes;
+    expect(obs).toContain('rounded');
+    expect(obs).toContain('radius');
+    expect(obs).toContain('no-borders-x');
+  });
+});
+
+/* ---- Moldura: a paginação faz parte do contorno da tabela ---- */
+
+describe('fx-table — moldura (borda envolvendo tabela + paginação)', () => {
+  beforeEach(() => { document.body.innerHTML = ''; });
+
+  it('tabela e paginação ficam dentro da mesma moldura .frame', () => {
+    const el = mount(`<fx-table pagination rows="2">${COLS}</fx-table>`, ROWS);
+    const frame = el.shadowRoot!.querySelector('.frame')!;
+    expect(frame).toBeTruthy();
+    expect(frame.querySelector('.scroll table')).toBeTruthy();
+    expect(frame.querySelector('.pager')).toBeTruthy();
+  });
+
+  it('a borda fica na moldura, não no elemento rolável (evita a "borda flutuando")', () => {
+    const el = mount(`<fx-table pagination rows="2">${COLS}</fx-table>`, ROWS);
+    const style = el.shadowRoot!.querySelector('style')!.textContent!;
+    const scroll = style.match(/\.scroll\s*\{[^}]*\}/s)?.[0];
+    expect(scroll).toBeTruthy();
+    expect(scroll).not.toContain('border:');
+    // A moldura é quem desenha o contorno único.
+    expect(style).toMatch(/\.frame\s*\{[^}]*border:\s*1px solid var\(--fx-border-default\)/s);
+  });
+
+  it('o pager ganha border-top, padding lateral e raio inferior da moldura', () => {
+    const el = mount(`<fx-table pagination rows="2">${COLS}</fx-table>`, ROWS);
+    const style = el.shadowRoot!.querySelector('style')!.textContent!;
+    const pager = style.match(/\.pager\s*\{[^}]*\}/s)?.[0];
+    expect(pager).toContain('border-top: 1px solid var(--fx-border-default)');
+    expect(pager).toContain('padding: var(--fx-space-sm) var(--fx-space-md)');
+    expect(pager).toContain('border-radius: 0 0 var(--fx-table-radius) var(--fx-table-radius)');
+  });
+
+  it('sem paginação o .scroll fecha o raio inferior da moldura', () => {
+    const el = mount(`<fx-table>${COLS}</fx-table>`, ROWS);
+    expect(el.shadowRoot!.querySelector('.pager')).toBeNull();
+    const style = el.shadowRoot!.querySelector('style')!.textContent!;
+    expect(style).toMatch(/:host\(:not\(\[pagination\]\)\) \.scroll\s*\{[^}]*border-radius:\s*var\(--fx-table-radius\)/s);
+  });
+
+  it('com toolbar a moldura não repete a borda superior', () => {
+    const el = mount(`<fx-table><fx-toolbar>busca</fx-toolbar>${COLS}</fx-table>`, ROWS);
+    const frame = el.shadowRoot!.querySelector('.frame')!;
+    expect(frame.classList.contains('has-toolbar')).toBe(true);
+    const style = el.shadowRoot!.querySelector('style')!.textContent!;
+    expect(style).toMatch(/\.frame\.has-toolbar\s*\{[^}]*border-top:\s*none/s);
+  });
+
+  it('sem toolbar a moldura não recebe a classe has-toolbar', () => {
+    const el = mount(`<fx-table>${COLS}</fx-table>`, ROWS);
+    expect(el.shadowRoot!.querySelector('.frame')!.classList.contains('has-toolbar')).toBe(false);
+  });
+
+  it('a moldura expõe part="frame" para estilização externa', () => {
+    const el = mount(`<fx-table pagination>${COLS}</fx-table>`, ROWS);
+    expect(el.shadowRoot!.querySelector('[part="frame"]')).toBeTruthy();
+  });
+});
+
+/* ---- Seletor "Por página": largura compacta (só números) ---- */
+
+describe('fx-table — seletor de itens por página compacto', () => {
+  beforeEach(() => { document.body.innerHTML = ''; });
+
+  it('limita a largura no HOST do fx-select, não só no trigger', () => {
+    const el = mount(`<fx-table pagination rows="2">${COLS}</fx-table>`, ROWS);
+    const style = el.shadowRoot!.querySelector('style')!.textContent!;
+    const host = style.match(/fx-select\.rows-sel\s*\{[^}]*\}/)?.[0];
+    expect(host).toBeTruthy();
+    // O host do <fx-select> tem min-width 200px (180px em size="sm"): sem
+    // sobrescrever as duas custom properties o rodapé fica largo demais.
+    expect(host).toContain('--fx-select-min-width: 56px');
+    expect(host).toContain('--fx-select-min-width-sm: 56px');
+    // Não deixa o flex do .pager esticar nem esmagar o controle.
+    expect(host).toContain('flex: none');
+  });
+
+  it('não usa mais !important no trigger (o limite real está no host)', () => {
+    const el = mount(`<fx-table pagination rows="2">${COLS}</fx-table>`, ROWS);
+    const style = el.shadowRoot!.querySelector('style')!.textContent!;
+    const trigger = style.match(/fx-select\.rows-sel::part\(trigger\)\s*\{[^}]*\}/)?.[0];
+    expect(trigger).toBeTruthy();
+    expect(trigger).not.toContain('!important');
+    expect(trigger).toContain('min-width: 0');
+  });
+
+  it('o seletor continua dentro do pager (não quebra o fluxo do rodapé)', () => {
+    const el = mount(`<fx-table pagination rows="2">${COLS}</fx-table>`, ROWS);
+    const sel = el.shadowRoot!.querySelector('fx-select.rows-sel')!;
+    expect(sel.closest('.pager')).toBeTruthy();
+    expect(sel.getAttribute('size')).toBe('sm');
+  });
+});
+
+
