@@ -39,6 +39,16 @@ export type FxAvatarShape = 'circle' | 'rounded' | 'square';
 export type FxCardVariant = 'elevated' | 'flat' | 'outline' | 'ghost';
 /** Arredondamento do container do card. */
 export type FxCardRadius = 'sm' | 'md' | 'lg';
+/**
+ * Arredondamento das bordas do <fx-table>.
+ *
+ * - `none` — bordas retas (0);
+ * - `sm` / `md` / `lg` — tokens `--fx-radius-sm|md|lg`.
+ *
+ * O padrão é `md`. O atributo `radius` é aceito como alias de `rounded`
+ * (mesma convenção do <fx-card>).
+ */
+export type FxTableRadius = 'none' | 'sm' | 'md' | 'lg';
 export type FxPopoverTrigger = 'click' | 'hover';
 export type FxPopoverPosition = 'auto' | 'top' | 'bottom';
 export type FxMenuOrientation = 'horizontal' | 'vertical';
@@ -176,6 +186,15 @@ export interface FxTableProps extends FxElementProps {
   'loading-message'?: string;
   'sort-field'?: string;
   'sort-order'?: 'asc' | 'desc' | '';
+  /**
+   * Arredondamento das bordas. `none` deixa retas; `sm`/`md`/`lg` usam os
+   * tokens `--fx-radius-*`. Padrão: `md`.
+   */
+  rounded?: FxTableRadius;
+  /** Alias de `rounded` (mesma convenção do <fx-card>). */
+  radius?: FxTableRadius;
+  /** Remove apenas as bordas laterais, mantendo topo e base. */
+  'no-borders-x'?: boolean;
   /** Referência ao markup da toolbar: `#id`/`id` de um elemento fora da tabela. */
   toolbar?: string;
 }

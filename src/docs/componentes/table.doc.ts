@@ -139,6 +139,14 @@ export const tableDoc: ComponentDoc = {
 			`<h4>Template reutilizado fora da tabela (template="#id")</h4><template id="doc-tpl-salario">R$ {{ value | number }}</template><fx-table data="${small}"><fx-column field="nome" header="Nome"></fx-column><fx-column field="salario" header="Salário" template="#doc-tpl-salario"></fx-column></fx-table>`,
 			`<h4>Forma legada com &lt;template&gt; (apenas HTML puro)</h4><fx-table data="${small}"><fx-column field="nome" header="Nome"></fx-column><fx-column field="salario" header="Salário"><template>R$ {{ value | number }}</template></fx-column></fx-table>`,
 			`<h4>Carregando (atributo loading — para buscas sob demanda)</h4><fx-table data="${small}" loading>${cols}</fx-table>`,
+			`<h4>Arredondamento: none (reto) · sm · md · lg</h4><div style="display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">${["none", "sm", "md", "lg"]
+				.map(
+					(r) =>
+						`<div><p style="margin:0 0 6px;font-size:12px;color:var(--fx-text-muted)">rounded="${r}"</p><fx-table data="${small}" pagination rows="3" rounded="${r}">${cols}</fx-table></div>`,
+				)
+				.join("")}</div>`,
+			`<h4>Somente bordas de topo e base (no-borders-x)</h4><fx-table data="${small}" pagination rows="3" no-borders-x>${cols}</fx-table>`,
+			`<h4>Bordas retas + sem laterais + paginação (combinação)</h4><fx-table data="${small}" pagination rows="3" rounded="none" no-borders-x>${cols}</fx-table>`,
 		].join("");
 	},
 	controls: [
@@ -159,6 +167,14 @@ export const tableDoc: ComponentDoc = {
 			options: ["left", "center", "right"],
 			value: "left",
 		},
+		{
+			kind: "select",
+			attr: "rounded",
+			label: "Arredondamento",
+			options: ["none", "sm", "md", "lg"],
+			value: "md",
+		},
+		{ kind: "toggle", attr: "no-borders-x", label: "Sem bordas laterais" },
 	],
 	attributes: [
 		{
@@ -244,6 +260,26 @@ export const tableDoc: ComponentDoc = {
 			type: "boolean",
 			default: "false",
 			desc: "Exibe overlay com spinner sobre a tabela (use durante a busca sob demanda).",
+		},
+		{
+			name: "rounded",
+			type: "'none' | 'sm' | 'md' | 'lg'",
+			default: "'md'",
+			desc: "Arredondamento das bordas. <b>none</b> deixa as bordas retas; <b>sm/md/lg</b> usam os tokens <code>--fx-radius-sm|md|lg</code>. O atributo <code>radius</code> é aceito como alias. Aplica-se à moldura que envolve a tabela e a paginação.",
+		},
+		{
+			name: "no-borders-x",
+			type: "boolean",
+			default: "false",
+			desc: "Remove <b>apenas as bordas laterais</b> (esquerda e direita) da moldura e da toolbar, mantendo a borda de topo e a de base. Útil para encaixar a tabela em um layout que já desenha as laterais.",
+		},
+	],
+	cssVars: [
+		{
+			name: "--fx-table-radius",
+			type: "string",
+			default: "var(--fx-radius-md)",
+			desc: "Raio aplicado na moldura (tabela + paginação), na tabela, na toolbar e no pager. Definido pelo atributo <code>rounded</code> e sobrescrevível por CSS externo: <code>fx-table { --fx-table-radius: 20px; }</code>.",
 		},
 	],
 	events: [

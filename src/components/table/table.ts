@@ -52,7 +52,8 @@ import "../select";
  *
  * Atributos: pagination, rows, rows-options, pagination-position (left|center|right),
  * striped, hover, empty-message, lazy, total, loading, loading-message,
- * sort-field, sort-order.
+ * sort-field, sort-order, rounded (none|sm|md|lg, padrão md; `radius` é alias),
+ * no-borders-x (remove apenas as bordas laterais, mantendo topo e base).
  * Eventos: page-change, sort-change, row-click, filter-change (todos composed).
  */
 export class FxTable extends FxElement {
@@ -64,14 +65,61 @@ export class FxTable extends FxElement {
 			font-size: var(--fx-font-size);
 			color: var(--fx-text-default);
 			background: var(--fx-surface-background);
+			/* Raio da moldura (tabela + paginação). O atributo "rounded"
+			   sobrescreve este valor e o consumidor também pode sobrescrever
+			   por CSS: fx-table { --fx-table-radius: 20px; }. */
+			--fx-table-radius: var(--fx-radius-md);
+		}
+		/* Arredondamento das bordas — "none" deixa tudo reto, como nos demais
+		   tokens de radius do design system. "rounded" é o nome atual; "radius"
+		   segue aceito como alias para ficar consistente com o <fx-card>. */
+		:host([rounded="none"]),
+		:host([radius="none"]) {
+			--fx-table-radius: var(--fx-radius-none, 0);
+		}
+		:host([rounded="sm"]),
+		:host([radius="sm"]) {
+			--fx-table-radius: var(--fx-radius-sm);
+		}
+		:host([rounded="md"]),
+		:host([radius="md"]) {
+			--fx-table-radius: var(--fx-radius-md);
+		}
+		:host([rounded="lg"]),
+		:host([radius="lg"]) {
+			--fx-table-radius: var(--fx-radius-lg);
+		}
+		/* Moldura: uma única borda envolvendo a tabela E a paginação, para que
+		   o pager não fique "solto" fora do contorno da tabela. */
+		.frame {
+			border: 1px solid var(--fx-border-default);
+			border-radius: var(--fx-table-radius);
+			background: var(--fx-surface-background);
+		}
+		/* Com toolbar no topo, quem desenha a borda superior é a própria
+		   toolbar — a moldura desenha apenas o contorno restante. */
+		.frame.has-toolbar {
+			border-top: none;
+		}
+		/* "no-borders-x": mantém somente as bordas de topo e de base
+		   (tabela encaixada em um layout que já desenha as laterais). */
+		:host([no-borders-x]) .frame,
+		:host([no-borders-x]) .toolbar {
+			border-left: none;
+			border-right: none;
 		}
 		.table-wrap {
 			position: relative;
 		}
 		.scroll {
 			overflow-x: auto;
-			border: 1px solid var(--fx-border-default);
-			border-radius: var(--fx-radius-md);
+			/* O topo acompanha o raio da moldura; a base fica reta porque o
+			   rodapé (.pager) é quem a desenha. */
+			border-radius: var(--fx-table-radius) var(--fx-table-radius) 0 0;
+		}
+		/* Sem paginação não existe rodapé: a moldura fecha embaixo. */
+		:host(:not([pagination])) .scroll {
+			border-radius: var(--fx-table-radius);
 		}
 		table {
 			width: 100%;
@@ -158,7 +206,13 @@ export class FxTable extends FxElement {
 			align-items: center;
 			gap: var(--fx-space-sm);
 			flex-wrap: wrap;
-			padding: var(--fx-space-sm) 0;
+			/* O rodapé é parte da moldura: borda só no topo (separando da
+			   tabela) e o mesmo padding horizontal das células. Antes ele
+			   ficava fora do contorno, sem borda e sem respiro lateral. */
+			padding: var(--fx-space-sm) var(--fx-space-md);
+			border-top: 1px solid var(--fx-border-default);
+			border-radius: 0 0 var(--fx-table-radius) var(--fx-table-radius);
+			background: var(--fx-surface-background);
 		}
 		:host([pagination-position="center"]) .pager {
 			justify-content: center;
@@ -207,15 +261,27 @@ export class FxTable extends FxElement {
 			color: #fff;
 			font-weight: var(--fx-font-weight);
 		}
-		fx-select {
+		/* O seletor "Por página" só mostra números, então não pode herdar a
+		   largura padrão do <fx-select> (200px / 180px em size="sm"), que
+		   deixava o rodapé da paginação desproporcional. O limite tem que ser
+		   no HOST — apertar só ::part(trigger) não funciona, porque o
+		   trigger é width:100% e continua herdando o min-width do host.
+		   O painel (dropdown) continua largo (220px) em select.ts. */
+		fx-select.rows-sel {
 			vertical-align: middle;
+			/* Não deixa o flex do .pager esticar nem esmagar o controle. */
+			flex: none;
+			width: auto;
+			--fx-select-min-width: 56px;
+			--fx-select-min-width-sm: 56px;
 		}
-		fx-select::part(trigger) {
-			min-width: 64px !important;
-			min-height: var(--fx-size-sm) !important;
-			padding: 0 var(--fx-space-sm) !important;
-			border-radius: var(--fx-radius-sm) !important;
-			font-size: calc(var(--fx-font-size) - 2px) !important;
+		fx-select.rows-sel::part(trigger) {
+			min-width: 0;
+			min-height: var(--fx-size-sm);
+			/* Padding curto: sobra espaço para o número + caret. */
+			padding: 0 var(--fx-space-xs);
+			border-radius: var(--fx-radius-sm);
+			font-size: calc(var(--fx-font-size) - 2px);
 		}
 		.toolbar {
 			display: flex;
@@ -225,7 +291,7 @@ export class FxTable extends FxElement {
 			padding: var(--fx-space-sm) var(--fx-space-md);
 			border: 1px solid var(--fx-border-default);
 			border-bottom: none;
-			border-radius: var(--fx-radius-md) var(--fx-radius-md) 0 0;
+			border-radius: var(--fx-table-radius) var(--fx-table-radius) 0 0;
 			background: var(--fx-surface-background);
 		}
 		.toolbar:empty {
@@ -246,7 +312,7 @@ export class FxTable extends FxElement {
 			);
 			backdrop-filter: blur(2px);
 			z-index: 10;
-			border-radius: var(--fx-radius-md);
+			border-radius: var(--fx-table-radius) var(--fx-table-radius) 0 0;
 		}
 		.tbl-spinner {
 			width: 32px;
@@ -283,6 +349,9 @@ export class FxTable extends FxElement {
 			"loading-message",
 			"sort-field",
 			"sort-order",
+			"rounded",
+			"radius",
+			"no-borders-x",
 		];
 	}
 
@@ -629,16 +698,18 @@ export class FxTable extends FxElement {
 
 		this.setTemplate(`
       ${toolbarHtml}
-      <div class="table-wrap">
-        <div class="scroll">
-          <table part="table">
-            <thead><tr>${headHtml}</tr>${filterRow}</thead>
-            <tbody>${bodyHtml}</tbody>
-          </table>
+      <div class="frame${toolbar ? " has-toolbar" : ""}" part="frame">
+        <div class="table-wrap">
+          <div class="scroll">
+            <table part="table">
+              <thead><tr>${headHtml}</tr>${filterRow}</thead>
+              <tbody>${bodyHtml}</tbody>
+            </table>
+          </div>
+          ${loadingHtml}
         </div>
-        ${loadingHtml}
+        ${pagerHtml}
       </div>
-      ${pagerHtml}
     `);
 
 		// Ordenação.
