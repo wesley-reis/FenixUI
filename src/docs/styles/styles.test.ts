@@ -96,7 +96,10 @@ describe("contrato de CSS da doc (styles/)", () => {
 	});
 
 	it("controles do drawer de temas ficam confinados às células (nada de encavalamento)", () => {
-		const css = readFileSync(join(DIR, "content.css"), "utf8");
+		// O CSS pode estar em CRLF (checkout no Windows): normalizar evita que a
+		// busca pelo seletor falhe por causa da quebra de linha. Normalizar o
+		// texto INTEIRO (e não só na busca) mantém os índices de slice coerentes.
+		const css = readFileSync(join(DIR, "content.css"), "utf8").replace(/\r\n/g, "\n");
 		const bloco = (seletor: string): string => {
 			const i = css.indexOf(seletor);
 			return i < 0 ? "" : css.slice(i, css.indexOf("}", i) + 1);

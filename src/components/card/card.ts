@@ -10,6 +10,10 @@ import { esc } from '../../core/sanitize';
  * radius (sm|md|lg — arredondamento; `size` segue aceito como alias legado),
  * padded (exibe padding interno), heading (rótulo opcional no cabeçalho).
  * Slots: `header`, padrão (conteúdo), `footer`.
+ *
+ * `header` e `footer` só são renderizados visualmente quando têm conteúdo:
+ * sem `heading`/nó no slot header e sem nó no slot footer, as seções ficam
+ * `hidden` (sem padding e sem a linha divisória).
  */
 export class FxCard extends FxElement {
   static override styles = css`
@@ -81,6 +85,37 @@ export class FxCard extends FxElement {
         <footer part="footer"><slot name="footer"></slot></footer>
       </div>
     `);
+    // Header e footer só existem visualmente se houver conteúdo: sem isso o
+    // rodapé vazio ainda pintava padding + linha divisória no card.
+    this._syncSlots();
+    for (const name of ['header', 'footer']) {
+      this.root
+        .querySelector(`slot[name="${name}"]`)
+        ?.addEventListener('slotchange', () => this._syncSlots());
+    }
+  }
+
+  /**
+   * Esconde `header`/`footer` quando o respectivo slot não recebeu nenhum nó.
+   * O `<slot>` fica no shadow e os nós no light DOM, então a checagem é feita
+   * via `assignedNodes()` — cobre conteúdo adicionado dinamicamente.
+   */
+  private _syncSlots(): void {
+    for (const name of ['header', 'footer'] as const) {
+      const slot = this.root.querySelector<HTMLSlotElement>(`slot[name="${name}"]`);
+      const section = this.root.querySelector<HTMLElement>(name);
+      if (!slot || !section) continue;
+      // `flatten: true` atravessa slots aninhados; nós em branco (whitespace)
+      // não contam como conteúdo. O atributo `heading` alimenta SÓ o header —
+      // contá-lo também no footer faria todo card com `heading` exibir a linha
+      // divisória do rodapé mesmo sem nada no slot `footer`.
+      const temConteudo =
+        slot
+          .assignedNodes({ flatten: true })
+          .some((n) => n.nodeType === 1 || (n.textContent ?? '').trim() !== '') ||
+        (name === 'header' && Boolean(this.getAttr('heading')));
+      section.toggleAttribute('hidden', !temConteudo);
+    }
   }
 }
 

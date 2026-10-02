@@ -15,7 +15,9 @@ import { esc } from '../../core/sanitize';
  *   </fx-select>
  *
  * Atributos: value, size (sm|md|lg), disabled, placeholder,
- * searchable, clearable, search-placeholder, no-results.
+ * searchable, clearable, search-placeholder, no-results,
+ * placement (auto|top|bottom — direção do painel; `auto` inverte quando
+ * não cabe na viewport).
  * Evento: `change` (composed, detail: { value }).
  */
 export class FxSelect extends FxElement {
@@ -30,6 +32,11 @@ export class FxSelect extends FxElement {
          e style inline no elemento definem a largura sem precisar do full. */
       width: var(--fx-select-width, max-content);
       min-width: var(--fx-select-min-width, 200px);
+      /* Espaço entre o campo e o painel + altura máxima do painel. Expostos
+         como custom property porque ::part() do lado do consumidor tem
+         prioridade MENOR que a folha do shadow root e não vence o top. */
+      --fx-select-panel-offset: 4px;
+      --fx-select-panel-max-height: 260px;
     }
     .trigger {
       display: inline-flex;
@@ -117,20 +124,31 @@ export class FxSelect extends FxElement {
     }
     .caret { font-size: calc(var(--fx-font-size) - 3px); color: var(--fx-text-muted); pointer-events: none; }
 
-    /* Painel do dropdown */
+    /* Painel do dropdown — a POSIÇÃO vertical é definida pelas regras
+       [data-placement] abaixo (o JS de ajustarPosicao decide), por isso
+       top/bottom não ficam aqui. */
     .panel {
       position: absolute;
-      top: calc(100% + 4px);
       left: 0;
       z-index: var(--fx-z-dropdown, 1000);
       width: max(100%, 220px);
-      max-height: 260px;
+      max-height: var(--fx-select-panel-max-height, 260px);
       overflow-y: auto;
       display: none;
       background: var(--fx-surface-background);
       border: 1px solid var(--fx-border-default);
       border-radius: var(--fx-radius-md);
       box-shadow: var(--fx-shadow-lg);
+    }
+    /* Padrão: abre para baixo. */
+    :host([open]:not([data-placement='top'])) .panel {
+      top: calc(100% + var(--fx-select-panel-offset, 4px));
+    }
+    /* placement="top" explícito ou auto-flip: abre para cima. */
+    :host([open][placement='top']) .panel,
+    :host([open][data-placement='top']) .panel {
+      top: auto;
+      bottom: calc(100% + var(--fx-select-panel-offset, 4px));
     }
     :host([open]) .panel { display: block; }
     .search {
@@ -185,11 +203,20 @@ export class FxSelect extends FxElement {
   static override get observedAttributes(): string[] {
         // `invalid`/`valid` são aliases aceitos no CSS; sem observá-los o
         // setAttribute no submit não re-renderiza.
-        return ['size', 'disabled', 'placeholder', 'searchable', 'clearable', 'error', 'invalid', 'success', 'valid'];
+        return ['size', 'disabled', 'placeholder', 'searchable', 'clearable', 'error', 'invalid', 'success', 'valid', 'placement'];
   }
+
+  /** Espaço (px) entre o campo e o painel — espelha `--fx-select-panel-offset`. */
+  private static readonly GAP = 4;
+  /** Margem (px) mantida entre o painel e as bordas da viewport. */
+  private static readonly MARGEM = 8;
+  /** Altura mínima do painel ao ser limitado pelo espaço disponível. */
+  private static readonly MIN_ALTURA = 80;
 
   private observer?: MutationObserver;
   private docListener?: (e: Event) => void;
+  /** Reposiciona o painel enquanto ele estiver aberto (bound em `_abrir`). */
+  private onReflow?: () => void;
 
   /** Tamanho do campo. Padrão: `'md'`. */
   get size(): string {
@@ -230,7 +257,7 @@ export class FxSelect extends FxElement {
     this.docListener = (e: Event) => {
       if (!this.hasAttr('open')) return;
       if (e.composedPath().includes(this)) return;
-      this.removeAttribute('open');
+      this._fechar();
       this.render();
     };
     document.addEventListener('click', this.docListener);
@@ -240,11 +267,98 @@ export class FxSelect extends FxElement {
     super.disconnectedCallback();
     this.observer?.disconnect();
     if (this.docListener) document.removeEventListener('click', this.docListener);
+    this._unbindReflow();
+  }
+
+  /** Abre o dropdown, posiciona o painel e passa a reposicioná-lo no reflow. */
+  private _abrir(): void {
+    this.setAttribute('open', '');
+    this._bindReflow();
+  }
+
+  /** Fecha o dropdown e libera os listeners de resize/scroll. */
+  private _fechar(): void {
+    this.removeAttribute('open');
+    // Sem isto o `data-placement` fica preso no host e a próxima abertura
+    // mostraria o painel na posição invertida antes do ajuste rodar.
+    this.removeAttribute('data-placement');
+    this._unbindReflow();
+  }
+
+  /** Liga o reposicionamento (resize + scroll interno, em capture). */
+  private _bindReflow(): void {
+    if (this.onReflow) return;
+    this.onReflow = () => {
+      if (this.hasAttr('open')) this.ajustarPosicao();
+    };
+    window.addEventListener('resize', this.onReflow);
+    window.addEventListener('scroll', this.onReflow, true);
+  }
+
+  private _unbindReflow(): void {
+    if (!this.onReflow) return;
+    window.removeEventListener('resize', this.onReflow);
+    window.removeEventListener('scroll', this.onReflow, true);
+    this.onReflow = undefined;
+  }
+
+  /**
+   * Decide a posição vertical do painel medindo o espaço real da viewport.
+   *
+   * `placement="top"`/`"bottom"` são respeitados literalmente; o padrão
+   * (`auto`) só inverte quando o painel não cabe embaixo E couber melhor
+   * acima. Também limita a altura ao espaço disponível e evita overflow
+   * horizontal próximo à borda direita.
+   */
+  protected ajustarPosicao(): void {
+    const painel = this.root.querySelector<HTMLElement>('.panel');
+    const trigger = this.root.querySelector<HTMLElement>('.trigger');
+    if (!painel || !trigger) return;
+
+    const r = trigger.getBoundingClientRect();
+    const abaixo = window.innerHeight - r.bottom; // espaço livre embaixo
+    const acima = r.top;                            // espaço livre acima
+    const desejado = painel.scrollHeight;           // altura já com a busca
+    const maxAltura = FxSelect._maxAltura(this);
+
+    const pedido = this.getAttr('placement', 'auto');
+    const paraCima =
+      pedido === 'top' ||
+      (pedido !== 'bottom' && abaixo < Math.min(desejado, maxAltura) && acima > abaixo);
+
+    // O atributo placement do host tem precedência no CSS; data-placement
+    // é o canal interno do auto-flip e usa a mesma regra de estilo.
+    if (paraCima) this.setAttribute('data-placement', 'top');
+    else this.removeAttribute('data-placement');
+
+    // Limita a altura ao espaço real disponível (evita o painel vazar da tela).
+    const disponivel = Math.max(
+      FxSelect.MIN_ALTURA,
+      (paraCima ? acima : abaixo) - FxSelect.GAP,
+    );
+    painel.style.maxHeight = `${Math.min(desejado || disponivel, disponivel, maxAltura)}px`;
+
+    // Reset do deslocamento horizontal antes de remedir (o painel é recriado
+    // a cada render, mas o ajuste pode rodar várias vezes com o mesmo nó).
+    painel.style.left = '';
+    const largura = painel.offsetWidth;
+    const excesso = r.left + largura - (window.innerWidth - FxSelect.MARGEM);
+    if (excesso > 0) {
+      painel.style.left = `${-excesso}px`;
+      painel.style.right = 'auto';
+    }
+  }
+
+  /** Altura máxima do painel a partir de `--fx-select-panel-max-height`. */
+  private static _maxAltura(host: HTMLElement): number {
+    const raw = getComputedStyle(host).getPropertyValue('--fx-select-panel-max-height');
+    const n = parseInt(raw, 10);
+    return Number.isFinite(n) && n > 0 ? n : 260;
   }
 
   private select(value: string): void {
     this.value = value;
-    this.removeAttribute('open');
+    this._fechar();
     this.render();
     this.dispatchEvent(
       new CustomEvent('change', { bubbles: true, composed: true, detail: { value } }),
@@ -255,7 +369,7 @@ export class FxSelect extends FxElement {
   private _navigateOptions(e: KeyboardEvent): void {
     e.preventDefault();
     if (!this.hasAttr('open')) {
-      this.toggleAttribute('open');
+      this._abrir();
       this.render();
     }
     const opts = Array.from(this.root.querySelectorAll<HTMLButtonElement>('.opt'));
@@ -309,6 +423,8 @@ export class FxSelect extends FxElement {
     `);
 
     if (prevOpen) this.setAttribute('open', '');
+    // A medição só é válida com o painel já `display: block` (open aplicado).
+    if (this.hasAttr('open')) this.ajustarPosicao();
     const searchInput = this.root.querySelector<HTMLInputElement>('.search');
     if (searchInput) {
       searchInput.value = search;
@@ -328,7 +444,8 @@ export class FxSelect extends FxElement {
     trigger.addEventListener('click', (e) => {
       if (this.disabled) return;
       if ((e.target as HTMLElement).closest('.clear')) return;
-      this.toggleAttribute('open');
+      if (this.hasAttr('open')) this._fechar();
+      else this._abrir();
       this.render();
       this.root.querySelector<HTMLInputElement>('.search')?.focus();
     });
@@ -343,7 +460,7 @@ export class FxSelect extends FxElement {
       }
       if (e.key === 'Escape') {
         if (this.hasAttr('open')) {
-          this.removeAttribute('open');
+          this._fechar();
           this.render();
           this.root.querySelector<HTMLElement>('.trigger')?.focus();
         }
@@ -358,7 +475,7 @@ export class FxSelect extends FxElement {
     this.root.querySelector('.clear')?.addEventListener('click', (e) => {
       e.stopPropagation();
       this.value = '';
-      this.removeAttribute('open');
+      this._fechar();
       this.render();
       this.dispatchEvent(
         new CustomEvent('change', { bubbles: true, composed: true, detail: { value: '' } }),

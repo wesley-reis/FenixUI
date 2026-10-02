@@ -97,7 +97,10 @@
   font-size: .78rem;
   color: var(--fx-text-muted);
 }
-/* Selects dentro do drawer: dropdown abre para cima (não há espaço embaixo) */
+/* Selects dentro do drawer: o painel abre para cima porque não há espaço
+   embaixo. Como a folha do shadow root tem prioridade sobre CSS externo,
+   isto é apenas uma redundância visual — o atributo placement="top" (com
+   auto-flip do próprio componente) é o caminho oficial. */
 .theme-drawer-body fx-select {
   position: relative;
 }
