@@ -475,6 +475,37 @@ describe("docs: código de exemplo", () => {
 		expect(block.querySelector("pre > code")?.textContent?.trim().length).toBeGreaterThan(0);
 	});
 
+	it("fx-card: os exemplos de footer implícito saem com código e botão Copiar", async () => {
+		// Regressão: quando o bloco estava em `extraSections`, o HTML entrava
+		// cru na página — sem .code-block e portanto sem botão Copiar.
+		await navigate("fx-card");
+		const main = document.getElementById("main")!;
+		const cards = [...main.querySelectorAll(".example-card")];
+		const comRodape = cards.filter((c) => c.querySelector(".example-code .copy-btn"));
+		expect(comRodape.length).toBeGreaterThanOrEqual(5); // 4 variantes + 4 exemplos de slot
+
+		// "Com heading, sem rodapé" precisa existir como exemplo com código
+		const exemplos = cards
+			.map((c) => c.querySelector(".example-code code")?.textContent ?? "")
+			.join("\n");
+		expect(exemplos).toContain("Com heading, sem rodapé");
+		expect(exemplos).toContain("Só o corpo");
+	});
+
+	it("fx-select: os exemplos de placement saem com código e botão Copiar", async () => {
+		await navigate("fx-select");
+		const main = document.getElementById("main")!;
+		const exemplos = [...main.querySelectorAll(".example-card .example-code code")]
+			.map((c) => c.textContent ?? "")
+			.join("\n");
+		expect(exemplos).toContain('placement="top"');
+		expect(exemplos).toContain("UF de destino");
+		// todo example-card precisa ter o botão (senão some o Copiar)
+		for (const card of main.querySelectorAll(".example-card")) {
+			expect(card.querySelector(".example-code .copy-btn")).toBeTruthy();
+		}
+	});
+
 	it("copiar envia o texto do bloco para a área de transferência", async () => {
 		await navigate("fx-button");
 		const written: string[] = [];

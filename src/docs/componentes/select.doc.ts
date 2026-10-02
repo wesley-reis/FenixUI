@@ -21,6 +21,21 @@ export const selectDoc: ComponentDoc = {
         <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
           <fx-select error placeholder="error"><option value="sp">São Paulo</option></fx-select>
           <fx-select success placeholder="success"><option value="sp">São Paulo</option></fx-select>
+        </div>
+        <h4>Posição do painel (automática)</h4>
+        <p style="font-size:12px;color:var(--fx-text-muted);margin:0 0 10px">Sem <code>placement</code>, o painel abre para baixo e <strong>inverte sozinho</strong> quando não cabe embaixo e há mais espaço acima — medindo a viewport de verdade, em resize e scroll. Role a página até a borda inferior da caixa: o select de baixo passa a abrir para cima, enquanto o de cima continua abrindo para baixo. Os dois são idênticos no código.</p>
+        <div style="border:1px dashed var(--fx-border-default);border-radius:var(--fx-radius-md);padding:16px;display:flex;flex-direction:column;gap:12px;min-height:340px">
+          <label style="font-size:12px;color:var(--fx-text-muted);font-weight:500">No topo — abre para baixo</label>
+          <div><fx-select placeholder="UF de origem"><option value="sp">São Paulo</option><option value="rj">Rio de Janeiro</option><option value="mg">Minas Gerais</option></fx-select></div>
+          <div style="flex:1 1 auto"></div>
+          <label style="font-size:12px;color:var(--fx-text-muted);font-weight:500">No fim — abre para cima</label>
+          <div><fx-select placeholder="UF de destino"><option value="sp">São Paulo</option><option value="rj">Rio de Janeiro</option><option value="mg">Minas Gerais</option></fx-select></div>
+        </div>
+        <h4>Posição fixa (placement)</h4>
+        <p style="font-size:12px;color:var(--fx-text-muted);margin:0 0 8px">Quando o auto-flip não serve, <code>placement="top"</code> ou <code>placement="bottom"</code> travam a direção. Útil em formulários dentro de modais ou gavetas, onde o painel sempre deve cobrir o campo.</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+          <div><small style="color:var(--fx-text-muted)">placement="top"</small><br><fx-select placement="top" placeholder="Sempre para cima"><option value="a">Opção A</option><option value="b">Opção B</option></fx-select></div>
+          <div><small style="color:var(--fx-text-muted)">placement="bottom"</small><br><fx-select placement="bottom" placeholder="Sempre para baixo"><option value="a">Opção A</option><option value="b">Opção B</option></fx-select></div>
         </div>`,
 	controls: [
 		{
@@ -38,11 +53,13 @@ export const selectDoc: ComponentDoc = {
 		},
 		{ kind: "text", attr: "value", label: "Value", hint: "ex.: rj" },
 		{
-			kind: "toggle",
-			attr: "searchable",
-			label: "Busca (searchable)",
-			on: true,
+			kind: "select",
+			attr: "placement",
+			label: "Posição do painel",
+			options: ["auto", "top", "bottom"],
+			value: "auto",
 		},
+		{ kind: "toggle", attr: "searchable", label: "Busca (searchable)", on: true },
 		{
 			kind: "toggle",
 			attr: "clearable",
@@ -78,6 +95,12 @@ export const selectDoc: ComponentDoc = {
 			type: "string",
 			default: "''",
 			desc: "Texto exibido quando nada está selecionado.",
+		},
+		{
+			name: "placement",
+			type: `'auto' | 'top' | 'bottom'`,
+			default: "'auto'",
+			desc: "Posição do painel. `auto` (padrão) abre para baixo e inverte sozinha quando não cabe e há mais espaço acima; `top` e `bottom` fixam a direção. O painel também se limita à altura disponível e é reposicionado em resize/scroll.",
 		},
 		{
 			name: "searchable",
@@ -138,5 +161,7 @@ export const selectDoc: ComponentDoc = {
 	cssVars: [
 		{ name: "--fx-select-width", type: "largura CSS", default: "max-content", desc: "Largura do campo (aplicada no host): por padrão acompanha o conteúdo. CSS externo, classes e style inline no elemento definem a largura (o trigger acompanha)." },
 		{ name: "--fx-select-min-width / -sm", type: "largura CSS", default: "200px / 180px", desc: "Largura mínima do campo (md/lg e sm)." },
+		{ name: "--fx-select-panel-offset", type: "comprimento CSS", default: "4px", desc: "Espaço entre o campo e o painel. Use esta custom property (e não `::part(panel)`) para reposicionar o painel: por especificação, as regras `::part()` têm prioridade MENOR que a folha do shadow root e não vencem o `top` interno." },
+		{ name: "--fx-select-panel-max-height", type: "comprimento CSS", default: "260px", desc: "Altura máxima do painel (também limita o cálculo do auto-flip)." },
 	],
 };
