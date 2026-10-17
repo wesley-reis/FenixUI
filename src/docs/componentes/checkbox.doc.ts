@@ -44,7 +44,13 @@ export const checkboxDoc: ComponentDoc = {
 			name: "value",
 			type: "string",
 			default: "''",
-			desc: "Valor associado (via detail de change).",
+			desc: "Valor enviado ao FormData quando marcado (default 'on', como o checkbox nativo); também vai no detail de change.",
+		},
+		{
+			name: "name",
+			type: "string",
+			default: "''",
+			desc: "Nome do campo no FormData quando dentro de um <form>: marcado envia value (ou 'on'), desmarcado não envia nada.",
 		},
 		{
 			name: "size",

@@ -1,10 +1,13 @@
-﻿import { FxElement } from '../../core/base';
+﻿import { FxFormElement } from '../../core/form-element';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from '../../core/sanitize';
 
 /**
  * <fx-select> — Campo de seleção com dropdown customizado.
+ *
+ * Form-Associated Custom Element: dentro de um <form> entra no FormData
+ * (via atributo `name`) e recebe reset/disable do form.
  *
  * Escreva os filhos como `<option>` nativos no light DOM; eles são
  * espelhados automaticamente (MutationObserver):
@@ -18,9 +21,10 @@ import { esc } from '../../core/sanitize';
  * searchable, clearable, search-placeholder, no-results,
  * placement (auto|top|bottom — direção do painel; `auto` inverte quando
  * não cabe na viewport).
- * Evento: `change` (composed, detail: { value }).
+ * Eventos: `change`, `input` e `valueChange` (composed, detail: { value }) —
+ * `input` aciona o v-model do Vue e `valueChange` o [(value)] do Angular.
  */
-export class FxSelect extends FxElement {
+export class FxSelect extends FxFormElement {
   static override styles = css`
     :host {
       display: inline-block;
@@ -232,6 +236,10 @@ export class FxSelect extends FxElement {
   }
   set value(value: string) {
     this.setAttribute('value', value);
+    // `value` não é observado (não pode re-renderizar/fechar o dropdown no
+    // change): publica no form aqui; o rótulo do trigger é re-renderizado
+    // pelos caminhos que já chamam render().
+    this.updateFormValue();
   }
 
   get disabled(): boolean {
@@ -360,6 +368,7 @@ export class FxSelect extends FxElement {
     this.value = value;
     this._fechar();
     this.render();
+    this.emitValueEvents();
     this.dispatchEvent(
       new CustomEvent('change', { bubbles: true, composed: true, detail: { value } }),
     );
@@ -477,6 +486,7 @@ export class FxSelect extends FxElement {
       this.value = '';
       this._fechar();
       this.render();
+      this.emitValueEvents();
       this.dispatchEvent(
         new CustomEvent('change', { bubbles: true, composed: true, detail: { value: '' } }),
       );
@@ -486,6 +496,15 @@ export class FxSelect extends FxElement {
     this.root.querySelectorAll<HTMLElement>('.opt').forEach((opt) => {
       opt.addEventListener('click', () => this.select(opt.dataset.value!));
     });
+
+    // Publica name/value no form (ElementInternals) a cada render.
+    this.updateFormValue();
+  }
+
+  /** form.reset(): restaura o valor inicial e re-renderiza o rótulo. */
+  override formResetCallback(): void {
+    super.formResetCallback();
+    this.render();
   }
 }
 

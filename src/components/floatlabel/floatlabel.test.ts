@@ -15,7 +15,7 @@ describe('<fx-floatlabel>', () => {
     defineFxFloatlabel();
   });
 
-  it('registra a tag, renderiza a label no shadow e esconde a original', () => {
+  it('registra a tag, renderiza a label no shadow e a move do light DOM', () => {
     const el = mount(`
       <fx-floatlabel>
         <fx-input id="nome"></fx-input>
@@ -27,8 +27,11 @@ describe('<fx-floatlabel>', () => {
     expect(flabel).toBeTruthy();
     expect(flabel.textContent).toBe('Nome');
     expect(flabel.getAttribute('for')).toBe('nome');
-    const original = el.querySelector('label');
-    expect(original.hasAttribute('hidden')).toBe(true);
+    // A label original foi MOVIDA para o Shadow DOM (não escondida com
+    // `hidden`): não existe cópia no light DOM para o consumidor reexibir.
+    expect(el.querySelector('label')).toBeNull();
+    expect(flabel.hasAttribute('hidden')).toBe(false);
+    expect(el.querySelectorAll('label').length).toBe(0);
   });
 
   it('aplica a variante como atributo (CSS responde via :host([variant]))', () => {

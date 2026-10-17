@@ -2,11 +2,18 @@
  * Presets de tema prontos para uso.
  *
  * Cada preset é um override parcial profundo sobre os tokens base.
- * Combina com o modo claro/escuro: `applyPreset('seiya', 'dark')`.
+ * Combina com o modo claro/escuro: `applyPreset('ikki', 'dark')`.
+ *
+ * `ikki` é o preset **padrão**: usa a identidade base (paleta indigo do tema
+ * claro/escuro) e apenas desliga o anel de foco. Os demais presets trazem
+ * paletas/raios próprios.
  */
 
 import { configure } from './theme';
 import { type DeepPartial, type FenixTokens } from './tokens';
+
+/** Nome do preset padrão (fallback de `applyPreset` e boot da documentação). */
+export const DEFAULT_PRESET = 'ikki';
 
 export interface FenixPreset {
   /** Identificador usado em `applyPreset(name)`. */
@@ -29,9 +36,9 @@ function register(preset: FenixPreset): FenixPreset {
 /* ------------------------------------------------------------------ */
 
 export const themePresets = {
-	fenix: register({
-		name: "fenix",
-		label: "Fenix (padrão)",
+	ikki: register({
+		name: "ikki",
+		label: "Ikki (padrão)",
 		tokens: { effect: { "focus-ring": "none" } },
 	}),
 	seiya: register({
@@ -93,19 +100,6 @@ export const themePresets = {
 			radius: { sm: "10px", md: "14px", lg: "20px" },
 		},
 	}),
-	ikki: register({
-		name: "ikki",
-		label: "Ikki",
-		tokens: {
-			color: {
-				primary: "#ea580c",
-				secondary: "#fb923c",
-				danger: "#dc2626",
-				warning: "#f59e0b",
-			},
-			radius: { sm: "2px", md: "4px", lg: "6px" },
-		},
-	}),
 	aiolia: register({
 		name: "aiolia",
 		label: "Aiolia",
@@ -149,7 +143,8 @@ export function applyPreset(
   presetName: string,
   mode: 'light' | 'dark' = 'light',
 ): { theme: 'light' | 'dark'; preset: string } {
-  const preset = registry.get(presetName) ?? registry.get('fenix')!;
+  // Preset desconhecido (ou o antigo nome "fenix") cai no padrão atual.
+  const preset = registry.get(presetName) ?? registry.get(DEFAULT_PRESET)!;
   const state = configure({ theme: mode, tokens: preset.tokens });
   return { ...state, preset: preset.name };
 }

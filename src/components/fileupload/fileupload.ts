@@ -1,4 +1,4 @@
-import { FxElement } from '../../core/base';
+import { FxFormElement } from '../../core/form-element';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from '../../core/sanitize';
@@ -6,6 +6,10 @@ import { FENIX_ICON_BASE_CSS, fenixIconHtml } from '../../icons/base-css';
 
 /**
  * <fx-fileupload> — Seletor de arquivos com upload e progresso.
+ *
+ * Form-Associated Custom Element: dentro de um <form> entra no FormData
+ * (via atributo `name`) com os File's selecionados — o upload é enviado
+ * junto com o submit do form, como um <input type="file"> nativo.
  *
  * Atributos:
  *  - mode (basic|advanced — `basic`: botão; `advanced`: dropzone com drag & drop);
@@ -20,7 +24,7 @@ import { FENIX_ICON_BASE_CSS, fenixIconHtml } from '../../icons/base-css';
  *
  * Eventos (composed): `select` (detail: { files: File[] }), `remove`, `complete`.
  */
-export class FxFileUpload extends FxElement {
+export class FxFileUpload extends FxFormElement {
   static override styles = css`
     :host {
       display: inline-block;
@@ -188,6 +192,15 @@ export class FxFileUpload extends FxElement {
     this._syncFilesArea();
   }
 
+  /** No FormData do form: os arquivos selecionados, como o <input type="file">. */
+  protected override getFormValue(): string | FormData | null {
+    const files = this._files;
+    if (!this.name || files.length === 0) return null;
+    const fd = new FormData();
+    for (const f of files) fd.append(this.name, f, f.name);
+    return fd;
+  }
+
   protected override render(): void {
     const mode = this.getAttr('mode', 'basic');
     const advanced = mode === 'advanced';
@@ -225,6 +238,7 @@ export class FxFileUpload extends FxElement {
 
     this._bindPicker();
     this._syncFilesArea();
+    this.updateFormValue();
 
     if (!this._done && showProgress && pct >= 100 && this._files.length) {
       this._done = true;
@@ -279,6 +293,13 @@ export class FxFileUpload extends FxElement {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  /** form.reset(): limpa os arquivos selecionados. */
+  override formResetCallback(): void {
+    this._files = [];
+    this.value = ''; // `value` é observado → re-render + _syncFilesArea
+    this.updateFormValue();
   }
 
   /** Renderiza a lista de arquivos sem re-renderizar o template (mantém estado). */

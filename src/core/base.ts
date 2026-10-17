@@ -15,11 +15,21 @@ export abstract class FxElement extends HTMLElement {
     return [];
   }
 
+  /**
+   * Opções do `attachShadow` — sobrescreva por componente quando precisar.
+   * `delegatesFocus` (usado pelos componentes de formulário, via FxFormElement)
+   * faz `focus()`, `autofocus` e o clique em `<label for>` atingirem o
+   * controle interno do Shadow DOM, e não só o host.
+   */
+  static shadowOptions: ShadowRootInit = { mode: 'open' };
+
   protected readonly root: ShadowRoot;
 
   constructor() {
     super();
-    this.root = this.attachShadow({ mode: 'open' });
+    this.root = this.attachShadow(
+      (this.constructor as typeof FxElement).shadowOptions,
+    );
   }
 
   /** Chamado quando um atributo observado muda. */

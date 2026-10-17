@@ -1,14 +1,19 @@
-import { FxElement } from '../../core/base';
+import { FxFormElement } from '../../core/form-element';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 
 /**
  * <fx-checkbox> — Caixa de seleção com suporte a estado indeterminado.
  *
- * Atributos: checked, indeterminate, disabled, value, size (sm|md|lg).
- * Evento: `change` (composed, detail: { checked, value }).
+ * Form-Associated Custom Element: dentro de um <form> entra no FormData
+ * (via atributo `name`) com `value` (ou 'on') quando marcado — desmarcado
+ * não envia nada, igual ao checkbox nativo. Recebe reset/disable do form.
+ *
+ * Atributos: checked, indeterminate, disabled, value, name, size (sm|md|lg).
+ * Eventos: `change` e `checkedChange` (composed, detail: { checked, value }) —
+ * `checkedChange` é o two-way binding do Angular [(checked)].
  */
-export class FxCheckbox extends FxElement {
+export class FxCheckbox extends FxFormElement {
   static override styles = css`
     :host {
       display: inline-flex;
@@ -97,6 +102,15 @@ export class FxCheckbox extends FxElement {
     this.toggleAttr('disabled', Boolean(value));
   }
 
+  /** No FormData: `value` (ou 'on') quando marcado; null (não envia) quando não. */
+  protected override getFormValue(): string | FormData | null {
+    return this.checked ? (this.getAttr('value') || 'on') : null;
+  }
+
+  /** getter/setter `value` → espelho do atributo `value` (compat com v-model / [(value)]). */
+  get value(): string { return this.getAttr('value'); }
+  set value(v: string) { this.setAttribute('value', v); }
+
   /** Tamanho do controle. Padrão: `'md'`. */
   get size(): string {
     const s = this.getAttr('size', 'md');
@@ -133,6 +147,28 @@ export class FxCheckbox extends FxElement {
         this.toggle();
       }
     });
+
+    // Publica name/value no form (ElementInternals) a cada render.
+    this.updateFormValue();
+  }
+
+  /** Estado marcado inicial (para form.reset() restaurar). */
+  private _initialChecked = false;
+  private _initialCheckedCaptured = false;
+
+  protected override connectedCallback(): void {
+    if (!this._initialCheckedCaptured) {
+      this._initialCheckedCaptured = true;
+      this._initialChecked = this.checked;
+    }
+    super.connectedCallback();
+  }
+
+  /** form.reset(): restaura o estado marcado inicial (checked/indeterminate não enviam nada). */
+  override formResetCallback(): void {
+    this.checked = this._initialChecked;
+    this.indeterminate = false;
+    this.updateFormValue();
   }
 
   private toggle(): void {
@@ -141,6 +177,14 @@ export class FxCheckbox extends FxElement {
     this.checked = !this.checked;
     this.dispatchEvent(
       new CustomEvent('change', {
+        bubbles: true,
+        composed: true,
+        detail: { checked: this.checked, value: this.getAttr('value') },
+      }),
+    );
+    // Two-way binding do Angular: [(checked)] = [checked] + (checkedChange).
+    this.dispatchEvent(
+      new CustomEvent('checkedChange', {
         bubbles: true,
         composed: true,
         detail: { checked: this.checked, value: this.getAttr('value') },

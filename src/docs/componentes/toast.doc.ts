@@ -9,7 +9,7 @@ export const toastDoc: ComponentDoc = {
 	tag: "fx-toast",
 	title: "Toast",
 	group: "Feedback",
-	lead: "Notificações flutuantes imperativas com posição e tempo de exibição configuráveis.",
+	lead: "Notificações flutuantes imperativas com posição e tempo de exibição configuráveis. A contagem pausa quando o cursor (ou o foco) está sobre o toast — dá tempo de ler a mensagem inteira. Textos longos são truncados em 2 linhas: ao clicar em “Ver mais” o toast expande e exibe o botão de copiar (título + mensagem completos).",
 	imports: ["import '@wrrdev/fenix-ui/toast';"],
 	demoHtml: (a) => {
 		const pos = /position="([^"]+)"/.exec(a)?.[1] ?? "top-right";
@@ -23,7 +23,7 @@ export const toastDoc: ComponentDoc = {
 		return `<div style="display:flex;gap:12px;flex-wrap:wrap"><fx-button variant="success" size="sm" onclick="FenixToast.success('${title}','${msg}',${o})">Success</fx-button><fx-button variant="danger" size="sm" onclick="FenixToast.error('${title}','${msg}',${o})">Error</fx-button><fx-button variant="warning" size="sm" onclick="FenixToast.warning('${title}','${msg}',${o})">Warning</fx-button><fx-button variant="secondary" size="sm" onclick="FenixToast.info('${title}','${msg}',${o})">Info</fx-button></div>`;
 	},
 	variantsHtml: () =>
-		`<h4>Cada posição na tela</h4><div style="display:flex;gap:12px;flex-wrap:wrap">${["top-left", "top-center", "top-right", "bottom-left", "bottom-center", "bottom-right"].map((p) => `<fx-button size="sm" variant="secondary" onclick="FenixToast.info('Posição: ${p}','Notificação de exemplo.',{position:'${p}',duration:3500})">${p}</fx-button>`).join("")}</div><h4>Duração customizada</h4><div style="display:flex;gap:12px;flex-wrap:wrap"><fx-button size="sm" onclick="FenixToast.warning('Fixo até fechar','duration: 0',{position:'bottom-center',duration:0})">duration: 0 (fixo)</fx-button><fx-button size="sm" onclick="FenixToast.success('Rápido','some em 1,5s',{position:'bottom-center',duration:1500})">duration: 1500</fx-button></div><h4>Barra de contagem regressiva (progress)</h4><p>Uma borda inferior na cor do toast esvazia durante a <code>duration</code> — você vê o tempo restante. Acompanha o <code>kind</code> automaticamente. O lado é configurável em <code>progress-origin</code>.</p><div style="display:flex;gap:12px;flex-wrap:wrap"><fx-button size="sm" variant="success" onclick="FenixToast.success('Salvando...','Barra esvaziando em 5s',{duration:5000,progress:'always'})">success 5s</fx-button><fx-button size="sm" variant="danger" onclick="FenixToast.error('Falhou','Barra vermelha em 6s',{duration:6000,progress:'always'})">error 6s</fx-button><fx-button size="sm" variant="secondary" onclick="FenixToast.info('Passe o mouse','A barra só corre sob o cursor',{duration:6000,progress:'hover'})">progress: 'hover'</fx-button><fx-button size="sm" variant="secondary" onclick="FenixToast.warning('Parada','Barra cheia e imóvel',{duration:0,progress:'paused'})">progress: 'paused'</fx-button></div><h4>Lado da barra (progress-origin)</h4><p>O padrão é <code>'left'</code>: a barra fica ancorada à esquerda e drena da direita para a esquerda. Use <code>'right'</code> para espelhar.</p><div style="display:flex;gap:12px;flex-wrap:wrap"><fx-button size="sm" variant="success" onclick="FenixToast.success('Padrão: left','Ancorada à esquerda',{duration:5000,progress:'always'})">origin: 'left' (padrão)</fx-button><fx-button size="sm" variant="success" onclick="FenixToast.success('Espelhado: right','Ancorada à direita',{duration:5000,progress:'always',progressOrigin:'right'})">origin: 'right'</fx-button></div><h4>Modo claro/escuro por toast</h4><p>Force o esquema de cores do card independentemente do tema global (útil sobre fundos personalizados):</p><div style="display:flex;gap:12px;flex-wrap:wrap"><fx-button size="sm" variant="secondary" onclick="FenixToast.info('Modo claro','mode: light',{mode:'light',duration:4000})">mode: 'light'</fx-button><fx-button size="sm" variant="secondary" onclick="FenixToast.info('Modo escuro','mode: dark',{mode:'dark',duration:4000})">mode: 'dark'</fx-button><fx-button size="sm" variant="secondary" onclick="FenixToast.success('Segue o tema','sem mode',{duration:4000})">sem mode (tema global)</fx-button></div>`,
+		`<h4>Cada posição na tela</h4><div style="display:flex;gap:12px;flex-wrap:wrap">${["top-left", "top-center", "top-right", "bottom-left", "bottom-center", "bottom-right"].map((p) => `<fx-button size="sm" variant="secondary" onclick="FenixToast.info('Posição: ${p}','Notificação de exemplo.',{position:'${p}',duration:3500})">${p}</fx-button>`).join("")}</div><h4>Duração customizada</h4><div style="display:flex;gap:12px;flex-wrap:wrap"><fx-button size="sm" onclick="FenixToast.warning('Fixo até fechar','duration: 0',{position:'bottom-center',duration:0})">duration: 0 (fixo)</fx-button><fx-button size="sm" onclick="FenixToast.success('Rápido','some em 1,5s',{position:'bottom-center',duration:1500})">duration: 1500</fx-button></div><h4>Barra de contagem regressiva (progress)</h4><p>Uma borda inferior na cor do toast esvazia durante a <code>duration</code> — você vê o tempo restante. Acompanha o <code>kind</code> automaticamente. O lado é configurável em <code>progress-origin</code>.</p><div style="display:flex;gap:12px;flex-wrap:wrap"><fx-button size="sm" variant="success" onclick="FenixToast.success('Salvando...','Barra esvaziando em 5s',{duration:5000,progress:'always'})">success 5s</fx-button><fx-button size="sm" variant="danger" onclick="FenixToast.error('Falhou','Barra vermelha em 6s',{duration:6000,progress:'always'})">error 6s</fx-button><fx-button size="sm" variant="secondary" onclick="FenixToast.info('Passe o mouse','A contagem pausa no hover',{duration:6000,progress:'always'})">pausa no hover</fx-button><fx-button size="sm" variant="secondary" onclick="FenixToast.warning('Parada','Barra cheia e imóvel',{duration:0,progress:'paused'})">progress: 'paused'</fx-button></div><h4>Lado da barra (progress-origin)</h4><p>O padrão é <code>'left'</code>: a barra fica ancorada à esquerda e drena da direita para a esquerda. Use <code>'right'</code> para espelhar.</p><div style="display:flex;gap:12px;flex-wrap:wrap"><fx-button size="sm" variant="success" onclick="FenixToast.success('Padrão: left','Ancorada à esquerda',{duration:5000,progress:'always'})">origin: 'left' (padrão)</fx-button><fx-button size="sm" variant="success" onclick="FenixToast.success('Espelhado: right','Ancorada à direita',{duration:5000,progress:'always',progressOrigin:'right'})">origin: 'right'</fx-button></div><h4>Modo claro/escuro por toast</h4><p>Force o esquema de cores do card independentemente do tema global (útil sobre fundos personalizados):</p><div style="display:flex;gap:12px;flex-wrap:wrap"><fx-button size="sm" variant="secondary" onclick="FenixToast.info('Modo claro','mode: light',{mode:'light',duration:4000})">mode: 'light'</fx-button><fx-button size="sm" variant="secondary" onclick="FenixToast.info('Modo escuro','mode: dark',{mode:'dark',duration:4000})">mode: 'dark'</fx-button><fx-button size="sm" variant="secondary" onclick="FenixToast.success('Segue o tema','sem mode',{duration:4000})">sem mode (tema global)</fx-button></div>`,
 	controls: [
 		{
 			kind: "select",
@@ -108,7 +108,7 @@ export const toastDoc: ComponentDoc = {
 			name: "options.progress / atributo progress",
 			type: `'always' | 'hover' | 'paused'`,
 			default: "— (desligado)",
-			desc: "Barra de contagem regressiva na base do card, na cor do kind (success/error/warning/info), esvaziando durante a duration. 'always' (ou atributo vazio) corre sempre; 'hover' só enquanto o cursor estiver sobre o toast; 'paused' exibe a barra cheia, porém imóvel. O lado é definido por progress-origin. Sem efeito com duration: 0 (toast fixo).",
+			desc: "Barra de contagem regressiva na base do card, na cor do kind (success/error/warning/info), esvaziando durante a duration. 'always' (ou atributo vazio) corre sempre; 'paused' exibe a barra cheia, porém imóvel. 'hover' é mantido por compatibilidade e equivale a 'always' — o hover agora pausa a contagem (timer + barra) em qualquer modo. O lado é definido por progress-origin. Sem efeito com duration: 0 (toast fixo).",
 		},
 		{
 			name: "options.progressOrigin / atributo progress-origin",
@@ -121,6 +121,34 @@ export const toastDoc: ComponentDoc = {
 			type: "number",
 			default: "—",
 			desc: "Id do toast para FenixToast.close(id).",
+		},
+		{
+			name: "message (atributo)",
+			type: "string",
+			default: "''",
+			desc: "Texto secundário. Acima de 2 linhas é truncado com “…” mantendo o card no tamanho padrão: clique em “Ver mais” para expandir o toast no lugar — só então o ícone de copiar (título + mensagem) aparece — ou passe o mouse na mensagem para ver o texto inteiro na dica nativa.",
+		},
+		{
+			name: "(layout)",
+			type: "—",
+			default: "56px",
+			desc: "O card tem altura mínima de 56px (a mesma com ou sem título) e o ícone fica centralizado verticalmente, alinhado ao bloco de texto.",
+		},
+		{
+			name: "(tempo)",
+			type: "hover / focus",
+			default: "pausa",
+			desc: "Com o cursor sobre o toast (ou o foco do teclado dentro dele) a contagem é pausada e retoma de onde parou ao sair — a barra de progresso pausa junto. Toasts com duration: 0 continuam fixos até fechar.",
+		},
+	],
+	extraSections: [
+		{
+			title: "Mensagens longas (truncar, expandir e copiar)",
+			html: `<p>Acima de 2 linhas o texto termina em <strong>“…”</strong>. Clique em <strong>Ver mais</strong> para expandir o próprio toast — o ícone de copiar aparece junto, para levar o conteúdo completo (título + mensagem). Também é possível passar o mouse na mensagem para ver o texto inteiro na dica nativa. Com o cursor sobre o card a contagem fica pausada.</p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <fx-button size="sm" variant="warning" onclick="FenixToast.info('Relatório consolidado','O relatório do período foi gerado com sucesso e já está disponível para download. Ele inclui todos os lançamentos do mês, os totais por categoria, a comparação com o mês anterior e as observações registradas pela equipe financeira. Você pode acessá-lo novamente em Relatórios > Histórico.',{duration:8000,progress:'always'})">Toast com mensagem longa</fx-button>
+      <fx-button size="sm" variant="secondary" onclick="FenixToast.success('Texto curto','Sem truncar, card no tamanho mínimo.',{duration:4000,progress:'always'})">Toast curto (altura mínima)</fx-button>
+    </div>`,
 		},
 	],
 };

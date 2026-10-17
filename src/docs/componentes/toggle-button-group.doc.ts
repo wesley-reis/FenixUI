@@ -21,6 +21,7 @@ export const toggleButtonGroupDoc: ComponentDoc = {
 	attributes: [
 		{ name: "multiple", type: "boolean", default: "false", desc: "Permite selecionar várias opções." },
 		{ name: "value", type: "string", default: "''", desc: "Opções selecionadas separadas por vírgula." },
+		{ name: "name", type: "string", default: "''", desc: "Nome do campo no FormData dentro de um <form>: UMA entrada por valor selecionado (form-associated)." },
 		{ name: "size", type: "'sm' | 'md' | 'lg'", default: "'md'", desc: "Tamanho dos botões." },
 	],
 	events: [

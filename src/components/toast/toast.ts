@@ -37,6 +37,10 @@ const KIND_ICON: Record<ToastKind, string> = {
   info: 'i',
 };
 
+/** Ícone de copiar (SVG inline: não depende da fonte de ícones). */
+const COPY_SVG =
+  '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+
 const CARD_CSS = `
 :host { display: contents; pointer-events: auto; }
 /* Modo explícito: sobrepõe os tokens herdados do tema global SOMENTE neste card. */
@@ -70,8 +74,11 @@ const CARD_CSS = `
   user-select: none;
 }
 .card {
-  display: flex; align-items: flex-start; gap: 10px;
+  display: flex; align-items: center; gap: 10px;
   min-width: 260px; max-width: 360px;
+  /* Altura mínima idêntica à de um toast COM título: sem título o card não
+     fica "achatado" e o conjunto mantém o mesmo ritmo visual. */
+  min-height: 56px;
   background: var(--fx-surface-background, #fff);
   color: var(--fx-text-default, #1e293b);
   border: 1px solid var(--fx-border-default, #e2e8f0);
@@ -90,16 +97,45 @@ const CARD_CSS = `
   color: #fff;
   display: flex; align-items: center; justify-content: center;
   font-size: 12px; font-weight: 700;
-  flex: none; margin-top: 2px;
+  flex: none; align-self: center;
   user-select: none;
 }
-.body { flex: 1; min-width: 0; }
+.body { flex: 1; min-width: 0; align-self: center; }
 .title { font-weight: 600; font-size: 14px; }
-.msg { font-size: calc(var(--fx-font-size, 14px) - 2px); color: var(--fx-text-muted, #64748b); margin-top: 2px; word-break: break-word; white-space: pre-line; }
-.close {
+.msg {
+  font-size: calc(var(--fx-font-size, 14px) - 2px);
+  color: var(--fx-text-muted, #64748b);
+  margin-top: 2px;
+  word-break: break-word; white-space: pre-line;
+  /* Mensagens longas mantêm o card no tamanho padrão e terminam em "…";
+     "Ver mais" expande o toast (sem perder o restante do texto). */
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+  line-clamp: 2; overflow: hidden;
+}
+.card.expanded .msg {
+  display: block; overflow: visible;
+  -webkit-line-clamp: unset; line-clamp: unset;
+}
+.more {
+  all: unset; cursor: pointer; display: inline-block;
+  margin-top: 4px; padding: 2px 0;
+  font-size: 11px; font-weight: 600; color: var(--kind);
+}
+.more[hidden] { display: none; }
+.more:hover { text-decoration: underline; }
+.actions {
+  display: flex; align-items: center; gap: 2px;
+  flex: none; align-self: flex-start;
+}
+.copy, .close {
   all: unset; cursor: pointer; flex: none; line-height: 1;
   color: var(--fx-text-muted, #64748b); font-size: 15px; padding: 2px 4px; border-radius: 4px;
 }
+.copy[hidden] { display: none; }
+.copy { font-size: 14px; display: inline-flex; align-items: center; }
+.copy svg { display: block; }
+.copy.done { color: var(--fx-color-success, #10b981); }
+.copy:hover { color: var(--fx-color-primary, #6366f1); background: var(--fx-surface-surface-hover, rgba(0,0,0,.05)); }
 .close:hover { color: var(--fx-color-danger, #f43f5e); background: var(--fx-surface-surface-hover, rgba(0,0,0,.05)); }
 
 /* --- Barra de contagem regressiva (atributo progress) ---
@@ -128,9 +164,12 @@ const CARD_CSS = `
   will-change: transform;
 }
 .progress.run { animation: fx-toast-drain var(--toast-duration, 4000ms) linear forwards; }
-/* No modo hover a animação fica parada até o cursor/foco entrar no card. */
+/* Passar o mouse (ou focar) no toast pausa a contagem: a barra e o timer
+   congelam juntos até o cursor sair — tempo de ler a mensagem inteira.
+   progress="hover" é mantido por compatibilidade e se comporta como
+   "always" (o hover já pausa a contagem). */
 .card:hover .progress.run,
-.card:focus-within .progress.run { animation-play-state: running; }
+.card:focus-within .progress.run { animation-play-state: paused; }
 @keyframes fx-toast-drain {
   from { transform: scaleX(1); }
   to   { transform: scaleX(0); }
@@ -153,19 +192,19 @@ export class FxToast extends HTMLElement {
   /**
    * Exibe a barra de contagem regressiva na base do card.
    *
-   * A barra esvazia da esquerda para a direita durante exatamente `duration`
-   * e usa a cor do `kind`. Com `duration="0"` (toast fixo) a barra é
-   * omitida — não há tempo restante a representar.
+   * A barra esvazia durante exatamente `duration` e usa a cor do `kind`.
+   * Com `duration="0"` (toast fixo) a barra é omitida — não há tempo restante.
    *
    * - `'always'` (ou atributo vazio): barra sempre correndo.
-   * - `'hover'`: a barra só corre enquanto o cursor estiver sobre o toast;
-   *   ao sair, a animação pausa, então dá tempo de ler a mensagem.
    * - `'paused'`: barra visível, porém parada.
+   * - `'hover'`: **compatibilidade** — equivale a `'always'`. O hover agora
+   *   pausa a contagem (timer + barra) em qualquer modo, então a barra "só
+   *   correr sob o cursor" deixou de fazer sentido.
    */
   get progress(): 'always' | 'hover' | 'paused' | undefined {
     if (!this.hasAttribute('progress')) return undefined;
     const v = this.getAttribute('progress');
-    return v === 'hover' || v === 'paused' ? v : 'always';
+    return v === 'paused' ? 'paused' : 'always';
   }
   set progress(value: 'always' | 'hover' | 'paused' | undefined) {
     if (value) this.setAttribute('progress', value);
@@ -208,6 +247,18 @@ export class FxToast extends HTMLElement {
   }
 
   private timer: ReturnType<typeof setTimeout> | null = null;
+  /** Tempo restante (ms) quando a contagem está pausada no hover/foco. */
+  private remaining = 0;
+  /** Instante em que o timer atual começou (para descontar o tempo decorrido). */
+  private startedAt = 0;
+  /** Cursor sobre o toast: não retoma a contagem no focusout. */
+  private hovering = false;
+  /** Já saiu do DOM — impede retomar a contagem. */
+  private disposed = false;
+  /** Existe contagem regressiva (duration > 0) — toasts fixos nunca retomam. */
+  private counting = false;
+  /** Listeners de pausa/retomada registrados uma única vez. */
+  private wired = false;
 
   constructor() {
     super();
@@ -216,13 +267,64 @@ export class FxToast extends HTMLElement {
 
   connectedCallback() {
     if (!this.shadowRoot!.firstChild) this.#render();
+    this.disposed = false;
+    this.#wirePause();
     // Durações mínimas: valores muito baixos (ex.: digitação parcial no
     // playground) são elevados para 1s; 0 permanece fixo até fechar.
     const safe = this.safeDuration;
-    if (safe > 0 && !this.timer) {
-      this.timer = setTimeout(() => this.dismiss(), safe);
-    }
+    this.counting = safe > 0;
+    if (safe > 0 && !this.timer) this.#startTimer(safe);
     this.#syncProgress();
+    // jsdom não calcula layout: o "Ver mais" fica oculto (scrollHeight 0).
+    this.#syncMore();
+  }
+
+  /**
+   * Pausa a contagem enquanto o cursor (ou o foco) estiver no toast e retoma
+   * de onde parou ao sair — assim uma mensagem longa pode ser lida inteira.
+   * A barra de progresso pausa junto (regra CSS de :hover/:focus-within).
+   */
+  #wirePause(): void {
+    if (this.wired) return;
+    this.wired = true;
+    this.addEventListener('mouseenter', () => {
+      this.hovering = true;
+      this.#pauseTimer();
+    });
+    this.addEventListener('mouseleave', () => {
+      this.hovering = false;
+      this.#resumeTimer();
+    });
+    // Teclado (botões copiar/fechar/ver mais) também mantém o toast na tela.
+    this.addEventListener('focusin', () => this.#pauseTimer());
+    this.addEventListener('focusout', () => {
+      if (!this.hovering) this.#resumeTimer();
+    });
+  }
+
+  #startTimer(ms: number): void {
+    this.remaining = ms;
+    this.startedAt = Date.now();
+    this.timer = setTimeout(() => {
+      this.timer = null;
+      this.dismiss();
+    }, ms);
+  }
+
+  #pauseTimer(): void {
+    if (!this.timer) return;
+    clearTimeout(this.timer);
+    this.timer = null;
+    this.remaining = Math.max(0, this.remaining - (Date.now() - this.startedAt));
+  }
+
+  #resumeTimer(): void {
+    if (!this.counting || this.timer || this.disposed) return;
+    if (this.remaining <= 0) {
+      this.dismiss();
+      return;
+    }
+    this.#startTimer(this.remaining);
   }
 
   /**
@@ -234,6 +336,7 @@ export class FxToast extends HTMLElement {
    * sem limite em uso prolongado.
    */
   disconnectedCallback() {
+    this.disposed = true;
     if (this.timer) clearTimeout(this.timer);
     this.timer = null;
     this.dispatchEvent(new CustomEvent(REMOVED_EVENT, { bubbles: false, composed: false }));
@@ -242,6 +345,15 @@ export class FxToast extends HTMLElement {
   attributeChangedCallback(name: string) {
     // A duração é lida em dois lugares (timer + barra): se mudar com o toast
     // na tela, ambos precisam se realinhar.
+    if (name === 'duration') {
+      if (this.timer) {
+        clearTimeout(this.timer);
+        this.timer = null;
+      }
+      const safe = this.safeDuration;
+      this.counting = safe > 0;
+      if (safe > 0 && this.isConnected && !this.disposed) this.#startTimer(safe);
+    }
     if (name === 'duration' || name === 'progress' || name === 'progress-origin' || name === 'kind') {
       this.#syncProgress();
     }
@@ -275,8 +387,8 @@ export class FxToast extends HTMLElement {
     // `left` (padrão) => origem à esquerda; `right` espelha a drenagem.
     el.style.setProperty('--toast-progress-origin', `${this.progressOrigin} center`);
     el.classList.remove('run');
-    // `paused` mantém a barra cheia e imóvel; `always` e `hover` deixam a
-    // animação correr (no `hover`, o CSS só a dispara sob :hover do host).
+    // `paused` mantém a barra cheia e imóvel; os demais modos animam
+    // (o hover pausa a animação junto com o timer, via CSS).
     if (mode !== 'paused') el.classList.add('run');
     // 1 frame sem animação para o browser registrar o estado inicial cheio
     // antes de a barra começar a esvaziar.
@@ -310,16 +422,64 @@ export class FxToast extends HTMLElement {
       <div class="card" style="--kind:${color}" role="status" part="card">
         <span class="icon${isFxIcon ? ' fx-icon' : ''}">${iconContent}</span>
         <div class="body">
-          ${title ? '<div class="title"></div>' : ''}
-          ${msg ? '<div class="msg"></div>' : ''}
+          ${title ? '<div class="title" part="title"></div>' : ''}
+          ${msg ? '<div class="msg" part="message"></div>' : ''}
+          ${msg ? '<button class="more" part="more" hidden>Ver mais</button>' : ''}
         </div>
-        <button class="close" aria-label="Fechar">✕</button>
+        <div class="actions">
+          ${msg ? `<button class="copy" part="copy" hidden aria-label="Copiar mensagem" title="Copiar mensagem">${COPY_SVG}</button>` : ''}
+          <button class="close" aria-label="Fechar" title="Fechar">✕</button>
+        </div>
       </div>`;
     const t = this.shadowRoot!.querySelector<HTMLElement>('.title');
     const m = this.shadowRoot!.querySelector<HTMLElement>('.msg');
     if (t) t.textContent = title;
-    if (m) m.textContent = msg;
+    if (m) {
+      m.textContent = msg;
+      // Dica nativa com o texto completo: passar o mouse na mensagem mostra
+      // tudo, mesmo quando o card está truncado em 2 linhas.
+      m.title = msg;
+    }
+    const card = this.shadowRoot!.querySelector<HTMLElement>('.card')!;
+    const more = this.shadowRoot!.querySelector<HTMLButtonElement>('.more');
+    const copy = this.shadowRoot!.querySelector<HTMLButtonElement>('.copy');
+    more?.addEventListener('click', () => {
+      const expanded = card.classList.toggle('expanded');
+      more.textContent = expanded ? 'Ver menos' : 'Ver mais';
+      // O botão de copiar só aparece com o texto aberto (não polui o card no
+      // tamanho padrão). Enquanto o texto está expandido o toast não fecha.
+      if (copy) copy.hidden = !expanded;
+      if (expanded) this.#pauseTimer();
+    });
+    copy?.addEventListener('click', (e) => {
+      const btn = e.currentTarget as HTMLButtonElement;
+      const text = [title, msg].filter(Boolean).join('\n');
+      navigator.clipboard?.writeText(text).catch(() => { /* clipboard indisponível */ });
+      // Feedback: check verde + dica "Copiado!" por 1,2s.
+      btn.classList.add('done');
+      btn.title = 'Copiado!';
+      setTimeout(() => {
+        btn.classList.remove('done');
+        btn.title = 'Copiar mensagem';
+      }, 1200);
+    });
     this.shadowRoot!.querySelector('.close')!.addEventListener('click', () => this.dismiss());
+  }
+
+  /**
+   * Mostra "Ver mais" somente quando a mensagem passou de 2 linhas.
+   * Sem layout (jsdom) scrollHeight/clientHeight são 0 → fica oculto.
+   */
+  #syncMore(): void {
+    const card = this.shadowRoot?.querySelector<HTMLElement>('.card');
+    const more = this.shadowRoot?.querySelector<HTMLButtonElement>('.more');
+    const msg = this.shadowRoot?.querySelector<HTMLElement>('.msg');
+    if (!card || !more || !msg) return;
+    if (card.classList.contains('expanded')) {
+      more.hidden = false;
+      return;
+    }
+    more.hidden = !(msg.scrollHeight - msg.clientHeight > 1);
   }
 }
 

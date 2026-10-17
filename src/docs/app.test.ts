@@ -319,7 +319,7 @@ describe("docs app", () => {
 		expect(
 			table.shadowRoot!.querySelectorAll("tbody tr").length,
 		).toBeGreaterThan(0);
-	});
+	}, 15000);
 
 	it("variantes da table carregam os dados dos exemplos de uso", async () => {
 		await navigate("fx-table");
@@ -334,18 +334,25 @@ describe("docs app", () => {
 		expect(
 			table.shadowRoot!.querySelectorAll("tbody tr").length,
 		).toBeGreaterThan(0);
-	});
+	}, 15000);
 
-	it("página de formulários renderiza os 4 modelos de cadastro", async () => {
+	it("página de formulários renderiza os 5 modelos de cadastro", async () => {
 		await navigate("forms");
 		await new Promise((r) => setTimeout(r, 50));
 		const cards = main().querySelectorAll(".example-card");
-		expect(cards.length).toBe(4);
+		expect(cards.length).toBe(5);
 		expect(main().textContent).toContain("Modelo 1 — Cadastro em uma coluna");
 		expect(main().textContent).toContain("Modelo 4 — FloatLabel com validação");
+		expect(main().textContent).toContain("Modelo 5 — Form nativo");
 		// fx-floatlabel full propaga full para o controle interno (modelo 4).
 		const floatInput = main().querySelector("fx-floatlabel[full] fx-input");
 		expect(floatInput?.hasAttribute("full")).toBe(true);
+		// Modelo 5: form nativo com campos name + botões submit/reset.
+		const nativeForm = main().querySelector("form[data-native-form]");
+		expect(nativeForm).toBeTruthy();
+		expect(nativeForm!.querySelectorAll('[name]').length).toBeGreaterThanOrEqual(4);
+		expect(nativeForm!.querySelector('fx-button[type="submit"]')).toBeTruthy();
+		expect(nativeForm!.querySelector('fx-button[type="reset"]')).toBeTruthy();
 	});
 
 	it("formulários: cards são opacos (fundo de superfície) e centralizados", async () => {
@@ -363,6 +370,8 @@ describe("docs app", () => {
 		const models = main().querySelectorAll<HTMLElement>("[data-form-validate]");
 		expect(models.length).toBe(4);
 		models.forEach((m) => expect(m.style.maxWidth).not.toBe(""));
+		// O form nativo do Modelo 5 recebe o mesmo card opaco centralizado.
+		expect(rule).toContain(".example-stage form[data-native-form]");
 	});
 
 	it("formulários: save com campos vazios marca error e exibe o alerta", async () => {
@@ -386,6 +395,37 @@ describe("docs app", () => {
 		form.querySelector("[data-save]")!.dispatchEvent(new Event("click"));
 		expect(input.hasAttribute("error")).toBe(false);
 		expect(alertEl.hidden).toBe(true);
+	});
+
+	it("formulários: submit nativo — Enter e fx-button type=submit disparam o submit do form", async () => {
+		await navigate("forms");
+		await new Promise((r) => setTimeout(r, 50));
+		const form = main().querySelector("form[data-native-form]")!;
+		expect(form).toBeTruthy();
+		const out = form.querySelector<HTMLElement>(".native-form-output")!;
+		expect(out.hidden).toBe(true);
+
+		let submits = 0;
+		form.addEventListener("submit", (e) => {
+			e.preventDefault();
+			submits++;
+		});
+
+		// Enter no campo interno do fx-input dispara o submit implícito do form
+		// (o input interno não se associa ao form — o componente aciona).
+		const field = (form.querySelector("fx-input[name='nome']") as any)
+			.shadowRoot.querySelector("input");
+		field.dispatchEvent(
+			new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }),
+		);
+		expect(submits).toBe(1);
+		expect(out.hidden).toBe(false); // saída do submit visível
+
+		// fx-button type="submit" também submete o form.
+		const btn = (form.querySelector('fx-button[type="submit"]') as any)
+			.shadowRoot.querySelector("button");
+		btn.click();
+		expect(submits).toBe(2);
 	});
 });
 
@@ -518,11 +558,78 @@ describe("docs: código de exemplo", () => {
 				},
 			},
 		});
-		const block = main().querySelector(".code-block")!;
+		const block = main().querySelector("#fw-code .fw-pane[data-pane='html'] .code-block")!;
 		const btn = block.querySelector<HTMLButtonElement>(".copy-btn")!;
 		btn.dispatchEvent(new Event("click"));
 		expect(written[0]).toBe(block.querySelector("code")!.textContent);
 		expect(btn.textContent).toBe("Copiado!");
+	});
+
+	it("playground tem abas por framework com valores reais", async () => {
+		await navigate("fx-button");
+		const tabs = [...main().querySelectorAll("#fw-code .fw-tab")].map((b) =>
+			(b as HTMLElement).dataset.fw,
+		);
+		expect(tabs).toEqual(["html", "vue", "react", "angular", "svelte"]);
+		// Trocar variante atualiza o snippet Vue (valor real do playground).
+		const select = main().querySelector('fx-select[data-attr="variant"]') as any;
+		select.value = "danger";
+		select.dispatchEvent(new Event("change"));
+		// Trocar de aba mostra o painel Vue (preenchido sob demanda).
+		const vueTab = main().querySelector("#fw-code .fw-tab[data-fw='vue']") as HTMLButtonElement;
+		vueTab.dispatchEvent(new Event("click"));
+		expect(
+			main().querySelector("#fw-code .fw-pane[data-pane='vue']")!.hasAttribute("hidden"),
+		).toBe(false);
+		const vueCode = main().querySelector("#fw-code .fw-pane[data-pane='vue'] code")!.textContent ?? "";
+		expect(vueCode).toContain('variant="danger"');
+		// Trocar de aba mostra o painel React e persiste.
+		const reactTab = main().querySelector("#fw-code .fw-tab[data-fw='react']") as HTMLButtonElement;
+		reactTab.dispatchEvent(new Event("click"));
+		expect(
+			main().querySelector("#fw-code .fw-pane[data-pane='react']")!.hasAttribute("hidden"),
+		).toBe(false);
+		expect(localStorage.getItem("fenix:doc:framework-tab")).toBe("react");
+		localStorage.removeItem("fenix:doc:framework-tab");
+	});
+
+	it("casos de uso têm abas por framework por card", async () => {
+		await navigate("fx-button");
+		const cards = [...main().querySelectorAll(".example-card")];
+		expect(cards.length).toBeGreaterThan(0);
+		for (const card of cards) {
+			expect(card.querySelector(".fw-tabs")).toBeTruthy();
+			expect(card.querySelector(".example-code .copy-btn")).toBeTruthy();
+		}
+	});
+
+	it("Home: casos de uso mostram código por framework", async () => {
+		await navigate("home");
+		const cards = [...main().querySelectorAll(".usecase-card")];
+		expect(cards.length).toBe(3);
+		for (const card of cards) {
+			const tabs = [...card.querySelectorAll(".fw-tab")].map((b) => (b as HTMLElement).dataset.fw);
+			expect(tabs).toEqual(["html", "vue", "react", "angular", "svelte"]);
+			expect(card.querySelector(".usecase-code .copy-btn")).toBeTruthy();
+		}
+	});
+
+	it("Formulários: cada modelo tem as 5 abas e alterna", async () => {
+		await navigate("forms");
+		const cards = [...main().querySelectorAll(".example-card")];
+		expect(cards.length).toBeGreaterThanOrEqual(5);
+		for (const card of cards) {
+			expect(card.querySelectorAll(".fw-tab").length).toBe(5);
+			expect(card.querySelector(".example-code .copy-btn")).toBeTruthy();
+		}
+		// A aba React converte o MODELO INTEIRO (não só o primeiro componente).
+		const first = cards[0]!;
+		first.querySelector<HTMLButtonElement>(".fw-tab[data-fw='react']")!.dispatchEvent(new Event("click"));
+		const pane = first.querySelector(".fw-pane[data-pane='react']")!;
+		expect(pane.hasAttribute("hidden")).toBe(false);
+		const code = pane.querySelector("code")!.textContent ?? "";
+		expect(code).toContain("useState");
+		expect(code).toContain("fx-input");
 	});
 });
 

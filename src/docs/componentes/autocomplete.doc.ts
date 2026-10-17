@@ -58,7 +58,13 @@ export const autocompleteDoc: ComponentDoc = {
 			name: "value",
 			type: "string",
 			default: "''",
-			desc: "Valor selecionado.",
+			desc: "Valor selecionado. Setar el.value também atualiza o campo interno (sem re-render).",
+		},
+		{
+			name: "name",
+			type: "string",
+			default: "''",
+			desc: "Nome do campo no FormData quando dentro de um <form> (form-associated); Enter com a lista fechada submete o form.",
 		},
 		{
 			name: "source",

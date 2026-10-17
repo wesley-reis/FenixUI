@@ -185,5 +185,125 @@ describe('fx-toast / FenixToast', () => {
     expect(el.shadowRoot!.querySelector('style')!.textContent).toContain('prefers-reduced-motion');
     el.remove();
   });
+
+  /* ------------------------------------------------------------------ */
+  /* Layout: altura mínima, ícone centralizado e mensagem longa          */
+  /* ------------------------------------------------------------------ */
+
+  it('card tem altura mínima e ícone centralizado mesmo com título', () => {
+    const el = document.createElement('fx-toast');
+    el.setAttribute('kind', 'success');
+    el.setAttribute('title', 'Título');
+    el.setAttribute('message', 'Mensagem');
+    document.body.appendChild(el);
+    const style = el.shadowRoot!.querySelector('style')!.textContent!;
+    expect(style).toContain('min-height: 56px');
+    expect(style).toMatch(/\.card \{[^}]*align-items: center/);
+    expect(style).toMatch(/\.icon \{[^}]*align-self: center/);
+    // O ícone não tem mais o deslocamento que o deixava acima do centro.
+    const iconBlock = style.match(/\.icon \{[^}]*\}/)?.[0] ?? '';
+    expect(iconBlock).not.toContain('margin-top');
+    el.remove();
+  });
+
+  it('sem título o card mantém a mesma altura mínima', () => {
+    const el = document.createElement('fx-toast');
+    el.setAttribute('kind', 'info');
+    el.setAttribute('message', 'Só mensagem');
+    document.body.appendChild(el);
+    expect(el.shadowRoot!.querySelector('.title')).toBeNull();
+    expect(el.shadowRoot!.querySelector('style')!.textContent).toContain('min-height: 56px');
+    el.remove();
+  });
+
+  it('mensagem longa é truncada em 2 linhas e oferece "Ver mais" + copiar', () => {
+    const el = document.createElement('fx-toast');
+    el.setAttribute('kind', 'warning');
+    el.setAttribute('title', 'Atenção');
+    el.setAttribute('message', 'Uma mensagem bem longa '.repeat(20));
+    document.body.appendChild(el);
+    const style = el.shadowRoot!.querySelector('style')!.textContent!;
+    expect(style).toContain('-webkit-line-clamp: 2');
+    const more = el.shadowRoot!.querySelector<HTMLButtonElement>('.more')!;
+    const copy = el.shadowRoot!.querySelector<HTMLButtonElement>('.copy')!;
+    expect(more).toBeTruthy();
+    expect(copy).toBeTruthy();
+    // O copiar só aparece depois de expandir o texto.
+    expect(copy.hidden).toBe(true);
+    more.click();
+    expect(copy.hidden).toBe(false);
+    // A dica nativa mostra o texto completo ao passar o mouse.
+    expect(el.shadowRoot!.querySelector('.msg')!.getAttribute('title')).toContain('Uma mensagem bem longa');
+    el.remove();
+  });
+
+  it('"Ver mais" expande o card e troca o rótulo', () => {
+    const el = document.createElement('fx-toast');
+    el.setAttribute('kind', 'info');
+    el.setAttribute('title', 'Título');
+    el.setAttribute('message', 'texto longo');
+    document.body.appendChild(el);
+    const more = el.shadowRoot!.querySelector<HTMLButtonElement>('.more')!;
+    const copy = el.shadowRoot!.querySelector<HTMLButtonElement>('.copy')!;
+    more.click();
+    expect(el.shadowRoot!.querySelector('.card')!.classList.contains('expanded')).toBe(true);
+    expect(more.textContent).toBe('Ver menos');
+    expect(copy.hidden).toBe(false);
+    more.click();
+    expect(el.shadowRoot!.querySelector('.card')!.classList.contains('expanded')).toBe(false);
+    expect(more.textContent).toBe('Ver mais');
+    expect(copy.hidden).toBe(true);
+    el.remove();
+  });
+
+  it('botão copiar envia título + mensagem completa (após expandir)', async () => {
+    const written: string[] = [];
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: (t: string) => { written.push(t); return Promise.resolve(); } },
+    });
+    const el = document.createElement('fx-toast');
+    el.setAttribute('kind', 'success');
+    el.setAttribute('title', 'Salvo');
+    el.setAttribute('message', 'Registro atualizado.');
+    document.body.appendChild(el);
+    el.shadowRoot!.querySelector<HTMLButtonElement>('.more')!.click();
+    el.shadowRoot!.querySelector<HTMLButtonElement>('.copy')!.click();
+    expect(written[0]).toBe('Salvo\nRegistro atualizado.');
+    el.remove();
+  });
+
+  /* ------------------------------------------------------------------ */
+  /* Hover/foco pausam a contagem                                        */
+  /* ------------------------------------------------------------------ */
+
+  it('hover pausa o tempo de fechar e retoma ao sair', async () => {
+    vi.useFakeTimers();
+    FenixToast.info('Longa', 'mensagem grande', { duration: 3000 });
+    await Promise.resolve();
+    const el = document.querySelector('fx-toast')!;
+    vi.advanceTimersByTime(1000);
+    el.dispatchEvent(new Event('mouseenter'));
+    // Muito tempo com o cursor em cima: o toast NÃO pode sumir.
+    vi.advanceTimersByTime(10000);
+    expect(el.shadowRoot!.querySelector('.card')!.classList.contains('leaving')).toBe(false);
+    el.dispatchEvent(new Event('mouseleave'));
+    vi.advanceTimersByTime(4000);
+    expect(el.shadowRoot!.querySelector('.card')!.classList.contains('leaving')).toBe(true);
+    vi.advanceTimersByTime(250);
+    expect(el.isConnected).toBe(false);
+    vi.useRealTimers();
+  });
+
+  it('a barra pausa junto com o timer no hover (:hover/:focus-within)', async () => {
+    FenixToast.info('Barra', 'msg', { duration: 4000, progress: 'always' });
+    await Promise.resolve();
+    const el = document.querySelector('fx-toast')!;
+    const style = el.shadowRoot!.querySelector('style')!.textContent!;
+    expect(style).toContain('.card:hover .progress.run');
+    expect(style).toContain('animation-play-state: paused');
+    expect(style).not.toContain('animation-play-state: running');
+    el.remove();
+  });
 });
 

@@ -27,7 +27,8 @@ import {
 	renderSidebar,
 	syncRoute,
 } from './shell';
-import { codeBlock, highlightCode } from './ui/code';
+import { codeBlock, highlightCode, wireCodeCopy } from './ui/code';
+import { buildFragmentSnippets, buildSnippets, buildSnippetsForHtml, frameworkTabsHtml, readSavedFramework, wireFrameworkTabs } from './frameworks';
 import { routeFromHash, startRouter } from './router';
 
 export { highlightCode };
@@ -214,16 +215,9 @@ function currentAttrs(doc: ComponentDoc): string {
 }
 
 function wireCopyButtons(root: ParentNode): void {
-  root.querySelectorAll<HTMLButtonElement>('.copy-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      // O botão vive na barra (.code-head); o código está no mesmo .code-block.
-      const block = btn.closest('.code-block');
-      const text = block?.querySelector('code')?.textContent ?? '';
-      navigator.clipboard?.writeText(text).catch(() => { /* clipboard indisponível */ });
-      btn.textContent = 'Copiado!';
-      setTimeout(() => (btn.textContent = 'Copiar'), 1200);
-    });
-  });
+  // Implementação compartilhada (idempotente) — também usada pelos painéis
+  // de framework preenchidos sob demanda.
+  wireCodeCopy(root);
 }
 
 /* ------------------------------------------------------------------ */
@@ -235,6 +229,83 @@ const HOME_TAGS = [
   'fx-button', 'fx-badge', 'fx-input', 'fx-switch', 'fx-floatlabel',
   'fx-progress', 'fx-knob', 'fx-stepper',
 ];
+
+/**
+ * Casos de uso da Home: cada card mostra o preview ao vivo E o código real
+ * por framework (valores de exemplo, prontos para colar no projeto).
+ */
+const HOME_USE_CASES = [
+  {
+    title: 'Dashboards & painéis',
+    desc: 'Tabelas, indicadores e métricas com visual consistente e temas em runtime.',
+    href: '#/fx-table',
+    link: 'Ver fx-table',
+    preview: `
+            <div class="uc-stat"><b>87%</b><span class="uc-label">Meta do mês</span><fx-progress value="87" variant="success"></fx-progress></div>
+            <div class="uc-stat"><b>1.2k</b><span class="uc-label">Visitas hoje</span><fx-progress value="62" variant="success"></fx-progress></div>
+            <fx-knob></fx-knob>`,
+    code: `<fx-progress value="87" variant="success" label="Meta do mês"></fx-progress>
+<fx-progress value="62" variant="success" label="Visitas hoje"></fx-progress>
+<fx-knob value="72"></fx-knob>`,
+  },
+  {
+    title: 'Formulários completos',
+    desc: 'FloatLabel, validação, upload e autocomplete prontos para qualquer cadastro.',
+    href: '#/forms',
+    link: 'Ver Formulários',
+    preview: `
+            <div class="uc-form">
+              <fx-floatlabel variant="in"><fx-input full icon="mail" type="email"></fx-input><label>E-mail</label></fx-floatlabel>
+              <fx-floatlabel variant="in"><fx-input full icon="lock" type="password"></fx-input><label>Senha</label></fx-floatlabel>
+              <fx-switch size="sm" checked>Lembrar-me</fx-switch>
+              <fx-button size="sm" variant="primary">Entrar</fx-button>
+            </div>`,
+    code: `<fx-floatlabel variant="in">
+  <fx-input full icon="mail" type="email" name="email" placeholder="E-mail"></fx-input>
+  <label>E-mail</label>
+</fx-floatlabel>
+<fx-floatlabel variant="in">
+  <fx-input full icon="lock" type="password" name="senha" placeholder="Senha"></fx-input>
+  <label>Senha</label>
+</fx-floatlabel>
+<fx-switch name="lembrar" checked>Lembrar-me</fx-switch>
+<fx-button variant="primary" type="submit">Entrar</fx-button>`,
+  },
+  {
+    title: 'Wizards & fluxos multi-etapa',
+    desc: 'Stepper com navegação integrada para checkout e onboarding, pronto para usar.',
+    href: '#/fx-stepper',
+    link: 'Ver fx-stepper',
+    preview: `
+            <div class="uc-wizard">
+              <fx-stepper active="1" style="width:100%">
+                <div slot="step-0" step-title="Conta"><p>Crie sua conta.</p></div>
+                <div slot="step-1" step-title="Pagamento"><p>Escolha a forma de pagamento.</p></div>
+                <div slot="step-2" step-title="Confirmação"><p>Revise e confirme.</p></div>
+              </fx-stepper>
+            </div>`,
+    code: `<fx-stepper active="1">
+  <div slot="step-0" step-title="Conta"><p>Crie sua conta.</p></div>
+  <div slot="step-1" step-title="Pagamento"><p>Escolha a forma de pagamento.</p></div>
+  <div slot="step-2" step-title="Confirmação"><p>Revise e confirme.</p></div>
+</fx-stepper>`,
+  },
+];
+
+/** Card de caso de uso com preview + abas de código por framework. */
+function useCaseCard(uc: (typeof HOME_USE_CASES)[number]): string {
+  const snippets = buildFragmentSnippets({ html: uc.code });
+  return (
+    `<div class="usecase-card">` +
+    `<div class="usecase-preview">${uc.preview}</div>` +
+    `<b>${esc(uc.title)}</b>` +
+    `<p>${esc(uc.desc)}</p>` +
+    `<a href="${uc.href}">${esc(uc.link)} <span class="fx-icon fx-icon-arrow_forward"></span></a>` +
+    `<div class="usecase-code">${frameworkTabsHtml(snippets, readSavedFramework())}</div>` +
+    `</div>`
+  );
+}
+
 
 async function renderHome(): Promise<void> {
   await Promise.all(HOME_TAGS.map((t) => componentLoaders[t]?.()));
@@ -296,43 +367,7 @@ async function renderHome(): Promise<void> {
     <section class="home-section">
       <h3 class="home-section-title">Casos de uso</h3>
       <div class="usecase-grid">
-        <div class="usecase-card">
-          <div class="usecase-preview">
-            <div class="uc-stat"><b>87%</b><span class="uc-label">Meta do mês</span><fx-progress value="87" variant="success"></fx-progress></div>
-            <div class="uc-stat"><b>1.2k</b><span class="uc-label">Visitas hoje</span><fx-progress value="62" variant="success"></fx-progress></div>
-            <fx-knob></fx-knob>
-          </div>
-          <b>Dashboards & painéis</b>
-          <p>Tabelas, indicadores e métricas com visual consistente e temas em runtime.</p>
-          <a href="#/fx-table">Ver fx-table <span class="fx-icon fx-icon-arrow_forward"></span></a>
-        </div>
-        <div class="usecase-card">
-          <div class="usecase-preview">
-            <div class="uc-form">
-              <fx-floatlabel variant="in"><fx-input full icon="mail" type="email"></fx-input><label>E-mail</label></fx-floatlabel>
-              <fx-floatlabel variant="in"><fx-input full icon="lock" type="password"></fx-input><label>Senha</label></fx-floatlabel>
-              <fx-switch size="sm" checked>Lembrar-me</fx-switch>
-              <fx-button size="sm" variant="primary">Entrar</fx-button>
-            </div>
-          </div>
-          <b>Formulários completos</b>
-          <p>FloatLabel, validação, upload e autocomplete prontos para qualquer cadastro.</p>
-          <a href="#/forms">Ver Formulários <span class="fx-icon fx-icon-arrow_forward"></span></a>
-        </div>
-        <div class="usecase-card">
-          <div class="usecase-preview">
-            <div class="uc-wizard">
-              <fx-stepper active="1" style="width:100%">
-                <div slot="step-0" step-title="Conta"><p>Crie sua conta.</p></div>
-                <div slot="step-1" step-title="Pagamento"><p>Escolha a forma de pagamento.</p></div>
-                <div slot="step-2" step-title="Confirmação"><p>Revise e confirme.</p></div>
-              </fx-stepper>
-            </div>
-          </div>
-          <b>Wizards & fluxos multi-etapa</b>
-          <p>Stepper com navegação integrada para checkout e onboarding, pronto para usar.</p>
-          <a href="#/fx-stepper">Ver fx-stepper <span class="fx-icon fx-icon-arrow_forward"></span></a>
-        </div>
+        ${HOME_USE_CASES.map(useCaseCard).join("\n        ")}
       </div>
     </section>
 
@@ -347,6 +382,9 @@ async function renderHome(): Promise<void> {
   };
   document.getElementById('hero-get-started')?.addEventListener('click', goInstall);
   document.getElementById('home-cta-button')?.addEventListener('click', goInstall);
+  // Casos de uso: abas por framework + botões Copiar de cada snippet.
+  wireFrameworkTabs(main);
+  wireCopyButtons(main);
 }
 
 /* ------------------------------------------------------------------ */
@@ -435,12 +473,11 @@ async function renderTheming(): Promise<void> {
     ${codeBlock(`import { applyPreset } from '@wrrdev/fenix-ui';
 
 // Presets disponíveis:
-applyPreset('fenix',  'light'); // padrão (indigo)
+applyPreset('ikki',   'light'); // padrão (identidade base)
 applyPreset('seiya',  'light'); // rose/coral
 applyPreset('shiryu', 'dark');  // teal/esmeralda
 applyPreset('hyoga',  'light'); // azul-gelo
 applyPreset('shun',   'dark');  // magenta, cantos em pílula
-applyPreset('ikki',   'light'); // laranja fogo, cantos retos
 applyPreset('aiolia', 'dark');  // âmbar/dourado`)}
 
     <h4>Usar um tema como base e mudar só o que quiser</h4>
@@ -581,7 +618,7 @@ FenixUI.setTokens({
   };
   document.getElementById('th-preset')!.addEventListener('change', sync);
   document.getElementById('th-mode')!.addEventListener('change', sync);
-  // Inicializa os selects com os valores padrão (Fenix + light)
+  // Inicializa os selects com os valores padrão (Ikki + light)
   const thPreset = document.getElementById('th-preset') as HTMLSelectElement | null;
   const thMode = document.getElementById('th-mode') as HTMLSelectElement | null;
   if (thPreset) thPreset.value = currentPreset;
@@ -740,7 +777,7 @@ function renderThemingSwatchesOnly(container: HTMLElement): void {
 /* Header: preset + modo (global, reflete em todas as páginas)         */
 /* ------------------------------------------------------------------ */
 
-let currentPreset = 'fenix';
+let currentPreset = 'ikki';
 let currentMode: 'light' | 'dark' = 'light';
 /**
  * Referência ao `paint()` da página de Temas. Permite repintar os swatches
@@ -917,11 +954,24 @@ function renderVariantCards(doc: ComponentDoc): string {
 
 	const pushCard = (el: Element, title: string): void => {
 		const html = el.outerHTML;
+		// Exemplos sem componente (só texto/explicação) ficam com o bloco simples.
+		const hasFx = /<fx-[a-z-]+/.test(html);
+		const code = hasFx
+			? `<div class="example-code">${frameworkTabsHtml(
+					buildSnippetsForHtml({
+						tag: doc.tag,
+						imports: doc.imports,
+						html: formatHtml(html),
+						events: doc.events,
+					}),
+					readSavedFramework(),
+				)}</div>`
+			: `<div class="code-block example-code"><div class="code-head"><button class="copy-btn">Copiar</button></div><pre><code>${highlightCode(formatHtml(html))}</code></pre></div>`;
 		cards.push(
 			`<div class="example-card">` +
 				(title ? `<div class="example-title">${esc(title)}</div>` : "") +
 				`<div class="example-stage">${html}</div>` +
-				`<div class="code-block example-code"><div class="code-head"><button class="copy-btn">Copiar</button></div><pre><code>${highlightCode(formatHtml(html))}</code></pre></div>` +
+				code +
 				`</div>`,
 		);
 	};
@@ -1029,7 +1079,8 @@ async function renderComponentPage(doc: ComponentDoc): Promise<void> {
       <div class="demo-stage" id="stage"></div>
       <div class="demo-controls">${buildControls(doc)}</div>
     </div>
-    ${codeBlock(`<${doc.tag}>…</${doc.tag}>`)}
+    <h3>Código por framework (usa os valores atuais do playground)</h3>
+    <div id="fw-code"></div>
     <h3>Variantes e usos (modelo + código)</h3>
     ${doc.variantsHtml ? renderVariantCards(doc) : ""}
     ${apiTable("Atributos / Propriedades", doc.attributes, COLS_ATTR)}
@@ -1044,20 +1095,32 @@ async function renderComponentPage(doc: ComponentDoc): Promise<void> {
 	await Promise.all(tags.map((tag) => customElements.whenDefined(tag)));
 
 	const stage = main.querySelector<HTMLDivElement>("#stage")!;
-	const codeEl = main
-		.querySelectorAll(".code-block")[1]
-		?.querySelector("code");
+	const fwCode = main.querySelector<HTMLDivElement>("#fw-code")!;
 	const refresh = (): void => {
-		stage.innerHTML = doc.demoHtml(currentAttrs(doc));
+		const src = doc.demoHtml(currentAttrs(doc));
+		stage.innerHTML = src;
 		// Re-inicializa componentes que precisam de parse de JSON via JS
 		initDataComponents(stage);
-		if (codeEl) {
-			// Atributos booleanos não têm valor: `disabled=""` vira apenas `disabled`.
-			const clean = stage.innerHTML.replace(
-				/(\s(?:disabled|loading|checked|readonly|full|round))=""/g,
-				"$1",
-			);
-			codeEl.innerHTML = highlightCode(formatHtml(clean));
+		// Atributos booleanos não têm valor: `disabled=""` vira apenas `disabled`.
+		// O código vem do SOURCE (não do innerHTML do stage): componentes como
+		// o fx-floatlabel MOVEM filhos (a <label>) para o Shadow DOM, então o
+		// innerHTML do stage PERDERIA o que foi movido — o código copiado
+		// sairia sem a label.
+		const clean = src.replace(
+			/(\s(?:disabled|loading|checked|readonly|full|round))=""/g,
+			"$1",
+		);
+		if (fwCode) {
+			const snippets = buildSnippets({
+				tag: doc.tag,
+				imports: doc.imports,
+				prettyHtml: formatHtml(clean),
+				rawHtml: clean,
+				events: doc.events,
+			});
+			fwCode.innerHTML = frameworkTabsHtml(snippets, readSavedFramework());
+			wireFrameworkTabs(fwCode);
+			wireCopyButtons(fwCode);
 		}
 	};
 	main
@@ -1069,6 +1132,7 @@ async function renderComponentPage(doc: ComponentDoc): Promise<void> {
 	refresh();
 	initDataComponents(main);
 	wireCopyButtons(main);
+	wireFrameworkTabs(main);
 }
 
 /* ------------------------------------------------------------------ */
@@ -1086,16 +1150,20 @@ const FORMS_TAGS = [
 	"fx-alert",
 	"fx-fileupload",
 	"fx-autocomplete",
+	"fx-checkbox",
 ];
 
-/** Card "modelo + código" de um formulário pronto. */
+/** Card "modelo + código" de um formulário pronto (código com abas por framework). */
 function formModelCard(title: string, desc: string, html: string): string {
+	// Modelos são FRAGMENTOS (vários componentes): o gerador converte todos e
+	// deriva os imports dos subpaths usados.
+	const snippets = buildFragmentSnippets({ html });
 	return (
 		`<div class="example-card">` +
 		`<div class="example-title">${esc(title)}</div>` +
 		`<p style="margin:0 0 12px;font-size:13px;color:var(--fx-text-muted)">${esc(desc)}</p>` +
 		`<div class="example-stage">${html}</div>` +
-		`<div class="code-block example-code"><div class="code-head"><button class="copy-btn">Copiar</button></div><pre><code>${highlightCode(formatHtml(html))}</code></pre></div>` +
+		`<div class="example-code">${frameworkTabsHtml(snippets, readSavedFramework())}</div>` +
 		`</div>`
 	);
 }
@@ -1223,23 +1291,71 @@ const FORM_MODEL_4 = `
   </div>
 </div>`;
 
+/**
+ * Modelo 5: <form> NATIVO — os componentes são form-associated: com o atributo
+ * `name` entram no FormData do form, o Enter em fx-input submete, fx-button
+ * type="submit"/"reset" aciona o form e <label for> foca o campo pelo id.
+ */
+const FORM_MODEL_5 = `
+<form data-native-form style="display:flex;flex-direction:column;gap:16px;max-width:520px">
+  <div>
+    <label for="nf-nome" style="display:block;font-size:12px;font-weight:600;color:var(--fx-text-muted);margin-bottom:4px">Nome completo (label nativa → for foca o campo)</label>
+    <fx-input full id="nf-nome" name="nome" icon="person" placeholder="Enter submete o form" autofocus></fx-input>
+  </div>
+  <fx-input full id="nf-email" name="email" type="email" icon="mail" placeholder="E-mail"></fx-input>
+  <fx-select full id="nf-uf" name="uf" placeholder="UF"><option value="sp">São Paulo</option><option value="rj">Rio de Janeiro</option><option value="mg">Minas Gerais</option></fx-select>
+  <fx-checkbox name="termos" value="aceito">Aceito os termos (só entra no FormData quando marcado)</fx-checkbox>
+  <fx-textarea full id="nf-obs" name="obs" rows="2" placeholder="Observações (Enter quebra linha)"></fx-textarea>
+  <pre class="native-form-output" hidden style="margin:0;padding:10px 12px;font-size:12px;font-family:var(--fx-font-family);background:var(--fx-surface-surface-hover,rgba(0,0,0,.05));border:1px dashed var(--fx-border-default);border-radius:var(--fx-radius-md);white-space:pre-wrap;word-break:break-word"></pre>
+  <div style="display:flex;gap:12px;justify-content:flex-end">
+    <fx-button variant="ghost" type="reset">Limpar (form.reset)</fx-button>
+    <fx-button type="submit">Enviar (FormData)</fx-button>
+  </div>
+</form>`;
+
+/**
+ * Modelo 5: o submit chega pelo <form> nativo (Enter em fx-input ou fx-button
+ * type="submit" → requestSubmit). O listener usa preventDefault e mostra o
+ * FormData resultante no <pre> de saída: em navegadores, o form-associated
+ * publica name/value via ElementInternals.
+ */
+function wireNativeForm(root: HTMLElement): void {
+	root.querySelectorAll<HTMLFormElement>("form[data-native-form]").forEach((form) => {
+		const out = form.querySelector<HTMLElement>(".native-form-output");
+		form.addEventListener("submit", (e) => {
+			e.preventDefault();
+			if (!out) return;
+			const fd = new FormData(form);
+			const lines = [...fd.entries()].map(
+				([k, v]) => `${k} = ${typeof v === "string" ? v : `(arquivo: ${(v as File).name})`}`,
+			);
+			out.textContent = lines.length
+				? `submit recebido pelo <form> — FormData:\n${lines.join("\n")}`
+				: "submit recebido pelo <form> — FormData vazio (este ambiente não associa custom elements ao form; teste em um navegador).";
+			out.hidden = false;
+		});
+	});
+}
+
 async function renderForms(): Promise<void> {
 	const main = document.getElementById("main")!;
 	await Promise.all(FORMS_TAGS.map((t) => componentLoaders[t]?.()));
 	await Promise.all(FORMS_TAGS.map((t) => customElements.whenDefined(t)));
 	main.innerHTML = `
     <h2>Formulários</h2>
-    <p class="lead">Modelos prontos de cadastro combinando os componentes do FenixUI: use <code>full</code> para os campos acompanharem o container, CSS grid para múltiplos campos por linha e <code>error</code>/<code>error-text</code> para a validação. Clique em <strong>Salvar</strong> com campos vazios para ver a validação em ação. A borda e o brilho de <code>error</code>/<code>success</code> seguem o token <code>effect.focus-ring</code>: com o anel desligado os campos validados exibem apenas a borda vermelha/verde (sem sobra), e com o anel ligado o brilho é somado.</p>
+    <p class="lead">Modelos prontos de cadastro combinando os componentes do FenixUI: use <code>full</code> para os campos acompanharem o container, CSS grid para múltiplos campos por linha e <code>error</code>/<code>error-text</code> para a validação. Clique em <strong>Salvar</strong> com campos vazios para ver a validação em ação. Cada modelo traz <strong>abas por framework</strong> (HTML/CDN, Vue, React, Angular e Svelte) com o modelo inteiro convertido e os valores do exemplo. A borda e o brilho de <code>error</code>/<code>success</code> seguem o token <code>effect.focus-ring</code>: com o anel desligado os campos validados exibem apenas a borda vermelha/verde (sem sobra), e com o anel ligado o brilho é somado. Todos os campos são <strong>form-associated</strong>: com o atributo <code>name</code> entram no <code>FormData</code> de um <code>&lt;form&gt;</code> nativo, o Enter submete, <code>&lt;label for&gt;</code> foca e <code>form.reset()</code> restaura o valor — veja o Modelo 5.</p>
     <style>
       /* hidden precisa vencer o display do host do alert */
       .example-stage fx-alert[hidden] { display: none !important; }
       /* O palco é display:flex/flex-wrap (index.html): sem isso os modelos
          colapsam para a largura do conteúdo e o full não estica. */
       .example-stage [data-form-validate] { flex: 1 1 100%; }
+      .example-stage form[data-native-form] { flex: 1 1 100%; }
       /* Os forms são cards opacos centralizados (não transparentes): o palco
          tem fundo xadrez vazado para mostrar transparência — o form cobre com
          a cor de superfície, tem largura legível e fica centrado. */
-      .example-stage [data-form-validate] {
+      .example-stage [data-form-validate],
+      .example-stage form[data-native-form] {
         background: var(--fx-surface-background, #fff);
         border: 1px solid var(--fx-border-default);
         border-radius: var(--fx-radius-md);
@@ -1253,9 +1369,16 @@ async function renderForms(): Promise<void> {
     ${formModelCard("Modelo 2 — Grid de duas colunas", "Dois campos por linha via CSS grid (grid-template-columns: 1fr 1fr) com full nos campos.", FORM_MODEL_2)}
     ${formModelCard("Modelo 3 — Misto (múltiplos campos por linha)", "Grids com 2-3 campos por linha, selects, multiselect, autocomplete e fileupload full.", FORM_MODEL_3)}
     ${formModelCard("Modelo 4 — FloatLabel com validação", "fx-floatlabel full (propagado para o controle) + error/error-text ao salvar com campos vazios.", FORM_MODEL_4)}
+    ${formModelCard(
+      "Modelo 5 — Form nativo (submit pelo form)",
+      "Form-Associated: `name` publica no FormData, o Enter em fx-input submete o <form>, fx-button type=\"submit\"/\"reset\" acionam o form e <label for> foca o campo pelo id. O submit é interceptado (preventDefault) e o FormData aparece no bloco de saída.",
+      FORM_MODEL_5,
+    )}
   `;
 	wireFormValidation(main);
+	wireNativeForm(main);
 	wireCopyButtons(main);
+	wireFrameworkTabs(main);
 }
 
 async function renderRoute(): Promise<void> {
@@ -1384,7 +1507,7 @@ import { applyPreset } from '@wrrdev/fenix-ui';
 import '@wrrdev/fenix-ui/vue';
 
 export default defineNuxtPlugin(() => {
-  applyPreset('fenix', 'light');
+  applyPreset('ikki', 'light');
 });`)}
     <div class="note">
       <strong>SSR:</strong> os componentes são Web Components (client-side). Use
@@ -2028,6 +2151,12 @@ async function openIconCopyModal(icon: string): Promise<void> {
 
   const name = esc(icon);
 
+  // Escapa para ATRIBUTO (aspas incluídas): o esc() das docs cobre apenas
+  // & < > — valores como <i class="fx-icon …"> contêm ASPAS, que fechavam o
+  // data-value no meio e o botão Copiava só `<i class=` (código truncado).
+  const attrEsc = (s: string): string =>
+    s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+
   const rows: Array<{ label: string; value: string }> = [
     { label: 'Nome do glifo', value: icon },
     { label: 'Classe completa (recomendado)', value: `fx-icon fx-icon-${icon}` },
@@ -2049,7 +2178,7 @@ async function openIconCopyModal(icon: string): Promise<void> {
             <span class="icon-copy-label">${r.label}</span>
             <code class="icon-copy-value">${esc(r.value)}</code>
           </div>
-          <button type="button" class="icon-copy-btn" data-value="${esc(r.value)}">Copiar</button>
+          <button type="button" class="icon-copy-btn" data-value="${attrEsc(r.value)}">Copiar</button>
         </div>`).join('')}
     </div>
     <style>
@@ -2325,7 +2454,7 @@ document.addEventListener('click', (e: MouseEvent) => {
   }
 });
 
-applyPreset('fenix', 'light');
+applyPreset('ikki', 'light');
 setupHeader();
 mountTopbar();
 setupSearch();

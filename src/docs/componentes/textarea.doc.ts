@@ -9,7 +9,7 @@ export const textareaDoc: ComponentDoc = {
 	tag: "fx-textarea",
 	title: "Textarea",
 	group: "Formulário",
-	lead: "Campo de texto multilinha com validação visual e tamanhos padronizados.",
+	lead: "Campo de texto multilinha com validação visual e tamanhos padronizados. Form-associated: com name entra no FormData de um <form> (Enter segue sendo quebra de linha, como o nativo).",
 	imports: ["import '@wrrdev/fenix-ui/textarea';"],
 	demoHtml: (a) =>
 		`<fx-textarea ${a} placeholder="Descreva sua necessidade..."></fx-textarea>`,
@@ -35,7 +35,19 @@ export const textareaDoc: ComponentDoc = {
 			name: "value",
 			type: "string",
 			default: "''",
-			desc: "Texto do campo.",
+			desc: "Texto do campo. Setar el.value também atualiza o campo interno (sem re-render, preservando foco/cursor).",
+		},
+		{
+			name: "name",
+			type: "string",
+			default: "''",
+			desc: "Nome do campo no FormData quando dentro de um <form> (form-associated).",
+		},
+		{
+			name: "autofocus",
+			type: "boolean",
+			default: "false",
+			desc: "Foca o campo ao entrar na tela (delegatesFocus leva o foco ao textarea interno).",
 		},
 		{
 			name: "size",

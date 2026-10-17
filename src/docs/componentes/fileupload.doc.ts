@@ -60,6 +60,7 @@ export const fileuploadDoc: ComponentDoc = {
 		{ name: "progress", type: "number", default: "0", desc: "Progresso do upload (0-100). Atualize durante o upload real; chega a 100 em verde." },
 		{ name: "disabled", type: "boolean", default: "false", desc: "Desabilita o controle." },
 		{ name: "value", type: "string", default: "''", desc: "Nome(s) do(s) arquivo(s) selecionado(s)." },
+		{ name: "name", type: "string", default: "''", desc: "Nome do campo no FormData quando dentro de um <form>: os File's selecionados são enviados junto com o submit, como um <input type=\"file\"> nativo (form-associated)." },
 		{ name: "full", type: "boolean", default: "false", desc: "Largura 100% acompanhando o elemento pai (host vira block; botão/dropzone esticam)." },
 	],
 	events: [

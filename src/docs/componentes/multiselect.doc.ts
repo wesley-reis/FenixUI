@@ -67,6 +67,12 @@ export const multiselectDoc: ComponentDoc = {
 			desc: "Valores selecionados; reflete ao alterar. Propriedade `values` aceita array.",
 		},
 		{
+			name: "name",
+			type: "string",
+			default: "''",
+			desc: "Nome do campo no FormData quando dentro de um <form>: UMA entrada por valor selecionado (form-associated).",
+		},
+		{
 			name: "searchable",
 			type: "boolean",
 			default: "false",

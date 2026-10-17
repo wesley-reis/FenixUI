@@ -9,7 +9,7 @@ export const floatlabelDoc: ComponentDoc = {
 	tag: 'fx-floatlabel',
 	title: 'FloatLabel',
 	group: 'Formulário',
-	lead: 'Rótulo flutuante  comporta-se como placeholder quando vazio e sobe para o topo do campo ao focar, abrir ou preencher valor.',
+	lead: 'Rótulo flutuante  comporta-se como placeholder quando vazio e sobe para o topo do campo ao focar, abrir ou preencher valor. A <label> do light DOM é MOVIDA para o Shadow DOM na primeira renderização (não sobra cópia no light DOM — nada que o consumidor/CSS possa reexibir); o clique na label foca o campo.',
 	imports: ['import \'@wrrdev/fenix-ui/floatlabel\';'],
 	demoHtml: (a) =>
 		`<fx-floatlabel ${a}><fx-input id="demo-fl-input"></fx-input><label for="demo-fl-input">Nome de usuário</label></fx-floatlabel>`,
@@ -109,7 +109,7 @@ export const floatlabelDoc: ComponentDoc = {
 	slots: [
 		{
 			name: '(padrão)',
-			desc: 'Contém exatamente um campo de controle (fx-input, fx-select, etc.) e um <label>.',
+			desc: 'Contém exatamente um campo de controle (fx-input, fx-select, etc.) e um <label>. A label é MOVIDA para o Shadow DOM no primeiro render — escreva-a normalmente no light DOM (com for apontando o id do controle, se quiser); depois dela não existe cópia no light DOM.',
 		},
 	],
 };

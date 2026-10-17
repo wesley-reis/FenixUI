@@ -77,6 +77,12 @@ export const knobDoc: ComponentDoc = {
 			desc: "Valor atual do knob.",
 		},
 		{
+			name: "name",
+			type: "string",
+			default: "''",
+			desc: "Nome do campo no FormData quando dentro de um <form> (form-associated).",
+		},
+		{
 			name: "min",
 			type: "number",
 			default: "0",

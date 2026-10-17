@@ -1,15 +1,20 @@
-import { FxElement } from '../../core/base';
+import { FxFormElement } from '../../core/form-element';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 
 /**
  * <fx-switch> — Interruptor ligado/desligado (role="switch").
  *
+ * Form-Associated Custom Element: dentro de um <form> entra no FormData
+ * (via atributo `name`) com `value` (ou 'on') quando ligado — desligado
+ * não envia nada, igual ao checkbox. Recebe reset/disable do form.
+ *
  * O texto do slot (light DOM) é o rótulo clicável.
- * Atributos: checked, disabled, size (sm|md|lg).
- * Evento: `change` (composed, detail: { checked }).
+ * Atributos: checked, disabled, value, name, size (sm|md|lg).
+ * Eventos: `change` e `checkedChange` (composed, detail: { checked, value }) —
+ * `checkedChange` é o two-way binding do Angular [(checked)].
  */
-export class FxSwitch extends FxElement {
+export class FxSwitch extends FxFormElement {
   static override styles = css`
     :host {
       display: inline-flex;
@@ -93,6 +98,15 @@ export class FxSwitch extends FxElement {
     this.toggleAttr('disabled', Boolean(value));
   }
 
+  /** getter/setter `value` → espelho do atributo `value` (compat com v-model / [(value)]). */
+  get value(): string { return this.getAttr('value'); }
+  set value(v: string) { this.setAttribute('value', v); }
+
+  /** No FormData: `value` (ou 'on') quando ligado; null (não envia) quando não. */
+  protected override getFormValue(): string | FormData | null {
+    return this.checked ? (this.getAttr('value') || 'on') : null;
+  }
+
   protected override render(): void {
     this.setTemplate(`
       <button class="switch" part="switch" type="button" role="switch"
@@ -115,7 +129,38 @@ export class FxSwitch extends FxElement {
           detail: { checked: this.checked },
         }),
       );
+      // Two-way binding do Angular: [(checked)] = [checked] + (checkedChange).
+      this.dispatchEvent(
+        new CustomEvent('checkedChange', {
+          bubbles: true,
+          composed: true,
+          detail: { checked: this.checked, value: this.getAttr('value') },
+        }),
+      );
     });
+
+    // Publica name/value no form (ElementInternals) a cada render.
+    this.updateFormValue();
+  }
+
+  /** Estado marcado inicial (para form.reset() restaurar). */
+  private _initialChecked = false;
+  private _initialCheckedCaptured = false;
+
+  protected override connectedCallback(): void {
+    if (!this._initialCheckedCaptured) {
+      this._initialCheckedCaptured = true;
+      this._initialChecked = this.checked;
+    }
+    super.connectedCallback();
+  }
+
+  /** form.reset(): restaura o estado inicial (desligado por padrão). */
+  override formResetCallback(): void {
+    this.checked = this._initialChecked;
+    const btn = this.root.querySelector<HTMLButtonElement>('.switch');
+    if (btn) btn.setAttribute('aria-checked', String(this.checked));
+    this.updateFormValue();
   }
 }
 

@@ -17,9 +17,12 @@ import { defineElement } from "../../core/define";
  *  - error / invalid: label + borda em vermelho, mensagem menor abaixo.
  *  - success / valid: label + borda em verde.
  *
- * A label do light DOM é MOVIDA para dentro do Shadow DOM (como `.flabel`),
- * usando classes de shadow (não `::slotted`), o que é confiável mesmo com
- * componentes aninhados que possuem shadow root próprio.
+ * A <label> do light DOM é MOVIDA para dentro do Shadow DOM (como `.flabel`)
+ * na primeira renderização — a partir daí NÃO existe cópia no light DOM.
+ * Ocultá-la com `hidden` (solução anterior) era frágil: o consumidor, o
+ * framework ou uma folha de estilo podiam remover o atributo e a label
+ * original reaparecia embaixo do campo, quebrando o floatlabel. Mover o
+ * elemento é estrutural: não há nada removível lá fora.
  */
 export class FxFloatlabel extends FxElement {
 	static override get observedAttributes(): string[] {
@@ -165,32 +168,51 @@ export class FxFloatlabel extends FxElement {
 	private targetControl: HTMLElement | null = null;
 	private observer: MutationObserver | null = null;
 	private listenersReady = false;
+	/** <label> adotada do light DOM — vive no Shadow DOM após o 1º render. */
+	private _label: HTMLElement | null = null;
+	private _labelClickBound = false;
 
 	protected render(): void {
 		const control = this.findControl();
-		const label = this.findLabel();
-		const originalLabel = label as HTMLElement | null;
-		const labelText = originalLabel
-			? originalLabel.textContent?.replace(/\s+/g, " ").trim()
-			: "";
-		const labelFor = originalLabel
-			? originalLabel.getAttribute("for") || ""
-			: "";
+		// Adota a <label> do light DOM (na 1ª renderização, ou se o consumidor
+		// trocar por outra depois). Uma vez movida, o render seguinte não a
+		// encontra no light DOM — a referência `_label` é reutilizada.
+		const lightLabel = this.findLabel();
+		if (lightLabel) this._label = lightLabel;
+		const label = this._label;
 		const isOver = this.getAttribute("variant") === "over";
 
 		this.setTemplate(`
       <div class="wrapper" part="wrapper">
-        ${isOver ? `<label class="flabel" part="label" for="${labelFor}">${labelText}</label>` : ""}
         <div class="field-box" part="field">
           <slot></slot>
-          ${isOver ? "" : `<label class="flabel" part="label" for="${labelFor}">${labelText}</label>`}
         </div>
         <div class="error-message" part="error"></div>
       </div>
     `);
 
-		// Esconde a label original do light DOM (a renderizada no shadow assume o papel).
-		if (originalLabel) originalLabel.setAttribute("hidden", "");
+		// A label original é INSERIDA no Shadow DOM (move o próprio elemento —
+		// não é uma cópia). `setTemplate` reconstrói o template a cada render e
+		// a label desanexada é reinserida no novo wrapper, com estado intacto.
+		if (label) {
+			label.classList.add("flabel");
+			label.setAttribute("part", "label");
+			const wrapper = this.root.querySelector(".wrapper");
+			const fieldBox = this.root.querySelector(".field-box");
+			if (wrapper && fieldBox) {
+				if (isOver) wrapper.insertBefore(label, fieldBox);
+				else fieldBox.appendChild(label);
+			}
+			// `for` não cruza a fronteira do shadow (o id do controle vive no
+			// light DOM): o clique na label foca o campo manualmente.
+			if (!this._labelClickBound) {
+				this._labelClickBound = true;
+				label.addEventListener("click", (e) => {
+					e.preventDefault();
+					(this.targetControl as HTMLElement | null)?.focus?.();
+				});
+			}
+		}
 
 		this.attachEvents();
 		this.syncControlReference(control);

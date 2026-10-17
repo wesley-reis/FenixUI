@@ -1,16 +1,20 @@
-import { FxElement } from '../../core/base';
+import { FxFormElement } from '../../core/form-element';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 
 /**
  * <fx-slider> — Controle deslizante para seleção de valor numérico em um intervalo.
  *
- * Atributos: min, max, step, value, size (sm|md|lg), disabled, show-value,
- * label (rótulo acima do trilho).
- * Eventos (composed): `input` (durante o arraste) e `change` (ao soltar) —
- * ambos com `detail: { value: number }`.
+ * Form-Associated Custom Element: dentro de um <form> entra no FormData
+ * (via atributo `name`) e recebe reset/disable do form.
+ *
+ * Atributos: min, max, step, value, name, size (sm|md|lg), disabled,
+ * show-value, label (rótulo acima do trilho).
+ * Eventos (composed): `input` (durante o arraste) e `change` (ao soltar),
+ * ambos com `detail: { value: number }`; `change`/solta também emitem
+ * `valueChange` ([(value)] do Angular) e o `input` aciona o v-model do Vue.
  */
-export class FxSlider extends FxElement {
+export class FxSlider extends FxFormElement {
   static override styles = css`
     :host {
       display: block;
@@ -107,6 +111,8 @@ export class FxSlider extends FxElement {
     this.setAttribute('value', String(snapped));
     // atualiza visual sem re-render (preserva estado de drag/foco)
     if (this.isConnected) this._syncVisual();
+    // `value` não é observado: publica no form aqui (setFormValue não re-renderiza).
+    this.updateFormValue();
   }
 
   private _num(attr: string, fallback: number): number {
@@ -198,6 +204,8 @@ export class FxSlider extends FxElement {
       window.removeEventListener('pointerup', up);
       this.value = valueFromEvent(e);
       this._syncVisual();
+      // input (v-model do Vue) + valueChange ([(value)] do Angular) no soltar.
+      this.emitValueEvents();
       this.dispatchEvent(
         new CustomEvent('change', { bubbles: true, composed: true, detail: { value: this.value } }),
       );
@@ -239,6 +247,7 @@ export class FxSlider extends FxElement {
       ev.preventDefault();
       this.value = next;
       this._syncVisual();
+      this.emitValueEvents();
       this.dispatchEvent(
         new CustomEvent('input', { bubbles: true, composed: true, detail: { value: this.value } }),
       );
@@ -265,6 +274,12 @@ export class FxSlider extends FxElement {
     wrap.setAttribute('aria-valuenow', String(this.value));
     const labelPct = this.root.querySelector<HTMLElement>('.label span:last-child');
     if (labelPct) labelPct.textContent = String(this.value);
+  }
+
+  /** form.reset(): restaura o valor inicial e o visual sem re-render. */
+  override formResetCallback(): void {
+    super.formResetCallback();
+    this._syncVisual();
   }
 }
 
