@@ -21,7 +21,8 @@ import { esc } from '../../core/sanitize';
  * searchable, clearable, search-placeholder, no-results,
  * placement (auto|top|bottom — direção do painel; `auto` inverte quando
  * não cabe na viewport).
- * Evento: `change` (composed, detail: { value }).
+ * Eventos: `change`, `input` e `valueChange` (composed, detail: { value }) —
+ * `input` aciona o v-model do Vue e `valueChange` o [(value)] do Angular.
  */
 export class FxSelect extends FxFormElement {
   static override styles = css`
@@ -367,6 +368,7 @@ export class FxSelect extends FxFormElement {
     this.value = value;
     this._fechar();
     this.render();
+    this.emitValueEvents();
     this.dispatchEvent(
       new CustomEvent('change', { bubbles: true, composed: true, detail: { value } }),
     );
@@ -484,6 +486,7 @@ export class FxSelect extends FxFormElement {
       this.value = '';
       this._fechar();
       this.render();
+      this.emitValueEvents();
       this.dispatchEvent(
         new CustomEvent('change', { bubbles: true, composed: true, detail: { value: '' } }),
       );

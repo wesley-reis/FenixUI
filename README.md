@@ -214,7 +214,7 @@ applyPreset('seiya');          // aplica o preset Seiya em modo claro
 applyPreset('shiryu', 'dark'); // preset + modo escuro
 ```
 
-Presets disponíveis: `fenix` (padrão), `seiya`, `shiryu`, `hyoga`, `shun`, `ikki`, `aiolia`.
+Presets disponíveis: `ikki` (padrão), `seiya`, `shiryu`, `hyoga`, `shun`, `aiolia`.
 
 ```ts
 import { listPresets } from '@wrrdev/fenix-ui';

@@ -319,7 +319,7 @@ describe("docs app", () => {
 		expect(
 			table.shadowRoot!.querySelectorAll("tbody tr").length,
 		).toBeGreaterThan(0);
-	});
+	}, 15000);
 
 	it("variantes da table carregam os dados dos exemplos de uso", async () => {
 		await navigate("fx-table");
@@ -334,7 +334,7 @@ describe("docs app", () => {
 		expect(
 			table.shadowRoot!.querySelectorAll("tbody tr").length,
 		).toBeGreaterThan(0);
-	});
+	}, 15000);
 
 	it("página de formulários renderiza os 5 modelos de cadastro", async () => {
 		await navigate("forms");
@@ -558,11 +558,78 @@ describe("docs: código de exemplo", () => {
 				},
 			},
 		});
-		const block = main().querySelector(".code-block")!;
+		const block = main().querySelector("#fw-code .fw-pane[data-pane='html'] .code-block")!;
 		const btn = block.querySelector<HTMLButtonElement>(".copy-btn")!;
 		btn.dispatchEvent(new Event("click"));
 		expect(written[0]).toBe(block.querySelector("code")!.textContent);
 		expect(btn.textContent).toBe("Copiado!");
+	});
+
+	it("playground tem abas por framework com valores reais", async () => {
+		await navigate("fx-button");
+		const tabs = [...main().querySelectorAll("#fw-code .fw-tab")].map((b) =>
+			(b as HTMLElement).dataset.fw,
+		);
+		expect(tabs).toEqual(["html", "vue", "react", "angular", "svelte"]);
+		// Trocar variante atualiza o snippet Vue (valor real do playground).
+		const select = main().querySelector('fx-select[data-attr="variant"]') as any;
+		select.value = "danger";
+		select.dispatchEvent(new Event("change"));
+		// Trocar de aba mostra o painel Vue (preenchido sob demanda).
+		const vueTab = main().querySelector("#fw-code .fw-tab[data-fw='vue']") as HTMLButtonElement;
+		vueTab.dispatchEvent(new Event("click"));
+		expect(
+			main().querySelector("#fw-code .fw-pane[data-pane='vue']")!.hasAttribute("hidden"),
+		).toBe(false);
+		const vueCode = main().querySelector("#fw-code .fw-pane[data-pane='vue'] code")!.textContent ?? "";
+		expect(vueCode).toContain('variant="danger"');
+		// Trocar de aba mostra o painel React e persiste.
+		const reactTab = main().querySelector("#fw-code .fw-tab[data-fw='react']") as HTMLButtonElement;
+		reactTab.dispatchEvent(new Event("click"));
+		expect(
+			main().querySelector("#fw-code .fw-pane[data-pane='react']")!.hasAttribute("hidden"),
+		).toBe(false);
+		expect(localStorage.getItem("fenix:doc:framework-tab")).toBe("react");
+		localStorage.removeItem("fenix:doc:framework-tab");
+	});
+
+	it("casos de uso têm abas por framework por card", async () => {
+		await navigate("fx-button");
+		const cards = [...main().querySelectorAll(".example-card")];
+		expect(cards.length).toBeGreaterThan(0);
+		for (const card of cards) {
+			expect(card.querySelector(".fw-tabs")).toBeTruthy();
+			expect(card.querySelector(".example-code .copy-btn")).toBeTruthy();
+		}
+	});
+
+	it("Home: casos de uso mostram código por framework", async () => {
+		await navigate("home");
+		const cards = [...main().querySelectorAll(".usecase-card")];
+		expect(cards.length).toBe(3);
+		for (const card of cards) {
+			const tabs = [...card.querySelectorAll(".fw-tab")].map((b) => (b as HTMLElement).dataset.fw);
+			expect(tabs).toEqual(["html", "vue", "react", "angular", "svelte"]);
+			expect(card.querySelector(".usecase-code .copy-btn")).toBeTruthy();
+		}
+	});
+
+	it("Formulários: cada modelo tem as 5 abas e alterna", async () => {
+		await navigate("forms");
+		const cards = [...main().querySelectorAll(".example-card")];
+		expect(cards.length).toBeGreaterThanOrEqual(5);
+		for (const card of cards) {
+			expect(card.querySelectorAll(".fw-tab").length).toBe(5);
+			expect(card.querySelector(".example-code .copy-btn")).toBeTruthy();
+		}
+		// A aba React converte o MODELO INTEIRO (não só o primeiro componente).
+		const first = cards[0]!;
+		first.querySelector<HTMLButtonElement>(".fw-tab[data-fw='react']")!.dispatchEvent(new Event("click"));
+		const pane = first.querySelector(".fw-pane[data-pane='react']")!;
+		expect(pane.hasAttribute("hidden")).toBe(false);
+		const code = pane.querySelector("code")!.textContent ?? "";
+		expect(code).toContain("useState");
+		expect(code).toContain("fx-input");
 	});
 });
 

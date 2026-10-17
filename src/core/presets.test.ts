@@ -6,12 +6,17 @@ import { defaultTokens } from './tokens';
 
 describe('themePresets', () => {
   it('expõe presets nomeados com label', () => {
-    expect(Object.keys(themePresets)).toContain('fenix');
+    expect(Object.keys(themePresets)).toContain('ikki');
     for (const p of Object.values(themePresets)) {
       expect(p.name.length).toBeGreaterThan(0);
       expect(p.label.length).toBeGreaterThan(0);
       expect(typeof p.tokens).toBe('object');
     }
+  });
+
+  it('ikki é o preset padrão e não existe mais preset "fenix"', () => {
+    expect(themePresets.ikki.label).toContain('padrão');
+    expect(Object.keys(themePresets)).not.toContain('fenix');
   });
 });
 
@@ -39,7 +44,7 @@ describe('applyPreset', () => {
     expect(listPresets().map((p) => p.name)).toContain('mascara-da-morte');
   });
 
-  it('preset desconhecido cai no padrão fenix (focus-ring desligado)', () => {
+  it('preset desconhecido cai no padrão ikki (focus-ring desligado)', () => {
     applyPreset('inexistente', 'light');
     expect(document.documentElement.style.getPropertyValue('--fx-color-primary')).toBe(
       defaultTokens.color.primary,
@@ -47,16 +52,16 @@ describe('applyPreset', () => {
     expect(document.documentElement.style.getPropertyValue('--fx-effect-focus-ring')).toBe('none');
   });
 
-  it('preset Fenix (padrão) respeita focus-ring desligado', () => {
-    applyPreset('fenix', 'light');
+  it('preset Ikki (padrão) respeita focus-ring desligado', () => {
+    applyPreset('ikki', 'light');
     expect(document.documentElement.style.getPropertyValue('--fx-effect-focus-ring')).toBe('none');
     // ...e ao trocar de modo, o valor do preset permanece
-    applyPreset('fenix', 'dark');
+    applyPreset('ikki', 'dark');
     expect(document.documentElement.style.getPropertyValue('--fx-effect-focus-ring')).toBe('none');
   });
 
   it('preset com focus-ring desligado deriva error-ring/success-ring = none', () => {
-    applyPreset('fenix', 'light');
+    applyPreset('ikki', 'light');
     const root = document.documentElement.style;
     expect(root.getPropertyValue('--fx-effect-error-ring')).toBe('none');
     expect(root.getPropertyValue('--fx-effect-success-ring')).toBe('none');

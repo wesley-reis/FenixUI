@@ -11,7 +11,8 @@ import { esc } from '../../core/sanitize';
  *
  * Atributos: value, name, size, placeholder, source (JSON array de strings),
  * disabled, min-chars (padrão 1), autofocus.
- * Eventos: `select` (composed, detail: { value }).
+ * Eventos: `select`, `input` e `valueChange` (composed, detail: { value }) —
+ * `input` aciona o v-model do Vue e `valueChange` o [(value)] do Angular.
  */
 export class FxAutocomplete extends FxFormElement {
   static override styles = css`
@@ -180,6 +181,7 @@ export class FxAutocomplete extends FxFormElement {
           field.value = btn.dataset.v ?? '';
           this.value = field.value;
           this.toggleAttr('open', false);
+          this.emitValueEvents();
           this.dispatchEvent(new CustomEvent('select', {
             bubbles: true, composed: true, detail: { value: this.value },
           }));
@@ -191,6 +193,7 @@ export class FxAutocomplete extends FxFormElement {
     // Reabrir com foco sem re-render (evita perder digitação)
     field.addEventListener('input', () => {
       this.value = field.value;
+      this.emitValueEvents();
       openList();
     });
     field.addEventListener('focus', () => { if (field.value.length >= minChars) openList(); });

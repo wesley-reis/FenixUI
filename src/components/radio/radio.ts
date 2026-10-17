@@ -12,6 +12,8 @@ import { defineElement } from '../../core/define';
  * radio nativo. Recebe reset/disable do form.
  *
  * Atributos: checked, disabled, value, name, size (sm|md|lg).
+ * Eventos: `change` e `checkedChange` (composed, detail: { checked, value }) —
+ * `checkedChange` é o two-way binding do Angular [(checked)].
  */
 export class FxRadio extends FxFormElement {
   static override styles = css`
@@ -181,6 +183,14 @@ export class FxRadio extends FxFormElement {
     this.checked = true;
     this.dispatchEvent(
       new CustomEvent('change', {
+        bubbles: true,
+        composed: true,
+        detail: { checked: true, value: this.getAttr('value') },
+      }),
+    );
+    // Two-way binding do Angular: [(checked)] = [checked] + (checkedChange).
+    this.dispatchEvent(
+      new CustomEvent('checkedChange', {
         bubbles: true,
         composed: true,
         detail: { checked: true, value: this.getAttr('value') },

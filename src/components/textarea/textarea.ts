@@ -12,7 +12,8 @@ import { esc } from '../../core/sanitize';
  *
  * Atributos: value, name, size (sm|md|lg), placeholder, disabled, readonly,
  * rows, maxlength, autofocus.
- * Eventos: `input` e `change` (composed, detail: { value }).
+ * Eventos: `input`, `change` e `valueChange` (composed, detail: { value }) —
+ * `input` aciona o v-model do Vue e `valueChange` o [(value)] do Angular.
  */
 export class FxTextarea extends FxFormElement {
   static override styles = css`
@@ -118,6 +119,8 @@ export class FxTextarea extends FxFormElement {
 
     const emit = (event: string): void => {
       this.value = field.value;
+      // input (v-model do Vue) + valueChange ([(value)] do Angular).
+      this.emitValueEvents();
       this.dispatchEvent(
         new CustomEvent(event, { bubbles: true, composed: true, detail: { value: field.value } }),
       );

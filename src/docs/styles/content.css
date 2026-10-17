@@ -183,6 +183,27 @@ code.inline { background: var(--fx-surface-surface-hover, var(--fx-surface-backg
 .example-code { margin: 0 !important; border-top: 1px dashed var(--fx-border-default); }
 .example-code pre { border: none; border-radius: 0; background: color-mix(in srgb, var(--fx-surface-surface-hover, var(--fx-surface-background)) 60%, transparent); }
 .example-code .copy-btn { opacity: 1; }
+/* ---------- Abas por framework (playground + casos de uso) ---------- */
+.fw-tabs {
+  display: flex; flex-wrap: wrap; gap: .35rem;
+  padding: .6rem 1.1rem 0;
+}
+.fw-tab {
+  font: inherit; font-size: .74rem; font-weight: 600;
+  padding: .3rem .7rem; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--fx-border-default);
+  background: transparent; color: var(--fx-text-muted);
+}
+.fw-tab:hover { color: var(--fx-text-default); border-color: var(--fx-color-primary); }
+.fw-tab.active {
+  background: color-mix(in srgb, var(--fx-color-primary) 14%, transparent);
+  border-color: var(--fx-color-primary); color: var(--fx-text-default);
+}
+.fw-panes .code-block { margin: 0; }
+.fw-pane[hidden] { display: none !important; }
+#fw-code .fw-tabs { padding-left: 0; padding-right: 0; }
+/* Painéis dentro de cards: sem margem extra (o card já tem espaçamento). */
+.example-code .code-block { margin: 0; }
 .code-block { margin: 0 0 1.8rem; }
 /* Barra de ações do bloco: reserva espaço p/ o botão Copiar acima do
    código — o botão NUNCA fica por cima dele, mesmo em linhas longas
@@ -336,6 +357,12 @@ table.api .default { color: var(--fx-text-muted); }
 /* O host do fx-input tem 260px fixos por padrão: dentro do card ele é fluido. */
 .usecase-preview .uc-form fx-input { display: block; width: 100%; min-width: 0; }
 .usecase-preview .uc-wizard { width: 100%; padding: .4rem 0; }
+/* Código por framework dentro do card de caso de uso (Home). */
+.usecase-code { margin-top: .9rem; }
+.usecase-code .fw-tabs { padding: 0 0 .45rem; gap: .25rem; }
+.usecase-code .fw-tab { font-size: .68rem; padding: .22rem .55rem; }
+.usecase-code .code-block { margin: 0; }
+.usecase-code .code-block pre { max-height: 260px; overflow: auto; }
 .home-cta {
   width: 100%;
   display: flex; flex-direction: column; align-items: center; text-align: center;

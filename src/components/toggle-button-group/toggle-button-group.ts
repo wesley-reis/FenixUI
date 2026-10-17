@@ -11,7 +11,8 @@ import { esc } from '../../core/sanitize';
  *
  * Atributos: multiple (permite varios seleccionados), value (lista), name,
  * size. Slots `option`: cada botón con [slot="option" value="..."].
- * Evento (composed): `change` (detail: { value: string[] }).
+ * Eventos (composed): `change` (detail: { value: string[] }) e `valuesChange`
+ * (detail: { values: string[] }, two-way binding do Angular [(value)]).
  */
 export class FxToggleButtonGroup extends FxFormElement {
   static override styles = css`
@@ -136,6 +137,8 @@ export class FxToggleButtonGroup extends FxFormElement {
       o.setAttribute('aria-pressed', String(on));
     });
     this.dispatchEvent(new CustomEvent('change', { bubbles: true, composed: true, detail: { value: current } }));
+    // Two-way binding do Angular: [(value)] em seleção múltipla → valuesChange.
+    this.dispatchEvent(new CustomEvent('valuesChange', { bubbles: true, composed: true, detail: { values: [...current] } }));
   }
 }
 

@@ -19,7 +19,8 @@ import { FENIX_ICON_BASE_CSS, fenixIconHtml } from '../../icons/base-css';
  * --fx-input-width(-sm|-lg) — CSS externo, classes e style inline no elemento
  * vencem o default sem precisar de atributo.
  * Slots: `icon` (ícone customizado no lugar do atributo).
- * Eventos: `input` e `change` (composed, detail: { value }).
+ * Eventos: `input`, `change` e `valueChange` (composed, detail: { value }) —
+ * `input` aciona o v-model do Vue e `valueChange` o [(value)] do Angular.
  */
 export class FxInput extends FxFormElement {
   static override styles = css`
@@ -236,6 +237,8 @@ export class FxInput extends FxFormElement {
 
     const emit = (event: string): void => {
       this.value = field.value;
+      // input (v-model do Vue) + valueChange ([(value)] do Angular).
+      this.emitValueEvents();
       this.dispatchEvent(
         new CustomEvent(event, { bubbles: true, composed: true, detail: { value: field.value } }),
       );

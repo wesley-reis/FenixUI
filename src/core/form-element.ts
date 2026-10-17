@@ -126,10 +126,32 @@ export abstract class FxFormElement extends FxElement {
     return this.getAttr('value') || null;
   }
 
+  /**
+   * Sincroniza o campo interno, publica name/value no form (ElementInternals)
+   * e emite `input` (v-model do Vue) + `valueChange` ([(value)] do Angular).
+   *
+   * Chame quando o valor mudar — junto do evento semântico (`change`,
+   * `select`, ...) que o componente já dispara. `detail` opcional complementa
+   * o payload (ex.: { start, end } do fx-datepicker).
+   */
+  protected emitValueEvents(detail?: Record<string, unknown>): void {
+    const value = this.getAttr('value');
+
+    // Empurra o valor para o controle interno SEM re-renderizar (hook —
+    // componentes com máscara/campo customizado sobrescrevem).
+    this.syncInternalControl();
+    this.updateFormValue();
+
+    const payload = { value, ...detail };
+    for (const type of ['input', 'valueChange'] as const) {
+      this.dispatchEvent(
+        new CustomEvent(type, { bubbles: true, composed: true, detail: payload }),
+      );
+    }
+  }
+
   /** Sincroniza name/value com o form (ElementInternals). */
   protected updateFormValue(): void {
-    // Alguns ambientes expõem attachInternals sem setFormValue (ex.: jsdom
-    // implementa só parte da API) — a publicação no form é opcional.
     if (!this.internals || typeof this.internals.setFormValue !== 'function') return;
     this.internals.setFormValue(this.getFormValue());
   }

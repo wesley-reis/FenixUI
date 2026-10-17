@@ -27,6 +27,9 @@ import { esc } from '../../core/sanitize';
  * - single:   { value }
  * - range:    { value, start, end }
  * - multiple: { values: string[] }
+ *
+ * Além do `change`, emite `input`/`valueChange` com o MESMO payload
+ * (v-model do Vue e [(value)] do Angular).
  */
 export class FxDatepicker extends FxFormElement {
   static override styles = css`
@@ -507,6 +510,9 @@ export class FxDatepicker extends FxFormElement {
   }
 
   private emitChange(detail: Record<string, unknown>): void {
+    // input (v-model do Vue) + valueChange ([(value)] do Angular) com o
+    // mesmo payload do change (single: { value } · range: { start, end }).
+    this.emitValueEvents(detail);
     this.dispatchEvent(
       new CustomEvent('change', { bubbles: true, composed: true, detail }),
     );

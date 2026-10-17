@@ -10,7 +10,8 @@ import { defineElement } from '../../core/define';
  * não envia nada, igual ao checkbox nativo. Recebe reset/disable do form.
  *
  * Atributos: checked, indeterminate, disabled, value, name, size (sm|md|lg).
- * Evento: `change` (composed, detail: { checked, value }).
+ * Eventos: `change` e `checkedChange` (composed, detail: { checked, value }) —
+ * `checkedChange` é o two-way binding do Angular [(checked)].
  */
 export class FxCheckbox extends FxFormElement {
   static override styles = css`
@@ -106,6 +107,10 @@ export class FxCheckbox extends FxFormElement {
     return this.checked ? (this.getAttr('value') || 'on') : null;
   }
 
+  /** getter/setter `value` → espelho do atributo `value` (compat com v-model / [(value)]). */
+  get value(): string { return this.getAttr('value'); }
+  set value(v: string) { this.setAttribute('value', v); }
+
   /** Tamanho do controle. Padrão: `'md'`. */
   get size(): string {
     const s = this.getAttr('size', 'md');
@@ -172,6 +177,14 @@ export class FxCheckbox extends FxFormElement {
     this.checked = !this.checked;
     this.dispatchEvent(
       new CustomEvent('change', {
+        bubbles: true,
+        composed: true,
+        detail: { checked: this.checked, value: this.getAttr('value') },
+      }),
+    );
+    // Two-way binding do Angular: [(checked)] = [checked] + (checkedChange).
+    this.dispatchEvent(
+      new CustomEvent('checkedChange', {
         bubbles: true,
         composed: true,
         detail: { checked: this.checked, value: this.getAttr('value') },

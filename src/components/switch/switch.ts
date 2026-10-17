@@ -11,6 +11,8 @@ import { defineElement } from '../../core/define';
  *
  * O texto do slot (light DOM) é o rótulo clicável.
  * Atributos: checked, disabled, value, name, size (sm|md|lg).
+ * Eventos: `change` e `checkedChange` (composed, detail: { checked, value }) —
+ * `checkedChange` é o two-way binding do Angular [(checked)].
  */
 export class FxSwitch extends FxFormElement {
   static override styles = css`
@@ -96,6 +98,10 @@ export class FxSwitch extends FxFormElement {
     this.toggleAttr('disabled', Boolean(value));
   }
 
+  /** getter/setter `value` → espelho do atributo `value` (compat com v-model / [(value)]). */
+  get value(): string { return this.getAttr('value'); }
+  set value(v: string) { this.setAttribute('value', v); }
+
   /** No FormData: `value` (ou 'on') quando ligado; null (não envia) quando não. */
   protected override getFormValue(): string | FormData | null {
     return this.checked ? (this.getAttr('value') || 'on') : null;
@@ -121,6 +127,14 @@ export class FxSwitch extends FxFormElement {
           bubbles: true,
           composed: true,
           detail: { checked: this.checked },
+        }),
+      );
+      // Two-way binding do Angular: [(checked)] = [checked] + (checkedChange).
+      this.dispatchEvent(
+        new CustomEvent('checkedChange', {
+          bubbles: true,
+          composed: true,
+          detail: { checked: this.checked, value: this.getAttr('value') },
         }),
       );
     });

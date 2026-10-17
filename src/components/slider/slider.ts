@@ -10,8 +10,9 @@ import { defineElement } from '../../core/define';
  *
  * Atributos: min, max, step, value, name, size (sm|md|lg), disabled,
  * show-value, label (rótulo acima do trilho).
- * Eventos (composed): `input` (durante o arraste) e `change` (ao soltar) —
- * ambos com `detail: { value: number }`.
+ * Eventos (composed): `input` (durante o arraste) e `change` (ao soltar),
+ * ambos com `detail: { value: number }`; `change`/solta também emitem
+ * `valueChange` ([(value)] do Angular) e o `input` aciona o v-model do Vue.
  */
 export class FxSlider extends FxFormElement {
   static override styles = css`
@@ -203,6 +204,8 @@ export class FxSlider extends FxFormElement {
       window.removeEventListener('pointerup', up);
       this.value = valueFromEvent(e);
       this._syncVisual();
+      // input (v-model do Vue) + valueChange ([(value)] do Angular) no soltar.
+      this.emitValueEvents();
       this.dispatchEvent(
         new CustomEvent('change', { bubbles: true, composed: true, detail: { value: this.value } }),
       );
@@ -244,6 +247,7 @@ export class FxSlider extends FxFormElement {
       ev.preventDefault();
       this.value = next;
       this._syncVisual();
+      this.emitValueEvents();
       this.dispatchEvent(
         new CustomEvent('input', { bubbles: true, composed: true, detail: { value: this.value } }),
       );
