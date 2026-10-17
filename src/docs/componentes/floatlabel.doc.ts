@@ -26,7 +26,7 @@ export const floatlabelDoc: ComponentDoc = {
         <div style="display: flex; flex-direction: column; gap: 12px;">
           <fx-floatlabel icon="search"><fx-input id="fl-icon-search"></fx-input><label for="fl-icon-search">Buscar</label></fx-floatlabel>
           <fx-floatlabel icon="lock" icon-pos="right"><fx-input id="fl-icon-lock" type="password"></fx-input><label for="fl-icon-lock">Senha</label></fx-floatlabel>
-          <fx-floatlabel full icon="mail"><fx-input id="fl-icon-mail" type="email"></fx-input><label for="fl-icon-mail">E-mail</label></fx-floatlabel>
+          <fx-floatlabel full icon="mail"><fx-input id="fl-icon-mail"></fx-input><label for="fl-icon-mail">E-mail</label></fx-floatlabel>
         </div>
         <h4>Full width (full)</h4>
         <p style="font-size:12px;color:var(--fx-text-muted);margin:0 0 8px">O full do floatlabel é propagado automaticamente para o controle interno (fx-input, fx-select, …) — não é preciso repetir o atributo no campo.</p>

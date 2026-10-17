@@ -255,13 +255,13 @@ const HOME_USE_CASES = [
     link: 'Ver Formulários',
     preview: `
             <div class="uc-form">
-              <fx-floatlabel variant="in"><fx-input full icon="mail" type="email"></fx-input><label>E-mail</label></fx-floatlabel>
+              <fx-floatlabel variant="in"><fx-input full icon="mail"></fx-input><label>E-mail</label></fx-floatlabel>
               <fx-floatlabel variant="in"><fx-input full icon="lock" type="password"></fx-input><label>Senha</label></fx-floatlabel>
               <fx-switch size="sm" checked>Lembrar-me</fx-switch>
               <fx-button size="sm" variant="primary">Entrar</fx-button>
             </div>`,
     code: `<fx-floatlabel variant="in">
-  <fx-input full icon="mail" type="email" name="email" placeholder="E-mail"></fx-input>
+  <fx-input full icon="mail" name="email" placeholder="E-mail"></fx-input>
   <label>E-mail</label>
 </fx-floatlabel>
 <fx-floatlabel variant="in">
@@ -1225,7 +1225,7 @@ const FORM_MODEL_1 = `
 <div data-form-validate style="display:flex;flex-direction:column;gap:16px;max-width:520px">
   <fx-alert variant="danger" title="Verifique o formulário" hidden>Preencha os campos destacados em vermelho.</fx-alert>
   <fx-input full icon="person" placeholder="Nome completo"></fx-input>
-  <fx-input full icon="mail" type="email" placeholder="E-mail"></fx-input>
+  <fx-input full icon="mail" placeholder="E-mail"></fx-input>
   <fx-input full icon="lock" type="password" placeholder="Senha"></fx-input>
   <fx-input full icon="call" placeholder="Telefone"></fx-input>
   <fx-textarea full rows="3" placeholder="Observações"></fx-textarea>
@@ -1240,7 +1240,7 @@ const FORM_MODEL_2 = `
   <fx-alert variant="danger" title="Verifique o formulário" hidden style="grid-column:1/-1">Preencha os campos destacados em vermelho.</fx-alert>
   <fx-input full icon="person" placeholder="Nome"></fx-input>
   <fx-input full placeholder="Sobrenome"></fx-input>
-  <fx-input full icon="mail" type="email" placeholder="E-mail"></fx-input>
+  <fx-input full icon="mail" placeholder="E-mail"></fx-input>
   <fx-input full icon="call" placeholder="Telefone"></fx-input>
   <fx-input full icon="badge" placeholder="CPF"></fx-input>
   <fx-datepicker full placeholder="Data de nascimento"></fx-datepicker>
@@ -1280,7 +1280,7 @@ const FORM_MODEL_4 = `
 <div data-form-validate style="display:grid;grid-template-columns:1fr 1fr;gap:20px 16px;max-width:760px">
   <fx-alert variant="danger" title="Verifique o formulário" hidden style="grid-column:1/-1">Preencha os campos destacados em vermelho.</fx-alert>
   <fx-floatlabel full><fx-input full></fx-input><label>Nome completo</label></fx-floatlabel>
-  <fx-floatlabel full><fx-input full icon="mail" type="email"></fx-input><label>E-mail</label></fx-floatlabel>
+  <fx-floatlabel full><fx-input full icon="mail"></fx-input><label>E-mail</label></fx-floatlabel>
   <fx-floatlabel full variant="in"><fx-input full icon="lock" type="password"></fx-input><label>Senha</label></fx-floatlabel>
   <fx-floatlabel full variant="in"><fx-input full icon="lock" type="password"></fx-input><label>Confirmar senha</label></fx-floatlabel>
   <fx-floatlabel full><fx-select full placeholder="Selecione"><option value="sp">São Paulo</option><option value="rj">Rio de Janeiro</option><option value="mg">Minas Gerais</option></fx-select><label>Estado</label></fx-floatlabel>
@@ -1302,7 +1302,7 @@ const FORM_MODEL_5 = `
     <label for="nf-nome" style="display:block;font-size:12px;font-weight:600;color:var(--fx-text-muted);margin-bottom:4px">Nome completo (label nativa → for foca o campo)</label>
     <fx-input full id="nf-nome" name="nome" icon="person" placeholder="Enter submete o form" autofocus></fx-input>
   </div>
-  <fx-input full id="nf-email" name="email" type="email" icon="mail" placeholder="E-mail"></fx-input>
+  <fx-input full id="nf-email" name="email" icon="mail" placeholder="E-mail"></fx-input>
   <fx-select full id="nf-uf" name="uf" placeholder="UF"><option value="sp">São Paulo</option><option value="rj">Rio de Janeiro</option><option value="mg">Minas Gerais</option></fx-select>
   <fx-checkbox name="termos" value="aceito">Aceito os termos (só entra no FormData quando marcado)</fx-checkbox>
   <fx-textarea full id="nf-obs" name="obs" rows="2" placeholder="Observações (Enter quebra linha)"></fx-textarea>

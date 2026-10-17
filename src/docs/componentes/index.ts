@@ -20,6 +20,7 @@ import { radioDoc } from './radio.doc';
 import { tableDoc } from './table.doc';
 import { floatlabelDoc } from './floatlabel.doc';
 import { textareaDoc } from './textarea.doc';
+import { editorDoc } from './editor.doc';
 import { dialogDoc } from './dialog.doc';
 import { confirmpopupDoc } from './confirmpopup.doc';
 import { fileuploadDoc } from './fileupload.doc';
@@ -69,6 +70,7 @@ export const componentDocs: ComponentDoc[] = [
 	tableDoc,
 	floatlabelDoc,
 	textareaDoc,
+	editorDoc,
 	dialogDoc,
 	confirmpopupDoc,
 	fileuploadDoc,
@@ -119,6 +121,7 @@ export const componentLoaders: Record<string, () => Promise<unknown>> = {
 	'fx-table': () => import('../../components/table'),
 	'fx-floatlabel': () => import('../../components/floatlabel'),
 	'fx-textarea': () => import('../../components/textarea'),
+	'fx-editor': () => import('../../components/editor'),
 	'fx-dialog': () => import('../../components/dialog'),
 	'fx-confirmpopup': () => import('../../components/confirmpopup'),
 	'fx-fileupload': () => import('../../components/fileupload'),

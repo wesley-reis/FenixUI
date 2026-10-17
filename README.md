@@ -18,8 +18,8 @@ import { FenixUI } from '@wrrdev/fenix-ui';  // API de tema/tokens (índice)
 FenixUI.theme('dark');
 ```
 
-> 📦 npm: [`@wrrdev/fenix-ui`](https://www.npmjs.com/package/@wrrdev/fenix-ui) — **v1.1.14**, acesso público.
-> Subpaths disponíveis: `./theme`, `./tokens`, `./jsx`, `./vue`, `./react`, `./button`, `./badge`, `./spinner`, `./select`, `./input`, `./switch`, `./textarea`, `./checkbox`, `./radio`, `./calendar`, `./datepicker`, `./multiselect`, `./table`, `./floatlabel`, `./dialog`, `./toast`, `./tooltip`, `./tabs`, `./progress`, `./skeleton`, `./alert`, `./drawer`, `./dropdown`, `./icon`, `./icons`, `./pagination`, `./autocomplete`, `./knob`, `./orderlist`, `./picklist`, `./auto-import` e o curinga `./components/*`.
+> 📦 npm: [`@wrrdev/fenix-ui`](https://www.npmjs.com/package/@wrrdev/fenix-ui) — **v1.1.15**, acesso público.
+> Subpaths disponíveis: `./theme`, `./tokens`, `./jsx`, `./vue`, `./react`, `./button`, `./badge`, `./spinner`, `./select`, `./input`, `./switch`, `./textarea`, `./editor`, `./checkbox`, `./radio`, `./calendar`, `./datepicker`, `./multiselect`, `./table`, `./floatlabel`, `./dialog`, `./toast`, `./tooltip`, `./tabs`, `./progress`, `./skeleton`, `./alert`, `./drawer`, `./dropdown`, `./icon`, `./icons`, `./pagination`, `./autocomplete`, `./knob`, `./orderlist`, `./picklist`, `./auto-import` e o curinga `./components/*`.
 
 
 ## Consumo
@@ -65,7 +65,7 @@ Carregue o bundle **UMD** único: ele registra todos os componentes e expõe os 
 <fx-toast></fx-toast>
 
 <!--
-  🔗 Links diretos para CDN (versão 1.1.14):
+  🔗 Links diretos para CDN (versão 1.1.15):
   • https://cdn.jsdelivr.net/npm/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js
   • https://unpkg.com/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js
 -->
@@ -140,6 +140,7 @@ export default defineConfig({
 | `fx-table` | `@wrrdev/fenix-ui/table` |
 | `fx-floatlabel` | `@wrrdev/fenix-ui/floatlabel` |
 | `fx-textarea` | `@wrrdev/fenix-ui/textarea` |
+| `fx-editor` | `@wrrdev/fenix-ui/editor` |
 | `fx-dialog` | `@wrrdev/fenix-ui/dialog` |
 | `fx-drawer` | `@wrrdev/fenix-ui/drawer` |
 | `fx-toast` | `@wrrdev/fenix-ui/toast` |
@@ -392,7 +393,7 @@ ative o modo estrito do Volar no `tsconfig.json`:
 |--------------|-----------------------------------------------|--------------|
 | `fx-button`  | `variant` (primary/secondary/success/warning/danger/ghost/outline), `size`, `disabled`, `loading`, `type`, `full` | default, `icon` |
 | `fx-badge`   | `variant` (default/primary/success/warning/danger/info), `round` | default |
-| `fx-input`   | `type` (text/number/email/password/search/tel/url), `value`, `size`, `placeholder`, `disabled`, `readonly`, `min/max/step` | — |
+| `fx-input`   | `type` (text/number/password), `value`, `size`, `placeholder`, `disabled`, `readonly`, `min/max/step` | — |
 | `fx-select`  | `value`, `size` (sm/md/lg), `disabled`, `placeholder` — filhos `<option>` nativos | `(padrão)` |
 | `fx-switch`  | `checked`, `disabled`, `size` (sm/md/lg)      | `(padrão)`   |
 | `fx-spinner` | `size` (sm/md/lg)                             | —            |

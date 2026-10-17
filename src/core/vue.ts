@@ -32,6 +32,7 @@ import type {
   FxDropdownItemProps,
   FxDropdownProps,
   FxDrawerProps,
+  FxEditorProps,
   FxEmptyStateProps,
   FxFileUploadProps,
   FxFloatlabelProps,
@@ -81,6 +82,7 @@ declare module '@vue/runtime-core' {
     'fx-checkbox': FxComp<FxCheckboxProps>;
     'fx-radio': FxComp<FxRadioProps>;
     'fx-textarea': FxComp<FxTextareaProps>;
+    'fx-editor': FxComp<FxEditorProps>;
     'fx-multiselect': FxComp<FxMultiselectProps>;
     'fx-calendar': FxComp<FxCalendarProps>;
     'fx-datepicker': FxComp<FxDatepickerProps>;
@@ -139,6 +141,7 @@ declare module '@vue/runtime-dom' {
     'fx-checkbox': FxCheckboxProps;
     'fx-radio': FxRadioProps;
     'fx-textarea': FxTextareaProps;
+    'fx-editor': FxEditorProps;
     'fx-multiselect': FxMultiselectProps;
     'fx-calendar': FxCalendarProps;
     'fx-datepicker': FxDatepickerProps;
