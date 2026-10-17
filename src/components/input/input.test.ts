@@ -35,6 +35,30 @@ describe('fx-input', () => {
     expect(el.value).toBe('abc');
   });
 
+  it('type padrão é text e a propriedade reflete no input interno', () => {
+    const el = mount('<fx-input></fx-input>') as any;
+    expect(el.type).toBe('text');
+    expect((el.shadowRoot!.querySelector('input') as HTMLInputElement).type).toBe('text');
+
+    el.type = 'password';
+    expect(el.getAttribute('type')).toBe('password');
+    expect(el.type).toBe('password');
+    expect((el.shadowRoot!.querySelector('input') as HTMLInputElement).type).toBe('password');
+
+    el.type = 'number';
+    expect((el.shadowRoot!.querySelector('input') as HTMLInputElement).type).toBe('number');
+  });
+
+  it('tipos com componente próprio caem em text', () => {
+    const el = mount('<fx-input type="date"></fx-input>') as any;
+    expect(el.type).toBe('text');
+    expect((el.shadowRoot!.querySelector('input') as HTMLInputElement).type).toBe('text');
+
+    el.setAttribute('type', 'email');
+    expect(el.type).toBe('text');
+    expect((el.shadowRoot!.querySelector('input') as HTMLInputElement).type).toBe('text');
+  });
+
   it('type number aplica min/max/step e disabled desabilita', () => {
     const el = mount('<fx-input type="number" min="1" max="10" step="2" disabled></fx-input>') as any;
     const field = el.shadowRoot!.querySelector('input')!;

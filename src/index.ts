@@ -38,6 +38,7 @@ export * from './components/radio';
 export * from './components/table';
 export * from './components/floatlabel';
 export * from './components/textarea';
+export * from './components/editor';
 export * from './components/dialog';
 export * from './components/confirmpopup';
 export * from './components/fileupload';

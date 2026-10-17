@@ -10,14 +10,14 @@ export const inputDoc: ComponentDoc = {
 	tag: "fx-input",
 	title: "Input",
 	group: "Formulário",
-	lead: "Campo de texto (text, number, email, password, search…) estilizado com os tokens do tema. Form-associated: com name entra no FormData de um <form>, o Enter submete e <label for> foca o campo. O anel de foco é controlado pelo token effect.focus-ring do preset.",
+	lead: "Campo de texto (text, number, password) estilizado com os tokens do tema. Form-associated: com name entra no FormData de um <form>, o Enter submete e <label for> foca o campo. O anel de foco é controlado pelo token effect.focus-ring do preset.",
 	imports: ["import '@wrrdev/fenix-ui/input';"],
 	demoHtml: (a) => `<fx-input ${a}></fx-input>`,
 	variantsHtml: () =>
 		`<div style="display:flex;flex-direction:column;gap:16px">
 			<h4>Tipos</h4>
 			<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-				${["text", "number", "email", "password", "search"]
+				${["text", "number", "password"]
 					.map((t) => `<fx-input type="${t}" placeholder="${t}"></fx-input>`)
 					.join("")}
 			</div>
@@ -66,11 +66,7 @@ export const inputDoc: ComponentDoc = {
 			options: [
 				"text",
 				"number",
-				"email",
 				"password",
-				"search",
-				"tel",
-				"url",
 			],
 			value: "text",
 		},
@@ -108,9 +104,9 @@ export const inputDoc: ComponentDoc = {
 	attributes: [
 		{
 			name: "type",
-			type: `'text' | 'number' | 'email' | 'password' | 'search' | 'tel' | 'url'`,
+			type: `'text' | 'number' | 'password'`,
 			default: `'text'`,
-			desc: "Tipo do campo nativo.",
+			desc: "Tipo do input interno. Apenas text, number e password; qualquer outro tipo cai em text.",
 		},
 		{
 			name: "value",

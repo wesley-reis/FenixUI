@@ -25,7 +25,7 @@ export type FxAlertVariant = 'info' | 'success' | 'warning' | 'danger';
 export type FxProgressVariant = 'primary' | 'success' | 'warning' | 'danger';
 export type FxSkeletonVariant = 'text' | 'circle' | 'rect';
 export type FxFloatlabelVariant = 'on' | 'in' | 'over';
-export type FxInputType = 'text' | 'number' | 'email' | 'password' | 'search' | 'tel' | 'url';
+export type FxInputType = 'text' | 'number' | 'password';
 export type FxFieldStatus = 'error' | 'invalid' | 'success' | 'valid';
 export type FxToastKind = 'success' | 'error' | 'info' | 'warning';
 export type FxToastPosition = 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
@@ -54,6 +54,8 @@ export type FxPopoverPosition = 'auto' | 'top' | 'bottom';
 export type FxMenuOrientation = 'horizontal' | 'vertical';
 export type FxTimelineOrientation = 'vertical' | 'horizontal';
 export type FxSelectionMode = 'single' | 'multiple';
+export type FxEditorToolbar = 'minimal' | 'basic' | 'standard' | 'full' | 'none';
+export type FxEditorPasteMode = 'clean' | 'plain';
 
 /* Props por componente */
 export interface FxButtonProps extends FxElementProps {
@@ -126,6 +128,23 @@ export interface FxTextareaProps extends FxElementProps {
   invalid?: boolean;
   success?: boolean;
   valid?: boolean;
+}
+export interface FxEditorProps extends FxElementProps {
+  value?: string;
+  name?: string;
+  required?: boolean;
+  readonly?: boolean;
+  placeholder?: string;
+  toolbar?: FxEditorToolbar;
+  features?: string;
+  'paste-mode'?: FxEditorPasteMode;
+  'min-height'?: string;
+  'max-height'?: string;
+  'show-count'?: boolean;
+  maxlength?: number;
+  fullscreen?: boolean;
+  uploadImage?: (file: File) => Promise<string | { url: string; alt?: string; width?: string }>;
+  sanitizeHtml?: (html: string) => string;
 }
 export interface FxMultiselectProps extends FxElementProps {
   values?: string;
@@ -515,6 +534,7 @@ export interface FxJsxIntrinsicElements {
   'fx-checkbox': FxCheckboxProps;
   'fx-radio': FxRadioProps;
   'fx-textarea': FxTextareaProps;
+  'fx-editor': FxEditorProps;
   'fx-multiselect': FxMultiselectProps;
   'fx-calendar': FxCalendarProps;
   'fx-datepicker': FxDatepickerProps;

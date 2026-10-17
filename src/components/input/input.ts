@@ -3,6 +3,19 @@ import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from '../../core/sanitize';
 import { FENIX_ICON_BASE_CSS, fenixIconHtml } from '../../icons/base-css';
+import type { FxInputType } from '../../core/jsx';
+
+/**
+ * Tipos suportados pelo <fx-input>: text, number e password.
+ * Qualquer outro tipo (email, search, date, file, range, checkbox, radio…)
+ * cai em `text` em runtime.
+ */
+const INPUT_TYPES = new Set(['text', 'number', 'password']);
+
+function normalizeInputType(value: string): string {
+  const type = (value || 'text').toLowerCase();
+  return INPUT_TYPES.has(type) ? type : 'text';
+}
 
 /**
  * <fx-input> — Campo de texto estilizado com os tokens do tema.
@@ -11,7 +24,7 @@ import { FENIX_ICON_BASE_CSS, fenixIconHtml } from '../../icons/base-css';
  * (via atributo `name`), recebe reset/disable do form, é alvo de
  * `<label for>`/`autofocus` e o Enter submete o form.
  *
- * Atributos: type (text|number|email|password|search|tel|url), value, name,
+ * Atributos: type (text|number|password), value, name,
  * size, placeholder, disabled, readonly, min, max, step, autofocus,
  * clearable, full (largura 100% acompanhando o elemento pai), icon (nome do
  * glifo Fenix Icons ou emoji/texto livre) e icon-pos (left|right, padrão left).
@@ -172,6 +185,14 @@ export class FxInput extends FxFormElement {
     ];
   }
 
+  /** Tipo do input interno. Padrão: `'text'`. */
+  override get type(): FxInputType {
+    return normalizeInputType(this.getAttr('type', 'text')) as FxInputType;
+  }
+  override set type(value: FxInputType) {
+    this.setAttribute('type', normalizeInputType(value));
+  }
+
   /** Tamanho do campo. Padrão: `'md'`. */
   get size(): string {
     const s = this.getAttr('size', 'md');
@@ -200,7 +221,7 @@ export class FxInput extends FxFormElement {
   }
 
   protected override render(): void {
-    const type = this.getAttr('type', 'text');
+    const type = this.type;
     const placeholder = this.getAttr('placeholder');
     const readonly = this.hasAttr('readonly');
     const disabled = this.hasAttr('disabled');
@@ -284,6 +305,8 @@ export class FxInput extends FxFormElement {
   protected override syncInternalControl(): void {
     const field = this.root.querySelector<HTMLInputElement>('.field');
     const value = this.getAttr('value');
+    const type = this.type;
+    if (field && field.type !== type) field.type = type;
     if (field && field.value !== value) field.value = value;
   }
 }

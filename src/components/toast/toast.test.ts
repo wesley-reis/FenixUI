@@ -15,6 +15,16 @@ describe('fx-toast / FenixToast', () => {
     hosts.forEach((h) => h.remove());
   });
 
+  it('mensagem sem título usa card compacto', async () => {
+    FenixToast.info('', 'Apenas mensagem');
+    await Promise.resolve();
+    const el = document.querySelector('fx-toast')!;
+    const card = el.shadowRoot!.querySelector<HTMLElement>('.card')!;
+    expect(card.classList.contains('no-title')).toBe(true);
+    expect(el.shadowRoot!.querySelector('style')!.textContent).toContain('.card.no-title { min-height: 48px; }');
+    el.remove();
+  });
+
   it('options.progress cria a barra de contagem com a duração correta', async () => {
     FenixToast.info('Com barra', 'msg', { duration: 5000, progress: 'always' });
     await Promise.resolve();

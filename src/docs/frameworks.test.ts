@@ -37,7 +37,7 @@ describe('docs: frameworks.buildSnippets', () => {
   };
 
   it('propaga o valor real do playground para os 5 frameworks', () => {
-    const raw = '<fx-input type="email" value="maria@ex.com" placeholder="Seu e-mail"></fx-input>';
+    const raw = '<fx-input type="text" value="maria@ex.com" placeholder="Seu e-mail"></fx-input>';
     const s = buildSnippets({ ...base, prettyHtml: raw, rawHtml: raw });
     expect(s.html).toContain('value="maria@ex.com"');
     expect(s.vue).toContain(`const value = ref("maria@ex.com")`);
@@ -79,7 +79,7 @@ describe('docs: frameworks.buildSnippets', () => {
 
 describe('docs: frameworks.buildFragmentSnippets', () => {
   const FORM = `<div>
-  <fx-input full icon="mail" type="email" name="email" placeholder="E-mail"></fx-input>
+  <fx-input full icon="mail" name="email" placeholder="E-mail"></fx-input>
   <fx-select full name="uf" placeholder="UF"><option value="sp">SP</option></fx-select>
   <fx-checkbox name="termos" value="aceito">Aceito</fx-checkbox>
   <fx-button type="submit">Enviar</fx-button>

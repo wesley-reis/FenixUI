@@ -9,32 +9,36 @@
  * progress-origin (left|right — lado pelo qual a barra esvazia; padrão left).
  */
 const POSITIONS = [
-  'top-left', 'top-center', 'top-right',
-  'bottom-left', 'bottom-center', 'bottom-right',
+  "top-left",
+  "top-center",
+  "top-right",
+  "bottom-left",
+  "bottom-center",
+  "bottom-right",
 ] as const;
 export type ToastPosition = (typeof POSITIONS)[number];
-type ToastKind = 'success' | 'error' | 'info' | 'warning';
+type ToastKind = "success" | "error" | "info" | "warning";
 
 /**
  * Evento interno disparado quando o <fx-toast> sai do DOM.
  * A API `FenixToast` o escuta para remover a entrada do mapa interno —
  * é o que impede o acúmulo de toasts já dispensados.
  */
-const REMOVED_EVENT = 'fx-toast:removed';
+const REMOVED_EVENT = "fx-toast:removed";
 
 const KIND_COLOR: Record<ToastKind, string> = {
-  success: 'var(--fx-color-success, #10b981)',
-  error: 'var(--fx-color-danger, #f43f5e)',
-  info: 'var(--fx-color-info, #0ea5e9)',
-  warning: 'var(--fx-color-warning, #f59e0b)',
+  success: "var(--fx-color-success, #10b981)",
+  error: "var(--fx-color-danger, #f43f5e)",
+  info: "var(--fx-color-info, #0ea5e9)",
+  warning: "var(--fx-color-warning, #f59e0b)",
 };
 
 /** Ícone exibido no lugar da bolinha, conforme a variante. */
 const KIND_ICON: Record<ToastKind, string> = {
-  success: '✓',
-  error: '✕',
-  warning: '!',
-  info: 'i',
+  success: "✓",
+  error: "✕",
+  warning: "!",
+  info: "i",
 };
 
 /** Ícone de copiar (SVG inline: não depende da fonte de ícones). */
@@ -85,12 +89,13 @@ const CARD_CSS = `
   border-left: 4px solid var(--kind);
   border-radius: var(--fx-radius-md, 8px);
   box-shadow: var(--fx-shadow-lg, 0 10px 30px rgba(0,0,0,.14));
-  padding: var(--fx-space-sm, 8px) var(--fx-space-md, 12px);
+  padding: var(--fx-space-xs, 8px) var(--fx-space-md, 12px);
   font-family: inherit;
   animation: fx-toast-in .25s ease;
 }
 @keyframes fx-toast-in { from { opacity: 0; transform: translateY(-6px); } }
 .card.leaving { opacity: 0; transition: opacity .2s ease; }
+.card.no-title { min-height: 48px; }
 .icon {
   width: 22px; height: 22px; border-radius: 50%;
   background: var(--kind);
@@ -186,7 +191,16 @@ const CARD_CSS = `
 
 export class FxToast extends HTMLElement {
   static get observedAttributes() {
-    return ['kind', 'title', 'message', 'duration', 'icon', 'mode', 'progress', 'progress-origin'];
+    return [
+      "kind",
+      "title",
+      "message",
+      "duration",
+      "icon",
+      "mode",
+      "progress",
+      "progress-origin",
+    ];
   }
 
   /**
@@ -201,14 +215,14 @@ export class FxToast extends HTMLElement {
    *   pausa a contagem (timer + barra) em qualquer modo, então a barra "só
    *   correr sob o cursor" deixou de fazer sentido.
    */
-  get progress(): 'always' | 'hover' | 'paused' | undefined {
-    if (!this.hasAttribute('progress')) return undefined;
-    const v = this.getAttribute('progress');
-    return v === 'paused' ? 'paused' : 'always';
+  get progress(): "always" | "hover" | "paused" | undefined {
+    if (!this.hasAttribute("progress")) return undefined;
+    const v = this.getAttribute("progress");
+    return v === "paused" ? "paused" : "always";
   }
-  set progress(value: 'always' | 'hover' | 'paused' | undefined) {
-    if (value) this.setAttribute('progress', value);
-    else this.removeAttribute('progress');
+  set progress(value: "always" | "hover" | "paused" | undefined) {
+    if (value) this.setAttribute("progress", value);
+    else this.removeAttribute("progress");
   }
 
   /**
@@ -222,28 +236,28 @@ export class FxToast extends HTMLElement {
    * Só tem efeito junto com `progress`; qualquer valor fora da lista cai em
    * `'left'`.
    */
-  get progressOrigin(): 'left' | 'right' {
-    return this.getAttribute('progress-origin') === 'right' ? 'right' : 'left';
+  get progressOrigin(): "left" | "right" {
+    return this.getAttribute("progress-origin") === "right" ? "right" : "left";
   }
-  set progressOrigin(value: 'left' | 'right') {
-    this.setAttribute('progress-origin', value);
+  set progressOrigin(value: "left" | "right") {
+    this.setAttribute("progress-origin", value);
   }
 
   /** Duração efetiva em ms (0 = fixo). Mesma regra usada no timer. */
   private get safeDuration(): number {
-    const dur = Number(this.getAttribute('duration') ?? '4000');
+    const dur = Number(this.getAttribute("duration") ?? "4000");
     if (dur === 0) return 0;
     return Math.max(Number.isNaN(dur) ? 4000 : dur, 1000);
   }
 
   /** Esquema de cores forçado do card: 'light' | 'dark' | undefined (segue o tema). */
-  get mode(): 'light' | 'dark' | undefined {
-    const m = this.getAttribute('mode');
-    return m === 'light' || m === 'dark' ? m : undefined;
+  get mode(): "light" | "dark" | undefined {
+    const m = this.getAttribute("mode");
+    return m === "light" || m === "dark" ? m : undefined;
   }
-  set mode(value: 'light' | 'dark' | undefined) {
-    if (value) this.setAttribute('mode', value);
-    else this.removeAttribute('mode');
+  set mode(value: "light" | "dark" | undefined) {
+    if (value) this.setAttribute("mode", value);
+    else this.removeAttribute("mode");
   }
 
   private timer: ReturnType<typeof setTimeout> | null = null;
@@ -262,7 +276,7 @@ export class FxToast extends HTMLElement {
 
   constructor() {
     super();
-    this.attachShadow({ mode: 'open' });
+    this.attachShadow({ mode: "open" });
   }
 
   connectedCallback() {
@@ -287,17 +301,17 @@ export class FxToast extends HTMLElement {
   #wirePause(): void {
     if (this.wired) return;
     this.wired = true;
-    this.addEventListener('mouseenter', () => {
+    this.addEventListener("mouseenter", () => {
       this.hovering = true;
       this.#pauseTimer();
     });
-    this.addEventListener('mouseleave', () => {
+    this.addEventListener("mouseleave", () => {
       this.hovering = false;
       this.#resumeTimer();
     });
     // Teclado (botões copiar/fechar/ver mais) também mantém o toast na tela.
-    this.addEventListener('focusin', () => this.#pauseTimer());
-    this.addEventListener('focusout', () => {
+    this.addEventListener("focusin", () => this.#pauseTimer());
+    this.addEventListener("focusout", () => {
       if (!this.hovering) this.#resumeTimer();
     });
   }
@@ -315,7 +329,10 @@ export class FxToast extends HTMLElement {
     if (!this.timer) return;
     clearTimeout(this.timer);
     this.timer = null;
-    this.remaining = Math.max(0, this.remaining - (Date.now() - this.startedAt));
+    this.remaining = Math.max(
+      0,
+      this.remaining - (Date.now() - this.startedAt),
+    );
   }
 
   #resumeTimer(): void {
@@ -339,22 +356,30 @@ export class FxToast extends HTMLElement {
     this.disposed = true;
     if (this.timer) clearTimeout(this.timer);
     this.timer = null;
-    this.dispatchEvent(new CustomEvent(REMOVED_EVENT, { bubbles: false, composed: false }));
+    this.dispatchEvent(
+      new CustomEvent(REMOVED_EVENT, { bubbles: false, composed: false }),
+    );
   }
 
   attributeChangedCallback(name: string) {
     // A duração é lida em dois lugares (timer + barra): se mudar com o toast
     // na tela, ambos precisam se realinhar.
-    if (name === 'duration') {
+    if (name === "duration") {
       if (this.timer) {
         clearTimeout(this.timer);
         this.timer = null;
       }
       const safe = this.safeDuration;
       this.counting = safe > 0;
-      if (safe > 0 && this.isConnected && !this.disposed) this.#startTimer(safe);
+      if (safe > 0 && this.isConnected && !this.disposed)
+        this.#startTimer(safe);
     }
-    if (name === 'duration' || name === 'progress' || name === 'progress-origin' || name === 'kind') {
+    if (
+      name === "duration" ||
+      name === "progress" ||
+      name === "progress-origin" ||
+      name === "kind"
+    ) {
       this.#syncProgress();
     }
   }
@@ -367,41 +392,49 @@ export class FxToast extends HTMLElement {
    * toast — assim a barra e o desaparecimento nunca desalinham.
    */
   #syncProgress(): void {
-    const card = this.shadowRoot?.querySelector<HTMLElement>('.card');
+    const card = this.shadowRoot?.querySelector<HTMLElement>(".card");
     if (!card) return;
-    const bar = this.shadowRoot!.querySelector<HTMLElement>('.progress');
+    const bar = this.shadowRoot!.querySelector<HTMLElement>(".progress");
     const mode = this.progress;
     const dur = this.safeDuration;
     const shouldShow = !!mode && dur > 0;
 
     if (!shouldShow) {
       bar?.remove();
-      card.classList.remove('entering');
+      card.classList.remove("entering");
       return;
     }
     if (!bar) {
-      this.shadowRoot!.querySelector('.card')!.insertAdjacentHTML('beforeend', '<span class="progress" part="progress" aria-hidden="true"></span>');
+      this.shadowRoot!.querySelector(".card")!.insertAdjacentHTML(
+        "beforeend",
+        '<span class="progress" part="progress" aria-hidden="true"></span>',
+      );
     }
-    const el = this.shadowRoot!.querySelector<HTMLElement>('.progress')!;
-    el.style.setProperty('--toast-duration', `${dur}ms`);
+    const el = this.shadowRoot!.querySelector<HTMLElement>(".progress")!;
+    el.style.setProperty("--toast-duration", `${dur}ms`);
     // `left` (padrão) => origem à esquerda; `right` espelha a drenagem.
-    el.style.setProperty('--toast-progress-origin', `${this.progressOrigin} center`);
-    el.classList.remove('run');
+    el.style.setProperty(
+      "--toast-progress-origin",
+      `${this.progressOrigin} center`,
+    );
+    el.classList.remove("run");
     // `paused` mantém a barra cheia e imóvel; os demais modos animam
     // (o hover pausa a animação junto com o timer, via CSS).
-    if (mode !== 'paused') el.classList.add('run');
+    if (mode !== "paused") el.classList.add("run");
     // 1 frame sem animação para o browser registrar o estado inicial cheio
     // antes de a barra começar a esvaziar.
-    card.classList.add('entering');
-    requestAnimationFrame(() => requestAnimationFrame(() => card.classList.remove('entering')));
+    card.classList.add("entering");
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => card.classList.remove("entering")),
+    );
   }
 
   dismiss() {
     if (this.timer) clearTimeout(this.timer);
     this.timer = null;
-    const card = this.shadowRoot!.querySelector('.card');
+    const card = this.shadowRoot!.querySelector(".card");
     if (card) {
-      card.classList.add('leaving');
+      card.classList.add("leaving");
       setTimeout(() => this.remove(), 200);
     } else {
       this.remove();
@@ -409,30 +442,32 @@ export class FxToast extends HTMLElement {
   }
 
   #render() {
-    const kind = (this.getAttribute('kind') || 'info') as ToastKind;
-    const title = this.getAttribute('title') ?? '';
-    const msg = this.getAttribute('message') ?? '';
+    const kind = (this.getAttribute("kind") || "info") as ToastKind;
+    const title = this.getAttribute("title") ?? "";
+    const msg = this.getAttribute("message") ?? "";
     const color = KIND_COLOR[kind] ?? KIND_COLOR.info;
-    const iconName = this.getAttribute('icon');
+    const iconName = this.getAttribute("icon");
     const isFxIcon = !!iconName && /^[a-z][a-z0-9_]*$/.test(iconName);
-    if (isFxIcon) void import('../../icons');
-    const iconContent = isFxIcon ? iconName : KIND_ICON[kind] ?? KIND_ICON.info;
+    if (isFxIcon) void import("../../icons");
+    const iconContent = isFxIcon
+      ? iconName
+      : (KIND_ICON[kind] ?? KIND_ICON.info);
     this.shadowRoot!.innerHTML = `
       <style>${CARD_CSS}</style>
-      <div class="card" style="--kind:${color}" role="status" part="card">
-        <span class="icon${isFxIcon ? ' fx-icon' : ''}">${iconContent}</span>
+      <div class="card${title ? "" : " no-title"}" style="--kind:${color}" role="status" part="card">
+        <span class="icon${isFxIcon ? " fx-icon" : ""}">${iconContent}</span>
         <div class="body">
-          ${title ? '<div class="title" part="title"></div>' : ''}
-          ${msg ? '<div class="msg" part="message"></div>' : ''}
-          ${msg ? '<button class="more" part="more" hidden>Ver mais</button>' : ''}
+          ${title ? '<div class="title" part="title"></div>' : ""}
+          ${msg ? '<div class="msg" part="message"></div>' : ""}
+          ${msg ? '<button class="more" part="more" hidden>Ver mais</button>' : ""}
         </div>
         <div class="actions">
-          ${msg ? `<button class="copy" part="copy" hidden aria-label="Copiar mensagem" title="Copiar mensagem">${COPY_SVG}</button>` : ''}
+          ${msg ? `<button class="copy" part="copy" hidden aria-label="Copiar mensagem" title="Copiar mensagem">${COPY_SVG}</button>` : ""}
           <button class="close" aria-label="Fechar" title="Fechar">✕</button>
         </div>
       </div>`;
-    const t = this.shadowRoot!.querySelector<HTMLElement>('.title');
-    const m = this.shadowRoot!.querySelector<HTMLElement>('.msg');
+    const t = this.shadowRoot!.querySelector<HTMLElement>(".title");
+    const m = this.shadowRoot!.querySelector<HTMLElement>(".msg");
     if (t) t.textContent = title;
     if (m) {
       m.textContent = msg;
@@ -440,30 +475,34 @@ export class FxToast extends HTMLElement {
       // tudo, mesmo quando o card está truncado em 2 linhas.
       m.title = msg;
     }
-    const card = this.shadowRoot!.querySelector<HTMLElement>('.card')!;
-    const more = this.shadowRoot!.querySelector<HTMLButtonElement>('.more');
-    const copy = this.shadowRoot!.querySelector<HTMLButtonElement>('.copy');
-    more?.addEventListener('click', () => {
-      const expanded = card.classList.toggle('expanded');
-      more.textContent = expanded ? 'Ver menos' : 'Ver mais';
+    const card = this.shadowRoot!.querySelector<HTMLElement>(".card")!;
+    const more = this.shadowRoot!.querySelector<HTMLButtonElement>(".more");
+    const copy = this.shadowRoot!.querySelector<HTMLButtonElement>(".copy");
+    more?.addEventListener("click", () => {
+      const expanded = card.classList.toggle("expanded");
+      more.textContent = expanded ? "Ver menos" : "Ver mais";
       // O botão de copiar só aparece com o texto aberto (não polui o card no
       // tamanho padrão). Enquanto o texto está expandido o toast não fecha.
       if (copy) copy.hidden = !expanded;
       if (expanded) this.#pauseTimer();
     });
-    copy?.addEventListener('click', (e) => {
+    copy?.addEventListener("click", (e) => {
       const btn = e.currentTarget as HTMLButtonElement;
-      const text = [title, msg].filter(Boolean).join('\n');
-      navigator.clipboard?.writeText(text).catch(() => { /* clipboard indisponível */ });
+      const text = [title, msg].filter(Boolean).join("\n");
+      navigator.clipboard?.writeText(text).catch(() => {
+        /* clipboard indisponível */
+      });
       // Feedback: check verde + dica "Copiado!" por 1,2s.
-      btn.classList.add('done');
-      btn.title = 'Copiado!';
+      btn.classList.add("done");
+      btn.title = "Copiado!";
       setTimeout(() => {
-        btn.classList.remove('done');
-        btn.title = 'Copiar mensagem';
+        btn.classList.remove("done");
+        btn.title = "Copiar mensagem";
       }, 1200);
     });
-    this.shadowRoot!.querySelector('.close')!.addEventListener('click', () => this.dismiss());
+    this.shadowRoot!.querySelector(".close")!.addEventListener("click", () =>
+      this.dismiss(),
+    );
   }
 
   /**
@@ -471,11 +510,11 @@ export class FxToast extends HTMLElement {
    * Sem layout (jsdom) scrollHeight/clientHeight são 0 → fica oculto.
    */
   #syncMore(): void {
-    const card = this.shadowRoot?.querySelector<HTMLElement>('.card');
-    const more = this.shadowRoot?.querySelector<HTMLButtonElement>('.more');
-    const msg = this.shadowRoot?.querySelector<HTMLElement>('.msg');
+    const card = this.shadowRoot?.querySelector<HTMLElement>(".card");
+    const more = this.shadowRoot?.querySelector<HTMLButtonElement>(".more");
+    const msg = this.shadowRoot?.querySelector<HTMLElement>(".msg");
     if (!card || !more || !msg) return;
-    if (card.classList.contains('expanded')) {
+    if (card.classList.contains("expanded")) {
       more.hidden = false;
       return;
     }
@@ -485,25 +524,27 @@ export class FxToast extends HTMLElement {
 
 /* ---------- Regiões por posição na tela ---------- */
 function regionFor(position: ToastPosition): HTMLElement {
-  let region = document.querySelector<HTMLElement>(`[data-fx-toast-region="${position}"]`);
+  let region = document.querySelector<HTMLElement>(
+    `[data-fx-toast-region="${position}"]`,
+  );
   if (!region) {
-    region = document.createElement('div');
-    region.setAttribute('data-fx-toast-region', position);
-    const [vertical, horizontal] = position.split('-') as [string, string];
+    region = document.createElement("div");
+    region.setAttribute("data-fx-toast-region", position);
+    const [vertical, horizontal] = position.split("-") as [string, string];
     const style = region.style as CSSStyleDeclaration & Record<string, string>;
-    style.position = 'fixed';
-    style[vertical] = '16px';
-    if (horizontal === 'center') {
-      style.left = '50%';
-      style.transform = 'translateX(-50%)';
+    style.position = "fixed";
+    style[vertical] = "16px";
+    if (horizontal === "center") {
+      style.left = "50%";
+      style.transform = "translateX(-50%)";
     } else {
-      style[horizontal] = '16px';
+      style[horizontal] = "16px";
     }
-    style.display = 'flex';
-    style.flexDirection = 'column';
-    style.gap = '8px';
-    style.zIndex = '1100';
-    style.pointerEvents = 'none';
+    style.display = "flex";
+    style.flexDirection = "column";
+    style.gap = "8px";
+    style.zIndex = "1100";
+    style.pointerEvents = "none";
     // Os cards reabilitam pointer-events via `:host { pointer-events: auto }` (herança),
     // sem necessidade de MutationObserver.
     document.body.appendChild(region);
@@ -523,38 +564,51 @@ export interface ToastOptions {
    * sobre o toast; `'paused'` exibe a barra cheia, porém imóvel.
    * Sem efeito com `duration: 0` (não há tempo restante a representar).
    */
-  progress?: 'always' | 'hover' | 'paused';
+  progress?: "always" | "hover" | "paused";
   /**
    * Lado a partir do qual a barra esvazia. `'left'` (padrão) deixa a barra
    * ancorada à esquerda; `'right'` a ancora à direita (espelhado).
    * Só tem efeito junto com `progress`.
    */
-  progressOrigin?: 'left' | 'right';
+  progressOrigin?: "left" | "right";
   /** Força o esquema de cores do card, independentemente do tema global. */
-  mode?: 'light' | 'dark';
+  mode?: "light" | "dark";
 }
 
 class ToastApi {
   private seq = 0;
   private map = new Map<number, FxToast>();
 
-  push(kind: ToastKind, title: string, messageOrOpts?: string | ToastOptions, opts?: ToastOptions): number {
+  push(
+    kind: ToastKind,
+    title: string,
+    messageOrOpts?: string | ToastOptions,
+    opts?: ToastOptions,
+  ): number {
     const id = ++this.seq;
     // Assinaturas suportadas:
     //   push(kind, title, options)
     //   push(kind, title, message, options)   <- usada pela doc e mais intuitiva
-    const message = typeof messageOrOpts === 'string' ? messageOrOpts : messageOrOpts?.message;
-    const o: ToastOptions = { ...(typeof messageOrOpts === 'object' && messageOrOpts ? messageOrOpts : undefined), ...opts };
-    const el = document.createElement('fx-toast') as FxToast;
-    el.setAttribute('kind', kind);
-    el.setAttribute('title', title);
-    if (message) el.setAttribute('message', message);
-    el.setAttribute('position', o.position ?? 'top-right');
-    el.setAttribute('duration', String(o.duration ?? 4000));
-    if (o.mode) el.setAttribute('mode', o.mode);
-    if (o.progress) el.setAttribute('progress', o.progress);
-    if (o.progressOrigin) el.setAttribute('progress-origin', o.progressOrigin);
-    regionFor(o.position ?? 'top-right').appendChild(el);
+    const message =
+      typeof messageOrOpts === "string"
+        ? messageOrOpts
+        : messageOrOpts?.message;
+    const o: ToastOptions = {
+      ...(typeof messageOrOpts === "object" && messageOrOpts
+        ? messageOrOpts
+        : undefined),
+      ...opts,
+    };
+    const el = document.createElement("fx-toast") as FxToast;
+    el.setAttribute("kind", kind);
+    el.setAttribute("title", title);
+    if (message) el.setAttribute("message", message);
+    el.setAttribute("position", o.position ?? "top-right");
+    el.setAttribute("duration", String(o.duration ?? 4000));
+    if (o.mode) el.setAttribute("mode", o.mode);
+    if (o.progress) el.setAttribute("progress", o.progress);
+    if (o.progressOrigin) el.setAttribute("progress-origin", o.progressOrigin);
+    regionFor(o.position ?? "top-right").appendChild(el);
     // O toast avisa quando sai do DOM (timer esgotado, botão de fechar ou
     // remoção externa). Sem este sync o mapa retém cada toast da sessão.
     el.addEventListener(REMOVED_EVENT, () => {
@@ -569,10 +623,14 @@ class ToastApi {
     this.map.delete(id);
   }
 
-  success = (t: string, m?: string, o?: ToastOptions) => this.push('success', t, m, o);
-  error = (t: string, m?: string, o?: ToastOptions) => this.push('error', t, m, o);
-  info = (t: string, m?: string, o?: ToastOptions) => this.push('info', t, m, o);
-  warning = (t: string, m?: string, o?: ToastOptions) => this.push('warning', t, m, o);
+  success = (t: string, m?: string, o?: ToastOptions) =>
+    this.push("success", t, m, o);
+  error = (t: string, m?: string, o?: ToastOptions) =>
+    this.push("error", t, m, o);
+  info = (t: string, m?: string, o?: ToastOptions) =>
+    this.push("info", t, m, o);
+  warning = (t: string, m?: string, o?: ToastOptions) =>
+    this.push("warning", t, m, o);
 }
 
 export const FenixToast = new ToastApi();
@@ -580,6 +638,6 @@ export const FenixToast = new ToastApi();
 (globalThis as unknown as Record<string, unknown>).FenixToast = FenixToast;
 
 export function defineFxToast() {
-  if (!customElements.get('fx-toast')) customElements.define('fx-toast', FxToast);
+  if (!customElements.get("fx-toast"))
+    customElements.define("fx-toast", FxToast);
 }
-

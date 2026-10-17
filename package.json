@@ -1,6 +1,6 @@
 {
   "name": "@wrrdev/fenix-ui",
-  "version": "1.1.14",
+  "version": "1.1.15",
   "description": "FenixUI Design System Web nativo (Web Components + Shadow DOM + Design Tokens) com tree-shaking por componente.",
   "type": "module",
   "license": "ISC",
@@ -120,6 +120,10 @@
     "./textarea": {
       "types": "./dist/components/textarea/index.d.ts",
       "import": "./dist/components/textarea/index.js"
+    },
+    "./editor": {
+      "types": "./dist/components/editor/index.d.ts",
+      "import": "./dist/components/editor/index.js"
     },
     "./dialog": {
       "types": "./dist/components/dialog/index.d.ts",

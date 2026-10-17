@@ -18,6 +18,7 @@ export const fenixComponentMap: Record<string, string> = {
   'fx-table': '@wrrdev/fenix-ui/table',
   'fx-floatlabel': '@wrrdev/fenix-ui/floatlabel',
   'fx-textarea': '@wrrdev/fenix-ui/textarea',
+  'fx-editor': '@wrrdev/fenix-ui/editor',
   'fx-dialog': '@wrrdev/fenix-ui/dialog',
   'fx-confirmpopup': '@wrrdev/fenix-ui/confirmpopup',
   'fx-fileupload': '@wrrdev/fenix-ui/fileupload',
