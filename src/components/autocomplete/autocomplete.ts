@@ -1,4 +1,4 @@
-﻿import { FxElement } from '../../core/base';
+﻿import { FxFormElement } from '../../core/form-element';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from '../../core/sanitize';
@@ -6,11 +6,14 @@ import { esc } from '../../core/sanitize';
 /**
  * <fx-autocomplete> — Campo de texto com sugestões filtradas.
  *
- * Atributos: value, size, placeholder, source (JSON array de strings),
- * disabled, min-chars (padrão 1).
- * Evento: `select` (composed, detail: { value }).
+ * Form-Associated Custom Element: dentro de um <form> entra no FormData
+ * (via atributo `name`) e é alvo de `<label for>`/`autofocus`.
+ *
+ * Atributos: value, name, size, placeholder, source (JSON array de strings),
+ * disabled, min-chars (padrão 1), autofocus.
+ * Eventos: `select` (composed, detail: { value }).
  */
-export class FxAutocomplete extends FxElement {
+export class FxAutocomplete extends FxFormElement {
   static override styles = css`
     :host {
       position: relative;
@@ -110,7 +113,13 @@ export class FxAutocomplete extends FxElement {
   }
   set size(v: string) { this.setAttribute('size', v); }
   get value(): string { return this.getAttr('value'); }
-  set value(v: string) { this.setAttribute('value', v); }
+  set value(v: string) {
+    this.setAttribute('value', v);
+    // `value` não é observado (não pode re-renderizar por tecla): sincroniza
+    // o campo interno direto, sem perder foco/cursor, e publica no form.
+    this.syncInternalControl();
+    this.updateFormValue();
+  }
 
   get source(): string[] {
     try {
@@ -186,9 +195,16 @@ export class FxAutocomplete extends FxElement {
     });
     field.addEventListener('focus', () => { if (field.value.length >= minChars) openList(); });
     // Navegação por teclado: setas movem o foco entre as sugestões; ESC fecha.
+    // Enter com a lista FECHADA submete o form (o input interno não se associa
+    // ao <form> do light DOM — submissão implícita acionada manualmente).
     field.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         this.toggleAttr('open', false);
+        return;
+      }
+      if (e.key === 'Enter' && !e.isComposing && !this.hasAttr('open') && this.form) {
+        e.preventDefault();
+        this.form.requestSubmit();
         return;
       }
       if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
@@ -202,6 +218,16 @@ export class FxAutocomplete extends FxElement {
         : (current === -1 ? opts.length - 1 : Math.max(current - 1, 0));
       opts[next]?.focus();
     });
+
+    // Publica name/value no form (ElementInternals) a cada render.
+    this.updateFormValue();
+  }
+
+  /** Empurra o atributo `value` para o campo interno sem re-renderizar. */
+  protected override syncInternalControl(): void {
+    const field = this.root.querySelector<HTMLInputElement>('.field');
+    const value = this.getAttr('value');
+    if (field && field.value !== value) field.value = value;
   }
 }
 

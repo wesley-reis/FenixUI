@@ -1048,12 +1048,17 @@ async function renderComponentPage(doc: ComponentDoc): Promise<void> {
 		.querySelectorAll(".code-block")[1]
 		?.querySelector("code");
 	const refresh = (): void => {
-		stage.innerHTML = doc.demoHtml(currentAttrs(doc));
+		const src = doc.demoHtml(currentAttrs(doc));
+		stage.innerHTML = src;
 		// Re-inicializa componentes que precisam de parse de JSON via JS
 		initDataComponents(stage);
 		if (codeEl) {
 			// Atributos booleanos não têm valor: `disabled=""` vira apenas `disabled`.
-			const clean = stage.innerHTML.replace(
+			// O código vem do SOURCE (não do innerHTML do stage): componentes como
+			// o fx-floatlabel MOVEM filhos (a <label>) para o Shadow DOM, então o
+			// innerHTML do stage PERDERIA o que foi movido — o código copiado
+			// sairia sem a label.
+			const clean = src.replace(
 				/(\s(?:disabled|loading|checked|readonly|full|round))=""/g,
 				"$1",
 			);
@@ -1086,6 +1091,7 @@ const FORMS_TAGS = [
 	"fx-alert",
 	"fx-fileupload",
 	"fx-autocomplete",
+	"fx-checkbox",
 ];
 
 /** Card "modelo + código" de um formulário pronto. */
@@ -1223,23 +1229,71 @@ const FORM_MODEL_4 = `
   </div>
 </div>`;
 
+/**
+ * Modelo 5: <form> NATIVO — os componentes são form-associated: com o atributo
+ * `name` entram no FormData do form, o Enter em fx-input submete, fx-button
+ * type="submit"/"reset" aciona o form e <label for> foca o campo pelo id.
+ */
+const FORM_MODEL_5 = `
+<form data-native-form style="display:flex;flex-direction:column;gap:16px;max-width:520px">
+  <div>
+    <label for="nf-nome" style="display:block;font-size:12px;font-weight:600;color:var(--fx-text-muted);margin-bottom:4px">Nome completo (label nativa → for foca o campo)</label>
+    <fx-input full id="nf-nome" name="nome" icon="person" placeholder="Enter submete o form" autofocus></fx-input>
+  </div>
+  <fx-input full id="nf-email" name="email" type="email" icon="mail" placeholder="E-mail"></fx-input>
+  <fx-select full id="nf-uf" name="uf" placeholder="UF"><option value="sp">São Paulo</option><option value="rj">Rio de Janeiro</option><option value="mg">Minas Gerais</option></fx-select>
+  <fx-checkbox name="termos" value="aceito">Aceito os termos (só entra no FormData quando marcado)</fx-checkbox>
+  <fx-textarea full id="nf-obs" name="obs" rows="2" placeholder="Observações (Enter quebra linha)"></fx-textarea>
+  <pre class="native-form-output" hidden style="margin:0;padding:10px 12px;font-size:12px;font-family:var(--fx-font-family);background:var(--fx-surface-surface-hover,rgba(0,0,0,.05));border:1px dashed var(--fx-border-default);border-radius:var(--fx-radius-md);white-space:pre-wrap;word-break:break-word"></pre>
+  <div style="display:flex;gap:12px;justify-content:flex-end">
+    <fx-button variant="ghost" type="reset">Limpar (form.reset)</fx-button>
+    <fx-button type="submit">Enviar (FormData)</fx-button>
+  </div>
+</form>`;
+
+/**
+ * Modelo 5: o submit chega pelo <form> nativo (Enter em fx-input ou fx-button
+ * type="submit" → requestSubmit). O listener usa preventDefault e mostra o
+ * FormData resultante no <pre> de saída: em navegadores, o form-associated
+ * publica name/value via ElementInternals.
+ */
+function wireNativeForm(root: HTMLElement): void {
+	root.querySelectorAll<HTMLFormElement>("form[data-native-form]").forEach((form) => {
+		const out = form.querySelector<HTMLElement>(".native-form-output");
+		form.addEventListener("submit", (e) => {
+			e.preventDefault();
+			if (!out) return;
+			const fd = new FormData(form);
+			const lines = [...fd.entries()].map(
+				([k, v]) => `${k} = ${typeof v === "string" ? v : `(arquivo: ${(v as File).name})`}`,
+			);
+			out.textContent = lines.length
+				? `submit recebido pelo <form> — FormData:\n${lines.join("\n")}`
+				: "submit recebido pelo <form> — FormData vazio (este ambiente não associa custom elements ao form; teste em um navegador).";
+			out.hidden = false;
+		});
+	});
+}
+
 async function renderForms(): Promise<void> {
 	const main = document.getElementById("main")!;
 	await Promise.all(FORMS_TAGS.map((t) => componentLoaders[t]?.()));
 	await Promise.all(FORMS_TAGS.map((t) => customElements.whenDefined(t)));
 	main.innerHTML = `
     <h2>Formulários</h2>
-    <p class="lead">Modelos prontos de cadastro combinando os componentes do FenixUI: use <code>full</code> para os campos acompanharem o container, CSS grid para múltiplos campos por linha e <code>error</code>/<code>error-text</code> para a validação. Clique em <strong>Salvar</strong> com campos vazios para ver a validação em ação. A borda e o brilho de <code>error</code>/<code>success</code> seguem o token <code>effect.focus-ring</code>: com o anel desligado os campos validados exibem apenas a borda vermelha/verde (sem sobra), e com o anel ligado o brilho é somado.</p>
+    <p class="lead">Modelos prontos de cadastro combinando os componentes do FenixUI: use <code>full</code> para os campos acompanharem o container, CSS grid para múltiplos campos por linha e <code>error</code>/<code>error-text</code> para a validação. Clique em <strong>Salvar</strong> com campos vazios para ver a validação em ação. A borda e o brilho de <code>error</code>/<code>success</code> seguem o token <code>effect.focus-ring</code>: com o anel desligado os campos validados exibem apenas a borda vermelha/verde (sem sobra), e com o anel ligado o brilho é somado. Todos os campos são <strong>form-associated</strong>: com o atributo <code>name</code> entram no <code>FormData</code> de um <code>&lt;form&gt;</code> nativo, o Enter submete, <code>&lt;label for&gt;</code> foca e <code>form.reset()</code> restaura o valor — veja o Modelo 5.</p>
     <style>
       /* hidden precisa vencer o display do host do alert */
       .example-stage fx-alert[hidden] { display: none !important; }
       /* O palco é display:flex/flex-wrap (index.html): sem isso os modelos
          colapsam para a largura do conteúdo e o full não estica. */
       .example-stage [data-form-validate] { flex: 1 1 100%; }
+      .example-stage form[data-native-form] { flex: 1 1 100%; }
       /* Os forms são cards opacos centralizados (não transparentes): o palco
          tem fundo xadrez vazado para mostrar transparência — o form cobre com
          a cor de superfície, tem largura legível e fica centrado. */
-      .example-stage [data-form-validate] {
+      .example-stage [data-form-validate],
+      .example-stage form[data-native-form] {
         background: var(--fx-surface-background, #fff);
         border: 1px solid var(--fx-border-default);
         border-radius: var(--fx-radius-md);
@@ -1253,8 +1307,14 @@ async function renderForms(): Promise<void> {
     ${formModelCard("Modelo 2 — Grid de duas colunas", "Dois campos por linha via CSS grid (grid-template-columns: 1fr 1fr) com full nos campos.", FORM_MODEL_2)}
     ${formModelCard("Modelo 3 — Misto (múltiplos campos por linha)", "Grids com 2-3 campos por linha, selects, multiselect, autocomplete e fileupload full.", FORM_MODEL_3)}
     ${formModelCard("Modelo 4 — FloatLabel com validação", "fx-floatlabel full (propagado para o controle) + error/error-text ao salvar com campos vazios.", FORM_MODEL_4)}
+    ${formModelCard(
+      "Modelo 5 — Form nativo (submit pelo form)",
+      "Form-Associated: `name` publica no FormData, o Enter em fx-input submete o <form>, fx-button type=\"submit\"/\"reset\" acionam o form e <label for> foca o campo pelo id. O submit é interceptado (preventDefault) e o FormData aparece no bloco de saída.",
+      FORM_MODEL_5,
+    )}
   `;
 	wireFormValidation(main);
+	wireNativeForm(main);
 	wireCopyButtons(main);
 }
 
@@ -2028,6 +2088,12 @@ async function openIconCopyModal(icon: string): Promise<void> {
 
   const name = esc(icon);
 
+  // Escapa para ATRIBUTO (aspas incluídas): o esc() das docs cobre apenas
+  // & < > — valores como <i class="fx-icon …"> contêm ASPAS, que fechavam o
+  // data-value no meio e o botão Copiava só `<i class=` (código truncado).
+  const attrEsc = (s: string): string =>
+    s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+
   const rows: Array<{ label: string; value: string }> = [
     { label: 'Nome do glifo', value: icon },
     { label: 'Classe completa (recomendado)', value: `fx-icon fx-icon-${icon}` },
@@ -2049,7 +2115,7 @@ async function openIconCopyModal(icon: string): Promise<void> {
             <span class="icon-copy-label">${r.label}</span>
             <code class="icon-copy-value">${esc(r.value)}</code>
           </div>
-          <button type="button" class="icon-copy-btn" data-value="${esc(r.value)}">Copiar</button>
+          <button type="button" class="icon-copy-btn" data-value="${attrEsc(r.value)}">Copiar</button>
         </div>`).join('')}
     </div>
     <style>

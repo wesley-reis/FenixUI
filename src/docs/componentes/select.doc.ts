@@ -79,6 +79,12 @@ export const selectDoc: ComponentDoc = {
 			desc: "Valor selecionado; reflete para o atributo ao escolher.",
 		},
 		{
+			name: "name",
+			type: "string",
+			default: "''",
+			desc: "Nome do campo no FormData quando dentro de um <form> (form-associated).",
+		},
+		{
 			name: "size",
 			type: `'sm' | 'md' | 'lg'`,
 			default: `'md'`,

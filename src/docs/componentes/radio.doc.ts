@@ -9,7 +9,7 @@ export const radioDoc: ComponentDoc = {
 	tag: "fx-radio",
 	title: "Radio",
 	group: "Formulário",
-	lead: "Botão de opção. Radios com o mesmo `name` formam um grupo de seleção exclusiva.",
+	lead: "Botão de opção. Radios com o mesmo `name` formam um grupo de seleção exclusiva (escopado à árvore — document ou shadow DOM do app); setas do teclado navegam entre eles. Form-associated: só o marcado entra no FormData de um <form>.",
 	imports: ["import '@wrrdev/fenix-ui/radio';"],
 	demoHtml: (a) =>
 		`<fx-radio ${a} name="gender">Masculino</fx-radio><fx-radio ${a} name="gender">Feminino</fx-radio>`,
@@ -38,13 +38,13 @@ export const radioDoc: ComponentDoc = {
 			name: "value",
 			type: "string",
 			default: "''",
-			desc: "Valor associado (via detail de change).",
+			desc: "Valor enviado ao FormData quando marcado (default 'on', como o radio nativo); também vai no detail de change.",
 		},
 		{
 			name: "name",
 			type: "string",
 			default: "''",
-			desc: "Grupo: radios com o mesmo name alternam exclusivamente.",
+			desc: "Grupo: radios com o mesmo name alternam exclusivamente na MESMA árvore (document ou shadow DOM do app) — e é o nome do campo no FormData: só o marcado envia.",
 		},
 		{
 			name: "size",

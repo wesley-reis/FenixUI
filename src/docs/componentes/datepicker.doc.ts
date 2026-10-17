@@ -75,6 +75,12 @@ export const datepickerDoc: ComponentDoc = {
 			desc: "Data (single), ex.: 2026-08-15.",
 		},
 		{
+			name: "name",
+			type: "string",
+			default: "''",
+			desc: "Nome do campo no FormData quando dentro de um <form>: single envia name; range envia name-start/name-end; multiple envia uma entrada name por data.",
+		},
+		{
 			name: "start / end",
 			type: "string (ISO)",
 			default: "''",

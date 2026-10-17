@@ -33,6 +33,18 @@ export const switchDoc: ComponentDoc = {
 			desc: "Estado ligado; reflete para o atributo ao clicar.",
 		},
 		{
+			name: "value",
+			type: "string",
+			default: "'on'",
+			desc: "Valor enviado ao FormData quando ligado (default 'on', como o checkbox nativo).",
+		},
+		{
+			name: "name",
+			type: "string",
+			default: "''",
+			desc: "Nome do campo no FormData quando dentro de um <form>: ligado envia value (ou 'on'), desligado não envia nada.",
+		},
+		{
 			name: "disabled",
 			type: "boolean",
 			default: "false",

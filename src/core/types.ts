@@ -31,6 +31,10 @@ export interface FxElementProps {
   full?: boolean;
   /** Texto/label do controle. */
   label?: string;
+  /** Nome do campo no FormData quando dentro de um <form>. */
+  name?: string;
+  /** Foca o controle interno ao entrar na tela (componentes de formulário). */
+  autofocus?: boolean;
   /** Texto de apoio/placeholder. */
   placeholder?: string;
   /** Valor do controle (string ou número). */

@@ -1,4 +1,4 @@
-﻿import { FxElement } from '../../core/base';
+﻿import { FxFormElement } from '../../core/form-element';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from '../../core/sanitize';
@@ -7,17 +7,21 @@ import { FENIX_ICON_BASE_CSS, fenixIconHtml } from '../../icons/base-css';
 /**
  * <fx-input> — Campo de texto estilizado com os tokens do tema.
  *
- * Atributos: type (text|number|email|password|search|tel|url), value, size,
- * placeholder, disabled, readonly, min, max, step, clearable,
- * full (largura 100% acompanhando o elemento pai), icon (nome do glifo Fenix Icons
- * ou emoji/texto livre) e icon-pos (left|right, padrão left).
+ * Form-Associated Custom Element: dentro de um <form> entra no FormData
+ * (via atributo `name`), recebe reset/disable do form, é alvo de
+ * `<label for>`/`autofocus` e o Enter submete o form.
+ *
+ * Atributos: type (text|number|email|password|search|tel|url), value, name,
+ * size, placeholder, disabled, readonly, min, max, step, autofocus,
+ * clearable, full (largura 100% acompanhando o elemento pai), icon (nome do
+ * glifo Fenix Icons ou emoji/texto livre) e icon-pos (left|right, padrão left).
  * Largura: o default (260px; sm 220px / lg 300px) fica no HOST via tokens
  * --fx-input-width(-sm|-lg) — CSS externo, classes e style inline no elemento
  * vencem o default sem precisar de atributo.
  * Slots: `icon` (ícone customizado no lugar do atributo).
  * Eventos: `input` e `change` (composed, detail: { value }).
  */
-export class FxInput extends FxElement {
+export class FxInput extends FxFormElement {
   static override styles = css`
     :host {
       display: inline-block;
@@ -181,6 +185,10 @@ export class FxInput extends FxElement {
   }
   set value(value: string) {
     this.setAttribute('value', value);
+    // `value` NÃO é observado (re-render a cada tecla perderia o foco): o
+    // campo interno é sincronizado aqui, sem re-render, preservando foco/cursor.
+    this.syncInternalControl();
+    this.updateFormValue();
   }
 
   get disabled(): boolean {
@@ -237,6 +245,18 @@ export class FxInput extends FxElement {
     field.addEventListener('input', (e) => { e.stopPropagation(); emit('input'); });
     field.addEventListener('change', (e) => { e.stopPropagation(); emit('change'); });
 
+    // Enter submete o form: o <input> interno vive no Shadow DOM e NÃO se
+    // associa ao <form> do light DOM (a fronteira do shadow corta a associação
+    // por árvore) — por isso a submissão implícita é acionada manualmente.
+    // Ouvintes de submit no form (ex.: submit.prevent de frameworks) seguem
+    // recebendo o evento normalmente.
+    field.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' || e.isComposing) return;
+      if (!this.form) return;
+      e.preventDefault();
+      this.form.requestSubmit();
+    });
+
     // Clearable: botão × que limpa o campo e emite input/change vazios.
     const clearBtn = this.root.querySelector<HTMLButtonElement>('.clear');
     const syncClear = (): void => {
@@ -251,6 +271,17 @@ export class FxInput extends FxElement {
       field.focus();
     });
     field.addEventListener('input', syncClear);
+
+    // Publica name/value no form (ElementInternals) a cada render — cobre o
+    // estado inicial e mudanças de atributos observados.
+    this.updateFormValue();
+  }
+
+  /** Empurra o atributo `value` para o campo interno sem re-renderizar. */
+  protected override syncInternalControl(): void {
+    const field = this.root.querySelector<HTMLInputElement>('.field');
+    const value = this.getAttr('value');
+    if (field && field.value !== value) field.value = value;
   }
 }
 

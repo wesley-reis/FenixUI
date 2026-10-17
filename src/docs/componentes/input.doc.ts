@@ -10,7 +10,7 @@ export const inputDoc: ComponentDoc = {
 	tag: "fx-input",
 	title: "Input",
 	group: "Formulário",
-	lead: "Campo de texto (text, number, email, password, search…) estilizado com os tokens do tema. O anel de foco é controlado pelo token effect.focus-ring do preset.",
+	lead: "Campo de texto (text, number, email, password, search…) estilizado com os tokens do tema. Form-associated: com name entra no FormData de um <form>, o Enter submete e <label for> foca o campo. O anel de foco é controlado pelo token effect.focus-ring do preset.",
 	imports: ["import '@wrrdev/fenix-ui/input';"],
 	demoHtml: (a) => `<fx-input ${a}></fx-input>`,
 	variantsHtml: () =>
@@ -116,7 +116,19 @@ export const inputDoc: ComponentDoc = {
 			name: "value",
 			type: "string",
 			default: "''",
-			desc: "Valor do campo; reflete para o atributo ao digitar.",
+			desc: "Valor do campo; reflete para o atributo ao digitar. Setar el.value também atualiza o campo interno (sem re-render, preservando foco/cursor).",
+		},
+		{
+			name: "name",
+			type: "string",
+			default: "''",
+			desc: "Nome do campo no FormData quando dentro de um <form> (form-associated); o Enter no campo submete o form.",
+		},
+		{
+			name: "autofocus",
+			type: "boolean",
+			default: "false",
+			desc: "Foca o campo ao entrar na tela (delegatesFocus leva o foco ao input interno).",
 		},
 		{
 			name: "size",

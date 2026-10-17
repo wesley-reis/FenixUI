@@ -10,7 +10,7 @@ export const buttonDoc: ComponentDoc = {
 	tag: "fx-button",
 	title: "Button",
 	group: "Formulário",
-	lead: "Botão acionável com variantes semânticas, tamanhos, ícone via atributo ou slot e estado de carregamento integrado.",
+	lead: "Botão acionável com variantes semânticas, tamanhos, ícone via atributo ou slot e estado de carregamento integrado. Form-associated: type=\"submit\" submete o <form> em que vive e type=\"reset\" o limpa.",
 	imports: ["import '@wrrdev/fenix-ui/button';", "import '@wrrdev/fenix-ui/icons'; // para o attr icon (glifos Fenix Icons)"],
 	demoHtml: (a) => `<fx-button ${a}>Confirmar ação</fx-button>`,
 	variantsHtml: () =>
@@ -112,7 +112,7 @@ export const buttonDoc: ComponentDoc = {
 			name: "type",
 			type: `'button' | 'submit' | 'reset'`,
 			default: `'button'`,
-			desc: "Tipo do button nativo (útil em forms).",
+			desc: "Tipo do button nativo. Dentro de um <form>: \"submit\" dispara requestSubmit (o Enter com foco no botão também) e \"reset\" chama form.reset(). Um <form>/<fieldset> disabled desabilita o botão automaticamente.",
 		},
 		{
 			name: "full",

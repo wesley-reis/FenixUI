@@ -1,10 +1,14 @@
-﻿import { FxElement } from '../../core/base';
+﻿import { FxFormElement } from '../../core/form-element';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from '../../core/sanitize';
 
 /**
  * <fx-datepicker> — Campo de data com calendário suspenso.
+ *
+ * Form-Associated Custom Element: dentro de um <form> entra no FormData
+ * (via atributo `name`): single → `name`; range → `name-start`/`name-end`;
+ * multiple → uma entrada `name` por data.
  *
  * Um input com ícone de calendário no final; ao clicar, abre o
  * <fx-calendar> em um popover. As datas selecionadas aparecem no input.
@@ -24,7 +28,7 @@ import { esc } from '../../core/sanitize';
  * - range:    { value, start, end }
  * - multiple: { values: string[] }
  */
-export class FxDatepicker extends FxElement {
+export class FxDatepicker extends FxFormElement {
   static override styles = css`
     :host {
       display: inline-block;
@@ -183,9 +187,40 @@ export class FxDatepicker extends FxElement {
     return ['value', 'start', 'end', 'values', 'mode', 'min', 'max', 'placeholder', 'disabled', 'format', 'show-time', 'free-text', 'error', 'invalid', 'success', 'valid'];
   }
 
+  protected override attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null): void {
+    super.attributeChangedCallback(name, oldValue, newValue);
+    // Mantém o FormData do form sincronizado sem tocar no render.
+    if (name === 'value' || name === 'start' || name === 'end' || name === 'values') {
+      this.updateFormValue();
+    }
+  }
+
+  /** No FormData do form, conforme o modo (single/range/multiple). */
+  protected override getFormValue(): string | FormData | null {
+    if (this.mode === 'range') {
+      const start = this.getAttr('start');
+      const end = this.getAttr('end');
+      if (!this.name || (!start && !end)) return null;
+      const fd = new FormData();
+      if (start) fd.append(`${this.name}-start`, start);
+      if (end) fd.append(`${this.name}-end`, end);
+      return fd;
+    }
+    if (this.mode === 'multiple') {
+      const values = this.values;
+      if (!this.name || values.length === 0) return null;
+      const fd = new FormData();
+      values.forEach((v) => fd.append(this.name, v));
+      return fd;
+    }
+    return this.getAttr('value') || null;
+  }
+
   private docListener?: (e: Event) => void;
   /** Hora/minuto/segundo do modo show-time. */
   private time = { h: 0, m: 0, s: 0 };
+  /** Estado inicial (value/start/end/values) para form.reset(). */
+  private _initialState?: { value: string; start: string; end: string; values: string };
 
   get mode(): string {
     const m = this.getAttr('mode', 'single');
@@ -219,6 +254,14 @@ export class FxDatepicker extends FxElement {
   }
 
   protected override connectedCallback(): void {
+    if (!this._initialState) {
+      this._initialState = {
+        value: this.getAttr('value'),
+        start: this.getAttr('start'),
+        end: this.getAttr('end'),
+        values: this.getAttr('values'),
+      };
+    }
     super.connectedCallback();
     // Fecha o popover ao clicar fora.
     this.docListener = (e: Event) => {
@@ -232,6 +275,16 @@ export class FxDatepicker extends FxElement {
   protected override disconnectedCallback(): void {
     super.disconnectedCallback();
     if (this.docListener) document.removeEventListener('click', this.docListener);
+  }
+
+  /** form.reset(): restaura value/start/end/values iniciais (re-render via atributos observados). */
+  override formResetCallback(): void {
+    const s = this._initialState ?? { value: '', start: '', end: '', values: '' };
+    this.setAttribute('value', s.value);
+    this.setAttribute('start', s.start);
+    this.setAttribute('end', s.end);
+    this.setAttribute('values', s.values);
+    this.updateFormValue();
   }
 
   /** Formata uma data ISO ("YYYY-MM-DD" ou com "THH:mm:ss") segundo o atributo format. */

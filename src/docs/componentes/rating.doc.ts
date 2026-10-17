@@ -23,6 +23,7 @@ export const ratingDoc: ComponentDoc = {
 	],
 	attributes: [
 		{ name: "value", type: "number", default: "0", desc: "Valor selecionado (0 a max)." },
+		{ name: "name", type: "string", default: "''", desc: "Nome do campo no FormData quando dentro de um <form> (form-associated)." },
 		{ name: "max", type: "number", default: "5", desc: "Número de estrelas (1-10)." },
 		{ name: "readonly", type: "boolean", default: "false", desc: "Não permite alterar o valor." },
 		{ name: "disabled", type: "boolean", default: "false", desc: "Desabilita o controle." },

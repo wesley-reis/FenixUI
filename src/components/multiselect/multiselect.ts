@@ -1,10 +1,13 @@
-﻿import { FxElement } from '../../core/base';
+﻿import { FxFormElement } from '../../core/form-element';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from '../../core/sanitize';
 
 /**
  * <fx-multiselect> — Seleção múltipla .
+ *
+ * Form-Associated Custom Element: dentro de um <form> entra no FormData com
+ * UMA entrada por valor selecionado (via atributo `name`).
  *
  * Dropdown customizado com painel (overlay), checkbox por item, pesquisa
  * opcional e ação de limpar. Opções via <option> nativos no light DOM.
@@ -13,7 +16,7 @@ import { esc } from '../../core/sanitize';
  * size (sm|md|lg), no-results.
  * Evento: `change` (composed, detail: { values: string[] }).
  */
-export class FxMultiselect extends FxElement {
+export class FxMultiselect extends FxFormElement {
   static override styles = css`
     :host {
       display: inline-block;
@@ -254,6 +257,8 @@ export class FxMultiselect extends FxElement {
   private observer?: MutationObserver;
   private docListener?: (e: Event) => void;
   private selected = new Set<string>();
+  /** Seleção inicial (para form.reset() restaurar o estado). */
+  private _initialValues?: string[];
 
   /** Valores selecionados (CSV no atributo / array na propriedade). */
   get values(): string[] {
@@ -262,6 +267,15 @@ export class FxMultiselect extends FxElement {
   }
   set values(list: string[]) {
     this.setAttribute('values', list.join(','));
+  }
+
+  /** No FormData do form: uma entrada `name` por valor selecionado. */
+  protected override getFormValue(): string | FormData | null {
+    const values = this.values;
+    if (!this.name || values.length === 0) return null;
+    const fd = new FormData();
+    values.forEach((v) => fd.append(this.name, v));
+    return fd;
   }
 
   get disabled(): boolean {
@@ -281,6 +295,7 @@ export class FxMultiselect extends FxElement {
   protected override connectedCallback(): void {
     // Popula a seleção ANTES do primeiro render (super chama render).
     this.selected = new Set(this.values);
+    if (!this._initialValues) this._initialValues = [...this.values];
     super.connectedCallback();
     this.observer = new MutationObserver(() => this.render());
     this.observer.observe(this, { childList: true, subtree: true, characterData: true });
@@ -303,6 +318,7 @@ export class FxMultiselect extends FxElement {
   private commit(): void {
     this.values = [...this.selected];
     this.render();
+    this.updateFormValue();
     this.dispatchEvent(
       new CustomEvent('change', {
         bubbles: true,
@@ -310,6 +326,15 @@ export class FxMultiselect extends FxElement {
         detail: { values: [...this.selected] },
       }),
     );
+  }
+
+  /** form.reset(): restaura a seleção inicial. */
+  override formResetCallback(): void {
+    const initial = this._initialValues ?? [];
+    this.values = initial;
+    this.selected = new Set(initial);
+    this.render();
+    this.updateFormValue();
   }
 
   private toggleValue(value: string): void {

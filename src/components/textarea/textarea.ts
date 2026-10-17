@@ -1,4 +1,4 @@
-﻿import { FxElement } from '../../core/base';
+﻿import { FxFormElement } from '../../core/form-element';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from '../../core/sanitize';
@@ -6,11 +6,15 @@ import { esc } from '../../core/sanitize';
 /**
  * <fx-textarea> — Área de texto multilinha estilizada com os tokens do tema.
  *
- * Atributos: value, size (sm|md|lg), placeholder, disabled, readonly,
- * rows, maxlength.
+ * Form-Associated Custom Element: dentro de um <form> entra no FormData
+ * (via atributo `name`), recebe reset/disable do form e é alvo de
+ * `<label for>`/`autofocus`. Enter continua sendo quebra de linha.
+ *
+ * Atributos: value, name, size (sm|md|lg), placeholder, disabled, readonly,
+ * rows, maxlength, autofocus.
  * Eventos: `input` e `change` (composed, detail: { value }).
  */
-export class FxTextarea extends FxElement {
+export class FxTextarea extends FxFormElement {
   static override styles = css`
     :host {
       display: inline-block;
@@ -85,7 +89,13 @@ export class FxTextarea extends FxElement {
   set size(value: string) { this.setAttribute('size', value); }
 
   get value(): string { return this.getAttr('value'); }
-  set value(value: string) { this.setAttribute('value', value); }
+  set value(value: string) {
+    this.setAttribute('value', value);
+    // `value` NÃO é observado (re-render perderia o foco): o campo interno é
+    // sincronizado aqui, sem re-render, preservando foco/cursor.
+    this.syncInternalControl();
+    this.updateFormValue();
+  }
 
   protected override render(): void {
     const placeholder = this.getAttr('placeholder');
@@ -116,6 +126,16 @@ export class FxTextarea extends FxElement {
     // CustomEvent com detail chegue aos consumidores.
     field.addEventListener('input', (e) => { e.stopPropagation(); emit('input'); });
     field.addEventListener('change', (e) => { e.stopPropagation(); emit('change'); });
+
+    // Publica name/value no form (ElementInternals) a cada render.
+    this.updateFormValue();
+  }
+
+  /** Empurra o atributo `value` para o campo interno sem re-renderizar. */
+  protected override syncInternalControl(): void {
+    const field = this.root.querySelector<HTMLTextAreaElement>('.field');
+    const value = this.getAttr('value');
+    if (field && field.value !== value) field.value = value;
   }
 }
 

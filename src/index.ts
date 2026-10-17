@@ -12,6 +12,7 @@ export * from './core/theme';
 export * from './core/presets';
 export * from './core/css';
 export * from './core/base';
+export * from './core/form-element';
 export * from './core/define';
 export * from './core/sanitize';
 

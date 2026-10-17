@@ -25,6 +25,7 @@ export const sliderDoc: ComponentDoc = {
 	],
 	attributes: [
 		{ name: "value", type: "number", default: "min", desc: "Valor selecionado." },
+		{ name: "name", type: "string", default: "''", desc: "Nome do campo no FormData quando dentro de um <form> (form-associated)." },
 		{ name: "min", type: "number", default: "0", desc: "Valor mínimo." },
 		{ name: "max", type: "number", default: "100", desc: "Valor máximo." },
 		{ name: "step", type: "number", default: "1", desc: "Incremento a cada movimento." },

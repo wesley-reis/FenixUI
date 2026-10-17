@@ -336,16 +336,23 @@ describe("docs app", () => {
 		).toBeGreaterThan(0);
 	});
 
-	it("página de formulários renderiza os 4 modelos de cadastro", async () => {
+	it("página de formulários renderiza os 5 modelos de cadastro", async () => {
 		await navigate("forms");
 		await new Promise((r) => setTimeout(r, 50));
 		const cards = main().querySelectorAll(".example-card");
-		expect(cards.length).toBe(4);
+		expect(cards.length).toBe(5);
 		expect(main().textContent).toContain("Modelo 1 — Cadastro em uma coluna");
 		expect(main().textContent).toContain("Modelo 4 — FloatLabel com validação");
+		expect(main().textContent).toContain("Modelo 5 — Form nativo");
 		// fx-floatlabel full propaga full para o controle interno (modelo 4).
 		const floatInput = main().querySelector("fx-floatlabel[full] fx-input");
 		expect(floatInput?.hasAttribute("full")).toBe(true);
+		// Modelo 5: form nativo com campos name + botões submit/reset.
+		const nativeForm = main().querySelector("form[data-native-form]");
+		expect(nativeForm).toBeTruthy();
+		expect(nativeForm!.querySelectorAll('[name]').length).toBeGreaterThanOrEqual(4);
+		expect(nativeForm!.querySelector('fx-button[type="submit"]')).toBeTruthy();
+		expect(nativeForm!.querySelector('fx-button[type="reset"]')).toBeTruthy();
 	});
 
 	it("formulários: cards são opacos (fundo de superfície) e centralizados", async () => {
@@ -363,6 +370,8 @@ describe("docs app", () => {
 		const models = main().querySelectorAll<HTMLElement>("[data-form-validate]");
 		expect(models.length).toBe(4);
 		models.forEach((m) => expect(m.style.maxWidth).not.toBe(""));
+		// O form nativo do Modelo 5 recebe o mesmo card opaco centralizado.
+		expect(rule).toContain(".example-stage form[data-native-form]");
 	});
 
 	it("formulários: save com campos vazios marca error e exibe o alerta", async () => {
@@ -386,6 +395,37 @@ describe("docs app", () => {
 		form.querySelector("[data-save]")!.dispatchEvent(new Event("click"));
 		expect(input.hasAttribute("error")).toBe(false);
 		expect(alertEl.hidden).toBe(true);
+	});
+
+	it("formulários: submit nativo — Enter e fx-button type=submit disparam o submit do form", async () => {
+		await navigate("forms");
+		await new Promise((r) => setTimeout(r, 50));
+		const form = main().querySelector("form[data-native-form]")!;
+		expect(form).toBeTruthy();
+		const out = form.querySelector<HTMLElement>(".native-form-output")!;
+		expect(out.hidden).toBe(true);
+
+		let submits = 0;
+		form.addEventListener("submit", (e) => {
+			e.preventDefault();
+			submits++;
+		});
+
+		// Enter no campo interno do fx-input dispara o submit implícito do form
+		// (o input interno não se associa ao form — o componente aciona).
+		const field = (form.querySelector("fx-input[name='nome']") as any)
+			.shadowRoot.querySelector("input");
+		field.dispatchEvent(
+			new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }),
+		);
+		expect(submits).toBe(1);
+		expect(out.hidden).toBe(false); // saída do submit visível
+
+		// fx-button type="submit" também submete o form.
+		const btn = (form.querySelector('fx-button[type="submit"]') as any)
+			.shadowRoot.querySelector("button");
+		btn.click();
+		expect(submits).toBe(2);
 	});
 });
 

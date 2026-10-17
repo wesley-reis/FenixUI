@@ -1,10 +1,13 @@
-import { FxElement } from '../../core/base';
+import { FxFormElement } from '../../core/form-element';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from '../../core/sanitize';
 
 /**
  * <fx-knob> - Controle giratorio circular para ajuste de valor.
+ *
+ * Form-Associated Custom Element: dentro de um <form> entra no FormData
+ * (via atributo `name`) e recebe reset/disable do form.
  *
  * permite ajustar um valor arrastando o mouse
  * ou usando as setas do teclado. Exibe um arco de progresso circular com
@@ -14,7 +17,7 @@ import { esc } from '../../core/sanitize';
  * readonly, disabled, valueTemplate.
  * Evento: `change` (composed, detail: { value }).
  */
-export class FxKnob extends FxElement {
+export class FxKnob extends FxFormElement {
   static override styles = css`
     :host {
       display: inline-flex;
@@ -233,6 +236,9 @@ export class FxKnob extends FxElement {
     `);
 
     this.attachListeners();
+    // Publica name/value no form (ElementInternals) a cada render — `value`
+    // é observado, então cada mudança passa por aqui.
+    this.updateFormValue();
   }
 
   private getSizeNum(): number {

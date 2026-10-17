@@ -1,4 +1,4 @@
-import { FxElement } from '../../core/base';
+import { FxFormElement } from '../../core/form-element';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from '../../core/sanitize';
@@ -6,11 +6,14 @@ import { esc } from '../../core/sanitize';
 /**
  * <fx-toggle-button-group> — Grupo de botones de selección múltiple o única.
  *
- * Atributos: multiple (permite varios seleccionados), value (lista), size.
- * Slots `option`: cada botón con [slot="option" value="..."].
+ * Form-Associated Custom Element: dentro de un <form> entra en el FormData
+ * con UNA entrada por valor seleccionado (via atributo `name`).
+ *
+ * Atributos: multiple (permite varios seleccionados), value (lista), name,
+ * size. Slots `option`: cada botón con [slot="option" value="..."].
  * Evento (composed): `change` (detail: { value: string[] }).
  */
-export class FxToggleButtonGroup extends FxElement {
+export class FxToggleButtonGroup extends FxFormElement {
   static override styles = css`
     :host { display: inline-flex; font-family: var(--fx-font-family); font-size: var(--fx-font-size); gap: var(--fx-space-xs); }
     .option {
@@ -50,9 +53,22 @@ export class FxToggleButtonGroup extends FxElement {
     const raw = this.getAttr('value');
     return raw ? raw.split(',').map((s) => s.trim()).filter(Boolean) : [];
   }
-  set value(v: string[]) { this.setAttribute('value', v.join(',')); }
+  set value(v: string[]) {
+    this.setAttribute('value', v.join(','));
+    // `value` não é observado: publica no form aqui.
+    this.updateFormValue();
+  }
 
   get multiple(): boolean { return this.hasAttr('multiple'); }
+
+  /** No FormData do form: uma entrada `name` por valor selecionado. */
+  protected override getFormValue(): string | FormData | null {
+    const values = this.value;
+    if (!this.name || values.length === 0) return null;
+    const fd = new FormData();
+    values.forEach((v) => fd.append(this.name, v));
+    return fd;
+  }
 
   get options(): HTMLElement[] {
     return Array.from(this.children).filter((el) => el.matches('[slot="option"]')).map((el) => el as HTMLElement);
@@ -77,6 +93,16 @@ export class FxToggleButtonGroup extends FxElement {
     `);
 
     this._bindOptions();
+
+    // Publica name/value no form (ElementInternals) a cada render.
+    this.updateFormValue();
+  }
+
+  /** form.reset(): restaura a seleção inicial e re-renderiza os botões. */
+  override formResetCallback(): void {
+    this.setAttribute('value', this._initialValue);
+    this.render();
+    this.updateFormValue();
   }
 
   private _bindOptions(): void {

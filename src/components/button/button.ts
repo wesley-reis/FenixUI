@@ -6,6 +6,11 @@ import { FENIX_ICON_BASE_CSS, fenixIconHtml } from '../../icons/base-css';
 /**
  * <fx-button> — Componente de ação (piloto).
  *
+ * Form-Associated Custom Element: `type="submit"` submete o <form> em que
+ * vive e `type="reset"` o limpa (o <button> interno está no Shadow DOM e não
+ * se associa ao form sozinho — a ação é acionada via ElementInternals).
+ * `<form disabled>`/`<fieldset disabled>` desabilitam o botão.
+ *
  * Atributos: variant, size, disabled, loading, type, full (largura 100%
  * acompanhando o elemento pai), icon (nome do glifo Fenix Icons ou
  * emoji/texto livre) e icon-pos (left|right, padrão left).
@@ -13,6 +18,10 @@ import { FENIX_ICON_BASE_CSS, fenixIconHtml } from '../../icons/base-css';
  * Evento: `click` nativo atravessa o Shadow DOM (composed) — ouça no host.
  */
 export class FxButton extends FxElement {
+  /** Participa de <form> como botão (submit/reset via ElementInternals). */
+  static formAssociated = true;
+  /** focus() e clique em <label for> atingem o botão interno do Shadow DOM. */
+  static override shadowOptions: ShadowRootInit = { mode: 'open', delegatesFocus: true };
   static override styles = css`
     ${FENIX_ICON_BASE_CSS}
     :host {
@@ -134,6 +143,29 @@ export class FxButton extends FxElement {
     return ['variant', 'size', 'disabled', 'loading', 'type', 'full', 'icon', 'icon-pos'];
   }
 
+  protected readonly internals: ElementInternals | null;
+
+  constructor() {
+    super();
+    // Ambientes sem ElementInternals (ex.: jsdom nos testes) funcionam sem
+    // a integração nativa de form — o getter `form` cai no closest('form').
+    this.internals =
+      typeof this.attachInternals === 'function' ? this.attachInternals() : null;
+  }
+
+  /** Form ao qual o botão está associado (null se fora de um form). */
+  get form(): HTMLFormElement | null {
+    return (
+      this.internals?.form ?? (this.closest('form') as HTMLFormElement | null)
+    );
+  }
+
+  /** <form disabled>/<fieldset disabled>: espelha no atributo observado. */
+  formDisabledCallback(disabled: boolean): void {
+    if (disabled) this.setAttribute('disabled', '');
+    else this.removeAttribute('disabled');
+  }
+
   /** Tamanho. Padrão: `'md'`. */
   get size(): string {
     const s = this.getAttr('size', 'md');
@@ -205,6 +237,18 @@ export class FxButton extends FxElement {
     }
     if (loading) btn.setAttribute('aria-busy', 'true');
     else btn.removeAttribute('aria-busy');
+
+    // type="submit"/"reset": o <button> interno vive no Shadow DOM e NÃO se
+    // associa ao <form> do light DOM (a fronteira do shadow corta a associação
+    // por árvore) — a ação do botão é acionada manualmente via requestSubmit/
+    // reset do form associado. Ouvintes de submit seguem recebendo o evento.
+    if (btnType === 'submit' || btnType === 'reset') {
+      btn.addEventListener('click', () => {
+        if (this.hasAttr('disabled') || this.hasAttr('loading')) return;
+        if (btnType === 'submit' && this.form) this.form.requestSubmit();
+        else if (btnType === 'reset' && this.form) this.form.reset();
+      });
+    }
   }
 
   protected override connectedCallback(): void {

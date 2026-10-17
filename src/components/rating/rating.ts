@@ -1,16 +1,19 @@
-import { FxElement } from '../../core/base';
+import { FxFormElement } from '../../core/form-element';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 
 /**
  * <fx-rating> — Evaluación por estrellas.
  *
+ * Form-Associated Custom Element: dentro de un <form> entra en el FormData
+ * (via atributo `name`) y recibe reset/disable del form.
+ *
  * Atributos: value (0 a max), max (número de estrellas, default 5),
- * readonly, disabled, allow-half (permite medias estrellas),
+ * name, readonly, disabled, allow-half (permite medias estrellas),
  * size (sm|md|lg).
  * Eventos (composed): `change` (detail: { value }).
  */
-export class FxRating extends FxElement {
+export class FxRating extends FxFormElement {
   static override styles = css`
     :host {
       display: inline-flex;
@@ -59,6 +62,8 @@ export class FxRating extends FxElement {
   set value(v: number) {
     this.setAttribute('value', String(Math.min(this.max, Math.max(0, v))));
     this._syncVisual();
+    // `value` é observado (re-render), mas o setter cobre o caminho sem render.
+    this.updateFormValue();
   }
 
   get max(): number {
@@ -82,6 +87,8 @@ export class FxRating extends FxElement {
 
     this._bindStars();
     this._syncVisual();
+    // Publica name/value no form (ElementInternals) a cada render.
+    this.updateFormValue();
   }
 
   private _starNodes(): HTMLElement[] {
