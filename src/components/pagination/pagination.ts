@@ -1,6 +1,7 @@
 ﻿import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
+import { pageRange } from '../../core/page-range';
 import { esc } from '../../core/sanitize';
 import { FENIX_ICON_BASE_CSS, fenixIconHtml } from '../../icons/base-css';
 import { loadFenixIconsFont } from '../../icons/font';
@@ -12,6 +13,9 @@ import '../select';
  * Atributos: page (atual), total (itens), rows (por página), rows-options,
  * position (left|center|right).
  * Evento: `page-change` (composed, detail: { page, rows }).
+ *
+ * Com muitas páginas o pager usa janela deslizante com elipses
+ * (1 … 499 [500] 501 … 1000) em vez de um botão por página.
  */
 export class FxPagination extends FxElement {
   static override styles = css`
@@ -19,6 +23,7 @@ export class FxPagination extends FxElement {
     :host {
       display: flex;
       align-items: center;
+      flex-wrap: wrap;
       gap: var(--fx-space-sm);
       font-family: var(--fx-font-family);
       font-size: var(--fx-font-size);
@@ -55,6 +60,18 @@ export class FxPagination extends FxElement {
       border-color: var(--fx-color-primary);
       color: #fff;
       font-weight: 600;
+    }
+    /* Elipse entre a janela de páginas e as bordas: ocupa o mesmo espaço de
+       um botão (para o rodapé não "pular" ao navegar) mas não é clicável. */
+    .ellipsis {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: var(--fx-size-sm);
+      height: var(--fx-size-sm);
+      color: var(--fx-text-muted);
+      font-size: calc(var(--fx-font-size) - 2px);
+      user-select: none;
     }
     .info { color: var(--fx-text-muted); font-size: calc(var(--fx-font-size) - 2px); }
     fx-select { vertical-align: middle; }
@@ -94,20 +111,24 @@ export class FxPagination extends FxElement {
     const current = Math.min(Math.max(1, this.page), pages);
     const opts = (this.getAttr('rows-options', '5,10,20,50') || '').split(',').map((s) => s.trim()).filter(Boolean);
 
-    // Janela de páginas: mostra até 5 com elipses simplificada
-    const window_: number[] = [];
-    for (let p = Math.max(1, current - 2); p <= Math.min(pages, current + 2); p++) window_.push(p);
+    // Janela de páginas: primeira + última + vizinhas da atual, com elipse no
+    // miolo. Mantém o pager compacto mesmo com milhares de páginas.
+    const pageButtons = pageRange(current, pages)
+      .map((item) =>
+        item === 'ellipsis'
+          ? `<span class="ellipsis" part="ellipsis" aria-hidden="true">…</span>`
+          : `<button type="button" class="nav ${item === current ? 'active' : ''}" part="page" data-go="${item}"${item === current ? ' aria-current="page"' : ''}>${item}</button>`,
+      )
+      .join('');
 
-    const from = total0(current, this.rows);
+    const from = (current - 1) * this.rows + 1;
     const to = Math.min(current * this.rows, this.total);
 
     this.setTemplate(`
       <span class="info">${this.total ? `${from}-${to} de ${this.total}` : '0 itens'}</span>
       <button type="button" class="nav" part="first" aria-label="Primeira página" data-go="1" ${current <= 1 ? 'disabled' : ''}>${fenixIconHtml('first_page')}</button>
       <button type="button" class="nav" part="prev" aria-label="Página anterior" data-go="${current - 1}" ${current <= 1 ? 'disabled' : ''}>${fenixIconHtml('navigate_before')}</button>
-      ${window_[0] !== 1 && pages > 5 ? `<button type="button" class="nav" data-go="1">1</button>` : ''}
-      ${window_.map((p) => `<button type="button" class="nav ${p === current ? 'active' : ''}" data-go="${p}">${p}</button>`).join('')}
-      ${window_[window_.length - 1] !== pages && pages > 5 ? `<button type="button" class="nav" data-go="${pages}">${pages}</button>` : ''}
+      ${pageButtons}
       <button type="button" class="nav" part="next" aria-label="Próxima página" data-go="${current + 1}" ${current >= pages ? 'disabled' : ''}>${fenixIconHtml('navigate_next')}</button>
       <button type="button" class="nav" part="last" aria-label="Última página" data-go="${pages}" ${current >= pages ? 'disabled' : ''}>${fenixIconHtml('last_page')}</button>
       ${opts.length ? `
@@ -115,10 +136,6 @@ export class FxPagination extends FxElement {
           ${opts.map((o) => `<option value="${esc(o)}">${esc(o)}</option>`).join('')}
         </fx-select>` : ''}
     `);
-
-    function total0(page: number, rows: number): number {
-      return (page - 1) * rows + 1;
-    }
 
     this.root.querySelectorAll<HTMLButtonElement>('.nav[data-go]').forEach((btn) => {
       btn.addEventListener('click', () => {

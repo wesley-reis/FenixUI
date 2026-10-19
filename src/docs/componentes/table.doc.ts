@@ -132,6 +132,7 @@ export const tableDoc: ComponentDoc = {
 			`<h4>Básica</h4><fx-table data="${small}">${cols}</fx-table>`,
 			`<h4>Ordenação + Filtro no header</h4><fx-table data="${small}" sort-field="nome" sort-order="asc"><fx-column field="nome" header="Nome" sortable filterable></fx-column><fx-column field="cargo" header="Cargo" sortable filterable></fx-column><fx-column field="salario" header="Salário" sortable></fx-column></fx-table>`,
 			`<h4>Paginação centralizada</h4><fx-table data="${small}" pagination rows="3" pagination-position="center">${cols}</fx-table>`,
+			`<h4>Muitas páginas — janela com elipses (1.000 páginas no modo lazy)</h4><fx-table data="${small}" lazy total="10000" pagination rows="10">${cols}</fx-table>`,
 			`<h4>Listrada + hover + paginação à direita</h4><fx-table data="${small}" striped hover pagination rows="3" pagination-position="right">${cols}</fx-table>`,
 			`<h4>Vazia com mensagem customizada</h4><fx-table data='[]' empty-message="Nenhum funcionário encontrado">${cols}</fx-table>`,
 			`<h4>Templates de célula (moeda, faixa)</h4><fx-table data="${small}"><fx-column field="nome" header="Nome"></fx-column><fx-column field="cargo" header="Cargo"></fx-column><fx-column field="salario" header="Salário (formatado)"><fx-cell>R$ {{ value | number }}</fx-cell></fx-column><fx-column field="salario" header="Faixa"><fx-cell>{{ value >= 6000 ? 'Sênior' : 'Júnior' }}</fx-cell></fx-column></fx-table>`,
