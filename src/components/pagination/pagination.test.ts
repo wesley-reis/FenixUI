@@ -111,4 +111,89 @@ describe('fx-pagination', () => {
     expect(el.getAttribute('rows')).toBe('20');
     el.remove();
   });
+
+  it('com muitas páginas exibe janela compacta com elipse (não todos os números)', () => {
+    const el = document.createElement('fx-pagination');
+    el.setAttribute('page', '1');
+    el.setAttribute('total', '10000');
+    el.setAttribute('rows', '10'); // 1.000 páginas
+    document.body.appendChild(el);
+
+    const root = el.shadowRoot!;
+    const numeros = [...root.querySelectorAll('[part="page"]')].map((b) => Number(b.getAttribute('data-go')));
+    // Primeira + vizinhas + última: 6 botões, nunca 1.000.
+    expect(numeros).toEqual([1, 2, 3, 4, 5, 1000]);
+    expect(root.querySelectorAll('[part="page"]').length).toBeLessThanOrEqual(6);
+    const elipses = [...root.querySelectorAll('[part="ellipsis"]')];
+    expect(elipses).toHaveLength(1);
+    expect(elipses[0].textContent).toBe('…');
+    expect(elipses[0].getAttribute('aria-hidden')).toBe('true');
+    el.remove();
+  });
+
+  it('no meio da lista mostra elipses dos dois lados e marca a página atual', () => {
+    const el = document.createElement('fx-pagination');
+    el.setAttribute('page', '500');
+    el.setAttribute('total', '10000');
+    el.setAttribute('rows', '10');
+    document.body.appendChild(el);
+
+    const root = el.shadowRoot!;
+    const numeros = [...root.querySelectorAll('[part="page"]')].map((b) => Number(b.getAttribute('data-go')));
+    expect(numeros).toEqual([1, 499, 500, 501, 1000]);
+    expect(root.querySelectorAll('[part="ellipsis"]')).toHaveLength(2);
+    const atual = root.querySelector('[part="page"][aria-current="page"]')!;
+    expect(atual.textContent).toBe('500');
+    el.remove();
+  });
+
+  it('na última página a janela encosta no fim e as setas desabilitam', () => {
+    const el = document.createElement('fx-pagination');
+    el.setAttribute('page', '1000');
+    el.setAttribute('total', '10000');
+    el.setAttribute('rows', '10');
+    document.body.appendChild(el);
+
+    const root = el.shadowRoot!;
+    const numeros = [...root.querySelectorAll('[part="page"]')].map((b) => Number(b.getAttribute('data-go')));
+    expect(numeros).toEqual([1, 996, 997, 998, 999, 1000]);
+    expect(root.querySelector('[part="next"]')?.hasAttribute('disabled')).toBe(true);
+    expect(root.querySelector('[part="last"]')?.hasAttribute('disabled')).toBe(true);
+    expect(root.querySelector('[part="first"]')?.hasAttribute('disabled')).toBe(false);
+    el.remove();
+  });
+
+  it('navegar de uma em uma desloca a janela', async () => {
+    const el = document.createElement('fx-pagination');
+    el.setAttribute('page', '1');
+    el.setAttribute('total', '10000');
+    el.setAttribute('rows', '10');
+    document.body.appendChild(el);
+
+    for (let i = 0; i < 4; i++) {
+      (el.shadowRoot!.querySelector('[part="next"]') as HTMLButtonElement).click();
+      await Promise.resolve();
+    }
+    expect(el.getAttribute('page')).toBe('5');
+
+    const root = el.shadowRoot!;
+    const numeros = [...root.querySelectorAll('[part="page"]')].map((b) => Number(b.getAttribute('data-go')));
+    expect(numeros).toEqual([1, 4, 5, 6, 1000]);
+    expect(root.querySelector('[part="page"][aria-current="page"]')!.textContent).toBe('5');
+    el.remove();
+  });
+
+  it('poucas páginas continuam sem elipses', () => {
+    const el = document.createElement('fx-pagination');
+    el.setAttribute('page', '3');
+    el.setAttribute('total', '50');
+    el.setAttribute('rows', '10'); // 5 páginas
+    document.body.appendChild(el);
+
+    const root = el.shadowRoot!;
+    const numeros = [...root.querySelectorAll('[part="page"]')].map((b) => Number(b.getAttribute('data-go')));
+    expect(numeros).toEqual([1, 2, 3, 4, 5]);
+    expect(root.querySelectorAll('[part="ellipsis"]')).toHaveLength(0);
+    el.remove();
+  });
 });

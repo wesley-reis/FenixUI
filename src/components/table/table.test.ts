@@ -67,6 +67,30 @@ describe('fx-table', () => {
     expect(el.shadowRoot!.querySelectorAll('tbody tr').length).toBe(2);
   });
 
+  it('com muitas páginas o pager usa janela com elipses (não 1.000 botões)', () => {
+    const el = mount(`<fx-table lazy total="10000" pagination rows="10">${COLS}</fx-table>`, ROWS);
+    const root = el.shadowRoot!;
+    const numeros = [...root.querySelectorAll('.pg-btn[part="page"]')].map((b) => Number(b.textContent));
+    expect(numeros).toEqual([1, 2, 3, 4, 5, 1000]);
+    expect(root.querySelectorAll('.pg-btn[part="page"]').length).toBeLessThanOrEqual(6);
+    expect(root.querySelectorAll('.pager [part="ellipsis"]')).toHaveLength(1);
+    expect(root.querySelector('.pager .info')!.textContent).toContain('Página 1 de 1000');
+  });
+
+  it('primeira/última movem a janela de páginas e atualizam aria-current', () => {
+    const el = mount(`<fx-table lazy total="10000" pagination rows="10">${COLS}</fx-table>`, ROWS);
+    const root = el.shadowRoot!;
+
+    (root.querySelector('[data-pg="last"]') as HTMLButtonElement).click();
+    expect([...root.querySelectorAll('.pg-btn[part="page"]')].map((b) => Number(b.textContent))).toEqual([1, 996, 997, 998, 999, 1000]);
+    expect(root.querySelector('.pg-btn[aria-current="page"]')!.textContent).toBe('1000');
+    expect(root.querySelectorAll('.pg-btn[aria-current="page"]').length).toBe(1);
+
+    (root.querySelector('[data-pg="first"]') as HTMLButtonElement).click();
+    expect([...root.querySelectorAll('.pg-btn[part="page"]')].map((b) => Number(b.textContent))).toEqual([1, 2, 3, 4, 5, 1000]);
+    expect(root.querySelector('.pg-btn[aria-current="page"]')!.textContent).toBe('1');
+  });
+
   it('emite row-click com o dado da linha', () => {
     const el = mount(`<fx-table>${COLS}</fx-table>`, ROWS) as any;
     let detail: unknown;

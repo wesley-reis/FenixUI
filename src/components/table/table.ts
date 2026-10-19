@@ -1,6 +1,7 @@
 import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
+import { pageRange } from '../../core/page-range';
 import { esc } from "../../core/sanitize";
 import { FENIX_ICON_BASE_CSS, fenixIconHtml } from '../../icons/base-css';
 import { loadFenixIconsFont } from '../../icons/font';
@@ -247,7 +248,7 @@ export class FxTable extends FxElement {
 		.pg-btn .fx-icon {
 			font-size: calc(var(--fx-font-size) - 1px);
 		}
-		.pg-btn:hover:not(:disabled):not([aria-current="true"]) {
+		.pg-btn:hover:not(:disabled):not([aria-current="page"]) {
 			border-color: var(--fx-color-primary);
 			color: var(--fx-color-primary);
 		}
@@ -255,11 +256,24 @@ export class FxTable extends FxElement {
 			opacity: 0.5;
 			cursor: not-allowed;
 		}
-		.pg-btn[aria-current="true"] {
+		.pg-btn[aria-current="page"] {
 			background: var(--fx-color-primary);
 			border-color: var(--fx-color-primary);
 			color: #fff;
 			font-weight: var(--fx-font-weight);
+		}
+		/* Elipse da janela de páginas (1 … 499 [500] 501 … 1000): ocupa o
+		   mesmo espaço de um botão para o rodapé não "pular" ao navegar,
+		   mas não é clicável. */
+		.pager .ellipsis {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			min-width: var(--fx-size-sm);
+			height: var(--fx-size-sm);
+			color: var(--fx-text-muted);
+			font-size: calc(var(--fx-font-size) - 2px);
+			user-select: none;
 		}
 		/* O seletor "Por página" só mostra números, então não pode herdar a
 		   largura padrão do <fx-select> (200px / 180px em size="sm"), que
@@ -647,6 +661,16 @@ export class FxTable extends FxElement {
 					.join("")
 			: `<tr><td class="empty" colspan="${cols.length || 1}">${esc(this.getAttr("empty-message", "Nenhum registro encontrado"))}</td></tr>`;
 
+	// Janela de páginas: primeira + última + vizinhas da atual, com elipse no
+	// miolo. Sem isso, com 1.000 páginas o rodapé renderizava 1.000 botões.
+	const pageButtons = pageRange(this.page + 1, pages)
+		.map((item) =>
+			item === "ellipsis"
+				? `<span class="ellipsis" part="ellipsis" aria-hidden="true">…</span>`
+				: `<button type="button" class="pg-btn" part="page" data-pg="${item - 1}"${item === this.page + 1 ? ' aria-current="page"' : ""}>${item}</button>`,
+		)
+		.join("");
+
 		const pagerHtml = !paginated
 			? ""
 			: `
@@ -654,7 +678,7 @@ export class FxTable extends FxElement {
         <span class="info">Página ${this.page + 1} de ${pages} · ${total} registros</span>
         <button type="button" class="pg-btn" part="first" aria-label="Primeira página" data-pg="first" ${this.page === 0 ? "disabled" : ""}>${fenixIconHtml("first_page")}</button>
         <button type="button" class="pg-btn" part="prev" aria-label="Página anterior" data-pg="prev" ${this.page === 0 ? "disabled" : ""}>${fenixIconHtml("navigate_before")}</button>
-        ${Array.from({ length: pages }, (_, p) => `<button type="button" class="pg-btn" data-pg="${p}" aria-current="${p === this.page}">${p + 1}</button>`).join("")}
+        ${pageButtons}
         <button type="button" class="pg-btn" part="next" aria-label="Próxima página" data-pg="next" ${this.page >= pages - 1 ? "disabled" : ""}>${fenixIconHtml("navigate_next")}</button>
         <button type="button" class="pg-btn" part="last" aria-label="Última página" data-pg="last" ${this.page >= pages - 1 ? "disabled" : ""}>${fenixIconHtml("last_page")}</button>
         <label class="info">${esc("Por página:")}
