@@ -49,14 +49,17 @@ describe('fx-input', () => {
     expect((el.shadowRoot!.querySelector('input') as HTMLInputElement).type).toBe('number');
   });
 
-  it('tipos com componente próprio caem em text', () => {
+  it('repassa tipos nativos de input (date/email/time)', () => {
     const el = mount('<fx-input type="date"></fx-input>') as any;
-    expect(el.type).toBe('text');
-    expect((el.shadowRoot!.querySelector('input') as HTMLInputElement).type).toBe('text');
+    expect(el.type).toBe('date');
+    expect((el.shadowRoot!.querySelector('input') as HTMLInputElement).type).toBe('date');
 
     el.setAttribute('type', 'email');
-    expect(el.type).toBe('text');
-    expect((el.shadowRoot!.querySelector('input') as HTMLInputElement).type).toBe('text');
+    expect(el.type).toBe('email');
+    expect((el.shadowRoot!.querySelector('input') as HTMLInputElement).type).toBe('email');
+
+    el.setAttribute('type', 'time');
+    expect((el.shadowRoot!.querySelector('input') as HTMLInputElement).type).toBe('time');
   });
 
   it('type number aplica min/max/step e disabled desabilita', () => {
@@ -79,6 +82,27 @@ describe('fx-input', () => {
     expect(document.activeElement).toBe(el);                 // foco mantido (host)
     expect(el.shadowRoot.activeElement).toBe(field);          // campo interno focado
     expect(el.shadowRoot.querySelector('input')).toBe(field); // sem re-render
+  });
+
+  it('emite um único input por tecla e um change no blur', () => {
+    const el = mount('<fx-input></fx-input>');
+    const field = el.shadowRoot!.querySelector('input')!;
+    let inputs = 0;
+    let changes = 0;
+    let valueChanges = 0;
+    el.addEventListener('input', () => { inputs += 1; });
+    el.addEventListener('change', () => { changes += 1; });
+    el.addEventListener('valueChange', () => { valueChanges += 1; });
+
+    field.value = 'ab';
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(inputs).toBe(1);
+    expect(valueChanges).toBe(1);
+    expect(changes).toBe(0);
+
+    field.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(inputs).toBe(1);
+    expect(changes).toBe(1);
   });
 
   it('placeholder é aplicado', () => {

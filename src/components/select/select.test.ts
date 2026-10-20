@@ -40,6 +40,19 @@ describe('fx-select', () => {
     expect(el.shadowRoot!.querySelector('.label')!.textContent).toBe('Opção B');
   });
 
+  it('propriedade value (binding do Vue) atualiza o rótulo sem clique', () => {
+    const el = mount(`<fx-select class="fx-select-host">${optionsHtml}</fx-select>`) as any;
+    expect(el.shadowRoot.querySelector('.placeholder')).toBeTruthy();
+
+    el.value = 'b';
+    expect(el.getAttribute('value')).toBe('b');
+    expect(el.shadowRoot.querySelector('.label')!.textContent).toBe('Opção B');
+
+    el.value = null;
+    expect(el.getAttribute('value')).toBe('');
+    expect(el.shadowRoot.querySelector('.placeholder')).toBeTruthy();
+  });
+
   it('abre o dropdown, escolhe opção e emite change composto', () => {
     const el = mount(`<fx-select class="fx-select-host">${optionsHtml}</fx-select>`) as any;
     let received = '';

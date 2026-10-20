@@ -14,6 +14,9 @@ import { defineElement } from '../../core/define';
  * Atributos: checked, disabled, value, name, size (sm|md|lg).
  * Eventos: `change` e `checkedChange` (composed, detail: { checked, value }) —
  * `checkedChange` é o two-way binding do Angular [(checked)].
+ *
+ * Vue: use `:checked="estado"` + `@change` (o `v-model` padrão de elemento
+ * customizado usa `value` + `input`, não `checked`).
  */
 export class FxRadio extends FxFormElement {
   static override styles = css`
@@ -33,8 +36,8 @@ export class FxRadio extends FxFormElement {
       -webkit-tap-highlight-color: transparent;
     }
     .control {
-      width: var(--fx-size-radio, 18px);
-      height: var(--fx-size-radio, 18px);
+      width: var(--fx-size-radio, var(--_fx-size-radio, 18px));
+      height: var(--fx-size-radio, var(--_fx-size-radio, 18px));
       flex-shrink: 0;
       display: inline-flex;
       align-items: center;
@@ -75,7 +78,7 @@ export class FxRadio extends FxFormElement {
   `;
 
   static override get observedAttributes(): string[] {
-    return ['checked', 'disabled'];
+    return ['checked', 'disabled', 'size'];
   }
 
   get checked(): boolean {
@@ -115,6 +118,13 @@ export class FxRadio extends FxFormElement {
     return this.checked ? (this.getAttr('value') || 'on') : null;
   }
 
+  /** getter/setter `value` — sem o setter o Vue não consegue escrever a propriedade. */
+  get value(): string { return this.getAttr('value'); }
+  set value(v: string | null | undefined) {
+    this.setAttribute('value', v == null ? '' : String(v));
+    this.updateFormValue();
+  }
+
   /** Tamanho do controle. Padrão: `'md'`. */
   get size(): string {
     const s = this.getAttr('size', 'md');
@@ -126,9 +136,8 @@ export class FxRadio extends FxFormElement {
 
   protected override render(): void {
     const px = this.size === 'sm' ? '14px' : this.size === 'lg' ? '22px' : '18px';
-    if (!this.style.getPropertyValue('--fx-size-radio')) {
-      this.style.setProperty('--fx-size-radio', px);
-    }
+    // Token interno: um `--fx-size-radio` do consumidor continua vencendo.
+    this.style.setProperty('--_fx-size-radio', px);
 
     this.setTemplate(`
       <span class="box" part="box" role="radio" tabindex="0"

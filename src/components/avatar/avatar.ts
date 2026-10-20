@@ -72,6 +72,7 @@ export class FxAvatar extends FxElement {
   }
 
   get variant(): string { return this.getAttr('variant', 'text'); }
+  set variant(v: string) { this.setAttribute('variant', v); }
   get src(): string { return this.getAttr('src'); }
   set src(v: string) { this.setAttribute('src', v); }
 

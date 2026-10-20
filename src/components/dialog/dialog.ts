@@ -2,6 +2,15 @@
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from '../../core/sanitize';
+import {
+  firstLightFocusable,
+  isTopmostModal,
+  lockBodyScroll,
+  modalFocusables,
+  registerModalClose,
+  registerModalOpen,
+  unlockBodyScroll,
+} from '../../core/modal';
 
 /**
  * <fx-dialog> — Janela modal com overlay, ESC para fechar e foco preso.
@@ -101,6 +110,14 @@ export class FxDialog extends FxElement {
     const isOpen = this.open;
     const heading = this.getAttr('heading');
 
+    if (!isOpen) {
+      // Fechado por atributo (v-model do Vue, remoção externa): desfaz os
+      // efeitos colaterais de abertura e remove o overlay do shadow.
+      this._release();
+      this.setTemplate('');
+      return;
+    }
+
     this.setTemplate(`
       <div class="overlay" part="overlay" ${isOpen ? '' : 'hidden'}>
         <div class="dialog" role="dialog" aria-modal="true" aria-label="${esc(heading)}" tabindex="-1">
@@ -125,50 +142,79 @@ export class FxDialog extends FxElement {
     const overlay = this.root.querySelector<HTMLElement>('.overlay');
     const closeBtn = this.root.querySelector<HTMLButtonElement>('.close');
     const close = (): void => {
-      this.open = false;
-      this._cleanup?.();
-      this._cleanup = undefined;
-      this._restoreFocus();
+      if (!this.open) return;
+      this.open = false; // attributeChanged → render(false) → _release()
       this.dispatchEvent(new CustomEvent('close', { bubbles: true, composed: true }));
     };
     overlay?.addEventListener('click', (e) => { if (e.target === overlay) close(); });
     closeBtn?.addEventListener('click', close);
 
-    // ESC fecha + foco preso no diálogo
+    // ESC fecha apenas o modal do topo + foco preso no diálogo.
     const onKey = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') { e.stopPropagation(); close(); return; }
+      if (e.key === 'Escape') {
+        if (!isTopmostModal(this)) return;
+        e.stopPropagation();
+        close();
+        return;
+      }
       if (e.key === 'Tab') this._trapFocus(e);
     };
     document.addEventListener('keydown', onKey);
     this._cleanup = () => document.removeEventListener('keydown', onKey);
 
-    requestAnimationFrame(() => {
-      this._previouslyFocused = document.activeElement as HTMLElement | null;
-      this.root.querySelector<HTMLElement>('.dialog')?.focus();
-    });
+    const alreadyOpen = this._locked;
+    if (!this._locked) {
+      lockBodyScroll();
+      registerModalOpen(this);
+      this._locked = true;
+    }
+
+    if (!alreadyOpen) {
+      requestAnimationFrame(() => {
+        if (!this.open) return;
+        this._previouslyFocused = document.activeElement as HTMLElement | null;
+        // O conteúdo do consumidor (light DOM/slotted) tem prioridade; o painel
+        // é apenas fallback quando não há nenhum campo focável no slot.
+        const first = firstLightFocusable(this) ?? this.root.querySelector<HTMLElement>('.dialog');
+        first?.focus();
+      });
+    }
     this.dispatchEvent(new CustomEvent('open', { bubbles: true, composed: true }));
   }
 
   private _cleanup?: () => void;
   private _previouslyFocused: HTMLElement | null = null;
+  private _locked = false;
 
-  /** Mantém o foco dentro do modal (WCAG 2.4.3 / 2.1.2). */
+  /** Desfaz listeners, foco e scroll lock ao fechar/desconectar. */
+  private _release(): void {
+    this._cleanup?.();
+    this._cleanup = undefined;
+    registerModalClose(this);
+    if (this._locked) {
+      unlockBodyScroll();
+      this._locked = false;
+    }
+    this._restoreFocus();
+  }
+
+  /** Mantém o foco dentro do modal (WCAG 2.4.3 / 2.1.2), incluindo o slot. */
   private _trapFocus(e: KeyboardEvent): void {
     const dialog = this.root.querySelector<HTMLElement>('.dialog');
     if (!dialog) return;
-    const focusables = dialog.querySelectorAll<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-    );
+    const focusables = modalFocusables(dialog, this);
     if (!focusables.length) return;
     const first = focusables[0];
     const last = focusables[focusables.length - 1];
-    const active = this.root.activeElement;
-    if (e.shiftKey && (active === first || active === dialog)) {
+    // Com foco no light DOM, `shadowRoot.activeElement` é null: usa o
+    // activeElement do documento como fallback.
+    const active = this.root.activeElement ?? document.activeElement;
+    if (e.shiftKey && (active === first || active === dialog || active === this)) {
       e.preventDefault();
-      last.focus();
+      last?.focus();
     } else if (!e.shiftKey && active === last) {
       e.preventDefault();
-      first.focus();
+      first?.focus();
     }
   }
 
@@ -179,9 +225,7 @@ export class FxDialog extends FxElement {
 
   override disconnectedCallback(): void {
     super.disconnectedCallback();
-    this._cleanup?.();
-    this._cleanup = undefined;
-    this._restoreFocus();
+    this._release();
   }
 }
 

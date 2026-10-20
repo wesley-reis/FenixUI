@@ -99,6 +99,7 @@ export class FxOrderList extends FxElement {
   static override get observedAttributes(): string[] {
     return [
       'data',
+      'items',
       'data-key',
       'filter',
       'filter-by',
@@ -113,7 +114,7 @@ export class FxOrderList extends FxElement {
       }
 
   set data(value: OrderListItem[]) {
-    this._data = value;
+    this._data = Array.isArray(value) ? value : [];
     this._filteredData = null;
     this.render();
   }
@@ -122,6 +123,33 @@ export class FxOrderList extends FxElement {
   }
   private _data: OrderListItem[] = [];
   private _filteredData: OrderListItem[] | null = null;
+
+  /**
+   * Alias de `data` para o binding do Vue/React: `data` colide com a
+   * tipagem nativa de atributos HTML (`dataset`/`data-*`) e não reflete em
+   * atributo. `items` funciona como propriedade e como atributo JSON.
+   */
+  get items(): OrderListItem[] {
+    return this._data;
+  }
+  set items(value: OrderListItem[]) {
+    const list = Array.isArray(value) ? value : [];
+    this._data = list;
+    this._filteredData = null;
+
+    const json = (() => {
+      try {
+        return JSON.stringify(list);
+      } catch {
+        // Itens com referência circular/função não são serializáveis:
+        // mantém a propriedade funcionando sem gravar o atributo.
+        return null;
+      }
+    })();
+
+    if (json !== null && this.getAttr('items') !== json) this.setAttribute('items', json);
+    else if (this.isConnected) this.render();
+  }
 
   set selection(value: OrderListItem[]) {
     this._selection = value;
@@ -221,7 +249,16 @@ export class FxOrderList extends FxElement {
   }
 
   protected override attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null): void {
-    if (this.getAttr('data', '') !== '') {
+    if (name === 'items') {
+      try {
+        const parsed = JSON.parse(newValue ?? '[]');
+        this._data = Array.isArray(parsed) ? parsed : [];
+        this._filteredData = null;
+      } catch {
+        this._data = [];
+        this._filteredData = null;
+      }
+    } else if (this.getAttr('data', '') !== '') {
       this._parseDataAttribute();
     }
     super.attributeChangedCallback(name, oldValue, newValue);

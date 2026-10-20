@@ -25,7 +25,20 @@ export type FxAlertVariant = 'info' | 'success' | 'warning' | 'danger';
 export type FxProgressVariant = 'primary' | 'success' | 'warning' | 'danger';
 export type FxSkeletonVariant = 'text' | 'circle' | 'rect';
 export type FxFloatlabelVariant = 'on' | 'in' | 'over';
-export type FxInputType = 'text' | 'number' | 'password';
+export type FxInputType =
+  | 'text'
+  | 'number'
+  | 'password'
+  | 'email'
+  | 'tel'
+  | 'url'
+  | 'search'
+  | 'date'
+  | 'time'
+  | 'datetime-local'
+  | 'month'
+  | 'week'
+  | 'color';
 export type FxFieldStatus = 'error' | 'invalid' | 'success' | 'valid';
 export type FxToastKind = 'success' | 'error' | 'info' | 'warning';
 export type FxToastPosition = 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
@@ -90,7 +103,7 @@ export interface FxInputProps extends FxElementProps {
   valid?: boolean;
 }
 export interface FxSelectProps extends FxElementProps {
-  value?: string;
+  value?: string | number;
   size?: FxSize;
   placeholder?: string;
   searchable?: boolean;
@@ -147,7 +160,7 @@ export interface FxEditorProps extends FxElementProps {
   sanitizeHtml?: (html: string) => string;
 }
 export interface FxMultiselectProps extends FxElementProps {
-  values?: string;
+  values?: string[] | string;
   size?: FxSize;
   placeholder?: string;
   searchable?: boolean;
@@ -166,7 +179,7 @@ export interface FxCalendarProps extends FxElementProps {
   min?: string;
   max?: string;
   mode?: 'single' | 'range' | 'multiple';
-  values?: string;
+  values?: string[] | string;
   locale?: string;
   disabled?: boolean;
 }
@@ -174,7 +187,7 @@ export interface FxDatepickerProps extends FxElementProps {
   value?: string;
   start?: string;
   end?: string;
-  values?: string;
+  values?: string[] | string;
   mode?: 'single' | 'range' | 'multiple';
   min?: string;
   max?: string;
@@ -498,6 +511,12 @@ export interface FxAccordionPanelProps extends FxElementProps {
 }
 export interface FxOrderListProps extends FxElementProps {
   data?: string;
+  /**
+   * Array de itens — alias de `data` para binding de framework
+   * (`:items="lista"` no Vue / `items={lista}` no React). Também aceita
+   * JSON no atributo (`items='[{"label":"A"}]'`).
+   */
+  items?: import('../components/orderlist/orderlist').OrderListItem[];
   'data-key'?: string;
   filter?: boolean;
   'filter-by'?: string;

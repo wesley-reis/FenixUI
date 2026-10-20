@@ -80,7 +80,7 @@ export class FxTextarea extends FxFormElement {
   `;
 
   static override get observedAttributes(): string[] {
-    return ['size', 'placeholder', 'disabled', 'readonly', 'rows', 'maxlength', 'error', 'invalid', 'success', 'valid'];
+    return ['size', 'placeholder', 'disabled', 'readonly', 'full', 'rows', 'maxlength', 'error', 'invalid', 'success', 'valid'];
   }
 
   get size(): string {
@@ -90,12 +90,26 @@ export class FxTextarea extends FxFormElement {
   set size(value: string) { this.setAttribute('size', value); }
 
   get value(): string { return this.getAttr('value'); }
-  set value(value: string) {
-    this.setAttribute('value', value);
+  set value(value: string | null | undefined) {
+    this.setAttribute('value', value == null ? '' : String(value));
     // `value` NÃO é observado (re-render perderia o foco): o campo interno é
     // sincronizado aqui, sem re-render, preservando foco/cursor.
     this.syncInternalControl();
     this.updateFormValue();
+  }
+
+  get readonly(): boolean {
+    return this.hasAttr('readonly');
+  }
+  set readonly(value: boolean) {
+    this.toggleAttr('readonly', Boolean(value));
+  }
+
+  get full(): boolean {
+    return this.hasAttr('full');
+  }
+  set full(value: boolean) {
+    this.toggleAttr('full', Boolean(value));
   }
 
   protected override render(): void {
@@ -117,18 +131,26 @@ export class FxTextarea extends FxFormElement {
     if (disabled) field.setAttribute('disabled', '');
     if (readonly) field.setAttribute('readonly', '');
 
-    const emit = (event: string): void => {
+    // Cada interação emite UM `input` (v-model) + `valueChange` (Angular);
+    // `change` apenas no evento nativo de mudança.
+    const notifyInput = (): void => {
       this.value = field.value;
-      // input (v-model do Vue) + valueChange ([(value)] do Angular).
       this.emitValueEvents();
+    };
+    const notifyChange = (): void => {
+      this.value = field.value;
       this.dispatchEvent(
-        new CustomEvent(event, { bubbles: true, composed: true, detail: { value: field.value } }),
+        new CustomEvent('change', {
+          bubbles: true,
+          composed: true,
+          detail: { value: field.value },
+        }),
       );
     };
     // Bloqueia o evento nativo (composed, sem detail) para que só o
     // CustomEvent com detail chegue aos consumidores.
-    field.addEventListener('input', (e) => { e.stopPropagation(); emit('input'); });
-    field.addEventListener('change', (e) => { e.stopPropagation(); emit('change'); });
+    field.addEventListener('input', (e) => { e.stopPropagation(); notifyInput(); });
+    field.addEventListener('change', (e) => { e.stopPropagation(); notifyChange(); });
 
     // Publica name/value no form (ElementInternals) a cada render.
     this.updateFormValue();

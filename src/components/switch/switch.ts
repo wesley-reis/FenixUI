@@ -13,6 +13,9 @@ import { defineElement } from '../../core/define';
  * Atributos: checked, disabled, value, name, size (sm|md|lg).
  * Eventos: `change` e `checkedChange` (composed, detail: { checked, value }) —
  * `checkedChange` é o two-way binding do Angular [(checked)].
+ *
+ * Vue: use `:checked="estado"` + `@change` (o `v-model` padrão de elemento
+ * customizado usa `value` + `input`, não `checked`).
  */
 export class FxSwitch extends FxFormElement {
   static override styles = css`
@@ -100,7 +103,11 @@ export class FxSwitch extends FxFormElement {
 
   /** getter/setter `value` → espelho do atributo `value` (compat com v-model / [(value)]). */
   get value(): string { return this.getAttr('value'); }
-  set value(v: string) { this.setAttribute('value', v); }
+  set value(v: string | null | undefined) {
+    this.setAttribute('value', v == null ? '' : String(v));
+    // Se o switch já está ligado, o FormData precisa refletir o novo valor.
+    this.updateFormValue();
+  }
 
   /** No FormData: `value` (ou 'on') quando ligado; null (não envia) quando não. */
   protected override getFormValue(): string | FormData | null {

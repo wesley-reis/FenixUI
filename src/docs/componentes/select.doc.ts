@@ -106,7 +106,7 @@ export const selectDoc: ComponentDoc = {
 			name: "placement",
 			type: `'auto' | 'top' | 'bottom'`,
 			default: "'auto'",
-			desc: "Posição do painel. `auto` (padrão) abre para baixo e inverte sozinha quando não cabe e há mais espaço acima; `top` e `bottom` fixam a direção. O painel também se limita à altura disponível e é reposicionado em resize/scroll.",
+			desc: "Posição do painel. `auto` (padrão) abre para baixo e inverte sozinha quando não cabe e há mais espaço acima; `top` e `bottom` fixam a direção. O painel também se limita à altura disponível e é reposicionado em resize/scroll. Dentro de ancestrais com overflow (fx-card, containers com scroll), passa automaticamente para position:fixed, imune ao clipping.",
 		},
 		{
 			name: "searchable",

@@ -40,6 +40,12 @@ export class FxBadge extends FxElement {
     return ['variant', 'round'];
   }
 
+  get variant(): string { return this.getAttr('variant', 'default'); }
+  set variant(v: string) { this.setAttribute('variant', v); }
+
+  get round(): boolean { return this.hasAttr('round'); }
+  set round(v: boolean) { this.toggleAttr('round', Boolean(v)); }
+
   protected override render(): void {
     this.setTemplate(`<span class="badge" part="badge"><slot></slot></span>`);
   }

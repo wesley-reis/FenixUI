@@ -252,7 +252,19 @@ export class FxMultiselect extends FxFormElement {
   static override get observedAttributes(): string[] {
     // `error`/`success` (+ aliases `invalid`/`valid`) PRECISAM ser observados:
     // é assim que o toggle no playground / setAttribute no submit re-renderiza.
-    return ['disabled', 'placeholder', 'error', 'invalid', 'success', 'valid'];
+    return [
+      'values',
+      'size',
+      'disabled',
+      'placeholder',
+      'searchable',
+      'clearable',
+      'full',
+      'error',
+      'invalid',
+      'success',
+      'valid',
+    ];
   }
 
   private observer?: MutationObserver;
@@ -261,13 +273,30 @@ export class FxMultiselect extends FxFormElement {
   /** Seleção inicial (para form.reset() restaurar o estado). */
   private _initialValues?: string[];
 
+  protected override attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null): void {
+    // `values` pode chegar como atributo (HTML puro) ou propriedade (Vue).
+    // Sincroniza o estado interno antes do render da base.
+    if (name === 'values') this.selected = new Set(this.values);
+    super.attributeChangedCallback(name, oldValue, newValue);
+  }
+
   /** Valores selecionados (CSV no atributo / array na propriedade). */
   get values(): string[] {
     const csv = this.getAttr('values');
     return csv ? csv.split(',').map((v) => v.trim()).filter(Boolean) : [];
   }
-  set values(list: string[]) {
-    this.setAttribute('values', list.join(','));
+  set values(list: string[] | null | undefined) {
+    const values = Array.isArray(list) ? list.map(String) : [];
+    // O estado interno precisa acompanhar o binding `:values` do Vue — só
+    // refletir o atributo deixava a UI desatualizada.
+    this.selected = new Set(values);
+    const csv = values.join(',');
+    if (this.getAttr('values') !== csv) {
+      this.setAttribute('values', csv); // observado → render
+    } else if (this.isConnected) {
+      this.render();
+    }
+    this.updateFormValue();
   }
 
   /** No FormData do form: uma entrada `name` por valor selecionado. */
@@ -286,6 +315,27 @@ export class FxMultiselect extends FxFormElement {
     this.toggleAttr('disabled', Boolean(value));
   }
 
+  get searchable(): boolean {
+    return this.hasAttr('searchable');
+  }
+  set searchable(value: boolean) {
+    this.toggleAttr('searchable', Boolean(value));
+  }
+
+  get clearable(): boolean {
+    return this.hasAttr('clearable');
+  }
+  set clearable(value: boolean) {
+    this.toggleAttr('clearable', Boolean(value));
+  }
+
+  get full(): boolean {
+    return this.hasAttr('full');
+  }
+  set full(value: boolean) {
+    this.toggleAttr('full', Boolean(value));
+  }
+
   private get options(): { value: string; label: string }[] {
     return [...this.querySelectorAll('option')].map((o) => ({
       value: o.getAttribute('value') ?? o.textContent?.trim() ?? '',
@@ -299,7 +349,15 @@ export class FxMultiselect extends FxFormElement {
     if (!this._initialValues) this._initialValues = [...this.values];
     super.connectedCallback();
     this.observer = new MutationObserver(() => this.render());
-    this.observer.observe(this, { childList: true, subtree: true, characterData: true });
+    this.observer.observe(this, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+      // Vue atualiza `:value`/`:selected` das <option> no light DOM; sem
+      // observar atributos o label/valor antigo permanecia em tela.
+      attributes: true,
+      attributeFilter: ['value', 'selected'],
+    });
     this.docListener = (e: Event) => {
       if (!this.hasAttr('open')) return;
       if (e.composedPath().includes(this)) return;
@@ -317,8 +375,11 @@ export class FxMultiselect extends FxFormElement {
 
   /** Aplica a seleção, reflete e emite change. */
   private commit(): void {
-    this.values = [...this.selected];
-    this.render();
+    // `values` é observado e renderiza quando o CSV muda (uma única vez).
+    const next = [...this.selected];
+    const same = next.join(',') === this.values.join(',');
+    this.values = next;
+    if (same && this.isConnected) this.render();
     this.updateFormValue();
     this.dispatchEvent(
       new CustomEvent('change', {
@@ -340,9 +401,8 @@ export class FxMultiselect extends FxFormElement {
   /** form.reset(): restaura a seleção inicial. */
   override formResetCallback(): void {
     const initial = this._initialValues ?? [];
+    // `values` sincroniza `selected` e renderiza (uma vez) quando muda.
     this.values = initial;
-    this.selected = new Set(initial);
-    this.render();
     this.updateFormValue();
   }
 
@@ -376,8 +436,12 @@ export class FxMultiselect extends FxFormElement {
     const search = this.root.querySelector<HTMLInputElement>('.search')?.value ?? '';
 
     const opts = this.options;
-    for (const v of [...this.selected]) {
-      if (!opts.some((o) => o.value === v)) this.selected.delete(v);
+    // Só remove valores órfãos quando as opções já chegaram: com `v-for`
+    // (opções depois do valor), limpar aqui apagaria a seleção controlada.
+    if (opts.length > 0) {
+      for (const v of [...this.selected]) {
+        if (!opts.some((o) => o.value === v)) this.selected.delete(v);
+      }
     }
 
     const chips = opts.filter((o) => this.selected.has(o.value));

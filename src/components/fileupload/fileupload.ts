@@ -170,7 +170,6 @@ export class FxFileUpload extends FxFormElement {
   static override get observedAttributes(): string[] {
     return ['mode', 'size', 'severity', 'label', 'icon', 'accept', 'multiple', 'disabled', 'show-progress', 'progress', 'value', 'full'];
   }
-
   get size(): string {
     const s = this.getAttr('size', 'md');
     return s === 'sm' || s === 'lg' ? s : 'md';
@@ -179,7 +178,41 @@ export class FxFileUpload extends FxFormElement {
 
   /** Nomes dos arquivos selecionados (espelho em `value`). */
   get value(): string { return this.getAttr('value'); }
-  set value(v: string) { this.setAttribute('value', v); }
+  set value(v: string | null | undefined) {
+    this.setAttribute('value', v == null ? '' : String(v));
+  }
+
+  get disabled(): boolean {
+    return this.hasAttr('disabled');
+  }
+  set disabled(v: boolean) {
+    this.toggleAttr('disabled', Boolean(v));
+  }
+
+  get multiple(): boolean {
+    return this.hasAttr('multiple');
+  }
+  set multiple(v: boolean) {
+    this.toggleAttr('multiple', Boolean(v));
+  }
+
+  get full(): boolean {
+    return this.hasAttr('full');
+  }
+  set full(v: boolean) {
+    this.toggleAttr('full', Boolean(v));
+  }
+
+  /**
+   * Nome literal: o Vue NÃO cameliza atributos em elementos customizados,
+   * então `:show-progress` procura a propriedade `'show-progress'`.
+   */
+  get 'show-progress'(): boolean {
+    return this.hasAttr('show-progress');
+  }
+  set 'show-progress'(v: boolean) {
+    this.toggleAttr('show-progress', Boolean(v));
+  }
 
   get progress(): number { return Math.min(100, Math.max(0, Number(this.getAttr('progress', '0')) || 0)); }
   set progress(v: number) { this.setAttribute('progress', String(v)); }

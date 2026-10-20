@@ -57,6 +57,12 @@ export const orderlistDoc: ComponentDoc = {
 			desc: "JSON array de itens.",
 		},
 		{
+			name: "items",
+			type: "OrderListItem[] | string",
+			default: "[]",
+			desc: "Alias de `data` para binding de framework: `items` como propriedade (array) ou JSON no atributo. Evita o conflito de `data` com a tipagem nativa de atributos HTML.",
+		},
+		{
 			name: "data-key",
 			type: "string",
 			default: "''",

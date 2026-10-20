@@ -10,14 +10,14 @@ export const inputDoc: ComponentDoc = {
 	tag: "fx-input",
 	title: "Input",
 	group: "Formulário",
-	lead: "Campo de texto (text, number, password) estilizado com os tokens do tema. Form-associated: com name entra no FormData de um <form>, o Enter submete e <label for> foca o campo. O anel de foco é controlado pelo token effect.focus-ring do preset.",
+	lead: "Campo de texto e tipos nativos do <input> (text, number, password, email, tel, url, search, date, time, datetime-local, month, week, color) estilizado com os tokens do tema. Form-associated: com name entra no FormData de um <form>, o Enter submete e <label for> foca o campo. O anel de foco é controlado pelo token effect.focus-ring do preset.",
 	imports: ["import '@wrrdev/fenix-ui/input';"],
 	demoHtml: (a) => `<fx-input ${a}></fx-input>`,
 	variantsHtml: () =>
 		`<div style="display:flex;flex-direction:column;gap:16px">
 			<h4>Tipos</h4>
 			<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-				${["text", "number", "password"]
+				${["text", "number", "password", "email", "tel", "date", "time"]
 					.map((t) => `<fx-input type="${t}" placeholder="${t}"></fx-input>`)
 					.join("")}
 			</div>
@@ -67,6 +67,16 @@ export const inputDoc: ComponentDoc = {
 				"text",
 				"number",
 				"password",
+				"email",
+				"tel",
+				"url",
+				"search",
+				"date",
+				"time",
+				"datetime-local",
+				"month",
+				"week",
+				"color",
 			],
 			value: "text",
 		},
@@ -89,6 +99,7 @@ export const inputDoc: ComponentDoc = {
 		{ kind: "text", attr: "step", label: "Step (number)", hint: "ex.: 5" },
 		{ kind: "toggle", attr: "disabled", label: "Desabilitado" },
 		{ kind: "toggle", attr: "readonly", label: "Somente leitura" },
+		{ kind: "toggle", attr: "clearable", label: "Botão limpar (clearable)" },
 		{ kind: "toggle", attr: "error", label: "Erro" },
 		{ kind: "toggle", attr: "success", label: "Sucesso" },
 		{ kind: "toggle", attr: "full", label: "Largura total (full)" },
@@ -104,9 +115,9 @@ export const inputDoc: ComponentDoc = {
 	attributes: [
 		{
 			name: "type",
-			type: `'text' | 'number' | 'password'`,
+			type: `'text' | 'number' | 'password' | 'email' | 'tel' | 'url' | 'search' | 'date' | 'time' | 'datetime-local' | 'month' | 'week' | 'color'`,
 			default: `'text'`,
-			desc: "Tipo do input interno. Apenas text, number e password; qualquer outro tipo cai em text.",
+			desc: "Tipo do input interno. Tipos com semântica própria (file, checkbox, radio, submit, reset, button, image) caem em text.",
 		},
 		{
 			name: "value",
@@ -151,10 +162,16 @@ export const inputDoc: ComponentDoc = {
 			desc: "Somente leitura.",
 		},
 		{
+			name: "clearable",
+			type: "boolean",
+			default: "false",
+			desc: "Exibe um botão × que limpa o campo; emite input + change uma única vez.",
+		},
+		{
 			name: "min / max / step",
 			type: "string",
 			default: "—",
-			desc: 'Restrições para type="number".',
+			desc: 'Restrições nativas aplicadas ao tipo escolhido (number, date, time, datetime-local, month, week etc.).',
 		},
 		{
 			name: "full",
@@ -191,7 +208,7 @@ export const inputDoc: ComponentDoc = {
 		{
 			name: "input",
 			type: `CustomEvent<{ value: string }>`,
-			desc: "Emitido a cada tecla (composed).",
+			desc: "Emitido a cada tecla (composed), exatamente uma vez por interação.",
 		},
 		{
 			name: "change",

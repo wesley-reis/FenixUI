@@ -77,6 +77,55 @@ export class FxTabs extends FxElement {
   get value(): string { return this.getAttr('value'); }
   set value(value: string) { this.setAttribute('value', value); }
 
+  /** Observa abas/painéis criados por v-if/v-for depois do primeiro render. */
+  private _lightObserver?: MutationObserver;
+  private _siblingObserver?: MutationObserver;
+
+  protected override connectedCallback(): void {
+    super.connectedCallback();
+    this._observeLightDom();
+  }
+
+  protected override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this._lightObserver?.disconnect();
+    this._siblingObserver?.disconnect();
+    this._lightObserver = undefined;
+    this._siblingObserver = undefined;
+  }
+
+  private _observeLightDom(): void {
+    // Abas filhas (fx-tab) e painéis internos (fx-tab-panel).
+    this._lightObserver?.disconnect();
+    this._lightObserver = new MutationObserver(() => this.render());
+    this._lightObserver.observe(this, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['tab', 'disabled'],
+    });
+
+    // Painéis irmãos (forma documentada: <fx-tab-panel> após </fx-tabs>).
+    // O observer do pai só re-renderiza quando o mutation realmente adiciona
+    // ou remove um painel (evita renders por qualquer nó do app).
+    this._siblingObserver?.disconnect();
+    const parent = this.parentNode;
+    if (parent) {
+      this._siblingObserver = new MutationObserver((mutations) => {
+        const affectsPanels = mutations.some((m) =>
+          [...m.addedNodes, ...m.removedNodes].some(
+            (node) =>
+              node.nodeType === Node.ELEMENT_NODE &&
+              ((node as Element).matches('fx-tab-panel') ||
+                Boolean((node as Element).querySelector('fx-tab-panel'))),
+          ),
+        );
+        if (affectsPanels) this.render();
+      });
+      this._siblingObserver.observe(parent, { childList: true });
+    }
+  }
+
   protected override render(): void {
     const tabs = Array.from(this.querySelectorAll<HTMLElement>('fx-tab'));
     const active = this.value || tabs[0]?.getAttribute('tab') || '';
