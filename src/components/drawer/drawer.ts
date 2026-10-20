@@ -2,6 +2,15 @@ import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from '../../core/sanitize';
+import {
+  firstLightFocusable,
+  isTopmostModal,
+  lockBodyScroll,
+  modalFocusables,
+  registerModalClose,
+  registerModalOpen,
+  unlockBodyScroll,
+} from '../../core/modal';
 
 /**
  * <fx-drawer> — Painel deslizante (drawer) com overlay.
@@ -166,6 +175,8 @@ export class FxDrawer extends FxElement {
 
 	protected override render(): void {
 		const title = this.getAttr("title");
+		const wasOpen = this._wasOpen;
+		this._wasOpen = this.open;
 
 		this.setTemplate(`
       <div class="overlay" part="overlay"></div>
@@ -179,21 +190,45 @@ export class FxDrawer extends FxElement {
 		this.root.querySelector(".close")?.addEventListener("click", this._close);
 
 		if (this.open) {
-			requestAnimationFrame(() => {
-				if (this._previouslyFocused === null) {
+			if (!this._locked) {
+				lockBodyScroll();
+				registerModalOpen(this);
+				this._locked = true;
+			}
+			if (!wasOpen) {
+				requestAnimationFrame(() => {
+					if (!this.open) return;
 					this._previouslyFocused = document.activeElement as HTMLElement | null;
-				}
-				this.root.querySelector<HTMLElement>(".panel")?.focus();
-			});
+					const first =
+						firstLightFocusable(this) ??
+						this.root.querySelector<HTMLElement>(".panel");
+					first?.focus();
+				});
+			}
+		} else {
+			this._release();
 		}
+	}
+
+	/** Desfaz scroll lock e restaura o foco ao fechar/desconectar. */
+	private _release(): void {
+		registerModalClose(this);
+		if (this._locked) {
+			unlockBodyScroll();
+			this._locked = false;
+		}
+		this._restoreFocus();
 	}
 
 	protected override connectedCallback(): void {
 		super.connectedCallback?.();
 		this._onKeydown = (e: KeyboardEvent) => {
-			if (e.key === "Escape" && this.open) {
+			if (!this.open) return;
+			if (e.key === "Escape") {
+				// Apenas o modal do topo responde ao Escape.
+				if (!isTopmostModal(this)) return;
 				this._close();
-			} else if (e.key === "Tab" && this.open) {
+			} else if (e.key === "Tab") {
 				this._trapFocus(e);
 			}
 		};
@@ -202,39 +237,38 @@ export class FxDrawer extends FxElement {
 
 	protected override disconnectedCallback(): void {
 		document.removeEventListener("keydown", this._onKeydown);
-		this._restoreFocus();
+		this._release();
 		super.disconnectedCallback?.();
 	}
 
 	private _onKeydown: (e: KeyboardEvent) => void = () => {};
 	private _previouslyFocused: HTMLElement | null = null;
+	private _locked = false;
+	private _wasOpen = false;
 
 	private _close = (): void => {
 		if (!this.open) return;
-		this.open = false;
-		this._restoreFocus();
+		this.open = false; // render(false) → _release()
 		this.dispatchEvent(
 			new CustomEvent("close", { bubbles: true, composed: true }),
 		);
 	};
 
-	/** Mantém o foco dentro do drawer (WCAG 2.4.3 / 2.1.2). */
+	/** Mantém o foco dentro do drawer (WCAG 2.4.3 / 2.1.2), incluindo o slot. */
 	private _trapFocus(e: KeyboardEvent): void {
 		const panel = this.root.querySelector<HTMLElement>(".panel");
 		if (!panel) return;
-		const focusables = panel.querySelectorAll<HTMLElement>(
-			'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-		);
+		const focusables = modalFocusables(panel, this);
 		if (!focusables.length) return;
 		const first = focusables[0];
 		const last = focusables[focusables.length - 1];
-		const active = this.root.activeElement;
-		if (e.shiftKey && (active === first || active === panel)) {
+		const active = this.root.activeElement ?? document.activeElement;
+		if (e.shiftKey && (active === first || active === panel || active === this)) {
 			e.preventDefault();
-			last.focus();
+			last?.focus();
 		} else if (!e.shiftKey && active === last) {
 			e.preventDefault();
-			first.focus();
+			first?.focus();
 		}
 	}
 

@@ -324,7 +324,7 @@ export const tableDoc: ComponentDoc = {
 		},
 		{
 			name: "<fx-toolbar>",
-			desc: "Toolbar opcional renderizada acima do header (substitui <template slot=\"toolbar\">). Inputs com data-search-fields=\"campo1,campo2…\" viram busca global (filtrando por esses campos; sem o atributo, busca em todas as colunas). Demais elementos (botões etc.) aparecem como estão.",
+			desc: "Toolbar opcional renderizada acima do header (substitui <template slot=\"toolbar\">). O conteúdo do <fx-toolbar> é projetado via slot: listeners do Vue/React (@click, v-model) e estilos do documento são preservados. Inputs com data-search-fields=\"campo1,campo2…\" viram busca global (filtrando por esses campos; sem o atributo, busca em todas as colunas). Demais elementos (botões etc.) aparecem como estão.",
 		},
 	],
 	extraSections: FX_CELL_FRAMEWORK_SECTIONS,

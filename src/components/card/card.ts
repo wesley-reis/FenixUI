@@ -76,6 +76,9 @@ export class FxCard extends FxElement {
     return ['variant', 'radius', 'size', 'padded', 'heading'];
   }
 
+  get padded(): boolean { return this.hasAttr('padded'); }
+  set padded(value: boolean) { this.toggleAttr('padded', Boolean(value)); }
+
   protected override render(): void {
     const heading = this.getAttr('heading');
     this.setTemplate(`

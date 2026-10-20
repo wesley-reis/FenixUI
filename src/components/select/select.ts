@@ -144,6 +144,11 @@ export class FxSelect extends FxFormElement {
       border-radius: var(--fx-radius-md);
       box-shadow: var(--fx-shadow-lg);
     }
+    /* Ancestral com overflow (ex.: fx-card) cortaria o painel absoluto:
+       nesse caso o JS posiciona com position:fixed a partir do trigger. */
+    :host([data-fixed]) .panel {
+      position: fixed;
+    }
     /* Padrão: abre para baixo. */
     :host([open]:not([data-placement='top'])) .panel {
       top: calc(100% + var(--fx-select-panel-offset, 4px));
@@ -202,12 +207,24 @@ export class FxSelect extends FxFormElement {
     .clear[hidden] { display: none; }
   `;
 
-  // `value` fica FORA da observação: refleti-lo no change não pode
-  // re-renderizar o template e fechar o dropdown.
+  // `value` é observado para que `setAttribute('value', ...)` (HTML puro)
+  // também atualize o rótulo. Os caminhos internos de change usam
+  // `_suppressRender` para renderizar UMA vez, depois de fechar o painel.
   static override get observedAttributes(): string[] {
         // `invalid`/`valid` são aliases aceitos no CSS; sem observá-los o
         // setAttribute no submit não re-renderiza.
-        return ['size', 'disabled', 'placeholder', 'searchable', 'clearable', 'error', 'invalid', 'success', 'valid', 'placement'];
+        return ['value', 'size', 'disabled', 'placeholder', 'searchable', 'clearable', 'full', 'error', 'invalid', 'success', 'valid', 'placement'];
+  }
+
+  /** Evita renders em cascata durante mudanças internas agrupadas. */
+  private _suppressRender = false;
+  /** Resultado de `_precisaFixed` cacheado por abertura (evita getComputedStyle no scroll). */
+  private _fixedMode = false;
+  private _fixedResolved = false;
+
+  protected override attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null): void {
+    if (this._suppressRender) return;
+    super.attributeChangedCallback(name, oldValue, newValue);
   }
 
   /** Espaço (px) entre o campo e o painel — espelha `--fx-select-panel-offset`. */
@@ -234,11 +251,12 @@ export class FxSelect extends FxFormElement {
   get value(): string {
     return this.getAttr('value');
   }
-  set value(value: string) {
-    this.setAttribute('value', value);
-    // `value` não é observado (não pode re-renderizar/fechar o dropdown no
-    // change): publica no form aqui; o rótulo do trigger é re-renderizado
-    // pelos caminhos que já chamam render().
+  set value(value: string | number | null | undefined) {
+    const next = value == null ? '' : String(value);
+    const prev = this.getAttr('value');
+
+    // setAttribute dispara attributeChangedCallback → render (quando conectado).
+    if (prev !== next) this.setAttribute('value', next);
     this.updateFormValue();
   }
 
@@ -247,6 +265,27 @@ export class FxSelect extends FxFormElement {
   }
   set disabled(value: boolean) {
     this.toggleAttr('disabled', Boolean(value));
+  }
+
+  get searchable(): boolean {
+    return this.hasAttr('searchable');
+  }
+  set searchable(value: boolean) {
+    this.toggleAttr('searchable', Boolean(value));
+  }
+
+  get clearable(): boolean {
+    return this.hasAttr('clearable');
+  }
+  set clearable(value: boolean) {
+    this.toggleAttr('clearable', Boolean(value));
+  }
+
+  get full(): boolean {
+    return this.hasAttr('full');
+  }
+  set full(value: boolean) {
+    this.toggleAttr('full', Boolean(value));
   }
 
   private get options(): { value: string; label: string }[] {
@@ -258,9 +297,21 @@ export class FxSelect extends FxFormElement {
 
   protected override connectedCallback(): void {
     super.connectedCallback();
-    // Espelha mudanças nas <option> do light DOM.
-    this.observer = new MutationObserver(() => this.render());
-    this.observer.observe(this, { childList: true, subtree: true, characterData: true });
+    // Espelha mudanças nas <option> do light DOM — inclusive `value`/`selected`
+    // alterados em runtime pelo framework (Vue atualiza atributos, não filhos).
+    this.observer = new MutationObserver((mutations) => {
+      // Mudanças no `value` do próprio host são tratadas pelo setter (que já
+      // renderiza); ignorá-las evita um segundo render assíncrono.
+      if (mutations.every((m) => m.type === 'attributes' && m.target === this)) return;
+      this.render();
+    });
+    this.observer.observe(this, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ['value', 'selected'],
+    });
     // Fecha o dropdown ao clicar fora.
     this.docListener = (e: Event) => {
       if (!this.hasAttr('open')) return;
@@ -280,6 +331,10 @@ export class FxSelect extends FxFormElement {
 
   /** Abre o dropdown, posiciona o painel e passa a reposicioná-lo no reflow. */
   private _abrir(): void {
+    // Resolve o modo (fixed/absolute) UMA vez por abertura; o scroll só
+    // recalcula coordenadas, sem varrer ancestrais/getComputedStyle.
+    this._fixedMode = FxSelect._precisaFixed(this);
+    this._fixedResolved = true;
     this.setAttribute('open', '');
     this._bindReflow();
   }
@@ -290,6 +345,8 @@ export class FxSelect extends FxFormElement {
     // Sem isto o `data-placement` fica preso no host e a próxima abertura
     // mostraria o painel na posição invertida antes do ajuste rodar.
     this.removeAttribute('data-placement');
+    this._fixedMode = false;
+    this._fixedResolved = false;
     this._unbindReflow();
   }
 
@@ -344,7 +401,39 @@ export class FxSelect extends FxFormElement {
       FxSelect.MIN_ALTURA,
       (paraCima ? acima : abaixo) - FxSelect.GAP,
     );
-    painel.style.maxHeight = `${Math.min(desejado || disponivel, disponivel, maxAltura)}px`;
+    const altura = Math.min(desejado || disponivel, disponivel, maxAltura);
+    painel.style.maxHeight = `${altura}px`;
+
+    // Dentro de containers com overflow (fx-card e afins) o painel absoluto é
+    // cortado. Nesse caso usa coordenadas fixas a partir do trigger — imune
+    // ao clipping do ancestral. Fora disso mantém o fluxo absoluto histórico.
+    if (!this._fixedResolved) {
+      this._fixedMode = FxSelect._precisaFixed(this);
+      this._fixedResolved = true;
+    }
+    if (this._fixedMode) {
+      this.setAttribute('data-fixed', '');
+      const largura = Math.max(r.width, 220);
+      const esquerda = Math.max(
+        FxSelect.MARGEM,
+        Math.min(r.left, window.innerWidth - largura - FxSelect.MARGEM),
+      );
+      const topo = paraCima
+        ? Math.max(FxSelect.MARGEM, r.top - FxSelect.GAP - altura)
+        : r.bottom + FxSelect.GAP;
+
+      painel.style.bottom = 'auto';
+      painel.style.width = `${largura}px`;
+      painel.style.left = `${esquerda}px`;
+      painel.style.top = `${topo}px`;
+      return;
+    }
+
+    // Reset do estado fixed (caso o select tenha sido movido de contexto).
+    this.removeAttribute('data-fixed');
+    painel.style.top = '';
+    painel.style.bottom = '';
+    painel.style.width = '';
 
     // Reset do deslocamento horizontal antes de remedir (o painel é recriado
     // a cada render, mas o ajuste pode rodar várias vezes com o mesmo nó).
@@ -357,6 +446,22 @@ export class FxSelect extends FxFormElement {
     }
   }
 
+  /**
+   * Existe ancestral com overflow que cortaria o painel absoluto?
+   * `getComputedStyle` é defensivo: em jsdom retorna vazio e o modo
+   * histórico (absoluto) é mantido.
+   */
+  private static _precisaFixed(host: HTMLElement): boolean {
+    let el = host.parentElement;
+    while (el && el !== document.body && el !== document.documentElement) {
+      const cs = getComputedStyle(el);
+      const overflow = `${cs.overflow}${cs.overflowX}${cs.overflowY}`;
+      if (/(hidden|clip|auto|scroll|overlay)/.test(overflow)) return true;
+      el = el.parentElement;
+    }
+    return false;
+  }
+
   /** Altura máxima do painel a partir de `--fx-select-panel-max-height`. */
   private static _maxAltura(host: HTMLElement): number {
     const raw = getComputedStyle(host).getPropertyValue('--fx-select-panel-max-height');
@@ -365,7 +470,14 @@ export class FxSelect extends FxFormElement {
   }
 
   private select(value: string): void {
-    this.value = value;
+    // Agrupa: o setter NÃO renderiza aqui; o render acontece uma única vez
+    // depois de fechar o painel.
+    this._suppressRender = true;
+    try {
+      this.value = value;
+    } finally {
+      this._suppressRender = false;
+    }
     this._fechar();
     this.render();
     this.emitValueEvents();
@@ -394,6 +506,10 @@ export class FxSelect extends FxFormElement {
 
   protected override render(): void {
     const prevOpen = this.hasAttr('open');
+    if (!prevOpen) {
+      this._fixedMode = false;
+      this._fixedResolved = false;
+    }
     const prevSearch = this.root.querySelector<HTMLInputElement>('.search');
     // Estado do campo de busca antes de re-renderizar (valor, foco e cursor).
     const search = prevSearch?.value ?? '';
@@ -483,7 +599,12 @@ export class FxSelect extends FxFormElement {
     // Limpar.
     this.root.querySelector('.clear')?.addEventListener('click', (e) => {
       e.stopPropagation();
-      this.value = '';
+      this._suppressRender = true;
+      try {
+        this.value = '';
+      } finally {
+        this._suppressRender = false;
+      }
       this._fechar();
       this.render();
       this.emitValueEvents();
@@ -503,7 +624,12 @@ export class FxSelect extends FxFormElement {
 
   /** form.reset(): restaura o valor inicial e re-renderiza o rótulo. */
   override formResetCallback(): void {
-    super.formResetCallback();
+    this._suppressRender = true;
+    try {
+      super.formResetCallback();
+    } finally {
+      this._suppressRender = false;
+    }
     this.render();
   }
 }

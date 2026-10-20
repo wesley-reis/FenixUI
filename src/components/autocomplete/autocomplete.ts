@@ -113,9 +113,16 @@ export class FxAutocomplete extends FxFormElement {
     return s === 'sm' || s === 'lg' ? s : 'md';
   }
   set size(v: string) { this.setAttribute('size', v); }
+
+  get disabled(): boolean {
+    return this.hasAttr('disabled');
+  }
+  set disabled(v: boolean) {
+    this.toggleAttr('disabled', Boolean(v));
+  }
   get value(): string { return this.getAttr('value'); }
-  set value(v: string) {
-    this.setAttribute('value', v);
+  set value(v: string | null | undefined) {
+    this.setAttribute('value', v == null ? '' : String(v));
     // `value` não é observado (não pode re-renderizar por tecla): sincroniza
     // o campo interno direto, sem perder foco/cursor, e publica no form.
     this.syncInternalControl();

@@ -12,6 +12,10 @@ import { defineElement } from '../../core/define';
  * Atributos: checked, indeterminate, disabled, value, name, size (sm|md|lg).
  * Eventos: `change` e `checkedChange` (composed, detail: { checked, value }) —
  * `checkedChange` é o two-way binding do Angular [(checked)].
+ *
+ * Vue: o `v-model` padrão de elemento customizado usa `value` + `input` (não
+ * `checked`). Para checkbox/switch use `:checked="estado"` + `@change` (ou
+ * `@checkedChange`) — o componente reflete o estado no atributo `checked`.
  */
 export class FxCheckbox extends FxFormElement {
   static override styles = css`
@@ -31,8 +35,8 @@ export class FxCheckbox extends FxFormElement {
       -webkit-tap-highlight-color: transparent;
     }
     .control {
-      width: var(--fx-size-checkbox, 18px);
-      height: var(--fx-size-checkbox, 18px);
+      width: var(--fx-size-checkbox, var(--_fx-size-checkbox, 18px));
+      height: var(--fx-size-checkbox, var(--_fx-size-checkbox, 18px));
       flex-shrink: 0;
       display: inline-flex;
       align-items: center;
@@ -41,7 +45,7 @@ export class FxCheckbox extends FxFormElement {
       border-radius: calc(var(--fx-radius-sm) + 2px);
       background: var(--fx-surface-background);
       color: #fff;
-      font-size: calc(var(--fx-size-checkbox, 18px) - 6px);
+      font-size: calc(var(--fx-size-checkbox, var(--_fx-size-checkbox, 18px)) - 6px);
       line-height: 1;
       transition:
         background-color var(--fx-motion-duration-fast) var(--fx-motion-easing),
@@ -78,7 +82,7 @@ export class FxCheckbox extends FxFormElement {
   `;
 
   static override get observedAttributes(): string[] {
-    return ['checked', 'disabled', 'indeterminate'];
+    return ['checked', 'disabled', 'indeterminate', 'size'];
   }
 
   get checked(): boolean {
@@ -109,7 +113,10 @@ export class FxCheckbox extends FxFormElement {
 
   /** getter/setter `value` → espelho do atributo `value` (compat com v-model / [(value)]). */
   get value(): string { return this.getAttr('value'); }
-  set value(v: string) { this.setAttribute('value', v); }
+  set value(v: string | null | undefined) {
+    this.setAttribute('value', v == null ? '' : String(v));
+    this.updateFormValue();
+  }
 
   /** Tamanho do controle. Padrão: `'md'`. */
   get size(): string {
@@ -121,11 +128,11 @@ export class FxCheckbox extends FxFormElement {
   }
 
   protected override render(): void {
-    // Escala por tamanho via token local.
+    // Escala por tamanho via token interno. Atualiza SEMPRE para reagir ao
+    // `:size`; um `--fx-size-checkbox` definido pelo consumidor continua com
+    // precedência (é consultado antes do token interno).
     const px = this.size === 'sm' ? '14px' : this.size === 'lg' ? '22px' : '18px';
-    if (!this.style.getPropertyValue('--fx-size-checkbox')) {
-      this.style.setProperty('--fx-size-checkbox', px);
-    }
+    this.style.setProperty('--_fx-size-checkbox', px);
 
     this.setTemplate(`
       <span class="box" part="box" role="checkbox" tabindex="0"

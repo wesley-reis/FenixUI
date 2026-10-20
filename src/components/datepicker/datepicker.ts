@@ -187,11 +187,18 @@ export class FxDatepicker extends FxFormElement {
   `;
 
   static override get observedAttributes(): string[] {
-    return ['value', 'start', 'end', 'values', 'mode', 'min', 'max', 'placeholder', 'disabled', 'format', 'show-time', 'free-text', 'error', 'invalid', 'success', 'valid'];
+    return ['value', 'start', 'end', 'values', 'mode', 'min', 'max', 'placeholder', 'disabled', 'format', 'show-time', 'free-text', 'clearable', 'full', 'error', 'invalid', 'success', 'valid'];
   }
 
+  /** Evita renders em cascata quando vários atributos mudam juntos. */
+  private _suppressRender = false;
+
   protected override attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null): void {
-    super.attributeChangedCallback(name, oldValue, newValue);
+    // Durante agrupamentos internos (applyTime/calendar/clear) não recria o
+    // shadow DOM: o foco do input de hora/minuto/segundo ficaria perdido.
+    if (!this._suppressRender) {
+      super.attributeChangedCallback(name, oldValue, newValue);
+    }
     // Mantém o FormData do form sincronizado sem tocar no render.
     if (name === 'value' || name === 'start' || name === 'end' || name === 'values') {
       this.updateFormValue();
@@ -236,8 +243,22 @@ export class FxDatepicker extends FxFormElement {
   get value(): string {
     return this.getAttr('value');
   }
-  set value(v: string) {
-    this.setAttribute('value', v);
+  set value(v: string | number | null | undefined) {
+    this.setAttribute('value', v == null ? '' : String(v));
+  }
+
+  get start(): string {
+    return this.getAttr('start');
+  }
+  set start(v: string | null | undefined) {
+    this.setAttribute('start', v == null ? '' : String(v));
+  }
+
+  get end(): string {
+    return this.getAttr('end');
+  }
+  set end(v: string | null | undefined) {
+    this.setAttribute('end', v == null ? '' : String(v));
   }
 
   /** Datas do modo múltiplo (CSV no atributo). */
@@ -245,8 +266,9 @@ export class FxDatepicker extends FxFormElement {
     const csv = this.getAttr('values');
     return csv ? csv.split(',').map((v) => v.trim()).filter(Boolean) : [];
   }
-  set values(list: string[]) {
-    this.setAttribute('values', list.join(','));
+  set values(list: string[] | null | undefined) {
+    const values = Array.isArray(list) ? list.map(String) : [];
+    this.setAttribute('values', values.join(','));
   }
 
   get disabled(): boolean {
@@ -254,6 +276,35 @@ export class FxDatepicker extends FxFormElement {
   }
   set disabled(value: boolean) {
     this.toggleAttr('disabled', Boolean(value));
+  }
+
+  /** `:show-time` procura a propriedade LITERAL no Vue (sem camelização). */
+  get 'show-time'(): boolean {
+    return this.hasAttr('show-time');
+  }
+  set 'show-time'(value: boolean) {
+    this.toggleAttr('show-time', Boolean(value));
+  }
+
+  get 'free-text'(): boolean {
+    return this.hasAttr('free-text');
+  }
+  set 'free-text'(value: boolean) {
+    this.toggleAttr('free-text', Boolean(value));
+  }
+
+  get clearable(): boolean {
+    return this.hasAttr('clearable');
+  }
+  set clearable(value: boolean) {
+    this.toggleAttr('clearable', Boolean(value));
+  }
+
+  get full(): boolean {
+    return this.hasAttr('full');
+  }
+  set full(value: boolean) {
+    this.toggleAttr('full', Boolean(value));
   }
 
   protected override connectedCallback(): void {
@@ -283,11 +334,17 @@ export class FxDatepicker extends FxFormElement {
   /** form.reset(): restaura value/start/end/values iniciais (re-render via atributos observados). */
   override formResetCallback(): void {
     const s = this._initialState ?? { value: '', start: '', end: '', values: '' };
-    this.setAttribute('value', s.value);
-    this.setAttribute('start', s.start);
-    this.setAttribute('end', s.end);
-    this.setAttribute('values', s.values);
+    this._suppressRender = true;
+    try {
+      this.setAttribute('value', s.value);
+      this.setAttribute('start', s.start);
+      this.setAttribute('end', s.end);
+      this.setAttribute('values', s.values);
+    } finally {
+      this._suppressRender = false;
+    }
     this.updateFormValue();
+    if (this.isConnected) this.render();
   }
 
   /** Formata uma data ISO ("YYYY-MM-DD" ou com "THH:mm:ss") segundo o atributo format. */
@@ -430,13 +487,18 @@ export class FxDatepicker extends FxFormElement {
       }
     });
 
-    // Limpar: zera tudo conforme o modo.
+    // Limpar: zera tudo conforme o modo (um único render no final).
     this.root.querySelector('.clear')?.addEventListener('click', (e) => {
       e.stopPropagation();
-      this.removeAttribute('value');
-      this.removeAttribute('start');
-      this.removeAttribute('end');
-      this.removeAttribute('values');
+      this._suppressRender = true;
+      try {
+        this.removeAttribute('value');
+        this.removeAttribute('start');
+        this.removeAttribute('end');
+        this.removeAttribute('values');
+      } finally {
+        this._suppressRender = false;
+      }
       this.removeAttribute('open');
       this.render();
       this.emitChange({});
@@ -446,20 +508,27 @@ export class FxDatepicker extends FxFormElement {
     const cal = this.root.querySelector<HTMLElement>('.pop fx-calendar');
     cal?.addEventListener('change', (e) => {
       const d = (e as CustomEvent).detail ?? {};
-      if (d.start !== undefined || d.end !== undefined) {
-        if (d.start) this.setAttribute('start', this.withTime(d.start));
-        else this.removeAttribute('start');
-        if (d.end) this.setAttribute('end', this.withTime(d.end));
-        else this.removeAttribute('end');
-      }
-      if (d.values !== undefined) {
-        this.values = d.values.map((v: string) => this.withTime(v));
-      }
-      if (d.value !== undefined) {
-        if (d.value) this.setAttribute('value', this.withTime(d.value));
-        else this.removeAttribute('value');
-        // No modo single, fecha ao escolher.
-        if (this.mode === 'single') this.removeAttribute('open');
+      // Agrupa os setAttribute em um único render (o calendário dispara
+      // value/start/end/values de uma vez).
+      this._suppressRender = true;
+      try {
+        if (d.start !== undefined || d.end !== undefined) {
+          if (d.start) this.setAttribute('start', this.withTime(d.start));
+          else this.removeAttribute('start');
+          if (d.end) this.setAttribute('end', this.withTime(d.end));
+          else this.removeAttribute('end');
+        }
+        if (d.values !== undefined) {
+          this.values = d.values.map((v: string) => this.withTime(v));
+        }
+        if (d.value !== undefined) {
+          if (d.value) this.setAttribute('value', this.withTime(d.value));
+          else this.removeAttribute('value');
+          // No modo single, fecha ao escolher.
+          if (this.mode === 'single') this.removeAttribute('open');
+        }
+      } finally {
+        this._suppressRender = false;
       }
       this.render();
       this.emitChange(d);
@@ -492,11 +561,18 @@ export class FxDatepicker extends FxFormElement {
         };
         // Reanexa o horário aos valores já selecionados.
         const reattach = (iso: string): string => iso.split('T')[0] ? `${iso.split('T')[0]}T${this.timeText()}` : iso;
-        if (this.value) this.setAttribute('value', reattach(this.value));
-        if (this.getAttr('start')) this.setAttribute('start', reattach(this.getAttr('start')));
-        if (this.getAttr('end')) this.setAttribute('end', reattach(this.getAttr('end')));
-        if (this.values.length) {
-          this.values = this.values.map((v) => reattach(v));
+        // Sem supressão, cada setAttribute acima re-renderizaria e o input
+        // de hora/minuto/segundo perderia o foco a cada dígito.
+        this._suppressRender = true;
+        try {
+          if (this.value) this.setAttribute('value', reattach(this.value));
+          if (this.getAttr('start')) this.setAttribute('start', reattach(this.getAttr('start')));
+          if (this.getAttr('end')) this.setAttribute('end', reattach(this.getAttr('end')));
+          if (this.values.length) {
+            this.values = this.values.map((v) => reattach(v));
+          }
+        } finally {
+          this._suppressRender = false;
         }
         // Atualiza apenas o texto do input, sem re-render completo.
         const display = this.root.querySelector<HTMLInputElement>('.display');
@@ -568,24 +644,34 @@ export class FxDatepicker extends FxFormElement {
       setTimeout(() => input.classList.remove('invalid'), 1500);
       return;
     }
+    this._suppressRender = true;
+    try {
+      if (this.mode === 'single') {
+        this.setAttribute('value', this.withTime(parsed));
+      } else if (this.mode === 'range') {
+        // Primeira digitação vira start; com start preenchido, vira end.
+        if (!this.getAttr('start') || (this.getAttr('start') && this.getAttr('end'))) {
+          this.setAttribute('start', this.withTime(parsed));
+          this.removeAttribute('end');
+        } else {
+          const [a, b] = [this.getAttr('start')!.split('T')[0]!, parsed].sort();
+          this.setAttribute('start', this.withTime(a));
+          this.setAttribute('end', this.withTime(b));
+        }
+      } else {
+        const list = this.values.filter((v) => v.split('T')[0] !== parsed);
+        list.push(this.withTime(parsed));
+        this.values = list;
+      }
+    } finally {
+      this._suppressRender = false;
+    }
+
     if (this.mode === 'single') {
-      this.setAttribute('value', this.withTime(parsed));
       this.emitChange({ value: this.value });
     } else if (this.mode === 'range') {
-      // Primeira digitação vira start; com start preenchido, vira end.
-      if (!this.getAttr('start') || (this.getAttr('start') && this.getAttr('end'))) {
-        this.setAttribute('start', this.withTime(parsed));
-        this.removeAttribute('end');
-      } else {
-        const [a, b] = [this.getAttr('start')!.split('T')[0]!, parsed].sort();
-        this.setAttribute('start', this.withTime(a));
-        this.setAttribute('end', this.withTime(b));
-      }
       this.emitChange({ start: this.getAttr('start'), end: this.getAttr('end') });
     } else {
-      const list = this.values.filter((v) => v.split('T')[0] !== parsed);
-      list.push(this.withTime(parsed));
-      this.values = list;
       this.emitChange({ values: this.values });
     }
     this.render();

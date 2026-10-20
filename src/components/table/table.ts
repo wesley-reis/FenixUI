@@ -311,6 +311,11 @@ export class FxTable extends FxElement {
 		.toolbar:empty {
 			display: none;
 		}
+		/* <fx-toolbar> é apenas um invólucro no light DOM: o slot projeta
+		   seus filhos (com listeners do Vue preservados) direto no flex. */
+		::slotted(fx-toolbar) {
+			display: contents;
+		}
 		.loading-overlay {
 			position: absolute;
 			inset: 0;
@@ -377,6 +382,8 @@ export class FxTable extends FxElement {
 	private filters: Record<string, string> = {};
 	private globalSearch = "";
 	private _columnObserver?: MutationObserver;
+	/** Inputs da toolbar slotted já receberam listener (não recria a cada render). */
+	private _boundToolbarInputs = new WeakSet<HTMLInputElement>();
 
 	get data(): Record<string, unknown>[] {
 		return this._data;
@@ -404,6 +411,49 @@ export class FxTable extends FxElement {
 
 	get lazy(): boolean {
 		return this.hasAttr("lazy");
+	}
+	set lazy(value: boolean) {
+		this.toggleAttr("lazy", Boolean(value));
+	}
+
+	get pagination(): boolean {
+		return this.hasAttr("pagination");
+	}
+	set pagination(value: boolean) {
+		this.toggleAttr("pagination", Boolean(value));
+	}
+
+	get striped(): boolean {
+		return this.hasAttr("striped");
+	}
+	set striped(value: boolean) {
+		this.toggleAttr("striped", Boolean(value));
+	}
+
+	get hover(): boolean {
+		return this.hasAttr("hover");
+	}
+	set hover(value: boolean) {
+		this.toggleAttr("hover", Boolean(value));
+	}
+
+	get loading(): boolean {
+		return this.hasAttr("loading");
+	}
+	set loading(value: boolean) {
+		this.toggleAttr("loading", Boolean(value));
+	}
+
+	/**
+	 * Vue não cameliza atributos de elementos customizados:
+	 * `:no-borders-x="false"` procura a propriedade LITERAL
+	 * `'no-borders-x'` — o accessor literal evita o contorno `.attr`.
+	 */
+	get 'no-borders-x'(): boolean {
+		return this.hasAttr("no-borders-x");
+	}
+	set 'no-borders-x'(value: boolean) {
+		this.toggleAttr("no-borders-x", Boolean(value));
 	}
 
 	private get columns(): {
@@ -504,7 +554,14 @@ export class FxTable extends FxElement {
 		loadFenixIconsFont();
 		super.connectedCallback();
 		this._columnObserver = new MutationObserver(() => this.render());
-		this._columnObserver.observe(this, { childList: true, subtree: true });
+		this._columnObserver.observe(this, {
+			childList: true,
+			subtree: true,
+			// Colunas com header/field/align/sortable/filterable alterados
+			// em runtime também precisam re-renderizar.
+			attributes: true,
+			attributeFilter: ["header", "field", "align", "sortable", "filterable", "template"],
+		});
 	}
 
 	protected override disconnectedCallback(): void {
@@ -629,8 +686,23 @@ export class FxTable extends FxElement {
 		if (this.page >= pages) this.page = pages - 1;
 
 		const toolbar = this.toolbarTemplate;
-		const toolbarHtml = toolbar
-			? `<div class="toolbar" part="toolbar">${toolbar.innerHTML}</div>`
+		// <fx-toolbar> usa <slot>: os nós continuam no light DOM e os
+		// listeners do framework (@click, v-model) sobrevivem. As formas
+		// legadas (template/toolbar="#id") seguem por clone de innerHTML.
+		const toolbarSlotted = toolbar?.localName === "fx-toolbar";
+		const toolbarHasContent = Boolean(
+			toolbar &&
+				(toolbarSlotted
+					? toolbar.children.length > 0 || (toolbar.textContent ?? "").trim() !== ""
+					: toolbar.innerHTML.trim() !== ""),
+		);
+		if (toolbarSlotted && toolbarHasContent) {
+			toolbar.setAttribute("slot", "fx-toolbar");
+		}
+		const toolbarHtml = toolbarHasContent
+			? `<div class="toolbar" part="toolbar">${
+					toolbarSlotted ? '<slot name="fx-toolbar"></slot>' : toolbar!.innerHTML
+				}</div>`
 			: "";
 
 		const headHtml = cols
@@ -682,7 +754,7 @@ export class FxTable extends FxElement {
         <button type="button" class="pg-btn" part="next" aria-label="Próxima página" data-pg="next" ${this.page >= pages - 1 ? "disabled" : ""}>${fenixIconHtml("navigate_next")}</button>
         <button type="button" class="pg-btn" part="last" aria-label="Última página" data-pg="last" ${this.page >= pages - 1 ? "disabled" : ""}>${fenixIconHtml("last_page")}</button>
         <label class="info">${esc("Por página:")}
-          <fx-select class="rows-sel" size="sm" value="${this.rowsPerPage}" aria-label="Itens por página">${this.getAttr(
+          <fx-select class="rows-sel" size="sm" placement="top" value="${this.rowsPerPage}" aria-label="Itens por página">${this.getAttr(
 					"rows-options",
 					"5,10,20,50",
 				)
@@ -715,6 +787,10 @@ export class FxTable extends FxElement {
 			if (tbody) {
 				tbody.innerHTML = bodyHtml;
 				this._bindRowClicks(rows);
+				// A toolbar slotted vive no light DOM: mesmo no caminho rápido
+				// pode ter recebido um input novo do framework.
+				this._bindSlottedToolbarSearch(toolbar);
+				this._restoreToolbarSearch();
 				return;
 			}
 		}
@@ -722,7 +798,7 @@ export class FxTable extends FxElement {
 
 		this.setTemplate(`
       ${toolbarHtml}
-      <div class="frame${toolbar ? " has-toolbar" : ""}" part="frame">
+      <div class="frame${toolbarHasContent ? " has-toolbar" : ""}" part="frame">
         <div class="table-wrap">
           <div class="scroll">
             <table part="table">
@@ -790,24 +866,13 @@ export class FxTable extends FxElement {
 			inp.addEventListener("click", (e) => e.stopPropagation());
 		});
 
-		// Busca global da toolbar.
+		// Busca global da toolbar (clone no shadow + inputs slotted persistentes).
 		this.root
 			.querySelectorAll<HTMLInputElement>("[data-search-fields]")
-			.forEach((inp) => {
-				inp.addEventListener("input", () => {
-					this.globalSearch = inp.value;
-					this.page = 0;
-					const pos = inp.selectionStart;
-					this.render();
-					const again = this.root.querySelector<HTMLInputElement>(
-						"[data-search-fields]",
-					);
-					if (again) {
-						again.focus();
-						again.setSelectionRange(pos, pos);
-					}
-				});
-			});
+			.forEach((inp) => this._bindSearchInput(inp, false));
+		if (toolbarSlotted && toolbar) {
+			this._bindSlottedToolbarSearch(toolbar);
+		}
 
 		// Paginação.
 		this.root
@@ -882,11 +947,56 @@ export class FxTable extends FxElement {
 			});
 	}
 
+	/** Liga (uma vez) os inputs de busca de um <fx-toolbar> slotted. */
+	private _bindSlottedToolbarSearch(toolbar: HTMLElement | null): void {
+		if (!toolbar || toolbar.localName !== "fx-toolbar") return;
+		toolbar
+			.querySelectorAll<HTMLInputElement>("[data-search-fields]")
+			.forEach((inp) => {
+				if (this._boundToolbarInputs.has(inp)) return;
+				this._boundToolbarInputs.add(inp);
+				this._bindSearchInput(inp, true);
+			});
+	}
+
+	/**
+	 * Liga um input da toolbar à busca global.
+	 * `persistent` = input slotted (não é recriado pelo render): o foco volta
+	 * no próprio nó. Inputs clonados são substituídos, então o foco é
+	 * restaurado no clone novo do shadow.
+	 */
+	private _bindSearchInput(inp: HTMLInputElement, persistent: boolean): void {
+		inp.addEventListener("input", () => {
+			this.globalSearch = inp.value;
+			this.page = 0;
+			const pos = inp.selectionStart;
+			this.render();
+			const again = persistent && inp.isConnected
+				? inp
+				: this.root.querySelector<HTMLInputElement>("[data-search-fields]");
+			if (again) {
+				again.focus();
+				again.setSelectionRange(pos, pos);
+			}
+		});
+	}
+
 	private _restoreToolbarSearch(): void {
-		const input = this.root.querySelector<HTMLInputElement>(
+		const shadow = this.root.querySelector<HTMLInputElement>(
 			"[data-search-fields]",
 		);
-		if (input && this.globalSearch) input.value = this.globalSearch;
+		if (shadow && this.globalSearch) shadow.value = this.globalSearch;
+
+		const toolbar = this.toolbarTemplate;
+		if (toolbar?.localName === "fx-toolbar") {
+			toolbar
+				.querySelectorAll<HTMLInputElement>("[data-search-fields]")
+				.forEach((input) => {
+					if (this.globalSearch && input.value !== this.globalSearch) {
+						input.value = this.globalSearch;
+					}
+				});
+		}
 	}
 }
 

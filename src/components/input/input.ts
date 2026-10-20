@@ -6,11 +6,25 @@ import { FENIX_ICON_BASE_CSS, fenixIconHtml } from '../../icons/base-css';
 import type { FxInputType } from '../../core/jsx';
 
 /**
- * Tipos suportados pelo <fx-input>: text, number e password.
- * Qualquer outro tipo (email, search, date, file, range, checkbox, radio…)
- * cai em `text` em runtime.
+ * Tipos nativos aceitos pelo <fx-input>. Os tipos com semântica própria
+ * (file, checkbox, radio, submit, reset, button, image) continuam fora:
+ * eles não fazem sentido no componente de texto.
  */
-const INPUT_TYPES = new Set(['text', 'number', 'password']);
+const INPUT_TYPES = new Set([
+  'text',
+  'number',
+  'password',
+  'email',
+  'tel',
+  'url',
+  'search',
+  'date',
+  'time',
+  'datetime-local',
+  'month',
+  'week',
+  'color',
+]);
 
 function normalizeInputType(value: string): string {
   const type = (value || 'text').toLowerCase();
@@ -24,7 +38,8 @@ function normalizeInputType(value: string): string {
  * (via atributo `name`), recebe reset/disable do form, é alvo de
  * `<label for>`/`autofocus` e o Enter submete o form.
  *
- * Atributos: type (text|number|password), value, name,
+ * Atributos: type (text|number|password|email|tel|url|search|date|time|
+ * datetime-local|month|week|color), value, name,
  * size, placeholder, disabled, readonly, min, max, step, autofocus,
  * clearable, full (largura 100% acompanhando o elemento pai), icon (nome do
  * glifo Fenix Icons ou emoji/texto livre) e icon-pos (left|right, padrão left).
@@ -181,6 +196,7 @@ export class FxInput extends FxFormElement {
     return [
       'type', 'size', 'placeholder',
       'disabled', 'readonly', 'min', 'max', 'step',
+      'clearable', 'full',
       'icon', 'icon-pos', 'error', 'invalid', 'success', 'valid',
     ];
   }
@@ -205,8 +221,8 @@ export class FxInput extends FxFormElement {
   get value(): string {
     return this.getAttr('value');
   }
-  set value(value: string) {
-    this.setAttribute('value', value);
+  set value(value: string | number | null | undefined) {
+    this.setAttribute('value', value == null ? '' : String(value));
     // `value` NÃO é observado (re-render a cada tecla perderia o foco): o
     // campo interno é sincronizado aqui, sem re-render, preservando foco/cursor.
     this.syncInternalControl();
@@ -218,6 +234,27 @@ export class FxInput extends FxFormElement {
   }
   set disabled(value: boolean) {
     this.toggleAttr('disabled', Boolean(value));
+  }
+
+  get readonly(): boolean {
+    return this.hasAttr('readonly');
+  }
+  set readonly(value: boolean) {
+    this.toggleAttr('readonly', Boolean(value));
+  }
+
+  get clearable(): boolean {
+    return this.hasAttr('clearable');
+  }
+  set clearable(value: boolean) {
+    this.toggleAttr('clearable', Boolean(value));
+  }
+
+  get full(): boolean {
+    return this.hasAttr('full');
+  }
+  set full(value: boolean) {
+    this.toggleAttr('full', Boolean(value));
   }
 
   protected override render(): void {
@@ -256,18 +293,26 @@ export class FxInput extends FxFormElement {
     if (disabled) field.setAttribute('disabled', '');
     if (readonly) field.setAttribute('readonly', '');
 
-    const emit = (event: string): void => {
+    // Cada interação emite UM `input` (v-model) + `valueChange` (Angular).
+    // O `change` só existe no evento nativo de mudança/limpar.
+    const notifyInput = (): void => {
       this.value = field.value;
-      // input (v-model do Vue) + valueChange ([(value)] do Angular).
       this.emitValueEvents();
+    };
+    const notifyChange = (): void => {
+      this.value = field.value;
       this.dispatchEvent(
-        new CustomEvent(event, { bubbles: true, composed: true, detail: { value: field.value } }),
+        new CustomEvent('change', {
+          bubbles: true,
+          composed: true,
+          detail: { value: field.value },
+        }),
       );
     };
     // Bloqueia o evento nativo (composed, sem detail) para que só o
     // CustomEvent com detail chegue aos consumidores.
-    field.addEventListener('input', (e) => { e.stopPropagation(); emit('input'); });
-    field.addEventListener('change', (e) => { e.stopPropagation(); emit('change'); });
+    field.addEventListener('input', (e) => { e.stopPropagation(); notifyInput(); });
+    field.addEventListener('change', (e) => { e.stopPropagation(); notifyChange(); });
 
     // Enter submete o form: o <input> interno vive no Shadow DOM e NÃO se
     // associa ao <form> do light DOM (a fronteira do shadow corta a associação
@@ -290,8 +335,15 @@ export class FxInput extends FxFormElement {
     clearBtn?.addEventListener('click', () => {
       field.value = '';
       syncClear();
-      emit('input');
-      emit('change');
+      this.value = '';
+      this.emitValueEvents();
+      this.dispatchEvent(
+        new CustomEvent('change', {
+          bubbles: true,
+          composed: true,
+          detail: { value: '' },
+        }),
+      );
       field.focus();
     });
     field.addEventListener('input', syncClear);

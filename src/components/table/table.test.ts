@@ -105,11 +105,27 @@ describe('fx-table', () => {
     expect(root.querySelector('select')).toBeNull();
     const sel = root.querySelector('fx-select.rows-sel') as HTMLElement;
     expect(sel).toBeTruthy();
+    expect(sel.getAttribute('placement')).toBe('top');
     // Escolhe a opção "5" no dropdown customizado.
     const opt = sel.shadowRoot!.querySelector('.opt[data-value="5"]') as HTMLElement;
     expect(opt).toBeTruthy();
     opt.click();
     expect(el.getAttribute('rows')).toBe('5');
+  });
+
+  it('lazy e booleanos têm setters (Vue escreve propriedades)', () => {
+    const el = mount(`<fx-table lazy loading striped hover pagination>${COLS}</fx-table>`, ROWS) as any;
+    expect(el.lazy).toBe(true);
+    el.lazy = false;
+    el.loading = false;
+    el.striped = false;
+    el.hover = false;
+    el.pagination = false;
+    expect(el.hasAttribute('lazy')).toBe(false);
+    expect(el.hasAttribute('loading')).toBe(false);
+    expect(el.hasAttribute('striped')).toBe(false);
+    expect(el.hasAttribute('hover')).toBe(false);
+    expect(el.hasAttribute('pagination')).toBe(false);
   });
 });
 
@@ -238,8 +254,27 @@ describe('fx-table — <fx-cell> (template seguro para frameworks)', () => {
   it('<fx-toolbar> substitui <template slot="toolbar">', () => {
     const el = mount(`<fx-table><fx-toolbar><input data-search-fields="nome"><button>Exportar</button></fx-toolbar>${COLS}</fx-table>`, ROWS);
     const bar = el.shadowRoot!.querySelector('.toolbar')!;
-    expect(bar.querySelector('[data-search-fields]')).toBeTruthy();
-    expect(bar.textContent).toContain('Exportar');
+    // O conteúdo vive no light DOM e é projetado via <slot>; os listeners do
+    // framework (Vue/React) são preservados.
+    expect(bar.querySelector('slot[name="fx-toolbar"]')).toBeTruthy();
+    expect(el.querySelector('[data-search-fields]')).toBeTruthy();
+    expect(el.querySelector('fx-toolbar')!.textContent).toContain('Exportar');
+  });
+
+  it('busca global da <fx-toolbar> slotted filtra as linhas', () => {
+    const data = [
+      { id: 1, nome: 'Ana', cargo: 'Dev' },
+      { id: 2, nome: 'Bruno', cargo: 'QA' },
+      { id: 3, nome: 'Carla', cargo: 'Dev' },
+    ];
+    const el = mount(
+      `<fx-table><fx-toolbar><input data-search-fields="cargo"></fx-toolbar><fx-column field="nome" header="Nome"></fx-column><fx-column field="cargo" header="Cargo"></fx-column></fx-table>`,
+      data,
+    );
+    const inp = el.querySelector('input') as HTMLInputElement;
+    inp.value = 'dev';
+    inp.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(el.shadowRoot!.querySelectorAll('tbody tr').length).toBe(2);
   });
 
   it('<template slot="toolbar"> legado continua funcionando', () => {

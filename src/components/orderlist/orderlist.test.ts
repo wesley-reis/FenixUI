@@ -28,6 +28,18 @@ describe('FxOrderList', () => {
     expect(element.data).toEqual([]);
   });
 
+  it('items é alias de data (property + atributo JSON)', () => {
+    const list = [{ label: 'A' }, { label: 'B' }];
+    element.items = list;
+    expect(element.items).toEqual(list);
+    expect(element.data).toEqual(list);
+    expect(JSON.parse(element.getAttribute('items') ?? '[]')).toEqual(list);
+
+    element.setAttribute('items', JSON.stringify([{ label: 'C' }]));
+    expect(element.data).toEqual([{ label: 'C' }]);
+    expect(element.shadowRoot!.textContent).toContain('C');
+  });
+
   it('should set data correctly', () => {
     const items = [{ label: 'Item 1' }, { label: 'Item 2' }, { label: 'Item 3' }];
     element.data = items;

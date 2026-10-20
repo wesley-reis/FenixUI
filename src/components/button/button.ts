@@ -189,6 +189,13 @@ export class FxButton extends FxElement {
     this.toggleAttr('loading', Boolean(value));
   }
 
+  get full(): boolean {
+    return this.hasAttr('full');
+  }
+  set full(value: boolean) {
+    this.toggleAttr('full', Boolean(value));
+  }
+
   protected override render(): void {
     const loading = this.hasAttr('loading');
     const disabled = this.hasAttr('disabled') || loading;

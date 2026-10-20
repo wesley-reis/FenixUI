@@ -26,7 +26,49 @@ import { defineElement } from "../../core/define";
  */
 export class FxFloatlabel extends FxElement {
 	static override get observedAttributes(): string[] {
-		return ["variant", "error", "invalid", "success", "valid", "full", "icon", "icon-pos"];
+		return ["variant", "error", "invalid", "success", "valid", "full", "icon", "icon-pos", "error-text"];
+	}
+
+	get error(): boolean {
+		return this.hasAttr("error");
+	}
+	set error(value: boolean) {
+		this.toggleAttr("error", Boolean(value));
+	}
+
+	get invalid(): boolean {
+		return this.hasAttr("invalid");
+	}
+	set invalid(value: boolean) {
+		this.toggleAttr("invalid", Boolean(value));
+	}
+
+	get success(): boolean {
+		return this.hasAttr("success");
+	}
+	set success(value: boolean) {
+		this.toggleAttr("success", Boolean(value));
+	}
+
+	get valid(): boolean {
+		return this.hasAttr("valid");
+	}
+	set valid(value: boolean) {
+		this.toggleAttr("valid", Boolean(value));
+	}
+
+	get full(): boolean {
+		return this.hasAttr("full");
+	}
+	set full(value: boolean) {
+		this.toggleAttr("full", Boolean(value));
+	}
+
+	get errorText(): string {
+		return this.getAttr("error-text");
+	}
+	set errorText(value: string | null | undefined) {
+		this.setAttribute("error-text", value == null ? "" : String(value));
 	}
 	// 'active' NÃO entra em observedAttributes: togglá-lo apenas atualiza CSS
 	// via :host([active]), sem re-render destrutivo (mantém o foco do campo).
@@ -171,6 +213,17 @@ export class FxFloatlabel extends FxElement {
 	/** <label> adotada do light DOM — vive no Shadow DOM após o 1º render. */
 	private _label: HTMLElement | null = null;
 	private _labelClickBound = false;
+	/** Observa o light DOM para readotar uma <label> recriada pelo framework. */
+	private _labelObserver?: MutationObserver;
+
+	protected override connectedCallback(): void {
+		super.connectedCallback();
+		this._labelObserver = new MutationObserver(() => {
+			const label = this.findLabel();
+			if (label && label !== this._label) this.render();
+		});
+		this._labelObserver.observe(this, { childList: true });
+	}
 
 	protected render(): void {
 		const control = this.findControl();
@@ -226,6 +279,8 @@ export class FxFloatlabel extends FxElement {
 	protected override disconnectedCallback(): void {
 		super.disconnectedCallback();
 		this.observer?.disconnect();
+		this._labelObserver?.disconnect();
+		this._labelObserver = undefined;
 	}
 
 	/** Campo de controle = qualquer filho direto que não seja label. */

@@ -80,6 +80,20 @@ export class FxIcon extends FxElement {
     else this.removeAttribute('label');
   }
 
+  get fill(): boolean {
+    return this.hasAttr('fill');
+  }
+  set fill(value: boolean) {
+    this.toggleAttr('fill', Boolean(value));
+  }
+
+  get bold(): boolean {
+    return this.hasAttr('bold');
+  }
+  set bold(value: boolean) {
+    this.toggleAttr('bold', Boolean(value));
+  }
+
   protected override connectedCallback(): void {
     // O glifo depende do @font-face: garante o CSS leve (sem as 4k classes).
     loadFenixIconsFont();
