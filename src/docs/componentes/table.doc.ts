@@ -282,6 +282,30 @@ export const tableDoc: ComponentDoc = {
 			default: "var(--fx-radius-md)",
 			desc: "Raio aplicado na moldura (tabela + paginação), na tabela, na toolbar e no pager. Definido pelo atributo <code>rounded</code> e sobrescrevível por CSS externo: <code>fx-table { --fx-table-radius: 20px; }</code>.",
 		},
+		{
+			name: "--fx-table-text",
+			type: "cor",
+			default: "var(--fx-text-default)",
+			desc: "Cor do texto das células do corpo (<code>td</code>). Tem <b>escopo da tabela</b>: não altera os demais textos do app (para isso existe <code>--fx-text-default</code>). Configurável pelo preset (<code>table.text</code>), global (<code>:root</code>) ou por tabela: <code>fx-table { --fx-table-text: #0f172a; }</code>.",
+		},
+		{
+			name: "--fx-table-text-weight",
+			type: "font-weight",
+			default: "inherit",
+			desc: "Peso do texto das células. Por padrão o <code>td</code> herda o peso do body da página (na doc 400, em apps que definem 500) — por isso o corpo pode parecer mais claro que o cabeçalho. <b>Não é token de tema</b> (o valor <code>inherit</code> não é representável como custom property): use CSS, <code>fx-table { --fx-table-text-weight: var(--fx-font-weight); }</code>.",
+		},
+		{
+			name: "--fx-table-header-text",
+			type: "cor",
+			default: "var(--fx-table-text)",
+			desc: "Cor do texto do cabeçalho (<code>th</code>). Por padrão acompanha <code>--fx-table-text</code> e também pode vir do preset (<code>table.header-text</code>): <code>fx-table { --fx-table-header-text: var(--fx-text-muted); }</code>.",
+		},
+		{
+			name: "--fx-table-header-weight",
+			type: "font-weight",
+			default: "bold",
+			desc: "Peso do cabeçalho (o <code>th</code> recebe <b>bold</b> do navegador). Configurável pelo preset (<code>table.header-weight</code>) ou por CSS: <code>fx-table { --fx-table-header-weight: 600; }</code>.",
+		},
 	],
 	events: [
 		{

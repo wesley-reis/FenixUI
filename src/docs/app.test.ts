@@ -209,15 +209,36 @@ describe("docs app", () => {
 		).toBe("#e11d48");
 	});
 
-	it("página de temas lista presets dos cavaleiros e pinta swatches", async () => {
+	it("página de temas lista presets e aponta para a referência de tokens", async () => {
 		await navigate("theming");
-		expect(
-			document.getElementById("swatches")!.children.length,
-		).toBeGreaterThan(0);
 		const opts = [...document.querySelectorAll("#th-preset option")].map(
 			(o) => o.getAttribute("value"),
 		);
 		expect(opts).toContain("seiya");
+		// A referência completa vive nas páginas próprias.
+		expect(main().innerHTML).toContain("#/tokens");
+		expect(main().innerHTML).toContain("#/component-vars");
+	});
+
+	it("página Tokens de tema lista todos os tokens, exemplos e valores ativos", async () => {
+		await navigate("tokens");
+		const html = main().innerHTML;
+		expect(main().querySelector("h2")?.textContent).toBe("Tokens de tema");
+		expect(html).toContain("--fx-color-primary");
+		expect(html).toContain("--fx-table-text");
+		expect(html).toContain("FenixUI.setTokens({");
+		// Uma linha por token no bloco “Valores ativos neste tema”.
+		expect(
+			document.querySelectorAll("#token-live-body tr").length,
+		).toBeGreaterThan(40);
+	});
+
+	it("página Variáveis de componente indexa as CSS vars dos componentes", async () => {
+		await navigate("component-vars");
+		const html = main().innerHTML;
+		expect(main().querySelector("h2")?.textContent).toBe("Variáveis de componente");
+		expect(html).toContain("--fx-input-width");
+		expect(html).toContain("--fx-table-text-weight");
 	});
 	it("playground do drawer: renderiza no stage", async () => {
 		await navigate("fx-drawer");
@@ -244,7 +265,7 @@ describe("docs app", () => {
 		expect(drawer.querySelector("fx-tab-panel")).toBeTruthy();
 	});
 
-	it("drawer de customização: color pickers inicializados com valores padrão", async () => {
+	it("drawer de customização: cor pickers inicializados com valores padrão", async () => {
 		const toggle = document.getElementById("theme-customize-toggle") as HTMLButtonElement;
 		toggle.click();
 		await new Promise((r) => setTimeout(r, 80));
@@ -254,6 +275,53 @@ describe("docs app", () => {
 		for (const input of colorInputs) {
 			expect((input as HTMLInputElement).value).toMatch(/^#[0-9a-f]{6}$/i);
 		}
+	});
+
+	it("drawer de customização: texto, tipografia e tabela refletem no preset", async () => {
+		const toggle = document.getElementById("theme-customize-toggle") as HTMLButtonElement;
+		toggle.click();
+		await new Promise((r) => setTimeout(r, 80));
+		const drawer = document.getElementById("theme-customize-drawer")!;
+
+		// Controles novos existem e o preview ganhou a tabela.
+		expect(drawer.querySelector("#drawer-text-default")).toBeTruthy();
+		expect(drawer.querySelector("#drawer-font-size")).toBeTruthy();
+		expect(drawer.querySelector("#drawer-table-text")).toBeTruthy();
+		expect(drawer.querySelector("#drawer-table-header-weight")).toBeTruthy();
+		expect(drawer.querySelector("#drawer-preview-stage fx-table")).toBeTruthy();
+
+		const text = drawer.querySelector("#drawer-text-default") as HTMLInputElement;
+		text.value = "#112233";
+		text.dispatchEvent(new Event("input", { bubbles: true }));
+
+		const weight = drawer.querySelector("#drawer-table-header-weight") as any;
+		weight.value = "600";
+		weight.dispatchEvent(new Event("change", { bubbles: true }));
+
+		const json = JSON.parse(
+			drawer.querySelector("#drawer-preset-json")!.textContent!,
+		);
+		expect(json.tokens.text.default).toBe("#112233");
+		expect(json.tokens.table["header-weight"]).toBe("600");
+		expect(json.tokens.font.size).toBe("14px");
+	});
+
+	it("drawer de customização: mantém os valores ao fechar e reabrir", async () => {
+		const toggle = document.getElementById("theme-customize-toggle") as HTMLButtonElement;
+		toggle.click();
+		await new Promise((r) => setTimeout(r, 80));
+		const drawer = document.getElementById("theme-customize-drawer") as any;
+		const text = drawer.querySelector("#drawer-text-default") as HTMLInputElement;
+		text.value = "#445566";
+		text.dispatchEvent(new Event("input", { bubbles: true }));
+
+		drawer.open = false;
+		await new Promise((r) => setTimeout(r, 20));
+		toggle.click();
+		await new Promise((r) => setTimeout(r, 80));
+		expect(
+			(drawer.querySelector("#drawer-text-default") as HTMLInputElement).value,
+		).toBe("#445566");
 	});
 
 	it("drawer de customização: preview renderiza componentes", async () => {

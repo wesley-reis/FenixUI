@@ -84,7 +84,13 @@ export const floatlabelDoc: ComponentDoc = {
 			name: 'active',
 			type: 'boolean',
 			default: 'false',
-			desc: 'Refletido automaticamente quando o campo contém valor, foco ou dropdown aberto.',
+			desc: 'Refletido automaticamente quando o campo contém valor, foco ou dropdown aberto. Apenas levanta a label (não muda a cor).',
+		},
+		{
+			name: 'focus',
+			type: 'boolean',
+			default: 'false',
+			desc: 'Refletido automaticamente quando o campo está focado ou com dropdown aberto. É o que destaca a label em primária; error/invalid e success/valid têm prioridade.',
 		},
 		{
 			name: 'full',

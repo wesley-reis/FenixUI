@@ -38,17 +38,38 @@ export const GUIDE_ITEMS: ShellNavItem[] = [
 	{ id: 'auto-import', title: 'Auto Import' },
 	{ id: 'icons', title: 'Ícones' },
 	{ id: 'theming', title: 'Temas' },
-	{ id: 'forms', title: 'Formulários' },
+	{ id: 'tokens', title: 'Tokens de tema' },
+	{ id: 'component-vars', title: 'Variáveis de componente' },
+];
+
+/**
+ * Grupos estáticos (não são guias nem páginas de componente). Entram logo
+ * depois de "Guia" e antes das categorias de componentes.
+ */
+export const EXTRA_NAV_GROUPS: ShellNavGroup[] = [
+	{ name: 'Exemplos', items: [{ id: 'forms', title: 'Formulários' }] },
+];
+
+/** Todos os itens estáticos (guia + extras), com o grupo de origem — busca. */
+export const STATIC_NAV_ENTRIES: (ShellNavItem & { group: string })[] = [
+	...GUIDE_ITEMS.map((i) => ({ ...i, group: 'Guia' })),
+	...EXTRA_NAV_GROUPS.flatMap((g) =>
+		g.items.map((i) => ({ ...i, group: g.name })),
+	),
 ];
 
 const COLLAPSED_KEY = 'fenix:doc:sidebar-collapsed';
 
-/** Monta os grupos da sidebar: Guia primeiro, depois os grupos dos docs. */
+/** Monta os grupos da sidebar: Guia, extras e depois os grupos dos docs. */
 export function buildSidebarGroups(
 	docs: readonly ShellDocMeta[],
 ): ShellNavGroup[] {
 	const groups = new Map<string, ShellNavItem[]>();
 	groups.set('Guia', [...GUIDE_ITEMS]);
+	for (const extra of EXTRA_NAV_GROUPS) {
+		if (!groups.has(extra.name)) groups.set(extra.name, []);
+		groups.get(extra.name)!.push(...extra.items);
+	}
 	for (const c of docs) {
 		if (!groups.has(c.group)) groups.set(c.group, []);
 		groups.get(c.group)!.push({ id: c.tag, title: c.title });
@@ -173,7 +194,10 @@ declare const __APP_VERSION__: string;
 function navKeyFor(route: string, docs: readonly ShellDocMeta[]): string {
 	if (route === 'home') return 'home';
 	if (route === 'icons') return 'icons';
-	if (route === 'theming') return 'theming';
+	// Tokens e variáveis de componente vivem dentro do universo de tema.
+	if (route === 'theming' || route === 'tokens' || route === 'component-vars') return 'theming';
+	// "Formulários" é uma página de exemplo de uso — destaca Componentes.
+	if (route === 'forms') return 'components';
 	if (docs.some((d) => d.tag === route)) return 'components';
 	return 'guides';
 }
@@ -202,8 +226,9 @@ export function syncRoute(
 	});
 
 	const doc = docs.find((d) => d.tag === route);
-	const guide = GUIDE_ITEMS.find((i) => i.id === route);
-	const title = doc?.title ?? guide?.title;
+	// Inclui os grupos estáticos extras (ex.: "Formulários" em "Exemplos").
+	const staticItem = STATIC_NAV_ENTRIES.find((i) => i.id === route);
+	const title = doc?.title ?? staticItem?.title;
 	document.title =
 		title && route !== 'home'
 			? `${title} — FenixUI`

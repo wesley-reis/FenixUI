@@ -27,6 +27,8 @@ export interface FenixTokens {
     /** Brilho/anel do estado de sucesso — acompanha `focus-ring` (ver applyTokens). */
     'success-ring': string;
   };
+  /** Texto das tabelas (`fx-table`): cor do corpo/cabeçalho e peso do cabeçalho. */
+  table: Record<'text' | 'header-text' | 'header-weight', string>;
   /** Z-index */ z: Record<'base' | 'dropdown' | 'modal' | 'toast', string>;
 }
 
@@ -90,6 +92,14 @@ export const lightTokens: FenixTokens = {
 		"success-ring":
 			"0 0 0 3px color-mix(in srgb, var(--fx-color-success, #16a34a) 18%, transparent)",
 	},
+	table: {
+		/** Cor do corpo do fx-table; `var()` mantém claro/escuro automáticos. */
+		text: "var(--fx-text-default)",
+		/** Cabeçalho acompanha o corpo por padrão. */
+		"header-text": "var(--fx-table-text)",
+		/** O UA aplica bold no <th>; aqui o valor fica explícito e tokenizado. */
+		"header-weight": "bold",
+	},
 	z: { base: "auto", dropdown: "1000", modal: "1100", toast: "1200" },
 };
 
@@ -118,6 +128,7 @@ export const darkTokens: FenixTokens = {
   },
   motion: { ...lightTokens.motion },
   effect: { ...lightTokens.effect },
+  table: { ...lightTokens.table },
   z: { ...lightTokens.z },
 };
 

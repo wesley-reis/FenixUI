@@ -10,6 +10,16 @@ describe('Design Tokens', () => {
     expect(vars['--fx-radius-md']).toBe('8px');
   });
 
+  it('tokens da tabela (table.*) viram --fx-table-* e seguem o tema', () => {
+    const light = tokenCssVars(defaultTokens);
+    const dark = tokenCssVars(darkTokens);
+    // Valor simbólico: acompanha text.default em claro e escuro.
+    expect(light['--fx-table-text']).toBe('var(--fx-text-default)');
+    expect(dark['--fx-table-text']).toBe('var(--fx-text-default)');
+    expect(light['--fx-table-header-text']).toBe('var(--fx-table-text)');
+    expect(light['--fx-table-header-weight']).toBe('bold');
+  });
+
   it('tema escuro mantém mesma estrutura que o claro', () => {
     expect(Object.keys(darkTokens)).toEqual(Object.keys(defaultTokens));
     expect(darkTokens.surface.background).not.toBe(defaultTokens.surface.background);

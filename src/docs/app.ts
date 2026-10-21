@@ -12,7 +12,7 @@
 import { fenixComponentMap } from '../plugins/auto-import';
 import { applyPreset, listPresets, defineCustomPreset, type FenixPreset } from '../core/presets';
 import { FenixUI } from '../core/theme';
-import type { DeepPartial, FenixTokens } from '../core/tokens';
+import { defaultTokens, type DeepPartial, type FenixTokens } from '../core/tokens';
 import { componentDocs, componentLoaders } from './componentes';
 import { FENIX_ICON_NAMES } from '../icons';
 export { componentLoaders };
@@ -25,8 +25,15 @@ import {
 	clearToc,
 	mountTopbar,
 	renderSidebar,
+	STATIC_NAV_ENTRIES,
 	syncRoute,
 } from './shell';
+import {
+	renderComponentVarsHtml,
+	renderLiveTokensTableBody,
+	renderTokenGroupsHtml,
+	renderTokenReferenceHtml,
+} from './theme-reference';
 import { codeBlock, highlightCode, wireCodeCopy } from './ui/code';
 import { buildFragmentSnippets, buildSnippets, buildSnippetsForHtml, frameworkTabsHtml, readSavedFramework, wireFrameworkTabs } from './frameworks';
 import { routeFromHash, startRouter } from './router';
@@ -141,6 +148,8 @@ type ApiColumn = [label: string, cell: (row: ApiRow) => string];
 const API_NAME = (r: ApiRow): string => `<td><code class="inline">${esc(r.name)}</code></td>`;
 const API_TYPE = (r: ApiRow): string => (r.type ? `<td class="type">${esc(r.type)}</td>` : '<td>—</td>');
 const API_DEFAULT = (r: ApiRow): string => (r.default ? `<td class="default">${esc(r.default)}</td>` : '<td>—</td>');
+const API_EXAMPLE = (r: ApiRow): string =>
+  r.example ? `<td><code class="inline">${esc(r.example)}</code></td>` : '<td>—</td>';
 const API_DESC = (r: ApiRow): string => `<td>${r.desc}</td>`;
 
 /**
@@ -152,11 +161,13 @@ function columns(labels: {
   name: string;
   type?: string;
   default?: string;
+  example?: string;
   desc?: string;
 }): ApiColumn[] {
   const cols: ApiColumn[] = [[labels.name, API_NAME]];
   if (labels.type) cols.push([labels.type, API_TYPE]);
   if (labels.default) cols.push([labels.default, API_DEFAULT]);
+  if (labels.example) cols.push([labels.example, API_EXAMPLE]);
   cols.push([labels.desc ?? 'Descrição', API_DESC]);
   return cols;
 }
@@ -506,40 +517,38 @@ FenixUI.setTokens({
       <fx-select><option value="sp">São Paulo</option><option value="rj">Rio de Janeiro</option></fx-select>
       <fx-switch>Notificações</fx-switch>
     </div></div>
-    <h3>Tudo que pode ser personalizado</h3>
-    <p>Cada grupo abaixo é um conjunto de CSS Custom Properties (<code class="inline">--fx-*</code>) que
-    os componentes consomem. No preset, sobrescreva <strong>apenas o que quiser</strong> — o restante
-    herda do tema base (claro ou escuro) automaticamente.</p>
-    ${apiTable(
-      'Grupos de tokens',
-      [
-        { name: 'color', type: 'primary, secondary, success, warning, danger, info', default: 'paleta indigo', desc: 'Cores semânticas usadas por todos os componentes.' },
-        { name: 'surface', type: 'background, surface, surface-hover', default: 'branco / cinza-50', desc: 'Fundos de página, campos e estados hover.' },
-        { name: 'text', type: 'default, muted, disabled', default: 'slate-900/500/400', desc: 'Cores de texto e placeholders.' },
-        { name: 'border', type: 'default, hover', default: 'cinza-200/300', desc: 'Bordas de campos, cards e divisores.' },
-        { name: 'font', type: 'family, size, weight, line-height', default: 'Inter 14px 500', desc: 'Tipografia global.' },
-        { name: 'space', type: 'xs…xl', default: '4–24px', desc: 'Espaçamentos internos.' },
-        { name: 'radius', type: 'none, sm, md, lg, full', default: '0–9999px', desc: 'Arredondamento (botões, campos, badges…).' },
-        { name: 'size', type: 'sm, md, lg', default: '32 / 40 / 48px', desc: 'Altura EXATA dos controles (button, input, select, multiselect, datepicker…) — mesmo valor para todos os campos no mesmo size; personalize a escala no preset.' },
-        { name: 'shadow', type: 'sm, md, lg', default: 'elevações suaves', desc: 'Sombras de elevação.' },
-        { name: 'motion', type: 'duration-fast, duration-normal, easing', default: '120/240ms', desc: 'Velocidade e curva das transições.' },
-        { name: 'effect', type: `ripple ('1'/'0'), focus-ring, error-ring, success-ring`, default: 'ligados', desc: 'Ripple do botão, anel de foco e brilhos de validação. error-ring/success-ring acompanham focus-ring: desligado ⇒ validação apenas com a borda vermelha/verde (sem brilho).' },
-        { name: 'z', type: 'base, dropdown, modal, toast', default: '1000–1200', desc: 'Camadas de sobreposição.' },
-      ],
-      columns({ name: 'Grupo', type: 'Chaves', default: 'Padrão' }),
-    )}
-    ${codeBlock("// O preset só precisa do que for diferente do tema base:\nFenixUI.setTokens({\n  color: { primary: '#0d9488' },   // só a cor primária muda\n  effect: { 'focus-ring': 'none' }, // campos sem anel de foco\n  size: { lg: '52px' },             // só o tamanho lg fica maior\n});")}
+    <h3>Como alterar um token (resumo)</h3>
+    <p>Existem três caminhos. A lista completa — todos os tokens, com valor claro/escuro e
+    exemplo de cada grupo — está em <a href="#/tokens"><strong>Tokens de tema</strong></a>.</p>
+    ${codeBlock(`// 1) Preset (recomendado: reutilizável e exportável em JSON)
+defineCustomPreset('minha-marca', 'Minha Marca', {
+  color: { primary: '#7c3aed' },
+});
+applyPreset('minha-marca', 'light');`)}
+    ${codeBlock(`// 2) Runtime — merge profundo sobre o tema ativo
+FenixUI.setTokens({
+  color: { primary: '#0d9488' },
+  radius: { md: '16px' },
+});`)}
+    ${codeBlock(`/* 3) CSS puro — sem JS */
+:root    { --fx-color-primary: #0d9488; } /* global */
+fx-table { --fx-table-text: #0f172a; }    /* só nesta tabela */`)}
+    <div class="note">
+      <strong>Precedência:</strong> regra no elemento (<code class="inline">fx-table { --fx-… }</code>)
+      vence os tokens do <code class="inline">:root</code>. <code class="inline">applyPreset()</code>
+      substitui os overrides do preset anterior; <code class="inline">setTokens()</code> faz merge
+      profundo. Detalhes em <a href="#/tokens">Tokens de tema</a>.
+    </div>
     <h3>API de tema</h3>
     ${apiTable('Métodos', [
-      { name: 'FenixUI.theme(name)', type: `name: 'light' | 'dark'`, desc: 'Troca o modo de cor em runtime.' },
-      { name: 'FenixUI.setTokens(tokens)', type: 'DeepPartial<FenixTokens>', desc: 'Override parcial profundo (ex.: só color.primary).' },
-      { name: 'FenixUI.configure(options)', type: 'ConfigureOptions', desc: 'Configuração combinada; retorna o estado ativo.' },
-      { name: 'FenixUI.resetTheme()', type: '', desc: 'Volta ao tema claro padrão, sem overrides.' },
-      { name: 'applyPreset(preset, mode)', type: `preset: string, mode: 'light' | 'dark'`, desc: 'Aplica um preset nomeado + modo.' },
-    ], columns({ name: 'Método', type: 'Tipo' }))}
-    <h3>Tokens ativos agora</h3>
-    <div class="swatches" id="swatches"></div>
-    ${codeBlock("// Override customizado\nFenixUI.setTokens({\n  color: { primary: '#0d9488' },\n  radius: { md: '16px' },\n});")}
+      { name: 'FenixUI.theme(name)', type: `name: 'light' | 'dark'`, example: "FenixUI.theme('dark')", desc: 'Troca o modo de cor em runtime.' },
+      { name: 'FenixUI.setTokens(tokens)', type: 'DeepPartial<FenixTokens>', example: "FenixUI.setTokens({ radius: { md: '16px' } })", desc: 'Override parcial profundo (ex.: só color.primary).' },
+      { name: 'FenixUI.configure(options)', type: 'ConfigureOptions', example: "FenixUI.configure({ theme: 'dark', tokens: { … } })", desc: 'Configuração combinada (tema + tokens); retorna o estado ativo.' },
+      { name: 'FenixUI.resetTheme()', type: '', example: 'FenixUI.resetTheme()', desc: 'Volta ao tema claro padrão, sem overrides.' },
+      { name: 'applyPreset(preset, mode)', type: `preset: string, mode: 'light' | 'dark'`, example: "applyPreset('shiryu', 'dark')", desc: 'Aplica um preset nomeado + modo.' },
+    ], columns({ name: 'Método', type: 'Tipo', example: 'Exemplo' }))}
+    <div class="note">Precisa de ajuste fino em um componente? Veja
+    <a href="#/component-vars">Variáveis de componente</a>.</div>
     <h3>Crie seu próprio tema</h3>
     <p>Personalize as cores, veja o preview ao vivo nos componentes abaixo e <strong>baixe o preset</strong>
     com o nome que escolher. O arquivo <code class="inline">.fenix-preset.json</code> pode ser carregado na
@@ -596,25 +605,13 @@ FenixUI.setTokens({
       "// Usando o preset baixado na sua aplicação:\nimport { defineCustomPreset, applyPreset } from '@wrrdev/fenix-ui';\nimport meuTema from './meu-tema.fenix-preset.json';\n\ndefineCustomPreset(meuTema.name, meuTema.label, meuTema.tokens);\napplyPreset('meu-tema', 'dark');",
     )}
   `;
-  const paint = (): void => {
-    const cs = getComputedStyle(document.documentElement);
-    const names = ['--fx-color-primary', '--fx-color-secondary', '--fx-color-success', '--fx-color-warning', '--fx-color-danger', '--fx-color-info', '--fx-surface-surface', '--fx-surface-background', '--fx-text-default', '--fx-border-default'];
-    document.getElementById('swatches')!.innerHTML = names
-      .map((n) => {
-        const v = cs.getPropertyValue(n).trim();
-        return `<div class="swatch"><div class="chip" style="background:${v}"></div><div class="meta"><b>${n.replace('--fx-', '')}</b>${v}</div></div>`;
-      })
-      .join('');
-  };
-  // Referência guardada para repintar os swatches quando o modo mudar pelo
-  // toggle do header (ele não dispara 'change' nos selects desta página).
-  themingPaint = paint;
+  // A página Temas não tem mais swatches: os valores ativos (todos os tokens)
+  // ficam na página Tokens de tema.
   const sync = (): void => {
     const p = (document.getElementById('th-preset') as HTMLSelectElement).value;
     const m = (document.getElementById('th-mode') as HTMLSelectElement).value as 'light' | 'dark';
     applyPreset(p, m);
     syncHeaderControls(p, m);
-    paint();
   };
   document.getElementById('th-preset')!.addEventListener('change', sync);
   document.getElementById('th-mode')!.addEventListener('change', sync);
@@ -623,10 +620,140 @@ FenixUI.setTokens({
   const thMode = document.getElementById('th-mode') as HTMLSelectElement | null;
   if (thPreset) thPreset.value = currentPreset;
   if (thMode) thMode.value = currentMode;
-  paint();
   setupCustomBuilder();
   wireCopyButtons(main);
 }
+/* ------------------------------------------------------------------ */
+/* Tokens de tema (referência completa)                                */
+/* ------------------------------------------------------------------ */
+
+/** JSON de exemplo com os principais grupos — mostrado no fim da página. */
+const PRESET_JSON_EXAMPLE = `{
+  "$schema": "fenix-preset/v1",
+  "name": "minha-marca",
+  "label": "Minha Marca",
+  "tokens": {
+    "color": { "primary": "#7c3aed" },
+    "radius": { "md": "16px" },
+    "size": { "lg": "52px" },
+    "table": {
+      "text": "#0f172a",
+      "header-weight": "600"
+    }
+  }
+}`;
+
+async function renderTokens(): Promise<void> {
+  const main = document.getElementById('main')!;
+  main.innerHTML = `
+    <h2>Tokens de tema</h2>
+    <p class="lead">Todo o visual do FenixUI é dirigido por <strong>Design Tokens</strong>: cada valor
+    vira uma CSS Custom Property <code class="inline">--fx-*</code> no
+    <code class="inline">:root</code> e atravessa o Shadow DOM. Trocar um token repinta todos os
+    componentes na hora — sem recompilar.</p>
+    <div class="note">
+      Esta página lista <strong>todos</strong> os tokens globais. Ajustes finos de um componente
+      (ex.: <code class="inline">--fx-table-text-weight</code>, <code class="inline">--fx-input-width</code>)
+      ficam em <a href="#/component-vars">Variáveis de componente</a>.
+    </div>
+
+    <h3>Como alterar um token</h3>
+    <p>São três caminhos; o resultado final é o mesmo (uma custom property no
+    <code class="inline">:root</code>).</p>
+    ${codeBlock(`// 1) Preset (recomendado: vira tema reutilizável e exportável em JSON)
+import { defineCustomPreset, applyPreset } from '@wrrdev/fenix-ui';
+
+defineCustomPreset('minha-marca', 'Minha Marca', {
+  color: { primary: '#7c3aed' },
+  table: { text: '#0f172a', 'header-weight': '600' },
+});
+applyPreset('minha-marca', 'light');`)}
+    ${codeBlock(`// 2) Runtime — sobrescreve o tema ativo (merge profundo)
+import { FenixUI } from '@wrrdev/fenix-ui';
+
+FenixUI.setTokens({
+  color: { primary: '#0d9488' },
+  radius: { md: '16px' },
+});`)}
+    ${codeBlock(`/* 3) CSS puro — sem JS */
+:root    { --fx-color-primary: #0d9488; }   /* global */
+fx-table { --fx-table-text: #0f172a; }      /* só nesta tabela */`)}
+    <div class="note">
+      <strong>Precedência e merge:</strong> uma regra no elemento
+      (<code class="inline">fx-table { --fx-… }</code>) vence os tokens do
+      <code class="inline">:root</code>. <code class="inline">setTokens()</code> faz merge profundo
+      (mantém o que não foi informado); <code class="inline">applyPreset()</code> substitui os
+      overrides pelo conjunto do preset; <code class="inline">resetTheme()</code> volta ao padrão.
+    </div>
+
+    <h3>Grupos de tokens</h3>
+    <p>Cada grupo é um nó do objeto de tokens; a chave vira o sufixo da variável
+    (<code class="inline">color.primary</code> → <code class="inline">--fx-color-primary</code>).</p>
+    ${renderTokenGroupsHtml()}
+
+    <h3>Referência completa</h3>
+    <p>Valores de <strong>Claro</strong> e <strong>Escuro</strong> são os padrões do tema base —
+    presets podem sobrescrevê-los. Cada grupo traz um exemplo de
+    <code class="inline">setTokens()</code> com todas as chaves.</p>
+    ${renderTokenReferenceHtml()}
+
+    <h3>Valores ativos neste tema</h3>
+    <p>Lidos do <code class="inline">:root</code> agora. Troque o preset/modo no header e esta
+    tabela é repintada automaticamente.</p>
+    <table class="api token-live">
+      <thead><tr><th>Grupo</th><th>Token</th><th>Valor ativo</th></tr></thead>
+      <tbody id="token-live-body">${renderLiveTokensTableBody()}</tbody>
+    </table>
+
+    <h3>Preset completo (JSON)</h3>
+    <p>O mesmo formato aceito por <code class="inline">defineCustomPreset()</code>:</p>
+    ${codeBlock(PRESET_JSON_EXAMPLE)}
+  `;
+  const paint = (): void => {
+    const body = document.getElementById('token-live-body');
+    if (body) body.innerHTML = renderLiveTokensTableBody();
+  };
+  tokensPaint = paint;
+  wireCopyButtons(main);
+}
+
+/* ------------------------------------------------------------------ */
+/* Variáveis de componente (CSS vars por componente)                   */
+/* ------------------------------------------------------------------ */
+
+async function renderComponentVars(): Promise<void> {
+  const main = document.getElementById('main')!;
+  main.innerHTML = `
+    <h2>Variáveis de componente</h2>
+    <p class="lead">Além dos tokens globais, cada componente expõe variáveis CSS próprias
+    (<code class="inline">--fx-*</code>) para ajustes finos. Elas <strong>não</strong> são tokens de
+    tema: valem só naquele componente e podem referenciar tokens
+    (<code class="inline">var(--fx-text-default)</code>), acompanhando claro/escuro.</p>
+
+    <h3>Como usar</h3>
+    ${codeBlock(`/* por componente (todas as tabelas) */
+fx-table {
+  --fx-table-text: #0f172a;
+  --fx-table-text-weight: 400;
+  --fx-table-header-weight: 600;
+}
+
+/* só em um elemento */
+<fx-input style="--fx-input-width: 320px"></fx-input>`)}
+    <div class="note">
+      Quer mudar o visual de <strong>todo o app</strong>? Use
+      <a href="#/tokens">Tokens de tema</a>. As variáveis abaixo são documentadas também na
+      página de cada componente, junto com atributos, eventos e slots.
+    </div>
+
+    <h3>Índice completo</h3>
+    <p>Gerado a partir da documentação de cada componente — sempre em dia.</p>
+    ${renderComponentVarsHtml(components)}
+  `;
+  wireCopyButtons(main);
+}
+
+
 
 /* ------------------------------------------------------------------ */
 /* Construtor de preset personalizado (preview + download .json)       */
@@ -780,10 +907,10 @@ function renderThemingSwatchesOnly(container: HTMLElement): void {
 let currentPreset = 'ikki';
 let currentMode: 'light' | 'dark' = 'light';
 /**
- * Referência ao `paint()` da página de Temas. Permite repintar os swatches
- * quando o modo é trocado pelo toggle do header (fora daquela página).
+ * Referência ao `paint()` da página **Tokens de tema**: repinta a coluna
+ * “Valor ativo” quando o modo/preset muda pelo header (fora daquela página).
  */
-let themingPaint: (() => void) | null = null;
+let tokensPaint: (() => void) | null = null;
 
 function syncHeaderControls(preset: string, mode: 'light' | 'dark'): void {
   currentPreset = preset;
@@ -812,12 +939,22 @@ function setupSearch(): void {
 
   if (!searchBox || !searchInput || !searchResults) return;
 
-  // Mapeia componentes para busca: { tag, title, group }
-  const searchableItems = components.map((c) => ({
-    tag: c.tag,
-    title: c.title,
-    group: c.group,
-  }));
+  // Mapeia componentes E páginas do guia para busca: { tag, title, group }.
+  // Guias usam `#/rota`; componentes aparecem como <fx-tag>.
+  const searchableItems = [
+    ...STATIC_NAV_ENTRIES.map((i) => ({
+      tag: i.id,
+      title: i.title,
+      group: i.group,
+      guide: true,
+    })),
+    ...components.map((c) => ({
+      tag: c.tag,
+      title: c.title,
+      group: c.group,
+      guide: false,
+    })),
+  ];
 
   let activeIndex = -1;
 
@@ -848,7 +985,7 @@ function setupSearch(): void {
       .map(
         (item, idx) => `
         <div class="search-result-item" data-tag="${item.tag}" data-index="${idx}">
-          <span class="tag-name">&lt;${item.tag}&gt;</span>
+          <span class="tag-name">${item.guide ? `#/${esc(item.tag)}` : `&lt;${item.tag}&gt;`}</span>
           <span class="component-title">${item.title}</span>
         </div>
       `,
@@ -923,10 +1060,11 @@ function setupHeader(): void {
     currentMode = currentMode === 'dark' ? 'light' : 'dark';
     applyPreset(currentPreset, currentMode);
     syncHeaderControls(currentPreset, currentMode);
-    // Na página de Temas, repinta os swatches: o toggle do header não passa
-    // pelos selects da página (que são quem normalmente chama paint()).
-    if (themingPaint) themingPaint();
   });
+  // Qualquer mudança de token (header, drawer de temas, preset) repinta a
+  // coluna “Valor ativo” da página Tokens de tema — `applyTokens` sempre
+  // dispara `fenix:theme` no window.
+  window.addEventListener('fenix:theme', () => tokensPaint?.());
 }
 
 /* ------------------------------------------------------------------ */
@@ -1053,6 +1191,7 @@ const THEME_DRAWER_TAGS = [
 	"fx-input",
 	"fx-select",
 	"fx-switch",
+	"fx-table",
 ];
 
 async function renderComponentPage(doc: ComponentDoc): Promise<void> {
@@ -1086,7 +1225,8 @@ async function renderComponentPage(doc: ComponentDoc): Promise<void> {
     ${apiTable("Atributos / Propriedades", doc.attributes, COLS_ATTR)}
     ${doc.events?.length ? apiTable("Eventos", doc.events, COLS_EVENT) : ""}
     ${doc.slots?.length ? apiTable("Slots", doc.slots, COLS_SLOT) : ""}
-    ${doc.cssVars?.length ? apiTable("Variáveis CSS", doc.cssVars, COLS_CSSVAR) : ""}
+    ${doc.cssVars?.length ? `${apiTable("Variáveis CSS", doc.cssVars, COLS_CSSVAR)}
+    <p class="hint">Índice de variáveis de <strong>todos</strong> os componentes: <a href="#/component-vars">Variáveis de componente</a>.</p>` : ""}
     ${doc.extraSections?.map((s) => `<h3>${esc(s.title)}</h3>${s.html}`).join("\n    ") ?? ""}
     ${renderTyping(doc)}
   `;
@@ -1390,8 +1530,8 @@ async function renderRoute(): Promise<void> {
 	// Limpa o conteúdo já: evita conteúdo obsoleto durante o carregamento
 	// assíncrono e mantém sidebar e conteúdo sincronizados.
 	main.innerHTML = `<div class="loading-state">Carregando…</div>`;
-	// Reseta callbacks de páginas inativas (ex.: swatches da página de Temas).
-	if (route !== "theming") themingPaint = null;
+	// Reseta callbacks de páginas inativas (ex.: valores ativos de Tokens).
+	if (route !== "tokens") tokensPaint = null;
 	const doc = components.find((c) => c.tag === route);
 	if (doc) {
 		// Import lazy + aguarda o render completo antes de resolver a rota.
@@ -1401,6 +1541,8 @@ async function renderRoute(): Promise<void> {
 	else if (route === "installation") await renderInstallation();
 	else if (route === "typings") renderTypings();
 	else if (route === "theming") await renderTheming();
+	else if (route === "tokens") await renderTokens();
+	else if (route === "component-vars") await renderComponentVars();
 	else if (route === "auto-import") renderAutoImport();
 	else if (route === "icons") renderIcons();
 	else if (route === "forms") await renderForms();
@@ -2229,6 +2371,12 @@ async function openIconCopyModal(icon: string): Promise<void> {
 /* Drawer de customização de tema (header)                             */
 /* ------------------------------------------------------------------ */
 
+/** Lê um controle do drawer; sem o elemento (1º render), devolve o padrão. */
+function readDrawerValue(id: string, fallback: string): string {
+  const el = document.getElementById(id) as (HTMLElement & { value?: string }) | null;
+  return el?.value || fallback;
+}
+
 /** Lê os tokens customizados a partir dos controles do drawer. */
 function readDrawerCustomTokens(): DeepPartial<FenixTokens> {
   const colorInputs = document.querySelectorAll<HTMLInputElement>('input[data-drawer-color]');
@@ -2236,18 +2384,34 @@ function readDrawerCustomTokens(): DeepPartial<FenixTokens> {
   colorInputs.forEach((input) => {
     colors[input.dataset.drawerColor!] = input.value;
   });
-  const radius = (document.getElementById('drawer-radius') as any)?.value ?? '8px';
-  const readSize = (id: string, fallback: string): string =>
-    (document.getElementById(id) as any)?.value || fallback;
+  const radius = readDrawerValue('drawer-radius', '8px');
   const focusRing = document.querySelector('fx-switch#drawer-focus-ring') as any;
   const ripple = document.querySelector('fx-switch#drawer-ripple') as any;
   return {
     color: colors,
     radius: { sm: radius === '9999px' ? '9999px' : `calc(${radius} / 2)`, md: radius, lg: `calc(${radius} * 1.5)` },
     size: {
-      sm: readSize('drawer-size-sm', '32px'),
-      md: readSize('drawer-size-md', '40px'),
-      lg: readSize('drawer-size-lg', '48px'),
+      sm: readDrawerValue('drawer-size-sm', '32px'),
+      md: readDrawerValue('drawer-size-md', '40px'),
+      lg: readDrawerValue('drawer-size-lg', '48px'),
+    },
+    // Texto, tipografia e tabela (fase 2 do customizador).
+    text: {
+      default: readDrawerValue('drawer-text-default', defaultTokens.text.default),
+      muted: readDrawerValue('drawer-text-muted', defaultTokens.text.muted),
+      disabled: readDrawerValue('drawer-text-disabled', defaultTokens.text.disabled),
+    },
+    font: {
+      size: readDrawerValue('drawer-font-size', defaultTokens.font.size),
+      weight: readDrawerValue('drawer-font-weight', defaultTokens.font.weight),
+    },
+    table: {
+      text: readDrawerValue('drawer-table-text', defaultTokens.text.default),
+      'header-text': readDrawerValue('drawer-table-header-text', defaultTokens.text.default),
+      'header-weight': readDrawerValue(
+        'drawer-table-header-weight',
+        defaultTokens.table['header-weight'],
+      ),
     },
     effect: {
       'focus-ring': focusRing && !focusRing.checked
@@ -2348,6 +2512,49 @@ function buildThemeDrawerHtml(): string {
               <label><fx-switch id="drawer-ripple" checked>Efeito ripple</fx-switch></label>
             </div>
           </div>
+
+          <h4 class="section-title">Texto</h4>
+          <div class="controls-grid">
+            <div class="control-item"><label>principal<input type="color" id="drawer-text-default" /></label></div>
+            <div class="control-item"><label>secundário<input type="color" id="drawer-text-muted" /></label></div>
+            <div class="control-item"><label>desabilitado<input type="color" id="drawer-text-disabled" /></label></div>
+          </div>
+
+          <h4 class="section-title">Tipografia</h4>
+          <div class="controls-grid">
+            <div class="control-item">
+              <label>Tamanho</label>
+              <fx-select id="drawer-font-size" value="14px">
+                <option value="13px">13px</option>
+                <option value="14px">14px (padrão)</option>
+                <option value="15px">15px</option>
+                <option value="16px">16px</option>
+              </fx-select>
+            </div>
+            <div class="control-item">
+              <label>Peso</label>
+              <fx-select id="drawer-font-weight" value="500">
+                <option value="400">400</option>
+                <option value="500">500 (padrão)</option>
+                <option value="600">600</option>
+              </fx-select>
+            </div>
+          </div>
+
+          <h4 class="section-title">Tabela</h4>
+          <div class="controls-grid">
+            <div class="control-item"><label>Texto do corpo<input type="color" id="drawer-table-text" /></label></div>
+            <div class="control-item"><label>Texto do cabeçalho<input type="color" id="drawer-table-header-text" /></label></div>
+            <div class="control-item">
+              <label>Peso do cabeçalho</label>
+              <fx-select id="drawer-table-header-weight" value="bold">
+                <option value="bold">bold (padrão)</option>
+                <option value="600">600</option>
+                <option value="500">500</option>
+                <option value="400">400</option>
+              </fx-select>
+            </div>
+          </div>
           <div class="preview-section">
             <h4>Preview ao vivo</h4>
             <div class="preview-stage" id="drawer-preview-stage">
@@ -2358,6 +2565,13 @@ function buildThemeDrawerHtml(): string {
               <fx-spinner></fx-spinner>
               <fx-input placeholder="Digite algo…"></fx-input>
               <fx-select><option value="a">Opção A</option><option value="b">Opção B</option></fx-select>
+              <fx-table
+                style="width:100%"
+                data="[{&quot;nome&quot;:&quot;Ana&quot;,&quot;valor&quot;:&quot;R$ 5.200&quot;},{&quot;nome&quot;:&quot;Bruno&quot;,&quot;valor&quot;:&quot;R$ 7.800&quot;}]"
+              >
+                <fx-column field="nome" header="Nome"></fx-column>
+                <fx-column field="valor" header="Valor"></fx-column>
+              </fx-table>
             </div>
           </div>
         </div>
@@ -2385,8 +2599,13 @@ function buildThemeDrawerHtml(): string {
   `;
 }
 
-/** Inicializa controles do drawer e liga eventos. */
+/** Inicializa controles do drawer e liga eventos (uma única vez). */
+let drawerControlsReady = false;
 function initDrawerControls(): void {
+  // `setupThemeDrawer` chama isto a cada abertura; sem o guard os pickers
+  // voltariam aos padrões e os listeners seriam duplicados.
+  if (drawerControlsReady) return;
+  drawerControlsReady = true;
   document.querySelectorAll<HTMLInputElement>('input[data-drawer-color]').forEach((input) => {
     input.value = DEFAULT_CUSTOM_COLORS[input.dataset.drawerColor!];
     input.addEventListener('input', () => {
@@ -2401,6 +2620,30 @@ function initDrawerControls(): void {
     });
   }
   for (const id of ['drawer-focus-ring', 'drawer-ripple']) {
+    document.getElementById(id)?.addEventListener('change', () => {
+      refreshDrawerPreview();
+      updateDrawerPresetJson();
+    });
+  }
+  // Fase 2: texto, tipografia e tabela. Os color inputs começam com os
+  // valores do tema claro (não há "hex resolvido" para var(--fx-*)).
+  const tokenColors: Record<string, string> = {
+    'drawer-text-default': defaultTokens.text.default,
+    'drawer-text-muted': defaultTokens.text.muted,
+    'drawer-text-disabled': defaultTokens.text.disabled,
+    'drawer-table-text': defaultTokens.text.default,
+    'drawer-table-header-text': defaultTokens.text.default,
+  };
+  for (const [id, value] of Object.entries(tokenColors)) {
+    const input = document.getElementById(id) as HTMLInputElement | null;
+    if (!input) continue;
+    input.value = value;
+    input.addEventListener('input', () => {
+      refreshDrawerPreview();
+      updateDrawerPresetJson();
+    });
+  }
+  for (const id of ['drawer-font-size', 'drawer-font-weight', 'drawer-table-header-weight']) {
     document.getElementById(id)?.addEventListener('change', () => {
       refreshDrawerPreview();
       updateDrawerPresetJson();

@@ -105,8 +105,68 @@ describe('<fx-floatlabel>', () => {
     return new Promise<void>((resolve) => {
       setTimeout(() => {
         expect(el.hasAttribute('active')).toBe(true);
+        // Dropdown aberto também destaca a label (focus), mesmo sem foco
+        // dentro do host (ex.: aberto por código).
+        expect(el.hasAttribute('focus')).toBe(true);
         resolve();
       }, 10);
     });
+  });
+
+  it('aplica focus só com foco real e mantém active quando há valor', async () => {
+    const el = mount(`
+      <fx-floatlabel>
+        <fx-input id="nome" value="Wesley"></fx-input>
+        <label for="nome">Nome</label>
+      </fx-floatlabel>
+    `);
+    const input = el.querySelector('fx-input') as HTMLElement;
+    const inner = input.shadowRoot!.querySelector('input') as HTMLElement;
+
+    // Valor sem foco: label levantada (active) e neutra (sem focus).
+    expect(el.hasAttribute('active')).toBe(true);
+    expect(el.hasAttribute('focus')).toBe(false);
+
+    // jsdom não implementa delegatesFocus: foca o controle interno direto
+    // (no browser, clicar/focar o fx-input chega ao mesmo input).
+    inner.focus();
+    expect(el.hasAttribute('focus')).toBe(true);
+
+    inner.blur();
+    // O focusout reavalia no próximo tick (activeElement já fora do campo).
+    await new Promise((r) => setTimeout(r, 0));
+    expect(el.hasAttribute('focus')).toBe(false);
+    expect(el.hasAttribute('active')).toBe(true);
+  });
+
+  it('pinta a label por --_flabel-color, alimentada por focus/error/success', () => {
+    const el = mount(`
+      <fx-floatlabel variant="in">
+        <fx-input id="nome"></fx-input>
+        <label for="nome">Nome</label>
+      </fx-floatlabel>
+    `);
+    const styles = (el.constructor as any).styles as string;
+
+    // Cor única para a label.
+    expect(styles).toMatch(
+      /\.flabel\s*\{[^}]*color:\s*var\(--_flabel-color\)/,
+    );
+    // Foco define a primária na variável (e não por [active]).
+    expect(styles).toMatch(
+      /:host\(\[focus\]\)\s*\{\s*--_flabel-color:\s*var\(--fx-color-primary/,
+    );
+    expect(styles).not.toMatch(/:host\(\[active\]\)\s+\.flabel\s*\{/);
+    // variant="in" + active não fixa color: uma declaração direta nesse
+    // seletor (variant+active) venceria :host([error]) e :host([focus]).
+    const variantInActive =
+      /:host\(\[variant="in"\]\[active\]\)\s*\.flabel\s*\{([^}]*)\}/.exec(
+        styles,
+      )?.[1] ?? '';
+    expect(variantInActive).not.toMatch(/(^|[^-])color\s*:/);
+    // Erro/sucesso vêm depois do foco: a validação vence pela ordem.
+    expect(styles.indexOf(':host([error])')).toBeGreaterThan(
+      styles.indexOf(':host([focus])'),
+    );
   });
 });

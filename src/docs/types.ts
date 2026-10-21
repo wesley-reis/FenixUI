@@ -4,6 +4,8 @@ export interface ApiRow {
   type?: string;
   default?: string;
   desc: string;
+  /** Exemplo curto de uso (renderizado em <code> na coluna “Exemplo”). */
+  example?: string;
 }
 
 /** Controle do playground ao vivo. */

@@ -70,8 +70,9 @@ export class FxFloatlabel extends FxElement {
 	set errorText(value: string | null | undefined) {
 		this.setAttribute("error-text", value == null ? "" : String(value));
 	}
-	// 'active' NÃO entra em observedAttributes: togglá-lo apenas atualiza CSS
-	// via :host([active]), sem re-render destrutivo (mantém o foco do campo).
+	// 'active' e 'focus' NÃO entram em observedAttributes: togglá-los apenas
+	// atualiza CSS via :host([...]), sem re-render destrutivo (mantém o foco
+	// do campo). 'active' levanta a label; 'focus' é o que a destaca.
 
 	static override styles = css`
 		:host {
@@ -80,6 +81,10 @@ export class FxFloatlabel extends FxElement {
 			font-family: var(--fx-font-family);
 			font-size: var(--fx-font-size);
 			vertical-align: middle;
+			/* Cor da label em UM único lugar. active (valor OU foco OU
+			   dropdown) só posiciona; focus (foco OU dropdown) só destaca —
+			   assim a label acompanha a borda, que só fica primária em foco. */
+			--_flabel-color: var(--fx-text-muted, #94a3b8);
 		}
 		/* Full width: o host estica até o pai; o controle interno com
 		   atributo full (ou largura herdada) acompanha. */
@@ -111,7 +116,7 @@ export class FxFloatlabel extends FxElement {
 			transform: translateY(-50%);
 			font-size: calc(var(--fx-font-size, 14px) - 3px);
 			font-weight: 600;
-			color: var(--fx-text-muted, #94a3b8);
+			color: var(--_flabel-color);
 			background-color: var(--fx-surface-background, #fff);
 			padding: 0 4px;
 			line-height: 1;
@@ -129,8 +134,11 @@ export class FxFloatlabel extends FxElement {
 				color var(--fx-motion-duration-normal, 180ms)
 					var(--fx-motion-easing, ease-in-out);
 		}
-		:host([active]) .flabel {
-			color: var(--fx-color-primary, #4f46e5);
+		/* Destacada = foco (ou dropdown aberto). NÃO usar [active]: ele
+		   também é verdadeiro com valor e sem foco — era o que deixava a
+		   label primária com a borda neutra. */
+		:host([focus]) {
+			--_flabel-color: var(--fx-color-primary, #4f46e5);
 		}
 
 		/* ---- variant="in": label como placeholder dentro, sobe ao focar/valor ---- */
@@ -149,7 +157,8 @@ export class FxFloatlabel extends FxElement {
 			font-weight: 600;
 			background-color: var(--fx-surface-background, #fff);
 			padding: 0 5px;
-			color: var(--fx-color-primary, #4f46e5);
+			/* Sem color aqui: a especificidade desta regra
+			   (variant + active) venceria :host([error])/:host([focus]). */
 		}
 
 		/* ---- variant="in" com ícone dentro do campo (fx-input icon):
@@ -180,16 +189,22 @@ export class FxFloatlabel extends FxElement {
 			font-size: calc(var(--fx-font-size, 14px) - 3px);
 			font-weight: 600;
 			white-space: normal;
+			/* Fora do campo, a label pode receber clique: o listener do
+			   render() foca o controle (nas variantes on/in o
+			   pointer-events: none é intencional, para não bloquear a borda). */
+			pointer-events: auto;
 		}
 
-		/* ---- estados de erro / sucesso ---- */
-		:host([error]) .flabel,
-		:host([invalid]) .flabel {
-			color: var(--fx-color-danger, #dc2626);
+		/* ---- estados de erro / sucesso ----
+		   Declarados DEPOIS de :host([focus]) e com a mesma especificidade:
+		   a validação vence o foco pela ordem, sem depender de acidente. */
+		:host([error]),
+		:host([invalid]) {
+			--_flabel-color: var(--fx-color-danger, #dc2626);
 		}
-		:host([success]) .flabel,
-		:host([valid]) .flabel {
-			color: var(--fx-color-success, #10b981);
+		:host([success]),
+		:host([valid]) {
+			--_flabel-color: var(--fx-color-success, #10b981);
 		}
 
 		/* ---- mensagem de erro sob o campo (fonte menor) ---- */
@@ -215,6 +230,8 @@ export class FxFloatlabel extends FxElement {
 	private _labelClickBound = false;
 	/** Observa o light DOM para readotar uma <label> recriada pelo framework. */
 	private _labelObserver?: MutationObserver;
+	/** Timer do `focusout`: confirma o estado no próximo tick (foco já movido). */
+	private _syncTimer: ReturnType<typeof setTimeout> | undefined;
 
 	protected override connectedCallback(): void {
 		super.connectedCallback();
@@ -278,6 +295,7 @@ export class FxFloatlabel extends FxElement {
 
 	protected override disconnectedCallback(): void {
 		super.disconnectedCallback();
+		this.cancelScheduledSync();
 		this.observer?.disconnect();
 		this._labelObserver?.disconnect();
 		this._labelObserver = undefined;
@@ -317,12 +335,31 @@ export class FxFloatlabel extends FxElement {
 		if (this.listenersReady) return;
 		this.listenersReady = true;
 
-		this.addEventListener("focusin", () => this.syncState());
-		this.addEventListener("focusout", () =>
-			setTimeout(() => this.syncState(), 60),
-		);
+		this.addEventListener("focusin", () => {
+			// Um foco novo invalida o `focusout` pendente: sem isso o
+			// sync atrasado poderia reaplicar o estado anterior.
+			this.cancelScheduledSync();
+			this.syncState();
+		});
+		this.addEventListener("focusout", () => this.scheduleSync());
 		this.addEventListener("input", () => this.syncState());
 		this.addEventListener("change", () => this.syncState());
+	}
+
+	/** Reavalia o estado no próximo tick (o foco já saiu do campo). */
+	private scheduleSync(): void {
+		this.cancelScheduledSync();
+		this._syncTimer = setTimeout(() => {
+			this._syncTimer = undefined;
+			this.syncState();
+		}, 0);
+	}
+
+	private cancelScheduledSync(): void {
+		if (this._syncTimer !== undefined) {
+			clearTimeout(this._syncTimer);
+			this._syncTimer = undefined;
+		}
 	}
 
 	/** Observa mudanças de atributos do controle (value, open, values...). */
@@ -366,24 +403,28 @@ export class FxFloatlabel extends FxElement {
 		const attrValues = c.getAttribute
 			? (c.getAttribute("values") ?? "").trim()
 			: "";
+		// `open` = dropdown/calendário aberto; `start` = data escolhida em
+		// componentes de range (é VALOR, não "aberto").
+		const isOpen = Boolean(c.hasAttribute?.("open"));
 		const hasValue = Boolean(
 			(typeof c.value === "string" && c.value.trim() !== "") ||
 			(Array.isArray(c.values) && c.values.length > 0) ||
 			attrValue !== "" ||
 			attrValues !== "" ||
-			(c.hasAttribute &&
-				(c.hasAttribute("open") || c.hasAttribute("start"))),
+			(c.hasAttribute && c.hasAttribute("start")),
 		);
 
 		const focused = this.isFocusedInside();
-		if (hasValue || focused) {
-			this.setAttribute("active", "");
-			if (focused) this.setAttribute("focus", "");
-			else this.removeAttribute("focus");
-		} else {
-			this.removeAttribute("active");
-			this.removeAttribute("focus");
-		}
+		// `active` só levanta a label (valor, foco ou dropdown aberto);
+		// `focus` é o que a destaca no CSS — e inclui o dropdown aberto
+		// para o destaque não depender de onde o foco está.
+		const highlighted = focused || isOpen;
+
+		if (hasValue || highlighted) this.setAttribute("active", "");
+		else this.removeAttribute("active");
+
+		if (highlighted) this.setAttribute("focus", "");
+		else this.removeAttribute("focus");
 	}
 
 	/**
