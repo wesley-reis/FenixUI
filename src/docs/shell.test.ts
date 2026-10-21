@@ -56,8 +56,16 @@ describe('shell · sidebar', () => {
 		expect(groups[0].items.map((i) => i.id)).toEqual(
 			GUIDE_ITEMS.map((i) => i.id),
 		);
-		expect(groups.map((g) => g.name)).toEqual(['Guia', 'Ações', 'Formulário']);
-		expect(groups[2].items.map((i) => i.id)).toEqual(['fx-input', 'fx-select']);
+		// "Exemplos" é um grupo estático (não é guia) e vem antes das categorias.
+		expect(groups.map((g) => g.name)).toEqual(['Guia', 'Exemplos', 'Ações', 'Formulário']);
+		const formGroup = groups.find((g) => g.name === 'Formulário')!;
+		expect(formGroup.items.map((i) => i.id)).toEqual(['fx-input', 'fx-select']);
+	});
+
+	it('Formulários não é guia: fica em "Exemplos"', () => {
+		expect(GUIDE_ITEMS.map((i) => i.id)).not.toContain('forms');
+		const examples = buildSidebarGroups([]).find((g) => g.name === 'Exemplos')!;
+		expect(examples.items.map((i) => i.id)).toContain('forms');
 	});
 
 	it('renderiza grupos em <details> abertos com todos os links no DOM', () => {
@@ -138,6 +146,15 @@ describe('shell · rota ativa', () => {
 				.querySelector('.doc-nav a[data-nav="guides"]')!
 				.classList.contains('active'),
 		).toBe(true);
+
+		// "Formulários" (grupo Exemplos) realça Componentes e mantém o título.
+		syncRoute('forms', docs);
+		expect(
+			document
+				.querySelector('.doc-nav a[data-nav="components"]')!
+				.classList.contains('active'),
+		).toBe(true);
+		expect(document.title).toBe('Formulários — FenixUI');
 	});
 
 	it('home mantém o título padrão da documentação', () => {

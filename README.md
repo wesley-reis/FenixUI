@@ -18,7 +18,7 @@ import { FenixUI } from '@wrrdev/fenix-ui';  // API de tema/tokens (índice)
 FenixUI.theme('dark');
 ```
 
-> 📦 npm: [`@wrrdev/fenix-ui`](https://www.npmjs.com/package/@wrrdev/fenix-ui) — **v1.1.17**, acesso público.
+> 📦 npm: [`@wrrdev/fenix-ui`](https://www.npmjs.com/package/@wrrdev/fenix-ui) — **v1.2.0**, acesso público.
 > Subpaths disponíveis: `./theme`, `./tokens`, `./jsx`, `./vue`, `./react`, `./button`, `./badge`, `./spinner`, `./select`, `./input`, `./switch`, `./textarea`, `./editor`, `./checkbox`, `./radio`, `./calendar`, `./datepicker`, `./multiselect`, `./table`, `./floatlabel`, `./dialog`, `./toast`, `./tooltip`, `./tabs`, `./progress`, `./skeleton`, `./alert`, `./drawer`, `./dropdown`, `./icon`, `./icons`, `./pagination`, `./autocomplete`, `./knob`, `./orderlist`, `./picklist`, `./auto-import` e o curinga `./components/*`.
 
 
@@ -65,7 +65,7 @@ Carregue o bundle **UMD** único: ele registra todos os componentes e expõe os 
 <fx-toast></fx-toast>
 
 <!--
-  🔗 Links diretos para CDN (versão 1.1.17):
+  🔗 Links diretos para CDN (versão 1.2.0):
   • https://cdn.jsdelivr.net/npm/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js
   • https://unpkg.com/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js
 -->
@@ -197,12 +197,21 @@ FenixUI.configure({
       // error-ring/success-ring acompanham o focus-ring automaticamente:
       // desligado, a validação error/success mostra só a borda (sem brilho).
     },
+    table: {
+      text: '#0f172a',            // corpo do fx-table (padrão: acompanha text.default)
+      'header-weight': '600',     // cabeçalho mais leve que o bold do navegador
+    },
   },
 });
 ```
 
 Grupos de tokens disponíveis: `color`, `surface`, `text`, `border`, `font`, `space`,
-`radius`, `size`, `shadow`, `motion`, `effect` e `z` (veja `@wrrdev/fenix-ui/tokens`).
+`radius`, `size`, `shadow`, `motion`, `effect`, `table` e `z` (veja `@wrrdev/fenix-ui/tokens`).
+
+> 📖 Referência completa de cada token (valores claro/escuro, o que cada um controla e
+> exemplo de uso): [**Tokens de tema**](https://wesley-reis.github.io/FenixUI/#/tokens).
+> Ajustes finos por componente (`--fx-input-width`, `--fx-table-text-weight`, …):
+> [**Variáveis de componente**](https://wesley-reis.github.io/FenixUI/#/component-vars).
 
 ### Presets prontos (temas padrão)
 

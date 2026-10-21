@@ -44,6 +44,18 @@ describe('applyPreset', () => {
     expect(listPresets().map((p) => p.name)).toContain('mascara-da-morte');
   });
 
+  it('preset pode configurar os tokens da tabela (table.*)', () => {
+    defineCustomPreset('tabela-da-marca', 'Tabela da marca', {
+      table: { text: '#0f172a', 'header-weight': '600' },
+    });
+    applyPreset('tabela-da-marca', 'light');
+    const root = document.documentElement.style;
+    expect(root.getPropertyValue('--fx-table-text')).toBe('#0f172a');
+    expect(root.getPropertyValue('--fx-table-header-weight')).toBe('600');
+    // Chave não informada continua com o padrão do tema base.
+    expect(root.getPropertyValue('--fx-table-header-text')).toBe('var(--fx-table-text)');
+  });
+
   it('preset desconhecido cai no padrão ikki (focus-ring desligado)', () => {
     applyPreset('inexistente', 'light');
     expect(document.documentElement.style.getPropertyValue('--fx-color-primary')).toBe(

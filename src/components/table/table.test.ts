@@ -517,6 +517,41 @@ describe('fx-table — bordas e arredondamento', () => {
   });
 });
 
+/* ---- Texto: cor/peso por token de TABELA (sem tocar em --fx-text-default) ---- */
+
+describe('fx-table — tokens de texto', () => {
+  beforeEach(() => { document.body.innerHTML = ''; });
+
+  it('td e th leem as variáveis, com fallback para os tokens globais', () => {
+    const el = mount(`<fx-table>${COLS}</fx-table>`, ROWS);
+    const style = el.shadowRoot!.querySelector('style')!.textContent!;
+
+    // Corpo: --fx-table-text > --fx-text-default; peso herdado por padrão.
+    expect(style).toMatch(
+      /td\s*\{[^}]*color:\s*var\(--fx-table-text,\s*var\(--fx-text-default\)\)/s,
+    );
+    expect(style).toMatch(
+      /td\s*\{[^}]*font-weight:\s*var\(--fx-table-text-weight,\s*inherit\)/s,
+    );
+
+    // Cabeçalho: --fx-table-header-text > --fx-table-text > --fx-text-default.
+    expect(style).toMatch(
+      /th\s*\{[^}]*color:\s*var\(\s*--fx-table-header-text,\s*var\(--fx-table-text,\s*var\(--fx-text-default\)\)\s*\)/s,
+    );
+    expect(style).toMatch(
+      /th\s*\{[^}]*font-weight:\s*var\(--fx-table-header-weight,\s*bold\)/s,
+    );
+  });
+
+  it('não redefine --fx-text-default: o token é exclusivo da tabela', () => {
+    const el = mount(`<fx-table>${COLS}</fx-table>`, ROWS);
+    const style = el.shadowRoot!.querySelector('style')!.textContent!;
+    const host = style.match(/:host\s*\{[^}]*\}/s)?.[0] ?? '';
+    expect(host).not.toMatch(/--fx-text-default\s*:/);
+    expect(host).not.toMatch(/--fx-table-text\s*:/);
+  });
+});
+
 /* ---- Moldura: a paginação faz parte do contorno da tabela ---- */
 
 describe('fx-table — moldura (borda envolvendo tabela + paginação)', () => {

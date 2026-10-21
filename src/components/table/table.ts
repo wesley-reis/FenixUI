@@ -133,6 +133,13 @@ export class FxTable extends FxElement {
 			border-bottom: 2px solid var(--fx-border-default);
 			white-space: nowrap;
 			user-select: none;
+			/* Cor/peso do cabeçalho por token de TABELA. Sem isso o th herda
+			   --fx-text-default do host e o peso vem do UA (bold). */
+			color: var(
+				--fx-table-header-text,
+				var(--fx-table-text, var(--fx-text-default))
+			);
+			font-weight: var(--fx-table-header-weight, bold);
 		}
 		th.sortable {
 			cursor: pointer;
@@ -177,6 +184,12 @@ export class FxTable extends FxElement {
 		td {
 			padding: var(--fx-space-sm) var(--fx-space-md);
 			border-bottom: 1px solid var(--fx-border-default);
+			/* Texto do corpo: token próprio para não depender de
+			   --fx-text-default (que afeta TODOS os textos do app) e para
+			   não herdar o font-weight do body da página — era isso que
+			   fazia a célula parecer mais clara que o cabeçalho. */
+			color: var(--fx-table-text, var(--fx-text-default));
+			font-weight: var(--fx-table-text-weight, inherit);
 		}
 		tbody tr {
 			cursor: pointer;

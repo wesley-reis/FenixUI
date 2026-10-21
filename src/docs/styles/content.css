@@ -66,6 +66,15 @@
   font-size: .85rem;
   color: var(--fx-text-muted);
 }
+/* Títulos de seção do customizador (Texto / Tipografia / Tabela). */
+.theme-drawer-body .section-title {
+  margin: var(--fx-space-md) 0 var(--fx-space-xs);
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--fx-text-muted);
+}
 .theme-drawer-body .preview-stage {
   display: flex;
   flex-wrap: wrap;
@@ -169,6 +178,15 @@ code.inline { background: var(--fx-surface-surface-hover, var(--fx-surface-backg
     repeating-conic-gradient(color-mix(in srgb, var(--fx-border-default) 30%, transparent) 0% 25%, transparent 0% 50%)
     0 0 / 18px 18px;
 }
+/* Tabelas de exemplo: o td herdava o font-weight do body da doc (400) e
+   parecia mais claro que no app, onde o texto costuma ser 500. A tabela é
+   um componente fechado — o peso deve vir do design system, não da página.
+   O consumidor tem o mesmo controle por token:
+   fx-table { --fx-table-text-weight: var(--fx-font-weight); } */
+.example-stage fx-table,
+.demo-stage fx-table {
+  --fx-table-text-weight: var(--fx-font-weight);
+}
 /* O palco é flex: um título/parágrafo no nível de topo do bloco precisa de
    linha própria (sem isso o h4 fica AO LADO dos campos, espremido). */
 .example-stage > h3,
@@ -238,6 +256,15 @@ table.api { width: 100%; border-collapse: collapse; font-size: .87rem; margin-bo
 table.api th, table.api td { text-align: left; padding: .55rem .75rem; border-bottom: 1px solid var(--fx-border-default); vertical-align: top; }
 table.api th { color: var(--fx-text-muted); font-weight: 600; font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; }
 table.api td:first-child code.inline { white-space: nowrap; }
+/* Referência de tokens: nomes/valores longos podem quebrar em vez de esticar
+   a tabela (sombras, font-family e os caminhos grupo.chave). */
+table.api.token-ref td,
+table.api.token-ref th { vertical-align: top; }
+table.api.token-ref td:first-child code.inline { white-space: normal; }
+table.api.token-ref td code.inline { overflow-wrap: anywhere; }
+table.api.token-live td code.inline { overflow-wrap: anywhere; }
+/* Contador discreto ao lado da descrição do grupo (ex.: 6 tokens). */
+main .counter { color: var(--fx-text-muted); font-size: .78em; font-weight: 600; margin-left: .35rem; }
 table.api .type { color: var(--fx-color-info); font-family: ui-monospace, Consolas, monospace; font-size: .8rem; }
 table.api .default { color: var(--fx-text-muted); }
 
