@@ -12,6 +12,13 @@ import { esc } from '../../core/sanitize';
  *
  * Atributos: value, name, size (sm|md|lg), placeholder, disabled, readonly,
  * rows, maxlength, autofocus.
+ *
+ * Autofill: o <textarea> real vive no Shadow DOM, então `autocomplete` é
+ * repassado ao campo interno (default `off`, como no <fx-input>) e o atributo
+ * declarado no host vence. `name`/`id` também descem ao campo interno. O Chrome
+ * IGNORA `off` em type="password" — irrelevante aqui, mas a regra vale para o
+ * <fx-input>.
+ *
  * Eventos: `input`, `change` e `valueChange` (composed, detail: { value }) —
  * `input` aciona o v-model do Vue e `valueChange` o [(value)] do Angular.
  */
@@ -80,7 +87,9 @@ export class FxTextarea extends FxFormElement {
   `;
 
   static override get observedAttributes(): string[] {
-    return ['size', 'placeholder', 'disabled', 'readonly', 'full', 'rows', 'maxlength', 'error', 'invalid', 'success', 'valid'];
+    return ['size', 'placeholder', 'disabled', 'readonly', 'full', 'rows', 'maxlength', 'error', 'invalid', 'success', 'valid',
+      // Autofill: vivem no campo interno (ver o JSDoc da classe).
+      'autocomplete', 'name', 'id'];
   }
 
   get size(): string {
@@ -118,8 +127,15 @@ export class FxTextarea extends FxFormElement {
     const disabled = this.hasAttr('disabled');
     const rows = this.getAttr('rows');
     const maxlength = this.getAttr('maxlength');
+    // Autofill: o <textarea> interno é o alvo do navegador — o atributo do HOST
+    // é repassado; sem ele, `off` (ver o JSDoc da classe).
+    const autocomplete = this.getAttr('autocomplete', 'off');
+    const name = this.getAttr('name');
+    const id = this.getAttr('id');
 
     this.setTemplate(`<textarea class="field" part="textarea"
+      ${name ? `name="${esc(name)}"` : ''} ${id ? `id="${esc(id)}"` : ''}
+      autocomplete="${esc(autocomplete)}"
       ${placeholder ? `placeholder="${esc(placeholder)}"` : ''}
       ${rows ? `rows="${esc(rows)}"` : ''}
       ${maxlength ? `maxlength="${esc(maxlength)}"` : ''}

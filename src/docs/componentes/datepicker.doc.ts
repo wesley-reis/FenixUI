@@ -4,7 +4,7 @@
  * Gerado a partir do split de src/docs/app.ts — edite aqui os metadados.
  */
 import type { ComponentDoc } from '../types';
-import { sizes } from '../shared';
+import { autofillSection, sizes } from '../shared';
 
 export const datepickerDoc: ComponentDoc = {
 	tag: "fx-datepicker",
@@ -12,6 +12,11 @@ export const datepickerDoc: ComponentDoc = {
 	group: "Formulário",
 	lead: "Campo de data com ícone de calendário: o calendário abre em um popover ao clicar no input e a(s) data(s) selecionada(s) aparecem nele. Suporta data simples, múltiplas datas e período, herdando min/max do calendário.",
 	imports: ["import '@wrrdev/fenix-ui/datepicker';"],
+	extraSections: [
+		autofillSection(
+			'O input de exibição (e os campos de hora quando <code>show-time</code> está ligado) vive no Shadow DOM e já sai com <code>autocomplete="off"</code>.'
+		),
+	],
 	demoHtml: (a) => `<fx-datepicker ${a}></fx-datepicker>`,
 	variantsHtml: () =>
 		`<div style="display:flex;flex-direction:column;gap:12px">

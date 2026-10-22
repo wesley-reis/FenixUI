@@ -4,6 +4,7 @@
  * Gerado a partir do split de src/docs/app.ts — edite aqui os metadados.
  */
 import type { ComponentDoc } from '../types';
+import { autofillSection } from '../shared';
 
 export const autocompleteDoc: ComponentDoc = {
 	tag: "fx-autocomplete",
@@ -11,6 +12,11 @@ export const autocompleteDoc: ComponentDoc = {
 	group: "Formulário",
 	lead: "Campo de busca com sugestões filtradas conforme digitação (source local).",
 	imports: ["import '@wrrdev/fenix-ui/autocomplete';"],
+	extraSections: [
+		autofillSection(
+			'O campo interno é <b>sempre</b> <code>autocomplete="off"</code> — regra fixa do componente (não há atributo para alterar). É por isso que este é o componente seguro para busca de nomes/usuários.'
+		),
+	],
 	demoHtml: (a) =>
 		`<fx-autocomplete ${a} source='["Brasil","Argentina","Chile","Colômbia","Peru","Uruguai"]' placeholder="Digite um país..."></fx-autocomplete>`,
 	controls: [

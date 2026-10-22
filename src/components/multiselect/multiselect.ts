@@ -473,7 +473,7 @@ export class FxMultiselect extends FxFormElement {
           <span class="count">${chips.length} selecionado${chips.length === 1 ? '' : 's'}</span>
           ${this.hasAttr('clearable') && chips.length ? '<button type="button" class="clear-all">Limpar tudo</button>' : ''}
         </div>
-        ${this.hasAttr('searchable') ? `<input class="search" part="search" type="text" placeholder="${esc(this.getAttr('search-placeholder', 'Pesquisar…'))}">` : ''}
+        ${this.hasAttr('searchable') ? `<input class="search" part="search" type="text" autocomplete="off" placeholder="${esc(this.getAttr('search-placeholder', 'Pesquisar…'))}">` : ''}
         <ul class="list">
           ${filtered.map((o) => `
             <li><button type="button" class="opt" role="option" data-value="${esc(o.value)}"

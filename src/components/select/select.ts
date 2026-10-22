@@ -539,7 +539,7 @@ export class FxSelect extends FxFormElement {
         </span>
       </span>
       <div class="panel" part="panel" role="listbox">
-        ${this.hasAttr('searchable') ? `<input class="search" part="search" type="text" placeholder="${esc(this.getAttr('search-placeholder', 'Pesquisar…'))}">` : ''}
+        ${this.hasAttr('searchable') ? `<input class="search" part="search" type="text" autocomplete="off" placeholder="${esc(this.getAttr('search-placeholder', 'Pesquisar…'))}">` : ''}
         ${filtered.map((o) => `
           <button type="button" class="opt" role="option" data-value="${esc(o.value)}"
             aria-selected="${o.value === current}">${esc(o.label)}</button>`).join('')}

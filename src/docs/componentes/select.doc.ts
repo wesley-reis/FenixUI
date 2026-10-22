@@ -4,7 +4,7 @@
  * Gerado a partir do split de src/docs/app.ts — edite aqui os metadados.
  */
 import type { ComponentDoc } from '../types';
-import { sizes } from '../shared';
+import { autofillSection, sizes } from '../shared';
 
 export const selectDoc: ComponentDoc = {
 	tag: "fx-select",
@@ -12,6 +12,11 @@ export const selectDoc: ComponentDoc = {
 	group: "Formulário",
 	lead: "Dropdown customizado com hover/seleção na cor do tema, busca e limpeza. Escreva <option> nativos como filhos — são espelhados automaticamente.",
 	imports: ["import '@wrrdev/fenix-ui/select';"],
+	extraSections: [
+		autofillSection(
+			'O campo de busca do <code>searchable</code> vive no Shadow DOM e já sai com <code>autocomplete="off"</code>.'
+		),
+	],
 	demoHtml: (a) =>
 		`<fx-select ${a}>\n  <option value="sp">São Paulo</option>\n  <option value="rj">Rio de Janeiro</option>\n  <option value="mg">Minas Gerais</option>\n  <option value="ba">Bahia</option>\n  <option value="pr">Paraná</option>\n</fx-select>`,
 	variantsHtml: () =>
