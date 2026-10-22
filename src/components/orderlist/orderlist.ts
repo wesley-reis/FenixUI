@@ -406,7 +406,7 @@ export class FxOrderList extends FxElement {
       <div class="container" part="container">
         ${this.filter ? `
           <div class="filter-wrapper" part="filter-wrapper">
-            <input type="text" class="filter-input" part="filter-input"
+            <input type="text" class="filter-input" part="filter-input" autocomplete="off"
               placeholder="${this.filterPlaceholder}"
               value="${esc(this._filterValue)}"
               aria-label="Filtrar lista" />

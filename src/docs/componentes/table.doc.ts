@@ -4,6 +4,7 @@
  * Gerado a partir do split de src/docs/app.ts — edite aqui os metadados.
  */
 import type { ComponentDoc } from '../types';
+import { autofillSection } from '../shared';
 import { FX_CELL_FRAMEWORK_SECTIONS } from './table-cell-rules';
 
 export const tableDoc: ComponentDoc = {
@@ -351,5 +352,10 @@ export const tableDoc: ComponentDoc = {
 			desc: "Toolbar opcional renderizada acima do header (substitui <template slot=\"toolbar\">). O conteúdo do <fx-toolbar> é projetado via slot: listeners do Vue/React (@click, v-model) e estilos do documento são preservados. Inputs com data-search-fields=\"campo1,campo2…\" viram busca global (filtrando por esses campos; sem o atributo, busca em todas as colunas). Demais elementos (botões etc.) aparecem como estão.",
 		},
 	],
-	extraSections: FX_CELL_FRAMEWORK_SECTIONS,
+	extraSections: [
+		autofillSection(
+			'Os inputs da linha de filtros (<code>&lt;fx-column filterable&gt;</code>) vivem no Shadow DOM e já saem com <code>autocomplete="off"</code>. Atenção: os inputs que VOCÊ coloca dentro de <code>&lt;fx-toolbar&gt;</code> ficam no light DOM (são projetados por <code>&lt;slot&gt;</code>) — declare <code>autocomplete="off"</code> neles.'
+		),
+		...FX_CELL_FRAMEWORK_SECTIONS,
+	],
 };

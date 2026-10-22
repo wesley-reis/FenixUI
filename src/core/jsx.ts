@@ -90,6 +90,14 @@ export interface FxInputProps extends FxElementProps {
   size?: FxSize;
   placeholder?: string;
   readonly?: boolean;
+  /**
+   * Repassado ao `<input>` interno (default `'off'`): o campo real vive no
+   * Shadow DOM, então sem este atributo o navegador autopreenche o campo com
+   * credenciais salvas. Use os tokens semânticos quando o autofill for
+   * desejado: `'username'`, `'current-password'`, `'new-password'`,
+   * `'one-time-code'`, `'email'`, `'street-address'`, …
+   */
+  autocomplete?: string;
   min?: string | number;
   max?: string | number;
   step?: string | number;
@@ -136,6 +144,8 @@ export interface FxTextareaProps extends FxElementProps {
   readonly?: boolean;
   rows?: number;
   maxlength?: number;
+  /** Repassado ao `<textarea>` interno (default `'off'`) — mesma regra do fx-input. */
+  autocomplete?: string;
   full?: boolean;
   error?: boolean;
   invalid?: boolean;

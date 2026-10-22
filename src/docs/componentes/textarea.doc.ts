@@ -4,6 +4,7 @@
  * Gerado a partir do split de src/docs/app.ts — edite aqui os metadados.
  */
 import type { ComponentDoc } from '../types';
+import { autofillSection } from '../shared';
 
 export const textareaDoc: ComponentDoc = {
 	tag: "fx-textarea",
@@ -11,6 +12,11 @@ export const textareaDoc: ComponentDoc = {
 	group: "Formulário",
 	lead: "Campo de texto multilinha com validação visual e tamanhos padronizados. Form-associated: com name entra no FormData de um <form> (Enter segue sendo quebra de linha, como o nativo).",
 	imports: ["import '@wrrdev/fenix-ui/textarea';"],
+	extraSections: [
+		autofillSection(
+			'O <code>&lt;textarea&gt;</code> interno recebe <code>autocomplete</code> (default <code>off</code>), <code>name</code> e <code>id</code> do host. Declare o atributo no <code>&lt;fx-textarea&gt;</code> quando o autofill for desejado (ex.: <code>autocomplete="street-address"</code>); o valor do host sempre vence o default.'
+		),
+	],
 	demoHtml: (a) =>
 		`<fx-textarea ${a} placeholder="Descreva sua necessidade..."></fx-textarea>`,
 	variantsHtml: () =>
@@ -41,7 +47,13 @@ export const textareaDoc: ComponentDoc = {
 			name: "name",
 			type: "string",
 			default: "''",
-			desc: "Nome do campo no FormData quando dentro de um <form> (form-associated).",
+			desc: "Nome do campo no FormData quando dentro de um <form> (form-associated). Também é repassado ao textarea interno (ajuda o navegador a classificar o campo).",
+		},
+		{
+			name: "autocomplete",
+			type: "string",
+			default: "'off'",
+			desc: "Repassado ao textarea INTERNO (é ele que o navegador enxerga): controla o autofill e o gerenciador de senhas. Default 'off'; o atributo declarado no host vence. Ex.: 'street-address', 'off'. Ver a seção Autofill abaixo.",
 		},
 		{
 			name: "autofocus",
