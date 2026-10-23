@@ -12,6 +12,8 @@
  *   fx-tooltip-html      — Se presente, trata o conteúdo como HTML
  */
 
+import { isDomAvailable } from '../../core/dom';
+
 export interface FxTooltipConfig {
   position: 'top' | 'bottom' | 'left' | 'right';
   html: boolean;
@@ -179,13 +181,24 @@ class FxTooltipManager {
       if (this._flushScheduled) return;
       this._flushScheduled = true;
       const run = () => {
+        this._flushHandle = null;
         this._flushScheduled = false;
         const batch = this._pending;
         this._pending = { added: [] };
+        // O lote pode disparar DEPOIS do ambiente morrer (teardown do jsdom ao
+        // fim de cada arquivo de teste, SSR). Sem DOM não há o que processar —
+        // e tocar `HTMLElement` aqui vira um erro NÃO TRATADO que derruba a
+        // suíte mesmo com todos os testes verdes.
+        if (this.observer === null || !isDomAvailable()) return;
         this._flush(batch.added);
       };
-      if (typeof requestAnimationFrame === 'function') requestAnimationFrame(run);
-      else setTimeout(run, 0);
+      if (typeof requestAnimationFrame === 'function') {
+        this._flushViaRaf = true;
+        this._flushHandle = requestAnimationFrame(run);
+      } else {
+        this._flushViaRaf = false;
+        this._flushHandle = setTimeout(run, 0);
+      }
     });
     this.observer.observe(document.body, {
       childList: true,
@@ -199,9 +212,30 @@ class FxTooltipManager {
 
   private _pending: { added: MutationRecord[] } = { added: [] };
   private _flushScheduled = false;
+  /** Handle do flush agendado (id de `requestAnimationFrame` ou timer). */
+  private _flushHandle: number | ReturnType<typeof setTimeout> | null = null;
+  /** `true` quando o handle acima veio de `requestAnimationFrame`. */
+  private _flushViaRaf = false;
+
+  /** Cancela o flush agendado — um flush pós-destroy recriaria comportamentos. */
+  private _cancelFlush(): void {
+    const handle = this._flushHandle;
+    this._flushHandle = null;
+    if (handle === null) return;
+    // Os canceladores são globais: depois do teardown do ambiente podem não
+    // existir mais (e um handle pendente de um ambiente morto não faz nada).
+    if (this._flushViaRaf) {
+      if (typeof cancelAnimationFrame === 'function') cancelAnimationFrame(handle as number);
+    } else {
+      clearTimeout(handle as ReturnType<typeof setTimeout>);
+    }
+  }
 
   /** Um passe de verificação sobre todos os registros acumulados. */
   private _flush(records: MutationRecord[]): void {
+    // Defesa extra: qualquer caminho que chegue aqui com o ambiente já
+    // desmontado sai antes de tocar construtores do browser.
+    if (!isDomAvailable()) return;
     // Sets evitam processar o mesmo elemento várias vezes quando ele aparece
     // em mais de um registro (comum com inserções aninhadas).
     const toProcess = new Set<HTMLElement>();
@@ -268,6 +302,7 @@ class FxTooltipManager {
     // comportamentos em elementos já desmontados.
     this._pending.added = [];
     this._flushScheduled = false;
+    this._cancelFlush();
     if (this.observer) {
       this.observer.disconnect();
       this.observer = null;

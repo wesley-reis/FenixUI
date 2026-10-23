@@ -27,6 +27,16 @@ Histórico anterior à 1.2.0: [releases do GitHub](https://github.com/wesley-rei
   “Autofill do navegador × v-model” do README.
 - `fx-input`/`fx-textarea`: o `change` sintetizado pelo autofill é absorvido
   junto do `input` (o `change` do blur após digitação continua saindo).
+- **Callbacks diferidos disparando após o teardown do ambiente** (erro que
+  derrubava a esteira com todos os testes verdes): o flush agendado pelo
+  `MutationObserver` da diretiva `fx-tooltip` rodava depois de o jsdom ser
+  desmontado e explodia com `ReferenceError: HTMLElement is not defined` —
+  reportado como "Unhandled Errors" e exit code 1. Os callbacks diferidos de
+  `fx-tooltip`, `fx-carousel`, `fx-editor`, `fx-toast`, `fx-dialog` e
+  `fx-drawer` agora checam `isDomAvailable()` (`src/core/dom.ts`) antes de
+  tocar o DOM, e o flush do tooltip é cancelado no `destroy()`. Cobertura nova:
+  `src/components/teardown-safety.test.ts` (globais do DOM zerados + timers
+  pendentes drenados — falha determinística, sem depender de timing).
 
 > **Complementa a v1.3.0** (que passou a repassar `autocomplete`/`name`/`id` ao
 > campo interno, com `off` como default): mesmo declarando os tokens semânticos

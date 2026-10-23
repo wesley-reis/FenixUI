@@ -13,6 +13,7 @@ import { fenixComponentMap } from '../plugins/auto-import';
 import { applyPreset, listPresets, defineCustomPreset, type FenixPreset } from '../core/presets';
 import { FenixUI } from '../core/theme';
 import { defaultTokens, type DeepPartial, type FenixTokens } from '../core/tokens';
+import { isDomAvailable } from '../core/dom';
 import { componentDocs, componentLoaders } from './componentes';
 import { FENIX_ICON_NAMES } from '../icons';
 export { componentLoaders };
@@ -2606,6 +2607,9 @@ function buildThemeDrawerHtml(): string {
 /** Inicializa controles do drawer e liga eventos (uma única vez). */
 let drawerControlsReady = false;
 function initDrawerControls(): void {
+  // Chamado por um `setTimeout(…, 60)`: pode disparar depois do teardown do
+  // ambiente (testes), quando `document` já não existe.
+  if (!isDomAvailable()) return;
   // `setupThemeDrawer` chama isto a cada abertura; sem o guard os pickers
   // voltariam aos padrões e os listeners seriam duplicados.
   if (drawerControlsReady) return;
