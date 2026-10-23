@@ -1,6 +1,7 @@
 ﻿import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
+import { isDomAvailable } from '../../core/dom';
 import { esc } from '../../core/sanitize';
 import {
   firstLightFocusable,
@@ -171,7 +172,8 @@ export class FxDialog extends FxElement {
 
     if (!alreadyOpen) {
       requestAnimationFrame(() => {
-        if (!this.open) return;
+        // Pode disparar após o teardown do ambiente (testes): `document` some.
+        if (!isDomAvailable() || !this.open) return;
         this._previouslyFocused = document.activeElement as HTMLElement | null;
         // O conteúdo do consumidor (light DOM/slotted) tem prioridade; o painel
         // é apenas fallback quando não há nenhum campo focável no slot.

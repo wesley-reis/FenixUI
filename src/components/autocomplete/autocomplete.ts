@@ -1,4 +1,5 @@
 ﻿import { FxFormElement } from '../../core/form-element';
+import { createUserEditGuard } from '../../core/user-edit';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from '../../core/sanitize';
@@ -10,9 +11,13 @@ import { esc } from '../../core/sanitize';
  * (via atributo `name`) e é alvo de `<label for>`/`autofocus`.
  *
  * Atributos: value, name, size, placeholder, source (JSON array de strings),
- * disabled, min-chars (padrão 1), autofocus.
+ * disabled, min-chars (padrão 1), autofocus, emit-autofill.
  * Eventos: `select`, `input` e `valueChange` (composed, detail: { value }) —
  * `input` aciona o v-model do Vue e `valueChange` o [(value)] do Angular.
+ * `input`/`valueChange` só saem em **edição do usuário**: valor colocado no
+ * campo por autofill do navegador/gerenciador de senha ou por script emite
+ * `autofill` (composed, detail: { value }) e sincroniza `value`/FormData, sem
+ * acionar o v-model (ver core/user-edit.ts).
  */
 export class FxAutocomplete extends FxFormElement {
   static override styles = css`
@@ -197,9 +202,16 @@ export class FxAutocomplete extends FxFormElement {
       this.toggleAttr('open', true);
     };
 
-    // Reabrir com foco sem re-render (evita perder digitação)
-    field.addEventListener('input', () => {
+    // Reabrir com foco sem re-render (evita perder digitação). Valor injetado
+    // (autofill/gerenciador de senha/script) NÃO é interação: sincroniza
+    // `value`/FormData, emite `autofill` e não abre a lista (core/user-edit.ts).
+    const guard = createUserEditGuard(field);
+    field.addEventListener('input', (event) => {
       this.value = field.value;
+      if (!this.isUserValueEvent(event, guard)) {
+        this.dispatchAutofill(field.value);
+        return;
+      }
       this.emitValueEvents();
       openList();
     });

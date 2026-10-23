@@ -456,9 +456,17 @@ describe("docs app", () => {
 
 		// Preencher o campo e salvar novamente limpa o erro; com TODOS os
 		// campos preenchidos o alerta some (vazio em qualquer outro → fica).
-		form.querySelectorAll("fx-input, fx-textarea").forEach((f) => {
-			f.setAttribute("value", "Fenix");
-			f.dispatchEvent(new Event("input"));
+		// Simula DIGITAÇÃO no controle interno: o componente só emite `input`
+		// com prova de edição (beforeinput) — ver core/user-edit.ts.
+		form.querySelectorAll<HTMLElement>("fx-input, fx-textarea").forEach((f) => {
+			const inner = f.shadowRoot!.querySelector<HTMLInputElement | HTMLTextAreaElement>(
+				"input, textarea",
+			)!;
+			inner.dispatchEvent(
+				new InputEvent("beforeinput", { inputType: "insertText", cancelable: true }),
+			);
+			inner.value = "Fenix";
+			inner.dispatchEvent(new InputEvent("input", { inputType: "insertText", bubbles: true }));
 		});
 		form.querySelector("[data-save]")!.dispatchEvent(new Event("click"));
 		expect(input.hasAttribute("error")).toBe(false);

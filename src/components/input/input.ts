@@ -1,4 +1,5 @@
 ﻿import { FxFormElement } from '../../core/form-element';
+import { createUserEditGuard } from '../../core/user-edit';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from '../../core/sanitize';
@@ -60,6 +61,11 @@ function normalizeInputType(value: string): string {
  * Slots: `icon` (ícone customizado no lugar do atributo).
  * Eventos: `input`, `change` e `valueChange` (composed, detail: { value }) —
  * `input` aciona o v-model do Vue e `valueChange` o [(value)] do Angular.
+ * Esses três eventos só saem em **edição do usuário**: valor colocado no
+ * campo por autofill do navegador/gerenciador de senha ou por script emite
+ * `autofill` (composed, detail: { value }) e sincroniza `value`/FormData, sem
+ * acionar o v-model. O atributo `emit-autofill` restaura o comportamento
+ * antigo por campo (ver core/user-edit.ts).
  */
 export class FxInput extends FxFormElement {
   static override styles = css`
@@ -318,14 +324,29 @@ export class FxInput extends FxFormElement {
     if (disabled) field.setAttribute('disabled', '');
     if (readonly) field.setAttribute('readonly', '');
 
-    // Cada interação emite UM `input` (v-model) + `valueChange` (Angular).
-    // O `change` só existe no evento nativo de mudança/limpar.
-    const notifyInput = (): void => {
+    // Cada interação do usuário emite UM `input` (v-model) + `valueChange`
+    // (Angular); o `change` só existe no evento nativo de mudança/limpar.
+    // Valor injetado (autofill/gerenciador de senha/script) NÃO é interação:
+    // sincroniza `value`/FormData e emite `autofill` (core/user-edit.ts).
+    const guard = createUserEditGuard(field);
+    // `change` do autofill (o navegador dispara input+change ao preencher)
+    // é absorvido junto do `input`; o `change` do blur após digitação
+    // continua saindo normalmente (não há beforeinput novo ali).
+    let autofilled = false;
+    const notifyInput = (event: Event): void => {
       this.value = field.value;
-      this.emitValueEvents();
+      autofilled = !this.isUserValueEvent(event, guard);
+      if (!autofilled) {
+        this.emitValueEvents();
+        return;
+      }
+      this.dispatchAutofill(field.value);
     };
     const notifyChange = (): void => {
       this.value = field.value;
+      const wasAutofill = autofilled;
+      autofilled = false;
+      if (wasAutofill) return;
       this.dispatchEvent(
         new CustomEvent('change', {
           bubbles: true,
@@ -336,7 +357,7 @@ export class FxInput extends FxFormElement {
     };
     // Bloqueia o evento nativo (composed, sem detail) para que só o
     // CustomEvent com detail chegue aos consumidores.
-    field.addEventListener('input', (e) => { e.stopPropagation(); notifyInput(); });
+    field.addEventListener('input', (e) => { e.stopPropagation(); notifyInput(e); });
     field.addEventListener('change', (e) => { e.stopPropagation(); notifyChange(); });
 
     // Enter submete o form: o <input> interno vive no Shadow DOM e NÃO se
@@ -360,6 +381,9 @@ export class FxInput extends FxFormElement {
     clearBtn?.addEventListener('click', () => {
       field.value = '';
       syncClear();
+      // Ação do usuário: zera o rastro de autofill para o `change` do blur
+      // seguinte não ser absorvido.
+      autofilled = false;
       this.value = '';
       this.emitValueEvents();
       this.dispatchEvent(

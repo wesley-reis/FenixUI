@@ -1,6 +1,7 @@
 import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
+import { isDomAvailable } from '../../core/dom';
 import { esc } from '../../core/sanitize';
 import {
   firstLightFocusable,
@@ -197,7 +198,8 @@ export class FxDrawer extends FxElement {
 			}
 			if (!wasOpen) {
 				requestAnimationFrame(() => {
-					if (!this.open) return;
+					// Pode disparar após o teardown do ambiente (testes): `document` some.
+					if (!isDomAvailable() || !this.open) return;
 					this._previouslyFocused = document.activeElement as HTMLElement | null;
 					const first =
 						firstLightFocusable(this) ??

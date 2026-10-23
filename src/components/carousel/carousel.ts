@@ -1,6 +1,7 @@
 import { FxElement } from '../../core/base';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
+import { isDomAvailable } from '../../core/dom';
 
 /**
  * <fx-carousel> — Carrossel de slides com navegação e indicadores.
@@ -176,7 +177,12 @@ export class FxCarousel extends FxElement {
     if (this._timer) { clearInterval(this._timer); this._timer = undefined; }
     const ms = Number(this.getAttr('autoplay', '0'));
     if (ms > 0) {
-      this._timer = setInterval(() => this._go(this.active + 1), ms);
+      this._timer = setInterval(() => {
+        // O intervalo pode disparar depois do ambiente morrer (teardown dos
+        // testes): `_go` emite `CustomEvent` e não pode rodar sem DOM.
+        if (!this.isConnected || !isDomAvailable()) return;
+        this._go(this.active + 1);
+      }, ms);
     }
   }
 

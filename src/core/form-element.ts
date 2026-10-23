@@ -20,6 +20,7 @@
  */
 
 import { FxElement } from './base';
+import type { UserEditGuard } from './user-edit';
 
 export abstract class FxFormElement extends FxElement {
   /** Participa de <form> como campo nativo (FormData, reset, validação, label). */
@@ -133,6 +134,11 @@ export abstract class FxFormElement extends FxElement {
    * Chame quando o valor mudar — junto do evento semântico (`change`,
    * `select`, ...) que o componente já dispara. `detail` opcional complementa
    * o payload (ex.: { start, end } do fx-datepicker).
+   *
+   * Componentes com controle nativo interno (`fx-input`, `fx-textarea`,
+   * `fx-autocomplete`) só chamam este método em **edição do usuário** — valor
+   * injetado por autofill/gerenciador de senha/script usa `dispatchAutofill()`
+   * (ver `core/user-edit.ts`).
    */
   protected emitValueEvents(detail?: Record<string, unknown>): void {
     const value = this.getAttr('value');
@@ -148,6 +154,36 @@ export abstract class FxFormElement extends FxElement {
         new CustomEvent(type, { bubbles: true, composed: true, detail: payload }),
       );
     }
+  }
+
+  /**
+   * `true` quando o evento vindo do controle interno deve virar evento de
+   * valor (`input`/`change`/`valueChange`) — isto é, quando veio de edição do
+   * usuário. O atributo `emit-autofill` restaura o comportamento anterior à
+   * correção (eventos de valor também no autofill) para quem depende do
+   * v-model atualizado pelo navegador.
+   */
+  protected isUserValueEvent(event: Event, guard: UserEditGuard): boolean {
+    return this.hasAttr('emit-autofill') || guard.isUserEdit(event);
+  }
+
+  /**
+   * Notifica valor colocado no controle interno SEM edição do usuário
+   * (autofill do navegador, gerenciador de senha, script).
+   *
+   * `input`/`valueChange`/`change` ficam reservados à interação real: quem
+   * quiser reagir ao autofill escuta `autofill` (composed, `detail: { value }`).
+   * O valor já foi sincronizado em `value` (atributo + FormData) por quem
+   * chama — inclusive o `valueChange` do atributo alimenta o `fx-floatlabel`.
+   */
+  protected dispatchAutofill(value: string): void {
+    this.dispatchEvent(
+      new CustomEvent('autofill', {
+        bubbles: true,
+        composed: true,
+        detail: { value },
+      }),
+    );
   }
 
   /** Sincroniza name/value com o form (ElementInternals). */

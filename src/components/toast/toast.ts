@@ -8,6 +8,8 @@
  * 'always'|'hover'|'paused' — barra de contagem regressiva na cor do kind),
  * progress-origin (left|right — lado pelo qual a barra esvazia; padrão left).
  */
+
+import { isDomAvailable } from '../../core/dom';
 const POSITIONS = [
   "top-left",
   "top-center",
@@ -321,6 +323,9 @@ export class FxToast extends HTMLElement {
     this.startedAt = Date.now();
     this.timer = setTimeout(() => {
       this.timer = null;
+      // O timer pode disparar depois do ambiente morrer (teardown dos testes):
+      // `dismiss()` mexe no shadow e o `disconnectedCallback` emite CustomEvent.
+      if (!isDomAvailable()) return;
       this.dismiss();
     }, ms);
   }
@@ -435,7 +440,10 @@ export class FxToast extends HTMLElement {
     const card = this.shadowRoot!.querySelector(".card");
     if (card) {
       card.classList.add("leaving");
-      setTimeout(() => this.remove(), 200);
+      setTimeout(() => {
+        // Mesmo motivo do timer de duração: pode disparar após o teardown.
+        if (isDomAvailable()) this.remove();
+      }, 200);
     } else {
       this.remove();
     }

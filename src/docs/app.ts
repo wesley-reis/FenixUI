@@ -13,6 +13,7 @@ import { fenixComponentMap } from '../plugins/auto-import';
 import { applyPreset, listPresets, defineCustomPreset, type FenixPreset } from '../core/presets';
 import { FenixUI } from '../core/theme';
 import { defaultTokens, type DeepPartial, type FenixTokens } from '../core/tokens';
+import { isDomAvailable } from '../core/dom';
 import { componentDocs, componentLoaders } from './componentes';
 import { FENIX_ICON_NAMES } from '../icons';
 export { componentLoaders };
@@ -1330,6 +1331,9 @@ function wireFormValidation(root: HTMLElement): void {
 			fields.forEach((f) => {
 				f.addEventListener("input", () => clearError(f));
 				f.addEventListener("change", () => clearError(f));
+				// Autofill (navegador/gerenciador de senha) não emite input/change:
+				// o componente avisa por `autofill` (ver core/user-edit.ts).
+				f.addEventListener("autofill", () => clearError(f));
 			});
 
 			save?.addEventListener("click", () => {
@@ -1505,6 +1509,7 @@ async function renderForms(): Promise<void> {
       }
     </style>
     <div class="note"><strong>Nota:</strong> com <code>full</code> o campo ocupa a linha inteira (host vira block). Para manter um botão na mesma linha do campo, use o container com <code>display:flex</code> — o campo estica e o botão mantém o tamanho. No <code>fx-floatlabel</code>, o <code>full</code> é propagado automaticamente para o controle interno.</div>
+    <div class="note"><strong>Autofill do navegador:</strong> <code>fx-input</code>, <code>fx-textarea</code> e <code>fx-autocomplete</code> só emitem <code>input</code>/<code>change</code>/<code>valueChange</code> em <strong>edição do usuário</strong>. Valor colocado pelo autofill (ou por gerenciador de senha/script) sincroniza o <code>value</code>/<code>FormData</code> e emite <code>autofill</code> — assim o <code>v-model</code> não recebe valores que o usuário não digitou. Ex.: <code>&lt;fx-input name="usuario" @autofill="usuario = $event.detail.value"&gt;</code>. Para o comportamento antigo por campo, use <code>emit-autofill</code>.</div>
     ${formModelCard("Modelo 1 — Cadastro em uma coluna (full)", "Campos full empilhados: cada um ocupa a linha toda do container.", FORM_MODEL_1)}
     ${formModelCard("Modelo 2 — Grid de duas colunas", "Dois campos por linha via CSS grid (grid-template-columns: 1fr 1fr) com full nos campos.", FORM_MODEL_2)}
     ${formModelCard("Modelo 3 — Misto (múltiplos campos por linha)", "Grids com 2-3 campos por linha, selects, multiselect, autocomplete e fileupload full.", FORM_MODEL_3)}
@@ -2602,6 +2607,9 @@ function buildThemeDrawerHtml(): string {
 /** Inicializa controles do drawer e liga eventos (uma única vez). */
 let drawerControlsReady = false;
 function initDrawerControls(): void {
+  // Chamado por um `setTimeout(…, 60)`: pode disparar depois do teardown do
+  // ambiente (testes), quando `document` já não existe.
+  if (!isDomAvailable()) return;
   // `setupThemeDrawer` chama isto a cada abertura; sem o guard os pickers
   // voltariam aos padrões e os listeners seriam duplicados.
   if (drawerControlsReady) return;

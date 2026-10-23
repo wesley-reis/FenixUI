@@ -109,6 +109,13 @@ export interface FxInputProps extends FxElementProps {
   invalid?: boolean;
   success?: boolean;
   valid?: boolean;
+  /**
+   * Restaura o comportamento anterior à correção de autofill: `input`/
+   * `change`/`valueChange` também quando o valor é colocado no campo pelo
+   * navegador (autofill/gerenciador de senha). Sem ele, autofill emite
+   * `autofill` e não aciona o v-model (ver core/user-edit.ts).
+   */
+  'emit-autofill'?: boolean;
 }
 export interface FxSelectProps extends FxElementProps {
   value?: string | number;
@@ -151,6 +158,8 @@ export interface FxTextareaProps extends FxElementProps {
   invalid?: boolean;
   success?: boolean;
   valid?: boolean;
+  /** `input`/`change`/`valueChange` também em autofill (ver core/user-edit.ts). */
+  'emit-autofill'?: boolean;
 }
 export interface FxEditorProps extends FxElementProps {
   value?: string;
@@ -363,6 +372,8 @@ export interface FxAutocompleteProps extends FxElementProps {
   disabled?: boolean;
   'min-chars'?: number;
   full?: boolean;
+  /** `input`/`valueChange` também em autofill (ver core/user-edit.ts). */
+  'emit-autofill'?: boolean;
 }
 export interface FxFileUploadProps extends FxElementProps {
   mode?: 'basic' | 'advanced';

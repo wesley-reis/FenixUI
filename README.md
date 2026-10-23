@@ -18,7 +18,7 @@ import { FenixUI } from '@wrrdev/fenix-ui';  // API de tema/tokens (índice)
 FenixUI.theme('dark');
 ```
 
-> 📦 npm: [`@wrrdev/fenix-ui`](https://www.npmjs.com/package/@wrrdev/fenix-ui) — **v1.3.0**, acesso público.
+> 📦 npm: [`@wrrdev/fenix-ui`](https://www.npmjs.com/package/@wrrdev/fenix-ui) — **v1.4.0**, acesso público.
 > Subpaths disponíveis: `./theme`, `./tokens`, `./jsx`, `./vue`, `./react`, `./button`, `./badge`, `./spinner`, `./select`, `./input`, `./switch`, `./textarea`, `./editor`, `./checkbox`, `./radio`, `./calendar`, `./datepicker`, `./multiselect`, `./table`, `./floatlabel`, `./dialog`, `./toast`, `./tooltip`, `./tabs`, `./progress`, `./skeleton`, `./alert`, `./drawer`, `./dropdown`, `./icon`, `./icons`, `./pagination`, `./autocomplete`, `./knob`, `./orderlist`, `./picklist`, `./auto-import` e o curinga `./components/*`.
 
 
@@ -65,7 +65,7 @@ Carregue o bundle **UMD** único: ele registra todos os componentes e expõe os 
 <fx-toast></fx-toast>
 
 <!--
-  🔗 Links diretos para CDN (versão 1.3.0):
+  🔗 Links diretos para CDN (versão 1.4.0):
   • https://cdn.jsdelivr.net/npm/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js
   • https://unpkg.com/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js
 -->
@@ -434,7 +434,7 @@ enxerga o `<input>`/`<textarea>` interno, nunca o atributo escrito no host. Como
 da spec é `autocomplete="on"`, sem tratamento o Chrome autopreenche campos comuns (busca de
 tabela, filtros, diálogos) com o usuário/senha salvos e ainda oferece “Salvar senha?”.
 
-A partir da **v1.3.0**:
+A partir da **v1.4.0**:
 
 - `fx-input` e `fx-textarea` **repassam** `autocomplete`, `name` e `id` ao campo interno,
   com default **`off`** — o atributo declarado no host vence o default;
@@ -456,9 +456,51 @@ A partir da **v1.3.0**:
 > espelha apenas atributos de apresentação: `full`, `icon`, `icon-pos`, `error`/`success`).
 > Em `fx-table`, os inputs que você coloca dentro de `<fx-toolbar>` ficam no light DOM
 > (projetados por `<slot>`) — marque `autocomplete="off"` neles.
+>
+> Quando o autofill é **desejado** (login com `username`/`current-password`), o valor que o
+> navegador injeta não aciona o v-model sem aviso: o campo emite `autofill` — ver a seção
+> seguinte.
 
 Eventos usam o nativo `click` no botão; `input`, `change` e o `change` do select são
 `CustomEvent`s **composed** com `detail: { value }` (atravessam o Shadow DOM).
+
+### Autofill do navegador × v-model (input/change)
+
+`fx-input`, `fx-textarea` e `fx-autocomplete` só emitem **`input`** (v-model do Vue),
+**`change`** e **`valueChange`** ([(value)] do Angular) em **edição do usuário**
+(teclado, IME, colar, recortar, arrastar, undo/redo). Valor colocado no campo por
+autofill do navegador, gerenciador de senha ou script **não** aciona esses eventos:
+
+- o `value` do componente e o `FormData` (form-associated) **são sincronizados** —
+  o autofill continua funcionando no form e na label do `fx-floatlabel`;
+- é emitido **`autofill`** (`composed`, `detail: { value }`) para quem quiser reagir
+  sem poluir o v-model:
+
+```html
+<fx-input name="usuario" @autofill="usuario = $event.detail.value"></fx-input>
+```
+
+```ts
+// Sem framework: o FormData do <form> já tem o valor autofillado.
+form.addEventListener('submit', (e) => { e.preventDefault(); console.log(new FormData(form)); });
+```
+
+**Por que assim:** a plataforma não tem um sinal interoperável de autofill — a spec
+deixa cada navegador sintetizar os eventos que quiser ([whatwg/html#3016](https://github.com/whatwg/html/issues/3016))
+e Chrome/Safari não disparam `beforeinput` no autofill ([WebKit 217692](https://bugs.webkit.org/show_bug.cgi?id=217692) /
+[Chromium 40673974](https://issues.chromium.org/issues/40673974)), enquanto o Firefox
+marca o autofill com `insertReplacementText` não cancelável. O FenixUI usa uma única
+regra (prova positiva de edição: `beforeinput`) em todos os navegadores — ver
+`src/core/user-edit.ts`.
+
+> **`emit-autofill`**: atributo booleano que restaura o comportamento anterior
+> (`input`/`change`/`valueChange` também no autofill) para quem depende do v-model
+> atualizado pelo navegador.
+>
+> **Atenção em testes/automação:** simular digitação com
+> `el.value = 'x'; el.dispatchEvent(new Event('input'))` **não** emite mais `input`
+> (esse é exatamente o caminho do autofill). Dispare `beforeinput` antes do `input`,
+> use teclado real (`page.keyboard.type()`) ou o atributo `emit-autofill`.
 
 ### Tokens de efeito (configuráveis por preset)
 

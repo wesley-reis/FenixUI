@@ -1,5 +1,6 @@
 import { FxFormElement } from '../../core/form-element';
 import { defineElement } from '../../core/define';
+import { isDomAvailable } from '../../core/dom';
 import { esc } from '../../core/sanitize';
 import { FENIX_ICON_BASE_CSS, fenixIconHtml } from '../../icons/base-css';
 import { loadFenixIconsFont } from '../../icons/font';
@@ -600,6 +601,9 @@ export class FxEditor extends FxFormElement {
   }
 
   #emitNow(): void {
+    // Diferido por rAF/debounce: pode disparar depois do teardown do ambiente
+    // (testes), quando `CustomEvent` já não existe.
+    if (!isDomAvailable()) return;
     cancelAnimationFrame(this.#rafId);
     if (this.#emitTimer) {
       clearTimeout(this.#emitTimer);
