@@ -15,7 +15,8 @@ import { esc } from '../../core/sanitize';
  * Atributos: values (CSV), searchable, clearable, disabled, placeholder,
  * size (sm|md|lg), no-results.
  * Eventos: `change` e `valuesChange` (composed, detail: { values: string[] }) —
- * `valuesChange` é o two-way binding do Angular [(value)] em seleção múltipla.
+ * `valuesChange` é o par do two-way binding do Angular em seleção múltipla
+ * (`(valuesChange)="x = $event.detail.values"`).
  */
 export class FxMultiselect extends FxFormElement {
   static override styles = css`
@@ -388,7 +389,7 @@ export class FxMultiselect extends FxFormElement {
         detail: { values: [...this.selected] },
       }),
     );
-    // Two-way binding do Angular: [(value)] em selecao multipla -> valuesChange.
+    // Two-way binding do Angular (selecao multipla): valuesChange + $event.detail.values.
     this.dispatchEvent(
       new CustomEvent('valuesChange', {
         bubbles: true,

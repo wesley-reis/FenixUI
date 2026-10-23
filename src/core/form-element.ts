@@ -20,6 +20,7 @@
  */
 
 import { FxElement } from './base';
+import { isSemanticAutocompleteToken } from './user-edit';
 import type { UserEditGuard } from './user-edit';
 
 export abstract class FxFormElement extends FxElement {
@@ -129,16 +130,18 @@ export abstract class FxFormElement extends FxElement {
 
   /**
    * Sincroniza o campo interno, publica name/value no form (ElementInternals)
-   * e emite `input` (v-model do Vue) + `valueChange` ([(value)] do Angular).
+   * e emite `input` (o que o `v-model` do Vue usa) + `valueChange` (o par do
+   * two-way binding do Angular, que precisa ler `$event.detail.value`).
    *
    * Chame quando o valor mudar — junto do evento semântico (`change`,
    * `select`, ...) que o componente já dispara. `detail` opcional complementa
    * o payload (ex.: { start, end } do fx-datepicker).
    *
    * Componentes com controle nativo interno (`fx-input`, `fx-textarea`,
-   * `fx-autocomplete`) só chamam este método em **edição do usuário** — valor
-   * injetado por autofill/gerenciador de senha/script usa `dispatchAutofill()`
-   * (ver `core/user-edit.ts`).
+   * `fx-autocomplete`) só chamam este método em **edição do usuário** ou no
+   * autofill DECLARADO (token semântico de `autocomplete` ou `emit-autofill`).
+   * Valor externo sem intenção declarada é bloqueado/desfeito por
+   * `acceptExternalValue()` (ver `core/user-edit.ts`).
    */
   protected emitValueEvents(detail?: Record<string, unknown>): void {
     const value = this.getAttr('value');
@@ -159,17 +162,55 @@ export abstract class FxFormElement extends FxElement {
   /**
    * `true` quando o evento vindo do controle interno deve virar evento de
    * valor (`input`/`change`/`valueChange`) — isto é, quando veio de edição do
-   * usuário. O atributo `emit-autofill` restaura o comportamento anterior à
-   * correção (eventos de valor também no autofill) para quem depende do
-   * v-model atualizado pelo navegador.
+   * usuário. O atributo `emit-autofill` também entra por aqui: com ele o valor
+   * externo é aceito e propagado como edição (útil em testes/automação e para
+   * quem depende do v-model atualizado pelo navegador).
    */
   protected isUserValueEvent(event: Event, guard: UserEditGuard): boolean {
     return this.hasAttr('emit-autofill') || guard.isUserEdit(event);
   }
 
   /**
+   * `true` quando o host DECLARA que quer autofill: atributo `emit-autofill`
+   * ou token semântico de `autocomplete` (`username`, `current-password`,
+   * `email`, …). Sem isso, valor colocado no controle interno por autofill do
+   * navegador/gerenciador de senha/script é bloqueado (ver
+   * `acceptExternalValue` e `core/user-edit.ts`).
+   */
+  protected wantsAutofill(): boolean {
+    return (
+      this.hasAttr('emit-autofill') ||
+      isSemanticAutocompleteToken(this.getAttr('autocomplete', 'off'))
+    );
+  }
+
+  /**
+   * Trata valor colocado no controle interno SEM edição do usuário (autofill
+   * do navegador, gerenciador de senha, script) e devolve `true` quando ele
+   * deve ser ACEITO.
+   *
+   * Aceito (`wantsAutofill()`): o chamador adota o valor, sincroniza
+   * `value`/FormData, emite `autofill` e também os eventos de valor.
+   *
+   * Bloqueado (default): o preenchimento é **desfeito** — o controle interno
+   * volta ao valor do host e nada é propagado, então o campo nunca aparece
+   * preenchido com credenciais salvas (nem `value`/`FormData` mudam). É a
+   * garantia que não depende do `autocomplete="off"`, que o Chrome ignora em
+   * `type="password"`.
+   */
+  protected acceptExternalValue(
+    field: HTMLInputElement | HTMLTextAreaElement,
+  ): boolean {
+    if (this.wantsAutofill()) return true;
+    const own = this.getAttr('value');
+    if (field.value !== own) field.value = own;
+    return false;
+  }
+
+  /**
    * Notifica valor colocado no controle interno SEM edição do usuário
-   * (autofill do navegador, gerenciador de senha, script).
+   * (autofill do navegador, gerenciador de senha, script) — **apenas** no
+   * caminho aceito (token semântico de `autocomplete` ou `emit-autofill`).
    *
    * `input`/`valueChange`/`change` ficam reservados à interação real: quem
    * quiser reagir ao autofill escuta `autofill` (composed, `detail: { value }`).

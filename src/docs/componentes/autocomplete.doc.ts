@@ -94,7 +94,7 @@ export const autocompleteDoc: ComponentDoc = {
 			name: "emit-autofill",
 			type: "boolean",
 			default: "false",
-			desc: "Restaura o comportamento anterior à correção de autofill: input/valueChange também quando o valor é colocado no campo pelo navegador (autofill/gerenciador de senha). Sem ele, autofill emite `autofill` e não aciona o v-model.",
+			desc: "Aceita o valor colocado no campo pelo navegador (autofill/gerenciador de senha/script): input/valueChange também nesse caminho. O campo interno é sempre autocomplete=\"off\" (regra fixa), então sem este atributo o autofill é desfeito.",
 		},
 		{
 			name: "error",
@@ -118,17 +118,17 @@ export const autocompleteDoc: ComponentDoc = {
 		{
 			name: "input",
 			type: `CustomEvent<{ value: string }>`,
-			desc: "Ao digitar (composed) — aciona o v-model do Vue. Só sai em edição do usuário: valor colocado no campo por autofill/gerenciador de senha/script emite `autofill`.",
+			desc: "Ao digitar (composed) — é o evento que o v-model do Vue usa. Só sai em edição do usuário ou com emit-autofill; valor externo bloqueado é desfeito e não emite nada.",
 		},
 		{
 			name: "valueChange",
 			type: `CustomEvent<{ value: string }>`,
-			desc: "Espelho de `input` para o [(value)] do Angular (composed). Também só em edição do usuário.",
+			desc: "Espelho de input (composed) para o two-way binding do Angular: [value] + (valueChange)=\"x = $event.detail.value\". [(value)] NÃO funciona em Web Components — o $event é o CustomEvent.",
 		},
 		{
 			name: "autofill",
 			type: `CustomEvent<{ value: string }>`,
-			desc: "Valor colocado no campo SEM edição do usuário (autofill do navegador, gerenciador de senha, script). O value/FormData já estão sincronizados e a lista não abre — use este evento para reagir sem poluir o v-model.",
+			desc: "Valor colocado no campo SEM edição do usuário e ACEITO (com emit-autofill). O value/FormData já estão sincronizados e a lista não abre.",
 		},
 	],
 	cssVars: [

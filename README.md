@@ -18,7 +18,7 @@ import { FenixUI } from '@wrrdev/fenix-ui';  // API de tema/tokens (índice)
 FenixUI.theme('dark');
 ```
 
-> 📦 npm: [`@wrrdev/fenix-ui`](https://www.npmjs.com/package/@wrrdev/fenix-ui) — **v1.4.0**, acesso público.
+> 📦 npm: [`@wrrdev/fenix-ui`](https://www.npmjs.com/package/@wrrdev/fenix-ui) — **v1.5.0**, acesso público.
 > Subpaths disponíveis: `./theme`, `./tokens`, `./jsx`, `./vue`, `./react`, `./button`, `./badge`, `./spinner`, `./select`, `./input`, `./switch`, `./textarea`, `./editor`, `./checkbox`, `./radio`, `./calendar`, `./datepicker`, `./multiselect`, `./table`, `./floatlabel`, `./dialog`, `./toast`, `./tooltip`, `./tabs`, `./progress`, `./skeleton`, `./alert`, `./drawer`, `./dropdown`, `./icon`, `./icons`, `./pagination`, `./autocomplete`, `./knob`, `./orderlist`, `./picklist`, `./auto-import` e o curinga `./components/*`.
 
 
@@ -65,7 +65,7 @@ Carregue o bundle **UMD** único: ele registra todos os componentes e expõe os 
 <fx-toast></fx-toast>
 
 <!--
-  🔗 Links diretos para CDN (versão 1.4.0):
+  🔗 Links diretos para CDN (versão 1.5.0):
   • https://cdn.jsdelivr.net/npm/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js
   • https://unpkg.com/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js
 -->
@@ -402,7 +402,7 @@ ative o modo estrito do Volar no `tsconfig.json`:
 |--------------|-----------------------------------------------|--------------|
 | `fx-button`  | `variant` (primary/secondary/success/warning/danger/ghost/outline), `size`, `disabled`, `loading`, `type`, `full` | default, `icon` |
 | `fx-badge`   | `variant` (default/primary/success/warning/danger/info), `round` | default |
-| `fx-input`   | `type` (text/number/password/email/tel/url/search/date/time/…), `value`, `name`, `size`, `placeholder`, `disabled`, `readonly`, `min/max/step`, `autocomplete` (default `off`), `icon` | — |
+| `fx-input`   | `type` (text/number/password), `value`, `name`, `size`, `placeholder`, `disabled`, `readonly`, `min/max/step`, `autocomplete` (default `off`), `icon` | — |
 | `fx-select`  | `value`, `size` (sm/md/lg), `disabled`, `placeholder` — filhos `<option>` nativos | `(padrão)` |
 | `fx-switch`  | `checked`, `disabled`, `size` (sm/md/lg)      | `(padrão)`   |
 | `fx-spinner` | `size` (sm/md/lg)                             | —            |
@@ -434,18 +434,26 @@ enxerga o `<input>`/`<textarea>` interno, nunca o atributo escrito no host. Como
 da spec é `autocomplete="on"`, sem tratamento o Chrome autopreenche campos comuns (busca de
 tabela, filtros, diálogos) com o usuário/senha salvos e ainda oferece “Salvar senha?”.
 
-A partir da **v1.4.0**:
+A partir da **v1.5.0** o autofill é tratado em duas camadas:
 
-- `fx-input` e `fx-textarea` **repassam** `autocomplete`, `name` e `id` ao campo interno,
-  com default **`off`** — o atributo declarado no host vence o default;
-- os campos internos de busca/filtro (`fx-select`/`fx-multiselect` com `searchable`, linha de
-  filtros do `fx-table`, `fx-datepicker`, `fx-orderlist`, `fx-picklist` e diálogos do
-  `fx-editor`) já saem com `autocomplete="off"`;
-- `fx-autocomplete` mantém `off` fixo (regra do componente).
+- **preventiva** — `fx-input` e `fx-textarea` **repassam** `autocomplete`, `name` e `id` ao campo
+  interno, com default **`off`** (o atributo declarado no host vence). Os campos internos de
+  busca/filtro (`fx-select`/`fx-multiselect` com `searchable`, linha de filtros do `fx-table`,
+  `fx-datepicker`, `fx-orderlist`, `fx-picklist` e diálogos do `fx-editor`) também saem com
+  `autocomplete="off"`, e o `fx-autocomplete` mantém `off` fixo;
+- **garantia** — valor colocado no campo **sem edição do usuário** (autofill, gerenciador de
+  senha, script) é **desfeito**: o campo volta ao valor do host e nada é propagado (nem
+  `value`/`FormData`, nem `input`/`valueChange`/`change`). É o que resolve o caso em que o
+  `off` não basta — o Chrome **ignora** `off` em `type="password"`.
+
+O autofill só é **aceito** quando o host declara intenção: token semântico em `autocomplete`
+ou o atributo `emit-autofill`. Nesse caminho o valor é adotado, sincroniza `value`/FormData,
+emite `autofill` e **também** `input`/`valueChange` — ou seja, o `v-model` acompanha o
+preenchimento (nada de handler extra para sincronizar).
 
 ```html
-<!-- busca: fora do autofill (já é o default do componente) -->
-<fx-input type="search" autocomplete="off" placeholder="Buscar por usuário AD"></fx-input>
+<!-- busca/filtro: fora do autofill — o preenchimento é desfeito -->
+<fx-input autocomplete="off" placeholder="Buscar por usuário AD"></fx-input>
 
 <!-- login: par semântico — o Chrome IGNORA `off` em type="password" -->
 <fx-input id="usuario" name="usuario" autocomplete="username"></fx-input>
@@ -457,27 +465,29 @@ A partir da **v1.4.0**:
 > Em `fx-table`, os inputs que você coloca dentro de `<fx-toolbar>` ficam no light DOM
 > (projetados por `<slot>`) — marque `autocomplete="off"` neles.
 >
-> Quando o autofill é **desejado** (login com `username`/`current-password`), o valor que o
-> navegador injeta não aciona o v-model sem aviso: o campo emite `autofill` — ver a seção
-> seguinte.
+> **Limites:** o desfazer é reativo — depende de o navegador disparar `input` ao preencher
+> (Chrome/Edge/Firefox disparam). Escolher uma credencial no dropdown do gerenciador em um campo
+> **bloqueado** não cola nada (esse fluxo não dispara `beforeinput`): declare o token semântico
+> onde o autofill é desejado. Simulação programática
+> (`el.value = 'x'; dispatchEvent(new Event('input'))`) também é desfeita — use `emit-autofill`
+> quando precisar adotar o valor.
 
 Eventos usam o nativo `click` no botão; `input`, `change` e o `change` do select são
 `CustomEvent`s **composed** com `detail: { value }` (atravessam o Shadow DOM).
 
-### Autofill do navegador × v-model (input/change)
+### Autofill do navegador × two-way binding (input/change)
 
 `fx-input`, `fx-textarea` e `fx-autocomplete` só emitem **`input`** (v-model do Vue),
-**`change`** e **`valueChange`** ([(value)] do Angular) em **edição do usuário**
-(teclado, IME, colar, recortar, arrastar, undo/redo). Valor colocado no campo por
-autofill do navegador, gerenciador de senha ou script **não** aciona esses eventos:
-
-- o `value` do componente e o `FormData` (form-associated) **são sincronizados** —
-  o autofill continua funcionando no form e na label do `fx-floatlabel`;
-- é emitido **`autofill`** (`composed`, `detail: { value }`) para quem quiser reagir
-  sem poluir o v-model:
+**`change`** e **`valueChange`** em **edição do usuário** (teclado, IME, colar, recortar,
+arrastar, undo/redo) **ou em autofill declarado** (token semântico de `autocomplete` /
+`emit-autofill`). Valor externo sem intenção declarada é **desfeito** — o campo volta ao
+valor do host, `value`/`FormData` não mudam e nenhum evento sai. Com o autofill declarado,
+`value`/FormData são sincronizados, sai `autofill` **e** saem `input`/`valueChange`, então o
+`v-model` do Vue acompanha sem handler extra:
 
 ```html
-<fx-input name="usuario" @autofill="usuario = $event.detail.value"></fx-input>
+<!-- Vue: v-model já é o two-way binding (o compilador usa value + input) -->
+<fx-input v-model="usuario" autocomplete="username"></fx-input>
 ```
 
 ```ts
@@ -493,14 +503,32 @@ marca o autofill com `insertReplacementText` não cancelável. O FenixUI usa uma
 regra (prova positiva de edição: `beforeinput`) em todos os navegadores — ver
 `src/core/user-edit.ts`.
 
-> **`emit-autofill`**: atributo booleano que restaura o comportamento anterior
-> (`input`/`change`/`valueChange` também no autofill) para quem depende do v-model
-> atualizado pelo navegador.
+> **`emit-autofill`**: atributo booleano que aceita o valor externo (autofill/script) e
+> propaga `input`/`change`/`valueChange` como se fosse edição — útil para testes/automação
+> e para quem depende do v-model atualizado pelo navegador.
 >
 > **Atenção em testes/automação:** simular digitação com
-> `el.value = 'x'; el.dispatchEvent(new Event('input'))` **não** emite mais `input`
-> (esse é exatamente o caminho do autofill). Dispare `beforeinput` antes do `input`,
-> use teclado real (`page.keyboard.type()`) ou o atributo `emit-autofill`.
+> `el.value = 'x'; el.dispatchEvent(new Event('input'))` **não** emite `input` e o valor é
+> **desfeito** (esse é exatamente o caminho do autofill). Dispare `beforeinput` antes do
+> `input`, use teclado real (`page.keyboard.type()`) ou o atributo `emit-autofill`.
+
+### Two-way binding por framework (Web Components)
+
+O evento `input` é o que o **Vue** usa no `v-model`; `valueChange` é o par do **Angular**.
+A sintaxe que **funciona** muda por stack — as demais dão a impressão de funcionar e
+quebram em silêncio:
+
+| Stack | Forma correta | Observação |
+|-------|---------------|------------|
+| **Vue 3 / Nuxt** | `<fx-input v-model="valor" />` | Com `isCustomElement`, o `v-model` vira `:value` + `@input` e lê a propriedade `value` do host. Não escreva `:value` + `@input` na mão. |
+| **React 18 / 19** | `<fx-input value={valor} onInput={(e) => setValor(e.currentTarget.value)} />` | React não tem açúcar de two-way (o estado é do componente). O evento `input` é genérico e chega em custom elements em qualquer versão; o React 18 **não** dispara `onChange` em custom element. |
+| **Angular** | `<fx-input [value]="valor" (valueChange)="valor = $event.detail.value" />` | **`[(value)]` não funciona**: o açúcar vira `[value]` + `(valueChange)="valor = $event"` e o `$event` é o **CustomEvent**, não o `detail`. `ngModel` também não funciona em Web Components. |
+| **Svelte 4 / 5** | `<fx-input value={valor} on:input={(e) => valor = e.detail.value} />` | **`bind:value` não compila** em custom element — o compilador do Svelte restringe o binding a `<input>`/`<textarea>`/`<select>`. |
+| **HTML / JS puro** | `el.addEventListener('input', (e) => valor = e.detail.value)` | Sem framework não há binding; alternativa é o `FormData` do `<form>` (o componente é form-associated). |
+
+Em `fx-checkbox`/`fx-switch`/`fx-radio` o two-way é por `checked` + `change`
+(`:checked="estado"` + `@change` no Vue) — o `v-model` de elemento usa `value` + `input`,
+não `checked`.
 
 ### Tokens de efeito (configuráveis por preset)
 

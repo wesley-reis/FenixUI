@@ -107,14 +107,14 @@ export const textareaDoc: ComponentDoc = {
 			name: "emit-autofill",
 			type: "boolean",
 			default: "false",
-			desc: "Restaura o comportamento anterior à correção de autofill: input/change/valueChange também quando o valor é colocado no campo pelo navegador (autofill/gerenciador de senha). Sem ele, autofill emite `autofill` e não aciona o v-model.",
+			desc: "Aceita o valor colocado no campo pelo navegador (autofill/gerenciador de senha/script): input/change/valueChange também nesse caminho. Sem ele — e sem token semântico em autocomplete — o autofill é desfeito: o campo volta ao valor do host e nada é propagado.",
 		},
 	],
 	events: [
 		{
 			name: "input",
 			type: `CustomEvent<{ value: string }>`,
-			desc: "Ao digitar. Só sai em edição do usuário: valor colocado no campo por autofill/gerenciador de senha/script emite `autofill`.",
+			desc: "Ao digitar (composed) — é o evento que o v-model do Vue usa. Só sai em edição do usuário ou em autofill DECLARADO (token semântico de autocomplete/emit-autofill); valor externo bloqueado não emite nada.",
 		},
 		{
 			name: "change",
@@ -122,9 +122,14 @@ export const textareaDoc: ComponentDoc = {
 			desc: "Ao concluir a edição. Só em edição do usuário (o change do autofill é absorvido).",
 		},
 		{
+			name: "valueChange",
+			type: `CustomEvent<{ value: string }>`,
+			desc: "Espelho de input (composed) para o two-way binding do Angular: [value] + (valueChange)=\"x = $event.detail.value\". [(value)] NÃO funciona em Web Components — o $event é o CustomEvent.",
+		},
+		{
 			name: "autofill",
 			type: `CustomEvent<{ value: string }>`,
-			desc: "Valor colocado no campo SEM edição do usuário (autofill do navegador, gerenciador de senha, script). O value/FormData já estão sincronizados — use este evento para reagir sem poluir o v-model.",
+			desc: "Valor colocado no campo SEM edição do usuário e ACEITO (token semântico de autocomplete ou emit-autofill). O value/FormData já estão sincronizados e input/valueChange também saem.",
 		},
 	],
 	cssVars: [

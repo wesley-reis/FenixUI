@@ -10,14 +10,14 @@ export const inputDoc: ComponentDoc = {
 	tag: "fx-input",
 	title: "Input",
 	group: "Formulário",
-	lead: "Campo de texto e tipos nativos do <input> (text, number, password, email, tel, url, search, date, time, datetime-local, month, week, color) estilizado com os tokens do tema. Form-associated: com name entra no FormData de um <form>, o Enter submete e <label for> foca o campo. O anel de foco é controlado pelo token effect.focus-ring do preset.",
+	lead: "Campo de texto estilizado com os tokens do tema, com type text, number ou password. Form-associated: com name entra no FormData de um <form>, o Enter submete e <label for> foca o campo. O anel de foco é controlado pelo token effect.focus-ring do preset. Autofill do navegador é desfeito por padrão (o campo não fica com credenciais salvas).",
 	imports: ["import '@wrrdev/fenix-ui/input';"],
 	demoHtml: (a) => `<fx-input ${a}></fx-input>`,
 	variantsHtml: () =>
 		`<div style="display:flex;flex-direction:column;gap:16px">
 			<h4>Tipos</h4>
 			<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-				${["text", "number", "password", "email", "tel", "date", "time"]
+				${["text", "number", "password"]
 					.map((t) => `<fx-input type="${t}" placeholder="${t}"></fx-input>`)
 					.join("")}
 			</div>
@@ -63,21 +63,7 @@ export const inputDoc: ComponentDoc = {
 			kind: "select",
 			attr: "type",
 			label: "Tipo",
-			options: [
-				"text",
-				"number",
-				"password",
-				"email",
-				"tel",
-				"url",
-				"search",
-				"date",
-				"time",
-				"datetime-local",
-				"month",
-				"week",
-				"color",
-			],
+			options: ["text", "number", "password"],
 			value: "text",
 		},
 		{
@@ -131,9 +117,9 @@ export const inputDoc: ComponentDoc = {
 	attributes: [
 		{
 			name: "type",
-			type: `'text' | 'number' | 'password' | 'email' | 'tel' | 'url' | 'search' | 'date' | 'time' | 'datetime-local' | 'month' | 'week' | 'color'`,
+			type: `'text' | 'number' | 'password'`,
 			default: `'text'`,
-			desc: "Tipo do input interno. Tipos com semântica própria (file, checkbox, radio, submit, reset, button, image) caem em text.",
+			desc: "Tipo do campo. Qualquer outro valor (email, tel, url, search, date, time, datetime-local, month, week, color, file, checkbox…) normaliza para text — para esses casos use o <input> nativo do tipo desejado.",
 		},
 		{
 			name: "value",
@@ -151,7 +137,7 @@ export const inputDoc: ComponentDoc = {
 			name: "autocomplete",
 			type: "string",
 			default: "'off'",
-			desc: "Repassado ao input INTERNO (é ele que o navegador enxerga): controla o autofill e o gerenciador de senhas. Default 'off' (igual ao fx-autocomplete); o atributo declarado no host vence. Use os tokens semânticos quando o autofill for desejado — 'username', 'current-password', 'new-password', 'one-time-code', 'email', 'street-address'. O Chrome IGNORA 'off' em type=\"password\". Ver a seção Autofill abaixo.",
+			desc: "Repassado ao input INTERNO (é ele que o navegador enxerga): controla o autofill e o gerenciador de senhas. Default 'off' (igual ao fx-autocomplete); o atributo declarado no host vence. Declare os tokens semânticos quando o autofill for desejado — 'username', 'current-password', 'new-password', 'one-time-code', 'email', 'street-address': com eles o valor é aceito e os eventos de valor saem; sem token semântico o preenchimento externo é DESFEITO. O Chrome IGNORA 'off' em type=\"password\" — ver a seção Autofill abaixo.",
 		},
 		{
 			name: "autofocus",
@@ -193,13 +179,13 @@ export const inputDoc: ComponentDoc = {
 			name: "emit-autofill",
 			type: "boolean",
 			default: "false",
-			desc: "Restaura o comportamento anterior à correção de autofill: input/change/valueChange também quando o valor é colocado no campo pelo navegador (autofill/gerenciador de senha). Sem ele, autofill emite `autofill` e não aciona o v-model.",
+			desc: "Aceita o valor colocado no campo pelo navegador (autofill/gerenciador de senha/script): input/change/valueChange também nesse caminho. Sem ele — e sem token semântico em autocomplete — o autofill é desfeito: o campo volta ao valor do host e nada é propagado.",
 		},
 		{
 			name: "min / max / step",
 			type: "string",
 			default: "—",
-			desc: 'Restrições nativas aplicadas ao tipo escolhido (number, date, time, datetime-local, month, week etc.).',
+			desc: 'Restrições nativas do type="number" (min/max/step).',
 		},
 		{
 			name: "full",
@@ -236,7 +222,7 @@ export const inputDoc: ComponentDoc = {
 		{
 			name: "input",
 			type: `CustomEvent<{ value: string }>`,
-			desc: "Emitido a cada tecla (composed), exatamente uma vez por interação. Só sai em edição do usuário: valor colocado no campo por autofill/gerenciador de senha/script emite `autofill`.",
+			desc: "Emitido a cada tecla (composed), exatamente uma vez por interação — é o evento que o v-model do Vue usa. Só sai em edição do usuário ou em autofill DECLARADO (token semântico de autocomplete/emit-autofill); valor externo bloqueado não emite nada.",
 		},
 		{
 			name: "change",
@@ -244,9 +230,14 @@ export const inputDoc: ComponentDoc = {
 			desc: "Emitido ao confirmar o valor (composed). Só em edição do usuário (o change do autofill é absorvido).",
 		},
 		{
+			name: "valueChange",
+			type: `CustomEvent<{ value: string }>`,
+			desc: "Espelho de input (composed) para o two-way binding do Angular: [value] + (valueChange)=\"x = $event.detail.value\". [(value)] NÃO funciona em Web Components — o $event é o CustomEvent, não o detail.",
+		},
+		{
 			name: "autofill",
 			type: `CustomEvent<{ value: string }>`,
-			desc: "Valor colocado no campo SEM edição do usuário (autofill do navegador, gerenciador de senha, script). O value/FormData já estão sincronizados — use este evento para reagir sem poluir o v-model.",
+			desc: "Valor colocado no campo SEM edição do usuário e ACEITO (token semântico de autocomplete ou emit-autofill). O value/FormData já estão sincronizados e input/valueChange também saem — use este evento só para reagir de forma específica.",
 		},
 	],
 	slots: [
@@ -280,11 +271,16 @@ export const inputDoc: ComponentDoc = {
 			title: "Autofill e gerenciadores de senha",
 			html: `
 				<p>O <code>&lt;input&gt;</code> real do <code>fx-input</code> vive no <b>Shadow DOM</b>. O navegador só enxerga o campo interno — um <code>autocomplete</code> escrito no host (light DOM) não chega lá sozinho. Como o default da spec é <code>on</code>, sem o atributo o Chrome autopreenche o campo com o usuário/senha salvos (heurística “primeiro campo de texto = usuário”) e ainda oferece <b>“Salvar senha?”</b>. O sintoma clássico é a busca de uma tabela ou um campo de diálogo amanhecer preenchido com o login do usuário.</p>
-				<p>Por isso o componente <b>repassa</b> <code>autocomplete</code>, <code>name</code> e <code>id</code> ao campo interno, com <b>default <code>off</code></b> (mesma escolha do <code>&lt;fx-autocomplete&gt;</code>). O atributo declarado no host sempre vence o default.</p>
+				<p>O componente ataca isso em duas camadas:</p>
+				<ol>
+					<li><b>preventiva</b> — <code>autocomplete</code>, <code>name</code> e <code>id</code> são <b>repassados</b> ao campo interno, com <b>default <code>off</code></b> (mesma escolha do <code>&lt;fx-autocomplete&gt;</code>). O atributo declarado no host sempre vence o default;</li>
+					<li><b>garantia</b> — valor colocado no campo <b>sem edição do usuário</b> (autofill, gerenciador de senha, script) é <b>desfeito</b>: o campo volta ao valor do host e nada é propagado (nem <code>value</code>/FormData, nem <code>input</code>/<code>valueChange</code>/<code>change</code>). Isso não depende do <code>off</code>, que o Chrome ignora em <code>type="password"</code>.</li>
+				</ol>
+				<p>O autofill só é <b>aceito</b> quando o host declara intenção — token semântico em <code>autocomplete</code> ou o atributo <code>emit-autofill</code>. Nesse caminho o valor é adotado, sincroniza <code>value</code>/FormData, emite <code>autofill</code> e <b>também</b> <code>input</code>/<code>valueChange</code> (ou seja, o <code>v-model</code> do Vue acompanha o preenchimento).</p>
 				<table>
 					<thead><tr><th>Uso</th><th>Valor de <code>autocomplete</code></th></tr></thead>
 					<tbody>
-						<tr><td>Busca, filtro, campo comum (padrão do componente)</td><td><code>off</code></td></tr>
+						<tr><td>Busca, filtro, campo comum (padrão do componente)</td><td><code>off</code> — autofill desfeito</td></tr>
 						<tr><td>Login — campo de usuário</td><td><code>username</code></td></tr>
 						<tr><td>Login — senha atual</td><td><code>current-password</code></td></tr>
 						<tr><td>Cadastro / troca de senha</td><td><code>new-password</code></td></tr>
@@ -293,18 +289,56 @@ export const inputDoc: ComponentDoc = {
 					</tbody>
 				</table>
 				<div class="note"><b>Senha:</b> o Chrome <b>ignora</b> <code>off</code> em <code>type="password"</code>. Para o login parar de pedir “Salvar senha?” e de preencher os outros campos, use <code>username</code> no usuário e <code>current-password</code> na senha — é o par semântico correto e o que faz o navegador abandonar a heurística. Use <code>new-password</code> só em cadastro/troca: ele suprime o autofill e, na maioria dos casos, o prompt de salvar.</div>
+				<div class="note"><b>Limites:</b> o desfazer é reativo — depende de o navegador disparar <code>input</code> ao preencher (Chrome/Edge/Firefox disparam). Escolher uma credencial no dropdown do gerenciador em um campo <b>bloqueado</b> não cola nada (esse fluxo não dispara <code>beforeinput</code>); declare o token semântico onde o autofill é desejado. Simulação programática (<code>el.value = 'x'; dispatchEvent(new Event('input'))</code>) também é desfeita — use <code>emit-autofill</code> quando precisar adotar o valor.</div>
 				<div class="note">Mude <code>autocomplete</code> <b>declarativamente</b>: como qualquer atributo observado (<code>type</code>, <code>placeholder</code>…), alterá-lo em runtime re-renderiza o campo e o foco é perdido.</div>
 				<p>Os demais componentes com campo interno de texto seguem a mesma regra e já saem com <code>off</code>: <a href="#/fx-textarea">fx-textarea</a>, <a href="#/fx-select">fx-select</a> e <a href="#/fx-multiselect">fx-multiselect</a> (busca), <a href="#/fx-table">fx-table</a> (linha de filtros), <a href="#/fx-datepicker">fx-datepicker</a>, <a href="#/fx-orderlist">fx-orderlist</a>, <a href="#/fx-picklist">fx-picklist</a> e <a href="#/fx-editor">fx-editor</a> (diálogos).</p>
 				<h4>Exemplo</h4>
-				<pre><code>&lt;!-- busca: fora do autofill --&gt;
-&lt;fx-input type="search" autocomplete="off" placeholder="Buscar por usuário AD"&gt;&lt;/fx-input&gt;
+				<pre><code>&lt;!-- busca: fora do autofill (o preenchimento é desfeito) --&gt;
+&lt;fx-input autocomplete="off" placeholder="Buscar por usuário AD"&gt;&lt;/fx-input&gt;
 
-&lt;!-- login: par semântico (usuário + senha) --&gt;
+&lt;!-- login: par semântico — autofill aceito e v-model atualizado --&gt;
 &lt;fx-input id="usuario" name="usuario" autocomplete="username"&gt;&lt;/fx-input&gt;
 &lt;fx-input type="password" name="senha" autocomplete="current-password"&gt;&lt;/fx-input&gt;
 
 &lt;!-- cadastro / troca de senha --&gt;
 &lt;fx-input type="password" name="nova" autocomplete="new-password"&gt;&lt;/fx-input&gt;</code></pre>
+			`,
+		},
+		{
+			title: "Two-way binding por framework",
+			html: `
+				<p>Cada stack liga o valor do campo à variável do app de um jeito diferente. <b>Estas são as formas que funcionam com Web Components</b> — copie a da sua stack:</p>
+				<table>
+					<thead><tr><th>Stack</th><th>Forma correta</th><th>Por quê</th></tr></thead>
+					<tbody>
+						<tr>
+							<td><b>Vue 3 / Nuxt</b></td>
+							<td><code>&lt;fx-input v-model="valor" /&gt;</code></td>
+							<td>Com <code>isCustomElement</code> o compilador trata a tag como <i>elemento</i>: o <code>v-model</code> vira <code>:value</code> + <code>@input</code> e lê a propriedade <code>value</code> do host. Não escreva <code>:value</code> + <code>@input</code> na mão.</td>
+						</tr>
+						<tr>
+							<td><b>React 18 / 19</b></td>
+							<td><code>&lt;fx-input value={valor} onInput={(e) =&gt; setValor(e.currentTarget.value)} /&gt;</code></td>
+							<td>React não tem açúcar de two-way (o estado é do componente). O evento <code>input</code> é genérico e chega em custom elements em qualquer versão; o React 18 <b>não</b> dispara <code>onChange</code> em custom element. O host já reflete o valor antes do evento.</td>
+						</tr>
+						<tr>
+							<td><b>Angular</b></td>
+							<td><code>&lt;fx-input [value]="valor" (valueChange)="valor = $event.detail.value" /&gt;</code></td>
+							<td><b><code>[(value)]</code> não funciona</b>: o açúcar vira <code>[value]</code> + <code>(valueChange)="valor = $event"</code> e o <code>$event</code> é o <b>CustomEvent</b>, não o <code>detail</code>. <code>ngModel</code> também não funciona em Web Components.</td>
+						</tr>
+						<tr>
+							<td><b>Svelte 4 / 5</b></td>
+							<td><code>&lt;fx-input value={valor} on:input={(e) =&gt; valor = e.detail.value} /&gt;</code></td>
+							<td><b><code>bind:value</code> não compila</b> em custom element — o compilador do Svelte restringe o binding a <code>&lt;input&gt;</code>/<code>&lt;textarea&gt;</code>/<code>&lt;select&gt;</code>.</td>
+						</tr>
+						<tr>
+							<td><b>HTML / JS puro</b></td>
+							<td><code>el.addEventListener('input', (e) =&gt; valor = e.detail.value)</code></td>
+							<td>Sem framework não há binding: use o listener — ou o <code>FormData</code> do <code>&lt;form&gt;</code>, já que o componente é form-associated.</td>
+						</tr>
+					</tbody>
+				</table>
+				<p>Os eventos <code>input</code>/<code>change</code>/<code>valueChange</code> são <code>CustomEvent</code>s <b>composed</b> com <code>detail: { value }</code> — atravessam o Shadow DOM. Em <code>fx-checkbox</code>/<code>fx-switch</code>/<code>fx-radio</code> o two-way é por <code>checked</code> + <code>change</code> (o <code>v-model</code> de elemento usa <code>value</code> + <code>input</code>, não <code>checked</code>).</p>
 			`,
 		},
 	],

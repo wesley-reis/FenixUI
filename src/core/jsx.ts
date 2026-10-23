@@ -25,20 +25,12 @@ export type FxAlertVariant = 'info' | 'success' | 'warning' | 'danger';
 export type FxProgressVariant = 'primary' | 'success' | 'warning' | 'danger';
 export type FxSkeletonVariant = 'text' | 'circle' | 'rect';
 export type FxFloatlabelVariant = 'on' | 'in' | 'over';
-export type FxInputType =
-  | 'text'
-  | 'number'
-  | 'password'
-  | 'email'
-  | 'tel'
-  | 'url'
-  | 'search'
-  | 'date'
-  | 'time'
-  | 'datetime-local'
-  | 'month'
-  | 'week'
-  | 'color';
+/**
+ * Tipos aceitos pelo `<fx-input>`: só os que o componente desenha com os
+ * tokens do tema. Qualquer outro valor normaliza para `'text'` — para
+ * email/tel/url/date/… use o `<input>` nativo do tipo desejado.
+ */
+export type FxInputType = 'text' | 'number' | 'password';
 export type FxFieldStatus = 'error' | 'invalid' | 'success' | 'valid';
 export type FxToastKind = 'success' | 'error' | 'info' | 'warning';
 export type FxToastPosition = 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
@@ -95,7 +87,8 @@ export interface FxInputProps extends FxElementProps {
    * Shadow DOM, então sem este atributo o navegador autopreenche o campo com
    * credenciais salvas. Use os tokens semânticos quando o autofill for
    * desejado: `'username'`, `'current-password'`, `'new-password'`,
-   * `'one-time-code'`, `'email'`, `'street-address'`, …
+   * `'one-time-code'`, `'email'`, `'street-address'`, … Sem token semântico o
+   * autofill é **desfeito** pelo componente (ver `emit-autofill`).
    */
   autocomplete?: string;
   min?: string | number;
@@ -110,10 +103,10 @@ export interface FxInputProps extends FxElementProps {
   success?: boolean;
   valid?: boolean;
   /**
-   * Restaura o comportamento anterior à correção de autofill: `input`/
-   * `change`/`valueChange` também quando o valor é colocado no campo pelo
-   * navegador (autofill/gerenciador de senha). Sem ele, autofill emite
-   * `autofill` e não aciona o v-model (ver core/user-edit.ts).
+   * Aceita o valor colocado no campo pelo navegador (autofill/gerenciador de
+   * senha/script): `input`/`change`/`valueChange` também nesse caminho. Sem ele
+   * — e sem token semântico em `autocomplete` — o autofill é **desfeito**: o
+   * campo volta ao valor do host e nada é propagado (ver core/user-edit.ts).
    */
   'emit-autofill'?: boolean;
 }

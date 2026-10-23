@@ -13,20 +13,20 @@ import { esc } from '../../core/sanitize';
  *
  * Atributos: value, name, size (sm|md|lg), placeholder, disabled, readonly,
  * rows, maxlength, autofocus, autocomplete (repassado ao campo interno; default
- * `off`) e emit-autofill (restaura o comportamento antigo).
+ * `off`) e emit-autofill (aceita o valor do autofill).
  *
  * Autofill: o <textarea> real vive no Shadow DOM, então `autocomplete` é
  * repassado ao campo interno (default `off`, como no <fx-input>) e o atributo
- * declarado no host vence. `name`/`id` também descem ao campo interno. O Chrome
- * IGNORA `off` em type="password" — irrelevante aqui, mas a regra vale para o
- * <fx-input>.
+ * declarado no host vence. `name`/`id` também descem ao campo interno. Sem
+ * token semântico de `autocomplete` (ou `emit-autofill`), valor colocado no
+ * campo pelo navegador/gerenciador de senha é **desfeito** — o campo volta ao
+ * valor do host e nada é propagado (ver core/user-edit.ts).
  *
  * Eventos: `input`, `change` e `valueChange` (composed, detail: { value }) —
- * `input` aciona o v-model do Vue e `valueChange` o [(value)] do Angular.
- * Os três só saem em **edição do usuário**: valor colocado no campo por
- * autofill do navegador/gerenciador de senha ou por script emite `autofill`
- * (composed, detail: { value }) e sincroniza `value`/FormData, sem acionar o
- * v-model (ver core/user-edit.ts).
+ * `input` é o que o `v-model` do Vue usa; `valueChange` é o evento do two-way
+ * binding do Angular, que precisa ler `$event.detail.value`. Os três só saem em
+ * **edição do usuário** ou no autofill declarado (token semântico/
+ * `emit-autofill`); valor externo bloqueado não emite nada.
  */
 export class FxTextarea extends FxFormElement {
   static override styles = css`
@@ -154,22 +154,30 @@ export class FxTextarea extends FxFormElement {
     if (readonly) field.setAttribute('readonly', '');
 
     // Cada interação do usuário emite UM `input` (v-model) + `valueChange`
-    // (Angular); `change` apenas no evento nativo de mudança. Valor injetado
-    // (autofill/gerenciador de senha/script) NÃO é interação: sincroniza
-    // `value`/FormData e emite `autofill` (core/user-edit.ts).
+    // (Angular); `change` apenas no evento nativo de mudança. Valor externo
+    // (autofill/gerenciador de senha/script) é BLOQUEADO por padrão: o campo
+    // volta ao valor do host e nada é propagado. Só é aceito quando o host
+    // declara intenção (`emit-autofill` ou token semântico de `autocomplete`)
+    // — aí vale como valor de verdade e aciona o v-model (core/user-edit.ts).
     const guard = createUserEditGuard(field);
     // `change` do autofill (o navegador dispara input+change ao preencher) é
     // absorvido junto do `input`; o `change` do blur após digitação continua
     // saindo normalmente (não há beforeinput novo ali).
     let autofilled = false;
     const notifyInput = (event: Event): void => {
-      this.value = field.value;
-      autofilled = !this.isUserValueEvent(event, guard);
-      if (!autofilled) {
+      if (this.isUserValueEvent(event, guard)) {
+        autofilled = false;
+        this.value = field.value;
         this.emitValueEvents();
         return;
       }
-      this.dispatchAutofill(field.value);
+      // Valor externo: absorve o `change` sintetizado que vem logo abaixo.
+      autofilled = true;
+      const injected = field.value;
+      if (!this.acceptExternalValue(field)) return; // bloqueado e desfeito
+      this.value = injected;
+      this.dispatchAutofill(injected);
+      this.emitValueEvents();
     };
     const notifyChange = (): void => {
       this.value = field.value;

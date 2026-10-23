@@ -12,7 +12,8 @@ import { defineElement } from '../../core/define';
  * O texto do slot (light DOM) é o rótulo clicável.
  * Atributos: checked, disabled, value, name, size (sm|md|lg).
  * Eventos: `change` e `checkedChange` (composed, detail: { checked, value }) —
- * `checkedChange` é o two-way binding do Angular [(checked)].
+ * `checkedChange` é o par do two-way binding do Angular (`[checked]` +
+ * `(checkedChange)="x = $event.detail.checked"`).
  *
  * Vue: use `:checked="estado"` + `@change` (o `v-model` padrão de elemento
  * customizado usa `value` + `input`, não `checked`).
@@ -101,7 +102,7 @@ export class FxSwitch extends FxFormElement {
     this.toggleAttr('disabled', Boolean(value));
   }
 
-  /** getter/setter `value` → espelho do atributo `value` (compat com v-model / [(value)]). */
+  /** getter/setter `value` → espelho do atributo `value` (o v-model do Vue lê a propriedade). */
   get value(): string { return this.getAttr('value'); }
   set value(v: string | null | undefined) {
     this.setAttribute('value', v == null ? '' : String(v));
@@ -136,7 +137,7 @@ export class FxSwitch extends FxFormElement {
           detail: { checked: this.checked },
         }),
       );
-      // Two-way binding do Angular: [(checked)] = [checked] + (checkedChange).
+      // Two-way binding do Angular: [checked] + (checkedChange)="x = $event.detail.checked".
       this.dispatchEvent(
         new CustomEvent('checkedChange', {
           bubbles: true,

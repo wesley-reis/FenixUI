@@ -41,7 +41,8 @@ describe('docs: frameworks.buildSnippets', () => {
     const s = buildSnippets({ ...base, prettyHtml: raw, rawHtml: raw });
     expect(s.html).toContain('value="maria@ex.com"');
     expect(s.vue).toContain(`const value = ref("maria@ex.com")`);
-    expect(s.vue).toContain(':value="value"');
+    // Vue: v-model (o compilador expande para :value + @input em custom element).
+    expect(s.vue).toContain('v-model="value"');
     expect(s.react).toContain(`useState("maria@ex.com")`);
     expect(s.angular).toContain('[value]="value"');
     expect(s.svelte).toContain('let value = "maria@ex.com"');
@@ -63,17 +64,42 @@ describe('docs: frameworks.buildSnippets', () => {
     expect(s.vue).toContain('disabled');
   });
 
-  it('eventos usam detail.value em toda stack', () => {
+  it('o two-way binding sai na sintaxe que cada stack suporta em Web Components', () => {
     const raw = '<fx-input value="a"></fx-input>';
     const s = buildSnippets({ ...base, prettyHtml: raw, rawHtml: raw });
-    for (const code of [s.html, s.vue, s.react, s.angular, s.svelte]) {
-      expect(code).toContain('detail.value');
-    }
-    // React 19: props on* em custom elements viram addEventListener.
-    expect(s.react).toContain('onChange');
-    // Angular avisa que ngModel não funciona; Svelte avisa sobre bind:.
+    // Vue: v-model. React: value + onInput (onChange não dispara em custom
+    // element no React 18). Angular: [value] + (valueChange) lendo o detail
+    // ([(value)] atribuiria o CustomEvent). Svelte: value + on:input
+    // (bind:value não compila em custom element).
+    expect(s.vue).toContain('v-model="value"');
+    expect(s.react).toContain('value={value}');
+    expect(s.react).toContain('onInput=');
+    expect(s.react).not.toContain('onChange={');
+    expect(s.angular).toContain('[value]="value"');
+    expect(s.angular).toContain('(valueChange)="value = $event.detail.value"');
+    expect(s.svelte).toContain('value={value}');
+    expect(s.svelte).toContain('on:input=');
+    // HTML puro: listener nativo lendo o detail do CustomEvent.
+    expect(s.html).toContain('detail.value');
+    // Avisos de plataforma continuam nos snippets.
     expect(s.angular).toContain('CUSTOM_ELEMENTS_SCHEMA');
     expect(s.svelte).toContain('bind:');
+  });
+
+  it('checkbox/switch usam checked + change (o v-model de elemento não cobre checked)', () => {
+    const raw = '<fx-switch name="notificar" checked>Notificar</fx-switch>';
+    const s = buildSnippets({
+      tag: 'fx-switch',
+      imports: ["import '@wrrdev/fenix-ui/switch';"],
+      events: [{ name: 'change' }],
+      prettyHtml: raw,
+      rawHtml: raw,
+    });
+    expect(s.vue).toContain(':checked="notificar"');
+    expect(s.vue).toContain('@change="notificar = $event.detail.checked"');
+    expect(s.react).toContain('onChange=');
+    expect(s.angular).toContain('(checkedChange)="notificar = $event.detail.checked"');
+    expect(s.svelte).toContain('on:change=');
   });
 });
 
@@ -100,7 +126,9 @@ describe('docs: frameworks.buildFragmentSnippets', () => {
     expect(s.vue).toContain('const email = ref("");');
     expect(s.vue).toContain('const uf = ref("");');
     expect(s.vue).toContain('const termos = ref(false);');
-    expect(s.vue).toContain(':value="email"');
+    expect(s.vue).toContain('v-model="email"');
+    expect(s.vue).toContain('const termos = ref(false);');
+    expect(s.vue).toContain(':checked="termos"');
     expect(s.react).toContain('useState("")');
     expect(s.svelte).toContain('let email = "";');
     // `value="aceito"` do checkbox continua estático (vai para o FormData).

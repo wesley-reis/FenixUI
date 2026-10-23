@@ -12,7 +12,8 @@ import { defineElement } from '../../core/define';
  * name, readonly, disabled, allow-half (permite medias estrellas),
  * size (sm|md|lg).
  * Eventos (composed): `change`, `input` e `valueChange` (detail: { value }) —
- * `input` aciona o v-model do Vue e `valueChange` o [(value)] do Angular.
+ * `input` é o que o `v-model` do Vue usa; `valueChange` é o par do two-way
+ * binding do Angular (`$event.detail.value`).
  */
 export class FxRating extends FxFormElement {
   static override styles = css`
@@ -117,7 +118,7 @@ export class FxRating extends FxFormElement {
         let next = n;
         if (this.hasAttr('allow-half')) next += -0.5; // para simplificar, valor entero
         this.value = next;
-        // input (v-model do Vue) + valueChange ([(value)] do Angular).
+        // input (v-model do Vue) + valueChange (Angular: $event.detail.value).
         this.emitValueEvents();
         this.dispatchEvent(
           new CustomEvent('change', { bubbles: true, composed: true, detail: { value: this.value } }),

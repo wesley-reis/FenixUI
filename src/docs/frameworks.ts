@@ -3,13 +3,17 @@
  *
  * Fonte única dos exemplos copiáveis: converte o HTML real do playground, dos
  * casos de uso e dos modelos de formulário para a sintaxe de cada stack —
- * sempre com os VALORES atuais e o uso correto de propriedades/eventos:
- *  - CustomEvents `composed` com `detail: { value }` (atravessam o Shadow DOM);
- *  - Vue: `:value` + `@change="$event.detail.value"`;
- *  - React 19: props `on*` em custom elements viram `addEventListener`
- *    (React 18 exige `ref` + `addEventListener`);
- *  - Angular: `[value]` + `(change)`; `ngModel` NÃO funciona em Web Components;
- *  - Svelte: `value={…}` + `on:change`; `bind:` NÃO funciona em Web Components.
+ * sempre com os VALORES atuais e o two-way binding que CADA stack realmente
+ * suporta em Web Components:
+ *  - CustomEvents `composed` com `detail: { … }` (atravessam o Shadow DOM);
+ *  - Vue: `v-model` (o compilador usa `value` + `input` quando a tag é custom
+ *    element — exige `isCustomElement` no app);
+ *  - React: `value` + `onInput` (o evento `input` é genérico no React e chega
+ *    em custom elements; `onChange` não dispara no React 18);
+ *  - Angular: `[value]` + `(valueChange)` lendo `$event.detail.value` —
+ *    `[(value)]` NÃO funciona: o açúcar vira `x = $event` (o CustomEvent);
+ *  - Svelte: `value={…}` + `on:input` — `bind:value` não compila em custom
+ *    element (o compilador restringe a `input`/`textarea`/`select`).
  */
 import { codeBlock, wireCodeCopy } from './ui/code';
 import { VOID_TAGS } from './shared';
@@ -217,14 +221,42 @@ function openTag(tag: string, attrsSrc: string, selfClose: string, ctx: Ctx): st
   }
 
   if (ctx.fw !== 'html' && kind && state) {
-    if (ctx.fw === 'vue') parts.push(kind === 'checked' ? `:checked="${state}"` : `:value="${state}"`);
-    if (ctx.fw === 'react') parts.push(kind === 'checked' ? `checked={${state}}` : `value={${state}}`);
-    if (ctx.fw === 'angular') parts.push(kind === 'checked' ? `[checked]="${state}"` : `[value]="${state}"`);
-    if (ctx.fw === 'svelte') parts.push(kind === 'checked' ? `checked={${state}}` : `value={${state}}`);
-    if (ctx.fw === 'vue') parts.push(`@change="${state} = $event.detail.value"`);
-    if (ctx.fw === 'react') parts.push(`onChange={(e) => set${cap(state)}(e.detail.value)}`);
-    if (ctx.fw === 'angular') parts.push(`(change)="${state} = $event.detail.value"`);
-    if (ctx.fw === 'svelte') parts.push(`on:change={(e) => ${state} = e.detail.value}`);
+    const checked = kind === 'checked';
+    if (ctx.fw === 'vue') {
+      // v-model = `:value` + `@input` para custom elements (isCustomElement).
+      // `checked` não entra no v-model de elemento: use `:checked` + `@change`.
+      parts.push(checked ? `:checked="${state}"` : `v-model="${state}"`);
+      if (checked) parts.push(`@change="${state} = $event.detail.checked"`);
+    }
+    if (ctx.fw === 'react') {
+      // `onInput` é genérico no React (chega em custom elements); o payload é
+      // lido da propriedade do host, que o componente já reflete.
+      parts.push(checked ? `checked={${state}}` : `value={${state}}`);
+      parts.push(
+        checked
+          ? `onChange={(e) => set${cap(state)}(e.detail.checked)}`
+          : `onInput={(e) => set${cap(state)}(e.currentTarget.value)}`,
+      );
+    }
+    if (ctx.fw === 'angular') {
+      // `[(value)]` NÃO funciona em Web Components: o açúcar vira `x = $event`
+      // (o CustomEvent). O par correto é `[value]` + `(valueChange)`.
+      parts.push(checked ? `[checked]="${state}"` : `[value]="${state}"`);
+      parts.push(
+        checked
+          ? `(checkedChange)="${state} = $event.detail.checked"`
+          : `(valueChange)="${state} = $event.detail.value"`,
+      );
+    }
+    if (ctx.fw === 'svelte') {
+      // `bind:value` não compila em custom element (valid_elements do Svelte).
+      parts.push(checked ? `checked={${state}}` : `value={${state}}`);
+      parts.push(
+        checked
+          ? `on:change={(e) => ${state} = e.detail.checked}`
+          : `on:input={(e) => ${state} = e.detail.value}`,
+      );
+    }
   } else if (isFx && ctx.withClick && isClickButton(tag, attrs)) {
     ctx.hasClick = true;
     if (ctx.fw === 'vue') parts.push(`@click="onClick"`);
@@ -398,8 +430,8 @@ function reactCode(markup: string, header: string[], ctx: Ctx, roots: number): s
     ...header,
     `import '@wrrdev/fenix-ui/react'; // tipos TSX (opcional)`,
     '',
-    `// React 19: props on* em custom elements viram addEventListener (e.detail é o CustomEvent).`,
-    `// React 18: use ref + addEventListener('change', (e) => ...).`,
+    `// O evento 'input' chega em custom elements em qualquer React (18/19): onInput + a`,
+    `// propriedade value do host (o React 18 nao dispara onChange em custom element).`,
     `export function Exemplo() {`,
     ...states,
   ];
@@ -415,7 +447,8 @@ function reactCode(markup: string, header: string[], ctx: Ctx, roots: number): s
 function angularCode(markup: string, header: string[], ctx: Ctx): string {
   const decls = ctx.binds.map((b) => `  ${b.name} = ${b.init}; // valor inicial`);
   const lines = [
-    `// ngModel NAO funciona em Web Components: use propriedade + evento.`,
+    `// ngModel NAO funciona em Web Components e [(value)] NAO funciona (o $event e o`,
+    `// CustomEvent): use [value] + (valueChange)="x = $event.detail.value".`,
     `import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';`,
     ...header,
     '',
@@ -439,8 +472,9 @@ function svelteCode(markup: string, header: string[], ctx: Ctx): string {
   const script = ['<script>', ...header.map((l) => '  ' + l)];
   if (ctx.binds.length) {
     script.push('');
-    // bind: não propaga o CustomEvent dos Web Components (use on:change).
-    for (const b of ctx.binds) script.push(`  let ${b.name} = ${b.init}; // bind: nao funciona em WC`);
+    // bind:value não compila em custom element (o Svelte só aceita
+    // input/textarea/select) — use value + on:input com o detail do CustomEvent.
+    for (const b of ctx.binds) script.push(`  let ${b.name} = ${b.init}; // bind: nao compila em WC`);
   }
   script.push('</script>');
   return `${script.join('\n')}\n\n${markup}`;

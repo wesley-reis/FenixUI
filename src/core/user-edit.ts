@@ -32,21 +32,40 @@
  * usuário quando houver **prova positiva** — um `beforeinput` de edição
  * imediatamente antes do `input` (teclado, IME, colar, recortar, arrastar,
  * undo/redo). Todo o resto (autofill nativo, gerenciador de senha, script,
- * `el.value = x` + dispatch manual) cai no caminho de "valor externo" do
- * componente: sincroniza `value`/FormData e emite `autofill`, sem poluir
- * `input`/`valueChange`/`change`. O resultado não depende do que cada
- * navegador faz no autofill — depende da regra, aplicada no mesmo ponto
- * (este módulo) por todos os componentes de formulário.
+ * `el.value = x` + dispatch manual) é "valor externo" e segue a regra de
+ * bloqueio:
+ *
+ *  - **bloqueado por padrão** — o componente DESFAZ o preenchimento (o
+ *    controle interno volta ao valor do host) e nada é propagado: o campo não
+ *    fica com credenciais salvas, `value`/`FormData` seguem como estavam e
+ *    `input`/`valueChange`/`change` não saem. É o que impede a heurística
+ *    "primeiro campo de texto = usuário" de contaminar busca, filtro e login;
+ *  - **aceito quando o host declara intenção** — atributo `emit-autofill` ou
+ *    token semântico de `autocomplete` (`username`, `current-password`,
+ *    `email`, …; ver `isSemanticAutocompleteToken`). Aí o valor é adotado,
+ *    sincroniza `value`/FormData, emite `autofill` e **também**
+ *    `input`/`valueChange` — autofill declarado é valor de verdade e o
+ *    `v-model` do Vue acompanha.
+ *
+ * O resultado não depende do que cada navegador faz no autofill — depende da
+ * regra, aplicada no mesmo ponto (este módulo) por todos os componentes de
+ * formulário. O `autocomplete="off"` no campo interno continua sendo a defesa
+ * preventiva, mas o guard é a garantia: o Chrome ignora `off` em
+ * `type="password"` e o gerenciador de senha preenche mesmo assim.
  *
  * Custo: um listener `beforeinput` por controle interno (O(1), sem
  * observers, timers ou hacks de CSS/animação) e nenhum re-render.
  *
  * Limitações conhecidas (documentadas no README):
- *  - seleção no dropdown de valores salvos do Chrome também é classificada
- *    como autofill (o Chrome não dispara `beforeinput` nesse fluxo);
+ *  - o bloqueio é reativo: depende de o navegador disparar `input` ao
+ *    preencher (Chrome/Edge/Firefox disparam; o evento nativo `autofill` ainda
+ *    não é Baseline). Sem o evento, resta o `autocomplete` como defesa;
+ *  - escolher uma credencial no dropdown do navegador/gerenciador de senha em
+ *    um campo bloqueado não cola nada (esse fluxo não dispara `beforeinput`) —
+ *    declare o token semântico nos campos onde o autofill é desejado;
  *  - simulação programática (`el.value = x; dispatchEvent(new Event('input'))`)
- *    deixa de emitir `input` — use o atributo `emit-autofill` quando precisar
- *    do comportamento antigo.
+ *    também é valor externo e é desfeita — use `emit-autofill` quando precisar
+ *    adotar o valor.
  */
 
 /** `inputType` com que o Firefox marca preenchimento automático. */
@@ -107,4 +126,63 @@ export function createUserEditGuard(field: HTMLElement): UserEditGuard {
       pending = null;
     },
   };
+}
+
+/**
+ * Tokens de `autocomplete` que PEDEM autofill (dados do próprio usuário).
+ *
+ * Fonte: WHATWG HTML — "Autofill" (autofill field names). São os tokens
+ * semânticos que os navegadores/gerenciadores de senha usam para classificar o
+ * campo; qualquer outro valor (`on`, `off`, `nope`, token desconhecido) NÃO
+ * declara intenção de autofill.
+ */
+const SEMANTIC_AUTOCOMPLETE_TOKENS = new Set([
+  // credenciais
+  'username', 'current-password', 'new-password', 'one-time-code',
+  // contato
+  'email', 'tel', 'tel-country-code', 'tel-national', 'tel-area-code',
+  'tel-local', 'tel-local-prefix', 'tel-local-suffix', 'tel-extension',
+  'impp', 'url',
+  // identidade
+  'name', 'honorific-prefix', 'given-name', 'additional-name', 'family-name',
+  'honorific-suffix', 'nickname', 'organization', 'organization-title',
+  'photo', 'sex', 'language', 'bday', 'bday-day', 'bday-month', 'bday-year',
+  // endereço
+  'street-address', 'address-line1', 'address-line2', 'address-line3',
+  'address-level1', 'address-level2', 'address-level3', 'address-level4',
+  'country', 'country-name', 'postal-code',
+  // pagamento
+  'cc-name', 'cc-given-name', 'cc-additional-name', 'cc-family-name',
+  'cc-number', 'cc-exp', 'cc-exp-month', 'cc-exp-year', 'cc-csc', 'cc-type',
+  'transaction-currency', 'transaction-amount',
+]);
+
+/** Modificadores de `autocomplete` que acompanham o token (não são o token). */
+const AUTOCOMPLETE_MODIFIERS = new Set([
+  'shipping', 'billing', 'home', 'work', 'mobile', 'fax', 'pager',
+]);
+
+/**
+ * `true` quando o valor de `autocomplete` declara autofill de dados do usuário
+ * — isto é, quando o campo quer receber o preenchimento do navegador.
+ *
+ * Aceita a sintaxe completa da spec (lista separada por espaços, com
+ * modificadores): `"section-azul shipping street-address"` ⇒ `true`.
+ * `on`/`off`, vazio e tokens desconhecidos ⇒ `false` (sem intenção declarada,
+ * logo o valor externo é bloqueado/desfeito pelo componente).
+ */
+export function isSemanticAutocompleteToken(value: string): boolean {
+  return (value || '')
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .some(
+      (token) =>
+        Boolean(token) &&
+        token !== 'on' &&
+        token !== 'off' &&
+        !token.startsWith('section-') &&
+        !AUTOCOMPLETE_MODIFIERS.has(token) &&
+        SEMANTIC_AUTOCOMPLETE_TOKENS.has(token),
+    );
 }
