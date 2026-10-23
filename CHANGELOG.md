@@ -4,7 +4,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) �
 Versionamento [SemVer](https://semver.org/lang/pt-BR/).
 Histórico anterior à 1.2.0: [releases do GitHub](https://github.com/wesley-reis/FenixUI/releases).
 
-## [Não publicado]
+## [1.4.0] — 2026-10-22
 
 ### Adicionado
 
