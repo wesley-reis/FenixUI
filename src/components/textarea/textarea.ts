@@ -171,7 +171,7 @@ export class FxTextarea extends FxFormElement {
       }
       this.dispatchAutofill(field.value);
     };
-    const notifyChange = (event: Event): void => {
+    const notifyChange = (): void => {
       this.value = field.value;
       const wasAutofill = autofilled;
       autofilled = false;
@@ -187,7 +187,7 @@ export class FxTextarea extends FxFormElement {
     // Bloqueia o evento nativo (composed, sem detail) para que só o
     // CustomEvent com detail chegue aos consumidores.
     field.addEventListener('input', (e) => { e.stopPropagation(); notifyInput(e); });
-    field.addEventListener('change', (e) => { e.stopPropagation(); notifyChange(e); });
+    field.addEventListener('change', (e) => { e.stopPropagation(); notifyChange(); });
 
     // Publica name/value no form (ElementInternals) a cada render.
     this.updateFormValue();
