@@ -4,6 +4,30 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) �
 Versionamento [SemVer](https://semver.org/lang/pt-BR/).
 Histórico anterior à 1.2.0: [releases do GitHub](https://github.com/wesley-reis/FenixUI/releases).
 
+## [Não publicado]
+
+### Adicionado
+
+- **Evento `autofill`** (`composed`, `detail: { value }`) em `fx-input`,
+  `fx-textarea` e `fx-autocomplete`: valor colocado no campo **sem** edição do
+  usuário (autofill do navegador, gerenciador de senha, script) agora tem
+  evento próprio, sem acionar `input`/`valueChange`/`change`.
+- **`emit-autofill`** (atributo booleano, por campo): restaura o comportamento
+  anterior — eventos de valor também quando o valor vem do autofill.
+
+### Corrigido
+
+- **`fx-input`, `fx-textarea` e `fx-autocomplete`: `input` disparado por
+  autofill/restauração do navegador** — o v-model do Vue (e o `[(value)]` do
+  Angular) recebia valores que o usuário não digitou (ex.: o username do login
+  salvo). Os eventos de valor agora só saem em edição real do usuário (prova
+  positiva de `beforeinput`), de forma igual em todos os navegadores; o valor
+  autofillado continua sincronizado em `value`/`FormData` e levanta a label do
+  `fx-floatlabel`. Regra e limitações em `src/core/user-edit.ts` e na seção
+  “Autofill do navegador × v-model” do README.
+- `fx-input`/`fx-textarea`: o `change` sintetizado pelo autofill é absorvido
+  junto do `input` (o `change` do blur após digitação continua saindo).
+
 ## [1.2.0] — 2026-10-21
 
 ### Adicionado

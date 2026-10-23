@@ -85,6 +85,12 @@ export const autocompleteDoc: ComponentDoc = {
 			desc: "Largura 100% acompanhando o elemento pai (host vira block). Sem full, a largura também é controlável por CSS externo, classes ou style inline no elemento (ver Variáveis CSS).",
 		},
 		{
+			name: "emit-autofill",
+			type: "boolean",
+			default: "false",
+			desc: "Restaura o comportamento anterior à correção de autofill: input/valueChange também quando o valor é colocado no campo pelo navegador (autofill/gerenciador de senha). Sem ele, autofill emite `autofill` e não aciona o v-model.",
+		},
+		{
 			name: "error",
 			type: "boolean",
 			default: "false",
@@ -102,6 +108,21 @@ export const autocompleteDoc: ComponentDoc = {
 			name: "select",
 			type: `CustomEvent<{ value: string }>`,
 			desc: "Ao escolher uma sugestão.",
+		},
+		{
+			name: "input",
+			type: `CustomEvent<{ value: string }>`,
+			desc: "Ao digitar (composed) — aciona o v-model do Vue. Só sai em edição do usuário: valor colocado no campo por autofill/gerenciador de senha/script emite `autofill`.",
+		},
+		{
+			name: "valueChange",
+			type: `CustomEvent<{ value: string }>`,
+			desc: "Espelho de `input` para o [(value)] do Angular (composed). Também só em edição do usuário.",
+		},
+		{
+			name: "autofill",
+			type: `CustomEvent<{ value: string }>`,
+			desc: "Valor colocado no campo SEM edição do usuário (autofill do navegador, gerenciador de senha, script). O value/FormData já estão sincronizados e a lista não abre — use este evento para reagir sem poluir o v-model.",
 		},
 	],
 	cssVars: [

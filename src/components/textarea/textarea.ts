@@ -1,4 +1,5 @@
 ﻿import { FxFormElement } from '../../core/form-element';
+import { createUserEditGuard } from '../../core/user-edit';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from '../../core/sanitize';
@@ -11,9 +12,13 @@ import { esc } from '../../core/sanitize';
  * `<label for>`/`autofocus`. Enter continua sendo quebra de linha.
  *
  * Atributos: value, name, size (sm|md|lg), placeholder, disabled, readonly,
- * rows, maxlength, autofocus.
+ * rows, maxlength, autofocus, emit-autofill (restaura o comportamento antigo).
  * Eventos: `input`, `change` e `valueChange` (composed, detail: { value }) —
  * `input` aciona o v-model do Vue e `valueChange` o [(value)] do Angular.
+ * Os três só saem em **edição do usuário**: valor colocado no campo por
+ * autofill do navegador/gerenciador de senha ou por script emite `autofill`
+ * (composed, detail: { value }) e sincroniza `value`/FormData, sem acionar o
+ * v-model (ver core/user-edit.ts).
  */
 export class FxTextarea extends FxFormElement {
   static override styles = css`
@@ -131,14 +136,29 @@ export class FxTextarea extends FxFormElement {
     if (disabled) field.setAttribute('disabled', '');
     if (readonly) field.setAttribute('readonly', '');
 
-    // Cada interação emite UM `input` (v-model) + `valueChange` (Angular);
-    // `change` apenas no evento nativo de mudança.
-    const notifyInput = (): void => {
+    // Cada interação do usuário emite UM `input` (v-model) + `valueChange`
+    // (Angular); `change` apenas no evento nativo de mudança. Valor injetado
+    // (autofill/gerenciador de senha/script) NÃO é interação: sincroniza
+    // `value`/FormData e emite `autofill` (core/user-edit.ts).
+    const guard = createUserEditGuard(field);
+    // `change` do autofill (o navegador dispara input+change ao preencher) é
+    // absorvido junto do `input`; o `change` do blur após digitação continua
+    // saindo normalmente (não há beforeinput novo ali).
+    let autofilled = false;
+    const notifyInput = (event: Event): void => {
       this.value = field.value;
-      this.emitValueEvents();
+      autofilled = !this.isUserValueEvent(event, guard);
+      if (!autofilled) {
+        this.emitValueEvents();
+        return;
+      }
+      this.dispatchAutofill(field.value);
     };
-    const notifyChange = (): void => {
+    const notifyChange = (event: Event): void => {
       this.value = field.value;
+      const wasAutofill = autofilled;
+      autofilled = false;
+      if (wasAutofill) return;
       this.dispatchEvent(
         new CustomEvent('change', {
           bubbles: true,
@@ -149,8 +169,8 @@ export class FxTextarea extends FxFormElement {
     };
     // Bloqueia o evento nativo (composed, sem detail) para que só o
     // CustomEvent com detail chegue aos consumidores.
-    field.addEventListener('input', (e) => { e.stopPropagation(); notifyInput(); });
-    field.addEventListener('change', (e) => { e.stopPropagation(); notifyChange(); });
+    field.addEventListener('input', (e) => { e.stopPropagation(); notifyInput(e); });
+    field.addEventListener('change', (e) => { e.stopPropagation(); notifyChange(e); });
 
     // Publica name/value no form (ElementInternals) a cada render.
     this.updateFormValue();

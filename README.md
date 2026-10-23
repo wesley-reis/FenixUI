@@ -430,6 +430,44 @@ disponível como atalho para largura 100%.
 Eventos usam o nativo `click` no botão; `input`, `change` e o `change` do select são
 `CustomEvent`s **composed** com `detail: { value }` (atravessam o Shadow DOM).
 
+### Autofill do navegador × v-model (input/change)
+
+`fx-input`, `fx-textarea` e `fx-autocomplete` só emitem **`input`** (v-model do Vue),
+**`change`** e **`valueChange`** ([(value)] do Angular) em **edição do usuário**
+(teclado, IME, colar, recortar, arrastar, undo/redo). Valor colocado no campo por
+autofill do navegador, gerenciador de senha ou script **não** aciona esses eventos:
+
+- o `value` do componente e o `FormData` (form-associated) **são sincronizados** —
+  o autofill continua funcionando no form e na label do `fx-floatlabel`;
+- é emitido **`autofill`** (`composed`, `detail: { value }`) para quem quiser reagir
+  sem poluir o v-model:
+
+```html
+<fx-input name="usuario" @autofill="usuario = $event.detail.value"></fx-input>
+```
+
+```ts
+// Sem framework: o FormData do <form> já tem o valor autofillado.
+form.addEventListener('submit', (e) => { e.preventDefault(); console.log(new FormData(form)); });
+```
+
+**Por que assim:** a plataforma não tem um sinal interoperável de autofill — a spec
+deixa cada navegador sintetizar os eventos que quiser ([whatwg/html#3016](https://github.com/whatwg/html/issues/3016))
+e Chrome/Safari não disparam `beforeinput` no autofill ([WebKit 217692](https://bugs.webkit.org/show_bug.cgi?id=217692) /
+[Chromium 40673974](https://issues.chromium.org/issues/40673974)), enquanto o Firefox
+marca o autofill com `insertReplacementText` não cancelável. O FenixUI usa uma única
+regra (prova positiva de edição: `beforeinput`) em todos os navegadores — ver
+`src/core/user-edit.ts`.
+
+> **`emit-autofill`**: atributo booleano que restaura o comportamento anterior
+> (`input`/`change`/`valueChange` também no autofill) para quem depende do v-model
+> atualizado pelo navegador.
+>
+> **Atenção em testes/automação:** simular digitação com
+> `el.value = 'x'; el.dispatchEvent(new Event('input'))` **não** emite mais `input`
+> (esse é exatamente o caminho do autofill). Dispare `beforeinput` antes do `input`,
+> use teclado real (`page.keyboard.type()`) ou o atributo `emit-autofill`.
+
 ### Tokens de efeito (configuráveis por preset)
 
 ```ts
