@@ -22,7 +22,8 @@ import { esc } from '../../core/sanitize';
  * placement (auto|top|bottom — direção do painel; `auto` inverte quando
  * não cabe na viewport).
  * Eventos: `change`, `input` e `valueChange` (composed, detail: { value }) —
- * `input` aciona o v-model do Vue e `valueChange` o [(value)] do Angular.
+ * `input` é o que o `v-model` do Vue usa; `valueChange` é o par do two-way
+ * binding do Angular (`[value]` + `(valueChange)="x = $event.detail.value"`).
  */
 export class FxSelect extends FxFormElement {
   static override styles = css`

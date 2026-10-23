@@ -13,7 +13,8 @@ import { defineElement } from '../../core/define';
  *
  * Atributos: checked, disabled, value, name, size (sm|md|lg).
  * Eventos: `change` e `checkedChange` (composed, detail: { checked, value }) —
- * `checkedChange` é o two-way binding do Angular [(checked)].
+ * `checkedChange` é o par do two-way binding do Angular (`[checked]` +
+ * `(checkedChange)="x = $event.detail.checked"`).
  *
  * Vue: use `:checked="estado"` + `@change` (o `v-model` padrão de elemento
  * customizado usa `value` + `input`, não `checked`).
@@ -197,7 +198,7 @@ export class FxRadio extends FxFormElement {
         detail: { checked: true, value: this.getAttr('value') },
       }),
     );
-    // Two-way binding do Angular: [(checked)] = [checked] + (checkedChange).
+    // Two-way binding do Angular: [checked] + (checkedChange)="x = $event.detail.checked".
     this.dispatchEvent(
       new CustomEvent('checkedChange', {
         bubbles: true,

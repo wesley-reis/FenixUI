@@ -73,7 +73,7 @@ describe('<fx-floatlabel>', () => {
     expect(el.hasAttribute('active')).toBe(false);
   });
 
-  it('autofill no fx-input levanta a label (value sincronizado, sem input)', async () => {
+  it('autofill no fx-input é DESFEITO: a label não levanta (campo segue vazio)', async () => {
     const el = mount(`
       <fx-floatlabel>
         <fx-input id="nome"></fx-input>
@@ -83,9 +83,29 @@ describe('<fx-floatlabel>', () => {
     const input = el.querySelector('fx-input') as any;
     expect(el.hasAttribute('active')).toBe(false);
 
-    // Autofill: valor no campo interno SEM `beforeinput` → o componente não
-    // emite `input`, mas sincroniza o `value` do host (o floatlabel observa o
-    // atributo via MutationObserver) — ver core/user-edit.ts.
+    // Autofill: valor no campo interno SEM `beforeinput` → o componente desfaz
+    // o preenchimento (o campo volta ao valor do host) e não sincroniza nada —
+    // ver core/user-edit.ts.
+    const field = input.shadowRoot.querySelector('input')!;
+    field.value = 'usuario.salvo';
+    field.dispatchEvent(new InputEvent('input', { inputType: 'insertText' }));
+    await new Promise((r) => setTimeout(r, 0)); // MutationObserver
+
+    expect(input.hasAttribute('value')).toBe(false);
+    expect(field.value).toBe('');
+    expect(el.hasAttribute('active')).toBe(false);
+  });
+
+  it('autofill declarado (token semântico) levanta a label', async () => {
+    const el = mount(`
+      <fx-floatlabel>
+        <fx-input id="nome" autocomplete="username"></fx-input>
+        <label for="nome">Nome</label>
+      </fx-floatlabel>
+    `);
+    const input = el.querySelector('fx-input') as any;
+    expect(el.hasAttribute('active')).toBe(false);
+
     const field = input.shadowRoot.querySelector('input')!;
     field.value = 'usuario.salvo';
     field.dispatchEvent(new InputEvent('input', { inputType: 'insertText' }));

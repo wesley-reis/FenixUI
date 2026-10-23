@@ -23,7 +23,7 @@ export function autofillSection(detail: string): { title: string; html: string }
     title: 'Autofill e gerenciadores de senha',
     html:
       `<p>${detail}</p>` +
-      '<p>Regra geral: o controle nativo vive no <b>Shadow DOM</b>, então <code>autocomplete</code> precisa ser repassado ao campo interno — sem isso o navegador aplica o default <code>on</code> e autopreenche o campo com credenciais salvas (heurística “primeiro campo de texto = usuário”), além de oferecer <b>“Salvar senha?”</b>. A tabela de tokens e o passo a passo do login estão em <a href="#/fx-input">fx-input</a>.</p>',
+      '<p>Regra geral: o controle nativo vive no <b>Shadow DOM</b>, então <code>autocomplete</code> precisa ser repassado ao campo interno — sem isso o navegador aplica o default <code>on</code> e autopreenche o campo com credenciais salvas (heurística “primeiro campo de texto = usuário”), além de oferecer <b>“Salvar senha?”</b>. Valor colocado no campo <b>sem edição do usuário</b> (autofill/gerenciador de senha/script) é <b>desfeito</b>: o campo volta ao valor do host e nada é propagado. A tabela de tokens, a regra de bloqueio e o passo a passo do login estão em <a href="#/fx-input">fx-input</a>.</p>',
   };
 }
 

@@ -7,25 +7,13 @@ import { FENIX_ICON_BASE_CSS, fenixIconHtml } from '../../icons/base-css';
 import type { FxInputType } from '../../core/jsx';
 
 /**
- * Tipos nativos aceitos pelo <fx-input>. Os tipos com semântica própria
- * (file, checkbox, radio, submit, reset, button, image) continuam fora:
- * eles não fazem sentido no componente de texto.
+ * Tipos nativos aceitos pelo <fx-input>: só os que o componente desenha com os
+ * tokens do tema. Os demais (email, tel, url, search, date, time,
+ * datetime-local, month, week, color) e os de semântica própria (file,
+ * checkbox, radio, submit, reset, button, image) normalizam para `text` — para
+ * esses casos use o <input> nativo do tipo desejado.
  */
-const INPUT_TYPES = new Set([
-  'text',
-  'number',
-  'password',
-  'email',
-  'tel',
-  'url',
-  'search',
-  'date',
-  'time',
-  'datetime-local',
-  'month',
-  'week',
-  'color',
-]);
+const INPUT_TYPES = new Set(['text', 'number', 'password']);
 
 function normalizeInputType(value: string): string {
   const type = (value || 'text').toLowerCase();
@@ -39,33 +27,41 @@ function normalizeInputType(value: string): string {
  * (via atributo `name`), recebe reset/disable do form, é alvo de
  * `<label for>`/`autofocus` e o Enter submete o form.
  *
- * Atributos: type (text|number|password|email|tel|url|search|date|time|
- * datetime-local|month|week|color), value, name,
+ * Atributos: type (text|number|password — padrão text), value, name,
  * size, placeholder, disabled, readonly, min, max, step, autofocus,
  * clearable, full (largura 100% acompanhando o elemento pai), icon (nome do
  * glifo Fenix Icons ou emoji/texto livre) e icon-pos (left|right, padrão left).
+ *
+ * `type` aceita apenas `text`, `number` e `password` — os tipos que o
+ * componente desenha/valida com os tokens do tema. Qualquer outro valor
+ * (email, tel, url, search, date, time, datetime-local, month, week, color)
+ * normaliza para `text`; para esses casos use o `<input>` nativo do tipo
+ * desejado.
  *
  * Autofill: o <input> real vive no Shadow DOM, então `autocomplete` precisa ser
  * REPASSADO ao campo interno — sem isso o navegador aplica o default `on` e
  * preenche o campo com credenciais salvas (heurística "primeiro campo de texto
  * = usuário"). O default aqui é `off` (mesma escolha do <fx-autocomplete>) e o
- * atributo declarado no host vence. Quando o autofill for desejado, use os
- * tokens semânticos: autocomplete="username", "current-password",
- * "new-password", "one-time-code", "email", "street-address", … O Chrome
- * IGNORA `off` em type="password" — para login use "current-password" (e
- * "new-password" no cadastro/troca de senha). `name` e `id` também são
- * repassados ao campo interno (melhoram a classificação do navegador).
+ * atributo declarado no host vence. Como o Chrome IGNORA `off` em
+ * type="password", o componente também **desfaz** o preenchimento externo
+ * quando o host não declarou intenção de autofill: o campo volta ao valor do
+ * host e nada é propagado (nem `value`/FormData, nem eventos). Para receber
+ * autofill de verdade use os tokens semânticos — autocomplete="username",
+ * "current-password", "new-password", "one-time-code", "email",
+ * "street-address", … — ou `emit-autofill`; nesse caminho o valor é aceito e os
+ * eventos de valor são emitidos. `name` e `id` também são repassados ao campo
+ * interno (melhoram a classificação do navegador).
  * Largura: o default (260px; sm 220px / lg 300px) fica no HOST via tokens
  * --fx-input-width(-sm|-lg) — CSS externo, classes e style inline no elemento
  * vencem o default sem precisar de atributo.
  * Slots: `icon` (ícone customizado no lugar do atributo).
  * Eventos: `input`, `change` e `valueChange` (composed, detail: { value }) —
- * `input` aciona o v-model do Vue e `valueChange` o [(value)] do Angular.
- * Esses três eventos só saem em **edição do usuário**: valor colocado no
- * campo por autofill do navegador/gerenciador de senha ou por script emite
- * `autofill` (composed, detail: { value }) e sincroniza `value`/FormData, sem
- * acionar o v-model. O atributo `emit-autofill` restaura o comportamento
- * antigo por campo (ver core/user-edit.ts).
+ * `input` é o que o `v-model` do Vue usa (o binding lê a propriedade `value` do
+ * host, que o componente reflete antes de emitir); `valueChange` é o evento do
+ * two-way binding do Angular, que precisa ler `$event.detail.value`. Esses três
+ * eventos só saem em **edição do usuário** ou no autofill declarado (acima);
+ * valor externo bloqueado não emite nada. O atributo `emit-autofill` força o
+ * caminho aceito (ver core/user-edit.ts).
  */
 export class FxInput extends FxFormElement {
   static override styles = css`
@@ -326,21 +322,30 @@ export class FxInput extends FxFormElement {
 
     // Cada interação do usuário emite UM `input` (v-model) + `valueChange`
     // (Angular); o `change` só existe no evento nativo de mudança/limpar.
-    // Valor injetado (autofill/gerenciador de senha/script) NÃO é interação:
-    // sincroniza `value`/FormData e emite `autofill` (core/user-edit.ts).
+    // Valor externo (autofill/gerenciador de senha/script) é BLOQUEADO por
+    // padrão: o campo volta ao valor do host e nada é propagado. Só é aceito
+    // quando o host declara intenção (`emit-autofill` ou token semântico de
+    // `autocomplete`) — aí vale como valor de verdade e aciona o v-model
+    // (core/user-edit.ts).
     const guard = createUserEditGuard(field);
     // `change` do autofill (o navegador dispara input+change ao preencher)
     // é absorvido junto do `input`; o `change` do blur após digitação
     // continua saindo normalmente (não há beforeinput novo ali).
     let autofilled = false;
     const notifyInput = (event: Event): void => {
-      this.value = field.value;
-      autofilled = !this.isUserValueEvent(event, guard);
-      if (!autofilled) {
+      if (this.isUserValueEvent(event, guard)) {
+        autofilled = false;
+        this.value = field.value;
         this.emitValueEvents();
         return;
       }
-      this.dispatchAutofill(field.value);
+      // Valor externo: absorve o `change` sintetizado que vem logo abaixo.
+      autofilled = true;
+      const injected = field.value;
+      if (!this.acceptExternalValue(field)) return; // bloqueado e desfeito
+      this.value = injected;
+      this.dispatchAutofill(injected);
+      this.emitValueEvents();
     };
     const notifyChange = (): void => {
       this.value = field.value;

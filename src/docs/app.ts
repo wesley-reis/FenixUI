@@ -273,11 +273,11 @@ const HOME_USE_CASES = [
               <fx-button size="sm" variant="primary">Entrar</fx-button>
             </div>`,
     code: `<fx-floatlabel variant="in">
-  <fx-input full icon="mail" name="email" placeholder="E-mail"></fx-input>
+  <fx-input full icon="mail" name="email" autocomplete="username" placeholder="E-mail"></fx-input>
   <label>E-mail</label>
 </fx-floatlabel>
 <fx-floatlabel variant="in">
-  <fx-input full icon="lock" type="password" name="senha" placeholder="Senha"></fx-input>
+  <fx-input full icon="lock" type="password" name="senha" autocomplete="current-password" placeholder="Senha"></fx-input>
   <label>Senha</label>
 </fx-floatlabel>
 <fx-switch name="lembrar" checked>Lembrar-me</fx-switch>
@@ -1509,7 +1509,7 @@ async function renderForms(): Promise<void> {
       }
     </style>
     <div class="note"><strong>Nota:</strong> com <code>full</code> o campo ocupa a linha inteira (host vira block). Para manter um botão na mesma linha do campo, use o container com <code>display:flex</code> — o campo estica e o botão mantém o tamanho. No <code>fx-floatlabel</code>, o <code>full</code> é propagado automaticamente para o controle interno.</div>
-    <div class="note"><strong>Autofill do navegador:</strong> <code>fx-input</code>, <code>fx-textarea</code> e <code>fx-autocomplete</code> só emitem <code>input</code>/<code>change</code>/<code>valueChange</code> em <strong>edição do usuário</strong>. Valor colocado pelo autofill (ou por gerenciador de senha/script) sincroniza o <code>value</code>/<code>FormData</code> e emite <code>autofill</code> — assim o <code>v-model</code> não recebe valores que o usuário não digitou. Ex.: <code>&lt;fx-input name="usuario" @autofill="usuario = $event.detail.value"&gt;</code>. Para o comportamento antigo por campo, use <code>emit-autofill</code>.</div>
+    <div class="note"><strong>Autofill do navegador:</strong> valor colocado em <code>fx-input</code>/<code>fx-textarea</code>/<code>fx-autocomplete</code> <strong>sem edição do usuário</strong> (autofill, gerenciador de senha, script) é <strong>desfeito</strong> — o campo volta ao valor do host e nada é propagado, então o campo nunca fica com credenciais salvas. Declare o token semântico (<code>autocomplete="username"</code>, <code>"current-password"</code>…) ou <code>emit-autofill</code> para aceitar: aí o valor entra em <code>value</code>/<code>FormData</code>, emite <code>autofill</code> e também <code>input</code>/<code>valueChange</code> (o <code>v-model</code> acompanha). Detalhes na seção Autofill de <a href="#/fx-input">fx-input</a>.</div>
     ${formModelCard("Modelo 1 — Cadastro em uma coluna (full)", "Campos full empilhados: cada um ocupa a linha toda do container.", FORM_MODEL_1)}
     ${formModelCard("Modelo 2 — Grid de duas colunas", "Dois campos por linha via CSS grid (grid-template-columns: 1fr 1fr) com full nos campos.", FORM_MODEL_2)}
     ${formModelCard("Modelo 3 — Misto (múltiplos campos por linha)", "Grids com 2-3 campos por linha, selects, multiselect, autocomplete e fileupload full.", FORM_MODEL_3)}

@@ -16,7 +16,8 @@ import { esc } from '../../core/sanitize';
  * Atributos: value, min, max, step, size, strokeWidth, valueColor, rangeColor,
  * readonly, disabled, valueTemplate.
  * Eventos: `change`, `input` e `valueChange` (composed, detail: { value }) —
- * `input` aciona o v-model do Vue e `valueChange` o [(value)] do Angular.
+ * `input` é o que o `v-model` do Vue usa; `valueChange` é o par do two-way
+ * binding do Angular (`[value]` + `(valueChange)="x = $event.detail.value"`).
  */
 export class FxKnob extends FxFormElement {
   static override styles = css`
@@ -275,7 +276,7 @@ export class FxKnob extends FxFormElement {
     const clamped = this.clampValue(newValue);
     if (clamped !== this.value) {
       this.value = clamped;
-      // input (v-model do Vue) + valueChange ([(value)] do Angular).
+      // input (v-model do Vue) + valueChange (Angular: x = $event.detail.value).
       this.emitValueEvents();
       this.dispatchEvent(
         new CustomEvent('change', {

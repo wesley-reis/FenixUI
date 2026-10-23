@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createUserEditGuard } from './user-edit';
+import { createUserEditGuard, isSemanticAutocompleteToken } from './user-edit';
 
 /**
  * Matriz de casos do guard: cada cenário reproduz o que um navegador/
@@ -99,5 +99,36 @@ describe('core/user-edit', () => {
       expect(guard.isUserEdit(new InputEvent('input', { inputType: 'insertReplacementText' }))).toBe(false);
       expect(guard.isUserEdit(new Event('input'))).toBe(false);
     });
+  });
+});
+
+/**
+ * `isSemanticAutocompleteToken` decide se o host DECLAROU intenção de autofill
+ * (token semântico) — é o que separa "aceitar o valor externo" de "desfazer o
+ * preenchimento" em `fx-input`/`fx-textarea`/`fx-autocomplete`.
+ */
+describe('core/user-edit · isSemanticAutocompleteToken', () => {
+  it('reconhece os tokens semânticos (dados do próprio usuário)', () => {
+    for (const token of [
+      'username', 'current-password', 'new-password', 'one-time-code',
+      'email', 'tel', 'tel-national', 'url', 'name', 'given-name',
+      'street-address', 'address-line1', 'postal-code', 'country',
+      'cc-name', 'cc-number', 'cc-exp', 'bday',
+    ]) {
+      expect(isSemanticAutocompleteToken(token), token).toBe(true);
+    }
+  });
+
+  it('não confunde `on`/`off`, vazio ou token desconhecido com intenção', () => {
+    for (const token of ['', '   ', 'on', 'off', 'nope', 'foo-bar']) {
+      expect(isSemanticAutocompleteToken(token), token).toBe(false);
+    }
+  });
+
+  it('aceita a sintaxe completa da spec (lista + modificadores + section-)', () => {
+    expect(isSemanticAutocompleteToken('section-azul shipping street-address')).toBe(true);
+    expect(isSemanticAutocompleteToken('BILLING CC-NUMBER')).toBe(true);
+    // Só modificadores, sem token de campo ⇒ sem intenção declarada.
+    expect(isSemanticAutocompleteToken('section-azul shipping')).toBe(false);
   });
 });

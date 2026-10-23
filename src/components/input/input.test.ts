@@ -64,17 +64,19 @@ describe('fx-input', () => {
     expect((el.shadowRoot!.querySelector('input') as HTMLInputElement).type).toBe('number');
   });
 
-  it('repassa tipos nativos de input (date/email/time)', () => {
-    const el = mount('<fx-input type="date"></fx-input>') as any;
-    expect(el.type).toBe('date');
-    expect((el.shadowRoot!.querySelector('input') as HTMLInputElement).type).toBe('date');
+  it('aceita apenas text/number/password — os demais types normalizam para text', () => {
+    for (const t of [
+      'email', 'tel', 'url', 'search', 'date', 'time', 'datetime-local',
+      'month', 'week', 'color', 'file', 'checkbox', 'radio', 'submit',
+    ]) {
+      const el = mount(`<fx-input type="${t}"></fx-input>`) as any;
+      expect(el.type).toBe('text');
+      expect((el.shadowRoot!.querySelector('input') as HTMLInputElement).type).toBe('text');
+    }
 
-    el.setAttribute('type', 'email');
-    expect(el.type).toBe('email');
-    expect((el.shadowRoot!.querySelector('input') as HTMLInputElement).type).toBe('email');
-
-    el.setAttribute('type', 'time');
-    expect((el.shadowRoot!.querySelector('input') as HTMLInputElement).type).toBe('time');
+    const pw = mount('<fx-input type="password"></fx-input>') as any;
+    expect(pw.type).toBe('password');
+    expect((pw.shadowRoot!.querySelector('input') as HTMLInputElement).type).toBe('password');
   });
 
   it('type number aplica min/max/step e disabled desabilita', () => {
@@ -118,8 +120,31 @@ describe('fx-input', () => {
     expect(changes).toBe(1);
   });
 
-  it('autofill do navegador NÃO emite input/valueChange/change (v-model intocado)', () => {
-    const el = mount('<fx-input name="usuario"></fx-input>') as any;
+  it('autofill do navegador é DESFEITO por padrão: o campo não fica com credenciais salvas', () => {
+    const el = mount('<fx-input name="usuario" value="meu.valor"></fx-input>') as any;
+    const field = el.shadowRoot.querySelector('input')!;
+    let inputs = 0;
+    let changes = 0;
+    let valueChanges = 0;
+    let autofills = 0;
+    el.addEventListener('input', () => { inputs += 1; });
+    el.addEventListener('change', () => { changes += 1; });
+    el.addEventListener('valueChange', () => { valueChanges += 1; });
+    el.addEventListener('autofill', () => { autofills += 1; });
+
+    autofill(field, 'usuario.salvo');
+
+    expect(field.value).toBe('meu.valor');                    // preenchimento desfeito
+    expect(el.value).toBe('meu.valor');                       // value/FormData intocados
+    expect(el.getAttribute('value')).toBe('meu.valor');
+    expect(inputs).toBe(0);
+    expect(valueChanges).toBe(0);
+    expect(changes).toBe(0);                                  // change do autofill absorvido
+    expect(autofills).toBe(0);                                // nada aceito ⇒ nada a avisar
+  });
+
+  it('token semântico de autocomplete ACEITA o autofill e aciona o v-model (input/valueChange)', () => {
+    const el = mount('<fx-input name="usuario" autocomplete="username"></fx-input>') as any;
     const field = el.shadowRoot.querySelector('input')!;
     let inputs = 0;
     let changes = 0;
@@ -132,15 +157,15 @@ describe('fx-input', () => {
 
     autofill(field, 'usuario.salvo');
 
-    expect(inputs).toBe(0);
-    expect(valueChanges).toBe(0);
+    expect(autofillDetail).toEqual({ value: 'usuario.salvo' });
+    expect(el.value).toBe('usuario.salvo');                   // value/FormData adotados
+    expect(field.value).toBe('usuario.salvo');
+    expect(inputs).toBe(1);                                   // v-model do Vue
+    expect(valueChanges).toBe(1);                             // two-way do Angular
     expect(changes).toBe(0);                                  // change do autofill absorvido
-    expect(autofillDetail).toEqual({ value: 'usuario.salvo' }); // aviso próprio
-    expect(el.value).toBe('usuario.salvo');                    // value/FormData sincronizados
-    expect(el.getAttribute('value')).toBe('usuario.salvo');    // atributo → fx-floatlabel
   });
 
-  it('autofill do Firefox (insertReplacementText não cancelável) também não emite input', () => {
+  it('autofill do Firefox (insertReplacementText não cancelável) também é desfeito', () => {
     const el = mount('<fx-input></fx-input>') as any;
     const field = el.shadowRoot.querySelector('input')!;
     let inputs = 0;
@@ -155,23 +180,28 @@ describe('fx-input', () => {
     field.dispatchEvent(new InputEvent('input', { inputType: 'insertReplacementText' }));
 
     expect(inputs).toBe(0);
-    expect(autofills).toBe(1);
-    expect(el.value).toBe('ff');
+    expect(autofills).toBe(0);
+    expect(field.value).toBe('');
+    expect(el.value).toBe('');
   });
 
-  it('emit-autofill restaura o comportamento antigo (input também no autofill)', () => {
+  it('emit-autofill aceita o valor externo (input/valueChange como edição)', () => {
     const el = mount('<fx-input emit-autofill></fx-input>') as any;
     const field = el.shadowRoot.querySelector('input')!;
     let inputs = 0;
+    let valueChanges = 0;
     let autofills = 0;
     el.addEventListener('input', () => { inputs += 1; });
+    el.addEventListener('valueChange', () => { valueChanges += 1; });
     el.addEventListener('autofill', () => { autofills += 1; });
 
     autofill(field, 'legado');
 
     expect(inputs).toBe(1);
+    expect(valueChanges).toBe(1);
     expect(autofills).toBe(0);
     expect(el.value).toBe('legado');
+    expect(field.value).toBe('legado');
   });
 
   it('clearable emite input + change uma única vez e limpa o valor', () => {

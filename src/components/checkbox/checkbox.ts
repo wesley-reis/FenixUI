@@ -11,7 +11,8 @@ import { defineElement } from '../../core/define';
  *
  * Atributos: checked, indeterminate, disabled, value, name, size (sm|md|lg).
  * Eventos: `change` e `checkedChange` (composed, detail: { checked, value }) —
- * `checkedChange` é o two-way binding do Angular [(checked)].
+ * `checkedChange` é o par do two-way binding do Angular (`[checked]` +
+ * `(checkedChange)="x = $event.detail.checked"`).
  *
  * Vue: o `v-model` padrão de elemento customizado usa `value` + `input` (não
  * `checked`). Para checkbox/switch use `:checked="estado"` + `@change` (ou
@@ -111,7 +112,7 @@ export class FxCheckbox extends FxFormElement {
     return this.checked ? (this.getAttr('value') || 'on') : null;
   }
 
-  /** getter/setter `value` → espelho do atributo `value` (compat com v-model / [(value)]). */
+  /** getter/setter `value` → espelho do atributo `value` (o v-model do Vue lê a propriedade). */
   get value(): string { return this.getAttr('value'); }
   set value(v: string | null | undefined) {
     this.setAttribute('value', v == null ? '' : String(v));
@@ -189,7 +190,7 @@ export class FxCheckbox extends FxFormElement {
         detail: { checked: this.checked, value: this.getAttr('value') },
       }),
     );
-    // Two-way binding do Angular: [(checked)] = [checked] + (checkedChange).
+    // Two-way binding do Angular: [checked] + (checkedChange)="x = $event.detail.checked".
     this.dispatchEvent(
       new CustomEvent('checkedChange', {
         bubbles: true,

@@ -4,6 +4,78 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) �
 Versionamento [SemVer](https://semver.org/lang/pt-BR/).
 Histórico anterior à 1.2.0: [releases do GitHub](https://github.com/wesley-reis/FenixUI/releases).
 
+## [1.5.0] — 2026-10-23
+
+### Adicionado
+
+- **`type` do `fx-input` documentado e tipado como `'text' | 'number' | 'password'`**:
+  qualquer outro valor (`email`, `tel`, `url`, `search`, `date`, `time`,
+  `datetime-local`, `month`, `week`, `color`, `file`, `checkbox`, …) normaliza
+  para `text` — para esses casos use o `<input>` nativo. Código, `FxInputType`,
+  docs e playground agora contam a mesma história.
+- **Seção “Two-way binding por framework”** na doc do `fx-input` e no README:
+  a sintaxe que **funciona** em cada stack (Vue `v-model`, React `value` +
+  `onInput`, Angular `[value]` + `(valueChange)`, Svelte `value` + `on:input`,
+  HTML `addEventListener`) e o motivo de as demais falharem em silêncio.
+
+### Alterado
+
+- **Autofill do navegador passa a ser BLOQUEADO por padrão em `fx-input`,
+  `fx-textarea` e `fx-autocomplete`**: valor colocado no campo **sem edição do
+  usuário** (autofill, gerenciador de senha, script) é **desfeito** — o campo
+  volta ao valor do host e nada é propagado (nem `value`/`FormData`, nem
+  `input`/`valueChange`/`change`). Antes o valor era adotado e só os eventos de
+  valor eram suprimidos, o que deixava o campo visualmente preenchido com
+  credenciais salvas. O autofill só é **aceito** quando o host declara intenção:
+  token semântico em `autocomplete` (`username`, `current-password`,
+  `new-password`, `one-time-code`, `email`, `street-address`, … — ver
+  `isSemanticAutocompleteToken` em `src/core/user-edit.ts`) ou o atributo
+  `emit-autofill`.
+- **`emit-autofill`** passa a significar “aceita o valor externo e propaga os
+  eventos de valor como edição” (antes: “restaura o comportamento anterior”).
+  Útil para testes/automação (`el.value = x; dispatchEvent(new Event('input'))`)
+  e para quem depende do v-model atualizado pelo navegador.
+- **`type` do `fx-input` limitado a `text`, `number` e `password`**: os demais
+  tipos caem em `text` (ver Notas de migração).
+- **Snippets da documentação**: o Vue agora gera `v-model`, o Angular
+  `[value]` + `(valueChange)="x = $event.detail.value"`, o React `value` +
+  `onInput` e o Svelte `value` + `on:input`.
+
+### Corrigido
+
+- **Campo preenchido com credenciais salvas** (`fx-input`/`fx-textarea`/
+  `fx-autocomplete`): o preenchimento externo não fica mais no campo — era o
+  sintoma que sobrava depois da v1.4.0, já que `autocomplete="off"` não impede o
+  Chrome de preencher `type="password"` e o gerenciador de senha segue a
+  heurística “primeiro campo de texto = usuário”.
+- **Login sem valor no v-model depois do autofill**: com o token semântico
+  (`username`/`current-password`) o autofill declarado emite `input`/
+  `valueChange`, então o `v-model` do Vue acompanha o preenchimento — não é mais
+  preciso capturar `@input` **e** `@autofill` para sincronizar a variável.
+- **Documentação do two-way binding do Angular**: o repositório afirmava em
+  ~25 lugares que `[(value)]`/`[(checked)]` funcionam em Web Components.
+  **Não funcionam** — o açúcar vira `x = $event` e o `$event` é o `CustomEvent`,
+  não o `detail`. JSDoc, docs e README passaram a mostrar
+  `[value]` + `(valueChange)="x = $event.detail.value"` (e `[checked]` +
+  `(checkedChange)` em checkbox/switch/radio).
+- **Documentação do Svelte**: registrado que `bind:value` **não compila** em
+  custom element (o compilador restringe o binding a
+  `input`/`textarea`/`select`) — use `value` + `on:input` com `e.detail.value`.
+- **`fx-autocomplete`**: valor externo é desfeito (antes era adotado) e a lista
+  não abre.
+
+### Notas de migração
+
+- `<fx-input type="password">` continua **suportado** (é o único type além de
+  `text`/`number`). Os demais types passam a renderizar `text` — se você
+  dependia de `email`/`tel`/`date`/… no `fx-input`, use o `<input>` nativo.
+- Quem dependia do valor autofillado **sem** declarar token semântico: declare o
+  token (`autocomplete="username"`, `"current-password"`, `"email"`…) ou use
+  `emit-autofill`.
+- Testes/automação que simulavam digitação com
+  `el.value = 'x'; dispatchEvent(new Event('input'))` precisam disparar
+  `beforeinput` antes (ou usar `emit-autofill`).
+
 ## [1.4.0] — 2026-10-22
 
 ### Adicionado

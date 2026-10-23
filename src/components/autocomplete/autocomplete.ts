@@ -13,11 +13,14 @@ import { esc } from '../../core/sanitize';
  * Atributos: value, name, size, placeholder, source (JSON array de strings),
  * disabled, min-chars (padrão 1), autofocus, emit-autofill.
  * Eventos: `select`, `input` e `valueChange` (composed, detail: { value }) —
- * `input` aciona o v-model do Vue e `valueChange` o [(value)] do Angular.
- * `input`/`valueChange` só saem em **edição do usuário**: valor colocado no
- * campo por autofill do navegador/gerenciador de senha ou por script emite
- * `autofill` (composed, detail: { value }) e sincroniza `value`/FormData, sem
- * acionar o v-model (ver core/user-edit.ts).
+ * `input` é o que o `v-model` do Vue usa; `valueChange` é o evento do two-way
+ * binding do Angular, que precisa ler `$event.detail.value`.
+ *
+ * O campo interno é sempre `autocomplete="off"` (regra fixa) e valor externo
+ * (autofill do navegador/gerenciador de senha/script) é **desfeito** por padrão:
+ * o campo volta ao valor do host, nada é propagado e a lista não abre. Com
+ * `emit-autofill` o valor é aceito e os eventos de valor saem normalmente
+ * (ver core/user-edit.ts).
  */
 export class FxAutocomplete extends FxFormElement {
   static override styles = css`
@@ -202,16 +205,22 @@ export class FxAutocomplete extends FxFormElement {
       this.toggleAttr('open', true);
     };
 
-    // Reabrir com foco sem re-render (evita perder digitação). Valor injetado
-    // (autofill/gerenciador de senha/script) NÃO é interação: sincroniza
-    // `value`/FormData, emite `autofill` e não abre a lista (core/user-edit.ts).
+    // Reabrir com foco sem re-render (evita perder digitação). Valor externo
+    // (autofill/gerenciador de senha/script) é BLOQUEADO por padrão — o campo
+    // volta ao valor do host, nada é propagado e a lista não abre. Só é aceito
+    // quando o host declara intenção (`emit-autofill`), e aí vale como valor de
+    // verdade (core/user-edit.ts).
     const guard = createUserEditGuard(field);
     field.addEventListener('input', (event) => {
-      this.value = field.value;
       if (!this.isUserValueEvent(event, guard)) {
-        this.dispatchAutofill(field.value);
+        const injected = field.value;
+        if (!this.acceptExternalValue(field)) return; // bloqueado e desfeito
+        this.value = injected;
+        this.dispatchAutofill(injected);
+        this.emitValueEvents();
         return;
       }
+      this.value = field.value;
       this.emitValueEvents();
       openList();
     });

@@ -204,7 +204,7 @@ export const editorDoc: ComponentDoc = {
     },
     {
       title: 'Frameworks',
-      html: `<p><b>Vue:</b> <code>v-model</code> funciona pelo evento <code>input</code> e pela propriedade <code>value</code>. <b>React:</b> use a propriedade via ref para conteúdo grande; o atributo <code>value</code> é o valor inicial (semântica de textarea). <b>Angular:</b> use <code>[(value)]</code> com <code>valueChange</code>.</p>`,
+      html: `<p><b>Vue:</b> <code>v-model</code> funciona pelo evento <code>input</code> e pela propriedade <code>value</code>. <b>React:</b> use a propriedade via ref para conteúdo grande; o atributo <code>value</code> é o valor inicial (semântica de textarea). <b>Angular:</b> use <code>[value]</code> + <code>(valueChange)="x = $event.detail.value"</code> — <code>[(value)]</code> não funciona em Web Components (o <code>$event</code> é o CustomEvent).</p>`,
     },
   ],
 

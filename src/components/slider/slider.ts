@@ -12,7 +12,8 @@ import { defineElement } from '../../core/define';
  * show-value, label (rótulo acima do trilho).
  * Eventos (composed): `input` (durante o arraste) e `change` (ao soltar),
  * ambos com `detail: { value: number }`; `change`/solta também emitem
- * `valueChange` ([(value)] do Angular) e o `input` aciona o v-model do Vue.
+ * `valueChange` (two-way binding do Angular: `$event.detail.value`) e o
+ * `input` é o que o `v-model` do Vue usa.
  */
 export class FxSlider extends FxFormElement {
   static override styles = css`
@@ -204,7 +205,7 @@ export class FxSlider extends FxFormElement {
       window.removeEventListener('pointerup', up);
       this.value = valueFromEvent(e);
       this._syncVisual();
-      // input (v-model do Vue) + valueChange ([(value)] do Angular) no soltar.
+      // input (v-model do Vue) + valueChange (Angular: $event.detail.value) no soltar.
       this.emitValueEvents();
       this.dispatchEvent(
         new CustomEvent('change', { bubbles: true, composed: true, detail: { value: this.value } }),

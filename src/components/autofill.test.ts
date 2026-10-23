@@ -16,6 +16,12 @@
  *   5. os campos internos de busca/filtro (select, multiselect, table,
  *      datepicker, orderlist, picklist, editor) também saem com `off`.
  *
+ * O `off` é só a camada PREVENTIVA. A garantia (valor externo — autofill,
+ * gerenciador de senha, script — é DESFEITO quando o host não declara token
+ * semântico nem `emit-autofill`) é verificada em `input/input.test.ts`,
+ * `textarea/textarea.test.ts`, `autocomplete/autocomplete.test.ts` e
+ * `core/user-edit.test.ts` — ver `src/core/user-edit.ts`.
+ *
  * Fora da regra (não são alvos de autofill de credenciais): `type="file"`,
  * `type="color"`, `type="checkbox"` e controles `hidden`.
  */
