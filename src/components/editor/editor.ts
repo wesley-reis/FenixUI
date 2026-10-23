@@ -747,8 +747,8 @@ export class FxEditor extends FxFormElement {
       button('removeFormat', 'format_clear', 'Limpar formatação'),
     ].join('');
     const color = [
-      `<label class="tb-color" title="Cor do texto"><input type="color" data-color="foreColor" value="#111827" aria-label="Cor do texto"></label>`,
-      `<label class="tb-color" title="Realçar texto"><input type="color" data-color="hiliteColor" value="#fef08a" aria-label="Realçar texto"></label>`,
+      `<label class="tb-color" title="Cor do texto"><input type="color" autocomplete="off" data-color="foreColor" value="#111827" aria-label="Cor do texto"></label>`,
+      `<label class="tb-color" title="Realçar texto"><input type="color" autocomplete="off" data-color="hiliteColor" value="#fef08a" aria-label="Realçar texto"></label>`,
     ].join('');
     const alignGroup = [
       button('justifyLeft', 'format_align_left', 'Alinhar à esquerda'),
@@ -1267,7 +1267,7 @@ export class FxEditor extends FxFormElement {
       return `<label class="field"><span>${label}</span><select data-field="${esc(field.name)}">${options}</select></label>`;
     }
     const type = field.type === 'url' ? 'url' : field.type === 'number' ? 'number' : 'text';
-    return `<label class="field"><span>${label}</span><input data-field="${esc(field.name)}" type="${type}" value="${esc(field.value ?? '')}" placeholder="${esc(field.placeholder ?? '')}"></label>`;
+    return `<label class="field"><span>${label}</span><input data-field="${esc(field.name)}" type="${type}" autocomplete="off" value="${esc(field.value ?? '')}" placeholder="${esc(field.placeholder ?? '')}"></label>`;
   }
 
   #submitDialog(): void {

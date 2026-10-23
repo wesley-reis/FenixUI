@@ -7,6 +7,26 @@ export const buttonVariants = ['primary', 'secondary', 'success', 'warning', 'da
 export const badgeVariants = ['neutral', 'primary', 'success', 'warning', 'danger', 'info'];
 export const sizes = ['sm', 'md', 'lg'];
 
+/**
+ * Seção de API "Autofill e gerenciadores de senha".
+ *
+ * Usada pelos componentes cujo controle NATIVO vive no Shadow DOM: o
+ * `autocomplete` declarado no host (light DOM) não chega sozinho ao campo
+ * interno, e o default da spec é `on` — o navegador passa a autopreencher
+ * campos comuns (busca, filtro, diálogo) com o usuário/senha salvos.
+ *
+ * `detail` é o texto específico do componente; a segunda linha traz a regra
+ * geral e o link para a seção completa em `fx-input`.
+ */
+export function autofillSection(detail: string): { title: string; html: string } {
+  return {
+    title: 'Autofill e gerenciadores de senha',
+    html:
+      `<p>${detail}</p>` +
+      '<p>Regra geral: o controle nativo vive no <b>Shadow DOM</b>, então <code>autocomplete</code> precisa ser repassado ao campo interno — sem isso o navegador aplica o default <code>on</code> e autopreenche o campo com credenciais salvas (heurística “primeiro campo de texto = usuário”), além de oferecer <b>“Salvar senha?”</b>. A tabela de tokens e o passo a passo do login estão em <a href="#/fx-input">fx-input</a>.</p>',
+  };
+}
+
 /** Formata HTML em múltiplas linhas com indentação para facilitar a leitura. */
 export const VOID_TAGS = /^(input|br|hr|img|meta|link)\b/i;
 export function formatHtml(src: string): string {

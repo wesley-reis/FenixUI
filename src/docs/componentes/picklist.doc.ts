@@ -4,6 +4,7 @@
  * Gerado a partir do split de src/docs/app.ts — edite aqui os metadados.
  */
 import type { ComponentDoc } from '../types';
+import { autofillSection } from '../shared';
 
 export const picklistDoc: ComponentDoc = {
 	tag: "fx-picklist",
@@ -12,6 +13,11 @@ export const picklistDoc: ComponentDoc = {
 	lead: "Duas listas para transferir itens entre origem e destino com filtro, seleção múltipla e templates customizados.",
 	imports: [
 		'import "@wrrdev/fenix-ui/picklist";',
+	],
+	extraSections: [
+		autofillSection(
+			'Os dois inputs de filtro (atributo <code>filter</code>) vivem no Shadow DOM e já saem com <code>autocomplete="off"</code>.'
+		),
 	],
 	initNote: "Este componente recebe dados via atributos JSON (source='[...]', target='[...]'). O auto-import registra o elemento automaticamente. Se os dados não aparecerem ao usar innerHTML dinâmico, reinicialize via JavaScript: <code>document.querySelectorAll('fx-picklist').forEach(el => el.source = [...])</code>",
 	demoHtml: (a) =>

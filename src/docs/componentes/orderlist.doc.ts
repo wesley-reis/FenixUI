@@ -4,6 +4,7 @@
  * Gerado a partir do split de src/docs/app.ts — edite aqui os metadados.
  */
 import type { ComponentDoc } from '../types';
+import { autofillSection } from '../shared';
 
 export const orderlistDoc: ComponentDoc = {
 	tag: "fx-orderlist",
@@ -12,6 +13,11 @@ export const orderlistDoc: ComponentDoc = {
 	lead: "Lista ordenável com controles para mover itens, filtro, seleção, drag-and-drop e templates customizados.",
 	imports: [
 		'import "@wrrdev/fenix-ui/orderlist";',
+	],
+	extraSections: [
+		autofillSection(
+			'O input de filtro (atributo <code>filter</code>) vive no Shadow DOM e já sai com <code>autocomplete="off"</code>.'
+		),
 	],
 	initNote: "Este componente recebe dados via atributo JSON (data='[...]'). O auto-import registra o elemento automaticamente. Se os dados não aparecerem ao usar innerHTML dinâmico, reinicialize via JavaScript: <code>document.querySelectorAll('fx-orderlist').forEach(el => el.data = [...])</code>",
 	demoHtml: (a) =>

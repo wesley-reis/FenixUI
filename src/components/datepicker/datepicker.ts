@@ -440,7 +440,7 @@ export class FxDatepicker extends FxFormElement {
 
     this.setTemplate(`
       <div class="field" part="field">
-        <input class="display" part="display" type="text" ${this.hasAttr('free-text') && !disabled ? '' : 'readonly'}
+        <input class="display" part="display" type="text" autocomplete="off" ${this.hasAttr('free-text') && !disabled ? '' : 'readonly'}
           placeholder="${esc(this.getAttr('placeholder', 'dd/mm/aaaa'))}"
           value="${esc(text)}" ${disabled ? 'disabled' : ''}>
         <button type="button" class="clear" part="clear" aria-label="Limpar"
@@ -460,9 +460,9 @@ export class FxDatepicker extends FxFormElement {
         ${
           showTime
             ? `<div class="time-row" part="time">
-                <input class="t-h" type="number" min="0" max="23" value="${this.time.h}" aria-label="Hora"><span class="sep">:</span>
-                <input class="t-m" type="number" min="0" max="59" value="${this.time.m}" aria-label="Minuto"><span class="sep">:</span>
-                <input class="t-s" type="number" min="0" max="59" value="${this.time.s}" aria-label="Segundo">
+                <input class="t-h" type="number" autocomplete="off" min="0" max="23" value="${this.time.h}" aria-label="Hora"><span class="sep">:</span>
+                <input class="t-m" type="number" autocomplete="off" min="0" max="59" value="${this.time.m}" aria-label="Minuto"><span class="sep">:</span>
+                <input class="t-s" type="number" autocomplete="off" min="0" max="59" value="${this.time.s}" aria-label="Segundo">
               </div>`
             : ''
         }

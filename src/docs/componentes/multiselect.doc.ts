@@ -4,7 +4,7 @@
  * Gerado a partir do split de src/docs/app.ts — edite aqui os metadados.
  */
 import type { ComponentDoc } from '../types';
-import { sizes } from '../shared';
+import { autofillSection, sizes } from '../shared';
 
 export const multiselectDoc: ComponentDoc = {
 	tag: "fx-multiselect",
@@ -12,6 +12,11 @@ export const multiselectDoc: ComponentDoc = {
 	group: "Formulário",
 	lead: "Seleção múltipla com chips, pesquisa e limpeza — dropdown customizado (componente separado do fx-select). Escreva <option> nativos como filhos.",
 	imports: ["import '@wrrdev/fenix-ui/multiselect';"],
+	extraSections: [
+		autofillSection(
+			'O campo de busca do <code>searchable</code> vive no Shadow DOM e já sai com <code>autocomplete="off"</code>.'
+		),
+	],
 	demoHtml: (a) =>
 		`<fx-multiselect ${a} placeholder="Estados">\n  <option value="sp">São Paulo</option>\n  <option value="rj">Rio de Janeiro</option>\n  <option value="mg">Minas Gerais</option>\n  <option value="ba">Bahia</option>\n</fx-multiselect>`,
 	variantsHtml: () =>

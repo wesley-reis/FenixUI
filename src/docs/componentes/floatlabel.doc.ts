@@ -11,6 +11,20 @@ export const floatlabelDoc: ComponentDoc = {
 	group: 'Formulário',
 	lead: 'Rótulo flutuante  comporta-se como placeholder quando vazio e sobe para o topo do campo ao focar, abrir ou preencher valor. A <label> do light DOM é MOVIDA para o Shadow DOM na primeira renderização (não sobra cópia no light DOM — nada que o consumidor/CSS possa reexibir); o clique na label foca o campo.',
 	imports: ['import \'@wrrdev/fenix-ui/floatlabel\';'],
+	extraSections: [
+		{
+			title: 'name, id e autocomplete ficam no CONTROLE (não no floatlabel)',
+			html: `
+				<p>O <code>fx-floatlabel</code> é um wrapper de layout: não cria nenhum controle nativo e apenas projeta os filhos via <code>&lt;slot&gt;</code> (a <code>&lt;label&gt;</code> do light DOM é movida para o Shadow DOM). Por isso <code>name</code>, <code>id</code> e <code>autocomplete</code> pertencem ao <b>campo</b> — <code>&lt;fx-input&gt;</code>, <code>&lt;fx-select&gt;</code>, <code>&lt;fx-textarea&gt;</code>… — e não precisam (nem devem) ser repetidos no wrapper:</p>
+				<pre><code>&lt;fx-floatlabel&gt;
+  &lt;fx-input id="usuario" name="usuario" autocomplete="username"&gt;&lt;/fx-input&gt;
+  &lt;label for="usuario"&gt;Usuário&lt;/label&gt;
+&lt;/fx-floatlabel&gt;</code></pre>
+				<p>O floatlabel espelha no controle apenas atributos de <b>apresentação</b>: <code>full</code>, <code>icon</code>, <code>icon-pos</code> e <code>error</code>/<code>success</code>. O <code>for</code> da label é preservado, mas não cruza a fronteira do shadow — o clique na label foca o campo por listener próprio do componente.</p>
+				<p>A regra completa de autofill (default <code>off</code>, tokens semânticos e o caso do login) está em <a href="#/fx-input">fx-input</a>.</p>
+			`,
+		},
+	],
 	demoHtml: (a) =>
 		`<fx-floatlabel ${a}><fx-input id="demo-fl-input"></fx-input><label for="demo-fl-input">Nome de usuário</label></fx-floatlabel>`,
 	variantsHtml: () =>

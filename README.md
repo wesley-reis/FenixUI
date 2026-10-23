@@ -18,7 +18,7 @@ import { FenixUI } from '@wrrdev/fenix-ui';  // API de tema/tokens (índice)
 FenixUI.theme('dark');
 ```
 
-> 📦 npm: [`@wrrdev/fenix-ui`](https://www.npmjs.com/package/@wrrdev/fenix-ui) — **v1.2.0**, acesso público.
+> 📦 npm: [`@wrrdev/fenix-ui`](https://www.npmjs.com/package/@wrrdev/fenix-ui) — **v1.3.0**, acesso público.
 > Subpaths disponíveis: `./theme`, `./tokens`, `./jsx`, `./vue`, `./react`, `./button`, `./badge`, `./spinner`, `./select`, `./input`, `./switch`, `./textarea`, `./editor`, `./checkbox`, `./radio`, `./calendar`, `./datepicker`, `./multiselect`, `./table`, `./floatlabel`, `./dialog`, `./toast`, `./tooltip`, `./tabs`, `./progress`, `./skeleton`, `./alert`, `./drawer`, `./dropdown`, `./icon`, `./icons`, `./pagination`, `./autocomplete`, `./knob`, `./orderlist`, `./picklist`, `./auto-import` e o curinga `./components/*`.
 
 
@@ -65,7 +65,7 @@ Carregue o bundle **UMD** único: ele registra todos os componentes e expõe os 
 <fx-toast></fx-toast>
 
 <!--
-  🔗 Links diretos para CDN (versão 1.2.0):
+  🔗 Links diretos para CDN (versão 1.3.0):
   • https://cdn.jsdelivr.net/npm/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js
   • https://unpkg.com/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js
 -->
@@ -402,7 +402,7 @@ ative o modo estrito do Volar no `tsconfig.json`:
 |--------------|-----------------------------------------------|--------------|
 | `fx-button`  | `variant` (primary/secondary/success/warning/danger/ghost/outline), `size`, `disabled`, `loading`, `type`, `full` | default, `icon` |
 | `fx-badge`   | `variant` (default/primary/success/warning/danger/info), `round` | default |
-| `fx-input`   | `type` (text/number/password), `value`, `size`, `placeholder`, `disabled`, `readonly`, `min/max/step` | — |
+| `fx-input`   | `type` (text/number/password/email/tel/url/search/date/time/…), `value`, `name`, `size`, `placeholder`, `disabled`, `readonly`, `min/max/step`, `autocomplete` (default `off`), `icon` | — |
 | `fx-select`  | `value`, `size` (sm/md/lg), `disabled`, `placeholder` — filhos `<option>` nativos | `(padrão)` |
 | `fx-switch`  | `checked`, `disabled`, `size` (sm/md/lg)      | `(padrão)`   |
 | `fx-spinner` | `size` (sm/md/lg)                             | —            |
@@ -426,6 +426,40 @@ O default global também é trocável por tokens: --fx-input-width, --fx-textare
 --fx-autocomplete-width, --fx-multiselect-width e --fx-select-width (com sufixos
 -sm/-lg; para o select, --fx-select-min-width). O atributo full continua
 disponível como atalho para largura 100%.
+
+### Autofill / gerenciadores de senha
+
+O controle nativo de todo componente de formulário vive no **Shadow DOM** — o navegador
+enxerga o `<input>`/`<textarea>` interno, nunca o atributo escrito no host. Como o default
+da spec é `autocomplete="on"`, sem tratamento o Chrome autopreenche campos comuns (busca de
+tabela, filtros, diálogos) com o usuário/senha salvos e ainda oferece “Salvar senha?”.
+
+A partir da **v1.3.0**:
+
+- `fx-input` e `fx-textarea` **repassam** `autocomplete`, `name` e `id` ao campo interno,
+  com default **`off`** — o atributo declarado no host vence o default;
+- os campos internos de busca/filtro (`fx-select`/`fx-multiselect` com `searchable`, linha de
+  filtros do `fx-table`, `fx-datepicker`, `fx-orderlist`, `fx-picklist` e diálogos do
+  `fx-editor`) já saem com `autocomplete="off"`;
+- `fx-autocomplete` mantém `off` fixo (regra do componente).
+
+```html
+<!-- busca: fora do autofill (já é o default do componente) -->
+<fx-input type="search" autocomplete="off" placeholder="Buscar por usuário AD"></fx-input>
+
+<!-- login: par semântico — o Chrome IGNORA `off` em type="password" -->
+<fx-input id="usuario" name="usuario" autocomplete="username"></fx-input>
+<fx-input type="password" name="senha" autocomplete="current-password"></fx-input>
+```
+
+> `name`, `id` e `autocomplete` ficam no **campo**, não no `fx-floatlabel` (que é só layout e
+> espelha apenas atributos de apresentação: `full`, `icon`, `icon-pos`, `error`/`success`).
+> Em `fx-table`, os inputs que você coloca dentro de `<fx-toolbar>` ficam no light DOM
+> (projetados por `<slot>`) — marque `autocomplete="off"` neles.
+>
+> Quando o autofill é **desejado** (login com `username`/`current-password`), o valor que o
+> navegador injeta não aciona o v-model sem aviso: o campo emite `autofill` — ver a seção
+> seguinte.
 
 Eventos usam o nativo `click` no botão; `input`, `change` e o `change` do select são
 `CustomEvent`s **composed** com `detail: { value }` (atravessam o Shadow DOM).

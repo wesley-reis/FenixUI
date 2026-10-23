@@ -44,6 +44,17 @@ function normalizeInputType(value: string): string {
  * size, placeholder, disabled, readonly, min, max, step, autofocus,
  * clearable, full (largura 100% acompanhando o elemento pai), icon (nome do
  * glifo Fenix Icons ou emoji/texto livre) e icon-pos (left|right, padrão left).
+ *
+ * Autofill: o <input> real vive no Shadow DOM, então `autocomplete` precisa ser
+ * REPASSADO ao campo interno — sem isso o navegador aplica o default `on` e
+ * preenche o campo com credenciais salvas (heurística "primeiro campo de texto
+ * = usuário"). O default aqui é `off` (mesma escolha do <fx-autocomplete>) e o
+ * atributo declarado no host vence. Quando o autofill for desejado, use os
+ * tokens semânticos: autocomplete="username", "current-password",
+ * "new-password", "one-time-code", "email", "street-address", … O Chrome
+ * IGNORA `off` em type="password" — para login use "current-password" (e
+ * "new-password" no cadastro/troca de senha). `name` e `id` também são
+ * repassados ao campo interno (melhoram a classificação do navegador).
  * Largura: o default (260px; sm 220px / lg 300px) fica no HOST via tokens
  * --fx-input-width(-sm|-lg) — CSS externo, classes e style inline no elemento
  * vencem o default sem precisar de atributo.
@@ -203,6 +214,10 @@ export class FxInput extends FxFormElement {
       'type', 'size', 'placeholder',
       'disabled', 'readonly', 'min', 'max', 'step',
       'clearable', 'full',
+      // `autocomplete` é observado porque ele vive no campo INTERNO (autofill
+      // do navegador): mudar o atributo no host precisa refletir no <input>.
+      // `name`/`id` idem — os dois descem para o campo interno.
+      'autocomplete', 'name', 'id',
       'icon', 'icon-pos', 'error', 'invalid', 'success', 'valid',
     ];
   }
@@ -271,6 +286,14 @@ export class FxInput extends FxFormElement {
     const min = this.getAttr('min');
     const max = this.getAttr('max');
     const step = this.getAttr('step');
+    // Autofill: quem o navegador enxerga é o <input> interno, então o atributo
+    // do HOST é repassado; sem ele, `off` (evita o preenchimento heurístico de
+    // credenciais — ver o JSDoc da classe).
+    const autocomplete = this.getAttr('autocomplete', 'off');
+    // `name`/`id` também descem (classificação do navegador). O `name` do host
+    // continua sendo o que entra no FormData via ElementInternals.
+    const name = this.getAttr('name');
+    const id = this.getAttr('id');
     const icon = this.getAttr('icon');
     const iconPos = this.getAttr('icon-pos', 'left') === 'right' ? 'right' : 'left';
     // Slot `icon` vence o atributo `icon`; sem nenhum dos dois, sem ícone.
@@ -285,6 +308,8 @@ export class FxInput extends FxFormElement {
       ${useIconBox ? `<div class="field-icon icon-${iconPos}">` : ''}
       ${useIconBox && iconPos === 'left' ? iconContent : ''}
       <input class="field" part="input" type="${esc(type)}"
+        ${name ? `name="${esc(name)}"` : ''} ${id ? `id="${esc(id)}"` : ''}
+        autocomplete="${esc(autocomplete)}"
         ${placeholder ? `placeholder="${esc(placeholder)}"` : ''}
         ${min ? `min="${esc(min)}"` : ''} ${max ? `max="${esc(max)}"` : ''} ${step ? `step="${esc(step)}"` : ''}
       />

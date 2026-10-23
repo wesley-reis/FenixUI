@@ -2,6 +2,7 @@
  * Documentação do componente <fx-editor>.
  */
 import type { ComponentDoc } from '../types';
+import { autofillSection } from '../shared';
 
 const SAMPLE = '&lt;p&gt;Texto com &lt;strong&gt;negrito&lt;/strong&gt;, &lt;em&gt;itálico&lt;/em&gt; e um &lt;a href=&quot;https://exemplo.com&quot;&gt;link&lt;/a&gt;.&lt;/p&gt;&lt;p&gt;Segundo parágrafo.&lt;/p&gt;';
 
@@ -168,6 +169,9 @@ export const editorDoc: ComponentDoc = {
     { name: '--fx-editor-content-padding', type: 'espaçamento', default: 'var(--fx-space-md) var(--fx-space-lg)', desc: 'Padding do conteúdo.' },
   ],
   extraSections: [
+    autofillSection(
+      'Os inputs dos diálogos (link, imagem e vídeo) vivem no Shadow DOM e já saem com <code>autocomplete="off"</code>. O conteúdo editável em si é um <code>contenteditable</code>, que não participa do autofill.'
+    ),
     {
       title: 'Contrato do HTML salvo',
       html: `<p>O valor é sempre HTML sanitizado e canônico: blocos no nível raiz, mídia em &lt;figure&gt;, tabelas com &lt;colgroup&gt; e grid como layout table. Exemplo de imagem:</p>

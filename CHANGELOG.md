@@ -28,6 +28,48 @@ Histórico anterior à 1.2.0: [releases do GitHub](https://github.com/wesley-rei
 - `fx-input`/`fx-textarea`: o `change` sintetizado pelo autofill é absorvido
   junto do `input` (o `change` do blur após digitação continua saindo).
 
+> **Complementa a v1.3.0** (que passou a repassar `autocomplete`/`name`/`id` ao
+> campo interno, com `off` como default): mesmo declarando os tokens semânticos
+> no login (`username`, `current-password`) — quando o autofill é desejado — o
+> valor injetado pelo navegador não aciona mais o v-model sem aviso; o app
+> decide o que fazer pelo evento `autofill`.
+
+## [1.3.0] — 2026-10-22
+
+### Adicionado
+
+- **`fx-input` · atributo `autocomplete`** (default `'off'`): o valor é repassado ao
+  `<input>` interno — que é o campo que o navegador enxerga, já que o controle real vive no
+  Shadow DOM. `name` e `id` do host também descem para o campo interno (ajudam a
+  classificação do navegador). Com isso é possível desligar o autofill em buscas/filtros e
+  declarar os tokens semânticos (`username`, `current-password`, `new-password`,
+  `one-time-code`, `email`, `street-address`, …) no login e no cadastro.
+- **`fx-textarea` · atributo `autocomplete`** (default `'off'`), com o mesmo repasse de
+  `name`/`id` ao `<textarea>` interno.
+- **Tipagem**: `autocomplete?: string` em `FxInputProps` e `FxTextareaProps` (Volar/TSX).
+- **Documentação**: seção *“Autofill e gerenciadores de senha”* em `fx-input` (tabela de
+  tokens, caso do login e exemplo) e nota em `fx-textarea`, `fx-floatlabel`, `fx-select`,
+  `fx-multiselect`, `fx-autocomplete`, `fx-table`, `fx-datepicker`, `fx-orderlist`,
+  `fx-picklist` e `fx-editor`. Novo controle *Autocomplete (autofill)* no playground do
+  `fx-input`.
+
+### Alterado
+
+- **Campos internos de busca/filtro passam a sair com `autocomplete="off"`**: `fx-select` e
+  `fx-multiselect` (`searchable`), linha de filtros do `fx-table`, `fx-datepicker`
+  (exibição e hora), `fx-orderlist`, `fx-picklist` e diálogos do `fx-editor`. **Mudança de
+  comportamento intencional** — evita que o gerenciador de senhas preencha campos comuns com
+  o usuário salvo (heurística “primeiro campo de texto = usuário”).
+- **`fx-input`/`fx-textarea`**: o campo interno passa a ter `autocomplete="off"` por padrão.
+  Quem depende de autofill declara o token semântico no host (o atributo declarado vence).
+  Observação: o Chrome ignora `off` em `type="password"` — use `current-password` (login) ou
+  `new-password` (cadastro/troca).
+
+### Corrigido
+
+- Campos comuns (busca de tabela, filtros, diálogos) deixam de ser preenchidos pelo
+  gerenciador de senhas quando o app tem um formulário de login na mesma sessão.
+
 ## [1.2.0] — 2026-10-21
 
 ### Adicionado
