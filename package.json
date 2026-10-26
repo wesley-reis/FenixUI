@@ -1,6 +1,6 @@
 {
   "name": "@wrrdev/fenix-ui",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "FenixUI Design System Web nativo (Web Components + Shadow DOM + Design Tokens) com tree-shaking por componente.",
   "type": "module",
   "license": "ISC",
@@ -42,6 +42,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:consumer": "vite build --config vite.consumer.config.mts",
+    "test:cdn": "node scripts/cdn-smoke.mjs",
     "prepack": "node scripts/update-readme-version.cjs",
     "icons:generate": "node scripts/generate-icons.mjs",
     "publish": "npm publish --access public --tag latest"

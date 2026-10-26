@@ -12,9 +12,48 @@ import { FENIX_ICON_BASE_CSS, FENIX_ICON_FONT_FAMILY } from './base-css';
 /** URL da fonte woff2: no build ESM a fonte vive na mesma pasta do módulo (dist/icons). */
 declare const __FENIX_ICONS_FONT_URL__: string | undefined;
 
+/**
+ * URL do `<script>` que AVALIOU este módulo (bundle UMD/CDN), capturada no
+ * carregamento — `document.currentScript` só é válido durante a execução do
+ * script, então não dá para consultá-lo depois, na hora de injetar o CSS.
+ *
+ * No bundle CDN a fonte é copiada para a MESMA pasta do UMD e o define aponta
+ * `./fenix-icons.woff2`. Sem absolutizar, a URL relativa de um `<style>` inline
+ * resolveria contra a PÁGINA (ex.: `/app/home.jsp` pediria
+ * `/app/fenix-icons.woff2` → 404) e os ícones apareceriam como TEXTO.
+ * Em ESM/SSR é `''` (sem efeito).
+ */
+const SCRIPT_URL: string = (() => {
+  if (typeof document === 'undefined') return '';
+  const current = document.currentScript as HTMLScriptElement | null;
+  return current?.src ?? '';
+})();
+
+/**
+ * Absolutiza um caminho de fonte RELATIVO contra a URL do bundle (ou uma base
+ * explícita). Só age em caminhos relativos:
+ *  - `https://…`, `//cdn/…` e `/raiz/…` ficam intactos — o próprio navegador já
+ *    os resolve corretamente dentro do `<style>` injetado (e um subset
+ *    root-relative precisa continuar apontando para o site do consumidor);
+ *  - em SSR/teste sem DOM devolve o valor original.
+ */
+export function absolutizeFontUrl(url: string, base?: string): string {
+  const value = url.trim();
+  if (!value) return value;
+  if (/^[a-z][a-z0-9+.-]*:/i.test(value) || value.startsWith('//') || value.startsWith('/')) {
+    return value;
+  }
+  const origin = base ?? SCRIPT_URL;
+  if (origin) return new URL(value, origin).href;
+  if (typeof document === 'undefined') return value;
+  return new URL(value, document.baseURI).href;
+}
+
 function resolveFontUrl(): string {
   if (typeof __FENIX_ICONS_FONT_URL__ !== 'undefined' && __FENIX_ICONS_FONT_URL__) {
-    return __FENIX_ICONS_FONT_URL__;
+    // Caminho do bundle CDN/UMD (define de vite.cdn.config.ts): a fonte vive ao
+    // lado do UMD, mas a URL precisa ser ABSOLUTA para não cair na página.
+    return absolutizeFontUrl(__FENIX_ICONS_FONT_URL__);
   }
   // IMPORTANTE: o `import.meta.url` precisa ser usado DIRETAMENTE como 2º
   // argumento de `new URL` (sem variável intermediária). É assim que Vite,

@@ -18,7 +18,7 @@ import { FenixUI } from '@wrrdev/fenix-ui';  // API de tema/tokens (índice)
 FenixUI.theme('dark');
 ```
 
-> 📦 npm: [`@wrrdev/fenix-ui`](https://www.npmjs.com/package/@wrrdev/fenix-ui) — **v1.5.0**, acesso público.
+> 📦 npm: [`@wrrdev/fenix-ui`](https://www.npmjs.com/package/@wrrdev/fenix-ui) — **v1.5.1**, acesso público.
 > Subpaths disponíveis: `./theme`, `./tokens`, `./jsx`, `./vue`, `./react`, `./button`, `./badge`, `./spinner`, `./select`, `./input`, `./switch`, `./textarea`, `./editor`, `./checkbox`, `./radio`, `./calendar`, `./datepicker`, `./multiselect`, `./table`, `./floatlabel`, `./dialog`, `./toast`, `./tooltip`, `./tabs`, `./progress`, `./skeleton`, `./alert`, `./drawer`, `./dropdown`, `./icon`, `./icons`, `./pagination`, `./autocomplete`, `./knob`, `./orderlist`, `./picklist`, `./auto-import` e o curinga `./components/*`.
 
 
@@ -38,8 +38,9 @@ document.body.append(el);
 
 ### CDN / HTML puro / JSP / .NET
 
-Carregue o bundle **UMD** único: ele registra todos os componentes e expõe os globals
-`FenixUI` (API de tema/tokens) e `FenixToast` (toasts imperativos).
+Carregue o bundle **UMD** único: ele registra todos os componentes — **e a biblioteca de
+ícones** — e expõe os globals `FenixUI` (tema, tokens, presets e ícones) e `FenixToast`
+(toasts imperativos).
 
 ```html
 <!-- jsDelivr (recomendado) — link direto para uso -->
@@ -64,12 +65,31 @@ Carregue o bundle **UMD** único: ele registra todos os componentes e expõe os 
 <fx-badge variant="success">Aprovado</fx-badge>
 <fx-toast></fx-toast>
 
+<!-- ícones: a fonte (fenix-icons.woff2) é copiada ao lado do UMD e o @font-face
+     é resolvido contra a URL do script — funciona de qualquer página/caminho -->
+<i class="fx-icon fx-icon-home"></i>
+<fx-icon name="settings" size="lg"></fx-icon>
+<fx-button icon="search">Buscar</fx-button>
+<fx-input icon="mail" placeholder="E-mail"></fx-input>
+
+<!-- subset (opcional): derruba a fonte de ~5 MB para dezenas de KB.
+     Use um caminho absoluto do SEU servidor (começando com / ou https://) -->
+<script>
+  FenixUI.setFenixIconsFontUrl('/fonts/fenix-icons-subset.woff2');
+</script>
+
 <!--
-  🔗 Links diretos para CDN (versão 1.5.0):
+  🔗 Links diretos para CDN (versão 1.5.1):
   • https://cdn.jsdelivr.net/npm/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js
   • https://unpkg.com/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js
 -->
 ```
+
+> **Validar no seu projeto:** `exemplos/cdn-icons.html` é uma página de smoke test do CDN
+> (abra direto no navegador ou sirva por HTTP). Ela traz um painel de diagnóstico — URL do
+> `@font-face` injetado, URL que o navegador realmente usa, status HTTP da fonte,
+> `document.fonts` e os globals do UMD — e todos os usos documentados de ícone. Com
+> `?bundle=../dist/fenix-ui.umd.min.js` ela testa um build local.
 
 ### Auto Import (plugin Vite/Rollup)
 
@@ -434,7 +454,7 @@ enxerga o `<input>`/`<textarea>` interno, nunca o atributo escrito no host. Como
 da spec é `autocomplete="on"`, sem tratamento o Chrome autopreenche campos comuns (busca de
 tabela, filtros, diálogos) com o usuário/senha salvos e ainda oferece “Salvar senha?”.
 
-A partir da **v1.5.0** o autofill é tratado em duas camadas:
+A partir da **v1.5.1** o autofill é tratado em duas camadas:
 
 - **preventiva** — `fx-input` e `fx-textarea` **repassam** `autocomplete`, `name` e `id` ao campo
   interno, com default **`off`** (o atributo declarado no host vence). Os campos internos de

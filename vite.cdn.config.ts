@@ -27,7 +27,12 @@ function copyIconFontPlugin() {
  */
 export default defineConfig({
   plugins: [copyIconFontPlugin()],
-  /** A fonte de ícones deve ficar na mesma pasta do UMD (URL relativa './fenix-icons.woff2'). */
+  /**
+   * A fonte de ícones é copiada para a MESMA pasta do UMD. O valor fica
+   * relativo de propósito: `src/icons/font.ts` absolutiza a URL contra a URL do
+   * script do bundle em runtime (`document.currentScript`), senão a URL
+   * relativa de um `<style>` inline resolveria contra a PÁGINA e daria 404.
+   */
   define: {
     __FENIX_ICONS_FONT_URL__: JSON.stringify('./fenix-icons.woff2'),
   },

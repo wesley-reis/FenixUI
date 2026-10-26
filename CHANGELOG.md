@@ -4,6 +4,45 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) �
 Versionamento [SemVer](https://semver.org/lang/pt-BR/).
 Histórico anterior à 1.2.0: [releases do GitHub](https://github.com/wesley-reis/FenixUI/releases).
 
+## [Não lançado]
+
+### Corrigido
+
+- **Ícones no bundle CDN/UMD (`fenix-ui.umd.min.js`)**: o `@font-face` saía com
+  `url('./fenix-icons.woff2')` — caminho relativo que um `<style>` inline resolve
+  contra a PÁGINA, não contra o script. Em qualquer página fora da raiz (ex.:
+  `/app/home.jsp`) a fonte dava **404** e os ícones apareciam como **texto**
+  (`home`, `search`). A URL agora é absolutizada contra a URL do script que
+  carregou o bundle (`document.currentScript`, com fallback para a base do
+  documento). Vale para `<fx-icon>`, para a classe `fx-icon fx-icon-<nome>` e
+  para o atributo `icon` de todos os componentes.
+- **Global `FenixUI` ausente no bundle CDN/UMD**: o entry `src/cdn.ts` não tinha
+  exports, então o Rollup não gerava global nenhum e `FenixUI.theme('dark')`
+  (snippet do README/doc) falhava com `ReferenceError` — só `FenixToast` era
+  exposto, por atribuição explícita em `toast.ts`. O bundle passa a expor
+  `FenixUI.theme`/`setTokens`/`configure`/`resetTheme`,
+  `FenixUI.applyPreset`/`defineCustomPreset`/`listPresets` e
+  `FenixUI.setFenixIconsFontUrl` (subset de ícones).
+
+### Adicionado
+
+- **`exemplos/cdn-icons.html`**: página de smoke test do CDN com painel de
+  diagnóstico (URL do `@font-face`, status HTTP da fonte, `document.fonts`,
+  globais do UMD) e todos os usos documentados de ícone — `<fx-icon>`, classe
+  `fx-icon fx-icon-<nome>`, ligadura, `fx-button`/`fx-input` com
+  `icon`/`icon-pos`/`slot="icon"` e demais componentes.
+- **`absolutizeFontUrl()`** exportada por `@wrrdev/fenix-ui/icons` — helper que
+  absolutiza caminhos relativos de fonte (usado pelo bundle CDN e disponível
+  para reuso).
+- **Harnesses de smoke test**:
+  - `npm run test:cdn` (`scripts/cdn-smoke.mjs`, jsdom + servidor local) — carrega
+    o UMD numa página em subpasta e valida que o `@font-face` resolve para a
+    pasta do bundle e que o global `FenixUI` existe. Aceita outra URL/path de
+    bundle como argumento.
+  - `npm run test:consumer` (build Vite de um consumidor real, em
+    `exemplos/consumer-smoke/`) — cobre o caminho "instalado via bundler", que
+    não pode regredir: precisa copiar/reescrever o `.woff2` no bundle final.
+
 ## [1.5.0] — 2026-10-23
 
 ### Adicionado
