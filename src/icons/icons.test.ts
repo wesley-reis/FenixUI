@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
+  absolutizeFontUrl,
   FENIX_ICON_NAMES,
   FENIX_ICON_BASE_CSS,
   FENIX_ICON_FONT_FAMILY,
@@ -101,6 +102,49 @@ describe('Fenix Icons', () => {
     // As regras por ícone continuam lá (a tipagem/nomes não mudam).
     expect(full.textContent).toContain('.fx-icon-home::before');
     expect(document.querySelectorAll('style#fenix-icons').length).toBe(1);
+  });
+
+  it('absolutizeFontUrl resolve a relativa do bundle CDN contra a URL do UMD', () => {
+    // Regressão: no CDN a fonte fica ao lado do UMD, mas `url('./x')` dentro de
+    // um <style> inline resolveria contra a PÁGINA (404 → ícone vira texto).
+    expect(
+      absolutizeFontUrl(
+        './fenix-icons.woff2',
+        'https://cdn.jsdelivr.net/npm/@wrrdev/fenix-ui@1.5.0/dist/fenix-ui.umd.min.js',
+      ),
+    ).toBe('https://cdn.jsdelivr.net/npm/@wrrdev/fenix-ui@1.5.0/dist/fenix-icons.woff2');
+  });
+
+  it('absolutizeFontUrl preserva URLs absolutas, protocol-relative e root-relative', () => {
+    const base = 'https://cdn.jsdelivr.net/npm/@wrrdev/fenix-ui@1.5.0/dist/fenix-ui.umd.min.js';
+    for (const url of [
+      'https://meusite.com/fonts/fenix-icons.woff2',
+      '//cdn.exemplo.com/fenix-icons.woff2',
+      '/fonts/subset.woff2',
+      'data:font/woff2;base64,AAAA',
+    ]) {
+      // Um subset root-relative precisa continuar apontando para o site do
+      // consumidor — por isso não absolutizamos `/fonts/...`.
+      expect(absolutizeFontUrl(url, base)).toBe(url);
+    }
+    expect(absolutizeFontUrl('', base)).toBe('');
+  });
+
+  it('absolutizeFontUrl cai na base do documento quando não há base explícita', () => {
+    // Sem `document.currentScript` (jsdom, ESM) a origem vem do baseURI.
+    expect(absolutizeFontUrl('./fenix-icons.woff2')).toBe(
+      new URL('./fenix-icons.woff2', document.baseURI).href,
+    );
+  });
+
+  it('o @font-face nunca sai com caminho relativo (build ESM/bundler intacto)', () => {
+    // No build ESM a URL vem de `new URL('./fenix-icons.woff2', import.meta.url)`
+    // — sempre absoluta (o bundler do consumidor copia/reescreve o asset). Este
+    // guarda impede que alguém volte a emitir `url('./…')`, que quebra no CDN.
+    // (`buildFenixIconsFontCss` = @font-face + classe base.)
+    const css = buildFenixIconsFontCss();
+    expect(css).not.toMatch(/src:url\('\.\.?\//);
+    expect(css).toMatch(/src:url\('[a-z][a-z0-9+.-]*:/i);
   });
 
   it('a tipagem dos ícones NÃO muda com o subset (lista completa preservada)', () => {

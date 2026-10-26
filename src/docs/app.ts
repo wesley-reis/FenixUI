@@ -1695,11 +1695,30 @@ async function renderIntegrations(): Promise<void> {
 <fx-badge variant="success">Aprovado</fx-badge>
 <fx-toast></fx-toast>
 
-<!-- ícones também funcionam no CDN (fonte copiada junto do UMD) -->
-<i class="fx-icon fx-icon-home"></i>`)}
+<!-- ícones: a fonte (fenix-icons.woff2) vem copiada ao lado do UMD e o
+     @font-face é resolvido contra a URL do SCRIPT — funciona de qualquer
+     página, inclusive JSP em subpastas -->
+<i class="fx-icon fx-icon-home"></i>
+<fx-icon name="settings" size="lg"></fx-icon>
+<fx-button icon="search">Buscar</fx-button>
+<fx-input icon="mail" placeholder="E-mail"></fx-input>
+
+<!-- subset de ícones (fonte de ~5 MB → dezenas de KB), DEPOIS do UMD -->
+<script>
+  FenixUI.setFenixIconsFontUrl('/fonts/fenix-icons-subset.woff2');
+</script>`)}
     <div class="note">
       Alternativa ao jsDelivr: <code>https://unpkg.com/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js</code>.
       Em produção, prefira fixar a versão (<code>@1.1.1</code>) em vez de <code>@latest</code>.
+    </div>
+    <div class="note">
+      <strong>Ícones no CDN:</strong> <code>&lt;fx-icon&gt;</code>, a classe
+      <code>fx-icon fx-icon-&lt;nome&gt;</code> e o atributo <code>icon</code> de qualquer componente
+      funcionam sem passo extra — o bundle registra a biblioteca de ícones e injeta o
+      <code>@font-face</code> apontando para o <code>fenix-icons.woff2</code> que fica ao lado do UMD
+      (a URL relativa é resolvida contra a URL do próprio script, então vale para qualquer
+      página). Para um subset, use <code>FenixUI.setFenixIconsFontUrl('/fonts/…')</code> com um
+      caminho absoluto do SEU servidor.
     </div>
 
     <h3>2. JSP / .NET (MVC, WebForms, Razor)</h3>

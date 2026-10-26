@@ -29,6 +29,7 @@ export type { FenixIconName, FenixIconKnownName } from './types';
 export { FENIX_ICON_BASE_CSS, FENIX_ICON_FONT_FAMILY, isFenixIconName } from './base-css';
 // Carregamento leve da fonte (usado pelo <fx-icon>) — ver ./font.
 export {
+  absolutizeFontUrl,
   buildFenixIconsFontCss,
   loadFenixIconsFont,
   setFenixIconsFontUrl,

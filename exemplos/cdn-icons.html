@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FenixUI · Smoke test dos ícones via CDN (UMD)</title>
+<style>
+  :root { color-scheme: light dark; --bd:#d0d7de; --bg:#fff; --fg:#1f2328; --mut:#59636e; --ok:#1a7f37; --bad:#cf222e; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bd:#3d444d; --bg:#0d1117; --fg:#e6edf3; --mut:#9198a1; --ok:#3fb950; --bad:#f85149; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:24px; background:var(--bg); color:var(--fg);
+    font:14px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  h1 { font-size:20px; margin:0 0 4px; }
+  h2 { font-size:16px; margin:28px 0 8px; }
+  h4 { font-size:12px; margin:0 0 10px; color:var(--mut); text-transform:uppercase; letter-spacing:.05em; }
+  p.lead { margin:0 0 14px; color:var(--mut); max-width:70ch; }
+  code { font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:12px;
+    background:rgba(127,127,127,.15); padding:1px 5px; border-radius:4px; word-break:break-all; }
+  .card { border:1px solid var(--bd); border-radius:10px; padding:16px; }
+  .grid { display:grid; gap:16px; grid-template-columns:repeat(auto-fit,minmax(330px,1fr)); }
+  .row { display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+  .row.big { font-size:26px; }
+  .col { display:flex; flex-direction:column; gap:12px; align-items:flex-start; }
+  table.diag { border-collapse:collapse; width:100%; }
+  table.diag td { border-top:1px solid var(--bd); padding:6px 8px; vertical-align:top; }
+  table.diag tr:first-child td { border-top:0; }
+  table.diag td:first-child { color:var(--mut); white-space:nowrap; }
+  table.diag td.ok { color:var(--ok); }
+  table.diag td.bad { color:var(--bad); font-weight:600; }
+  .toolbar { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin:12px 0; }
+  button { font:inherit; padding:6px 12px; border:1px solid var(--bd); border-radius:8px;
+    background:transparent; color:inherit; cursor:pointer; }
+  button:hover { border-color:currentColor; }
+  label.wa { display:flex; gap:8px; align-items:center; color:var(--mut); }
+  .note { border-left:3px solid var(--bd); padding:8px 12px; color:var(--mut); margin:12px 0; }
+  .ok-box { border-left-color:var(--ok); }
+  .bad-box { border-left-color:var(--bad); }
+  .wa-scope { --fx-icon-font:'Fenix Icons CDN'; }
+  html.use-cdn-font { --fx-icon-font:'Fenix Icons CDN'; }
+  ul.legend { color:var(--mut); padding-left:20px; }
+  ul.legend li { margin:4px 0; }
+</style>
+<script>
+  /* Bundle sob teste. Padrão: o UMD PUBLICADO (reproduz o 404 da fonte).
+     Para testar o build local corrigido:  ?bundle=../dist/fenix-ui.umd.min.js  */
+  window.__BUNDLE__ = new URLSearchParams(location.search).get('bundle')
+    || 'https://cdn.jsdelivr.net/npm/@wrrdev/fenix-ui@1.5.0/dist/fenix-ui.umd.min.js';
+</script>
+<!-- Preenchido por JS: @font-face com a URL ABSOLUTA do woff2, família própria. -->
+<style id="wa-style"></style>
+</head>
+<body>
+
+<h1>FenixUI · Smoke test dos ícones via CDN (UMD)</h1>
+<p class="lead">
+  Bundle: <code id="bundle-url">…</code><br />
+  Fonte esperada: <code id="wa-font-url">…</code>
+</p>
+<p class="lead">
+  Os ícones da lib são uma <strong>fonte de ligaduras</strong> (<code>fenix-icons.woff2</code>):
+  o glifo é o próprio nome (<code>home</code>). Se o <code>@font-face</code> injetado apontar para
+  uma URL errada (404), o glifo não existe e o navegador exibe o <strong>texto do nome</strong> —
+  é exatamente o sintoma relatado.
+</p>
+
+<h2>1. Diagnóstico automático</h2>
+<div class="toolbar">
+  <button id="btn-diag" type="button">Rodar diagnóstico</button>
+  <button id="btn-copy" type="button">Copiar diagnóstico</button>
+  <label class="wa">
+    <input type="checkbox" id="wa-toggle" />
+    aplicar workaround globalmente (<code>--fx-icon-font</code>)
+  </label>
+</div>
+<div class="card"><table class="diag" id="diag-rows"></table></div>
+<div class="note">
+  <strong>O que olhar:</strong> <code>@font-face src</code> é o que a lib injetou no
+  <code>&lt;head&gt;</code>; <code>→ URL resolvida pelo navegador</code> é onde a fonte será
+  realmente buscada. No bug, ela cai na SUA página (ex.: <code>/app/fenix-icons.woff2</code>) e o
+  HTTP é <strong>404</strong>. Corrigido, ela aponta para a pasta do bundle
+  (<code>…/dist/fenix-icons.woff2</code>) com HTTP <strong>200</strong>.
+  <br />
+  <strong>Testando um bundle local</strong> (<code>?bundle=../dist/fenix-ui.umd.min.js</code> aberto
+  por <code>file://</code>): o <code>fetch</code> pode ser bloqueado pelo navegador — nesse caso use a
+  aba Network. Para um teste fiel, sirva a página por HTTP
+  (<code>npx vite</code> → <code>http://localhost:5173/exemplos/cdn-icons.html</code>).
+</div>
+<h2>2. Uso dos ícones — SEM workaround (estado atual do bundle)</h2>
+<p class="lead">
+  Mesmo markup documentado para Vue/React. Se a fonte 404, tudo abaixo aparece como
+  <strong>texto</strong> (<code>home</code>, <code>search</code>, <code>navigate_next</code>).
+</p>
+<div class="grid" id="demo-sem"></div>
+
+<h2>3. Uso dos ícones — COM workaround (fonte absoluta + <code>--fx-icon-font</code>)</h2>
+<p class="lead">
+  Só a <strong>URL da fonte</strong> muda: um <code>@font-face</code> com a URL absoluta do
+  <code>fenix-icons.woff2</code> sob uma família própria, e o escopo abaixo aponta
+  <code>--fx-icon-font</code> para ela. Nenhum markup muda — é a prova de que o problema é a URL,
+  não o uso do componente. Este escopo funciona mesmo com o bundle quebrado.
+</p>
+<div class="grid wa-scope" id="demo-com"></div>
+
+<h2>4. Como validar no seu projeto (JSP / .NET / HTML puro)</h2>
+<ul class="legend">
+  <li><strong>DevTools → Network → filtro <code>woff2</code></strong>: se o status for 404, a URL da
+  fonte está caindo na sua aplicação (bug corrigido no bundle UMD a partir da próxima versão).</li>
+  <li><strong>Console</strong>: <code>document.getElementById('fenix-icons').textContent</code> mostra o
+  <code>@font-face</code> injetado; <code>new URL(src, document.baseURI).href</code> mostra a URL final.</li>
+  <li><strong>Fonte carregada?</strong> <code>document.fonts.check("24px 'Fenix Icons'")</code> deve ser
+  <code>true</code>; <code>await document.fonts.load("24px 'Fenix Icons'", "home")</code> deve devolver
+  1 face.</li>
+  <li><strong>Global do UMD</strong>: <code>typeof FenixUI</code> deve ser <code>object</code>
+  (<code>FenixUI.theme('dark')</code>, <code>FenixUI.setTokens({…})</code>,
+  <code>FenixUI.setFenixIconsFontUrl('/fonts/subset.woff2')</code>). Se for
+  <code>undefined</code>, o bundle é anterior à correção do global.</li>
+  <li><strong>CSP</strong>: se você usa <code>Content-Security-Policy</code>, inclua
+  <code>font-src</code> (e <code>connect-src</code> para o <code>fetch</code> do diagnóstico) com o
+  domínio do CDN.</li>
+  <li><strong>Subset</strong> (fonte de ~5 MB → dezenas de KB): depois de carregar o UMD, chame
+  <code>FenixUI.setFenixIconsFontUrl('/fonts/fenix-icons-subset.woff2')</code> — com o path absoluto
+  da sua aplicação (começando com <code>/</code> ou <code>https://</code>).</li>
+</ul>
+<script>
+(function () {
+  'use strict';
+
+  var BUNDLE_ABS = new URL(window.__BUNDLE__, location.href).href;
+  // No pacote CDN a fonte vive AO LADO do UMD (dist/fenix-icons.woff2).
+  var FONT_ABS = new URL('./fenix-icons.woff2', BUNDLE_ABS).href;
+  var BUNDLE_DIR = BUNDLE_ABS.slice(0, BUNDLE_ABS.lastIndexOf('/') + 1);
+
+  document.getElementById('bundle-url').textContent = BUNDLE_ABS;
+  document.getElementById('wa-font-url').textContent = FONT_ABS;
+
+  // Workaround: @font-face com URL ABSOLUTA sob família própria. A lib aplica
+  // `font-family: var(--fx-icon-font, 'Fenix Icons')` e custom properties herdam
+  // para dentro do Shadow DOM — por isso basta trocar a família no escopo.
+  document.getElementById('wa-style').textContent =
+    "@font-face{font-family:'Fenix Icons CDN';font-style:normal;font-weight:100 700;" +
+    "font-display:swap;src:url('" + FONT_ABS + "') format('woff2');}";
+
+  // Mesmo markup nas duas seções (só o `--fx-icon-font` do escopo muda).
+  function demoHtml(sfx) {
+    return '' +
+      '<div class="card"><h4>fx-icon — name tipado (size, fill, bold, emoji)</h4><div class="row">' +
+        '<fx-icon name="home" size="lg" label="Início"></fx-icon>' +
+        '<fx-icon name="settings" size="md"></fx-icon>' +
+        '<fx-icon name="favorite" size="md" fill></fx-icon>' +
+        '<fx-icon name="favorite" size="md" bold></fx-icon>' +
+        '<fx-icon name="⚠️" size="md"></fx-icon>' +
+      '</div></div>' +
+      '<div class="card"><h4>Classe fx-icon (light DOM): classe por glifo + ligadura</h4><div class="row big">' +
+        '<i class="fx-icon fx-icon-home"></i>' +
+        '<i class="fx-icon fx-icon-settings"></i>' +
+        '<i class="fx-icon fx-icon-fill fx-icon-favorite"></i>' +
+        '<i class="fx-icon fx-icon-bold fx-icon-star"></i>' +
+        '<span class="fx-icon">search</span>' +
+      '</div></div>' +
+      '<div class="card"><h4>fx-button — attr icon, icon-pos e slot</h4><div class="row">' +
+        '<fx-button icon="search">Buscar</fx-button>' +
+        '<fx-button variant="secondary" icon="download">Baixar</fx-button>' +
+        '<fx-button variant="danger" icon="delete">Excluir</fx-button>' +
+        '<fx-button variant="outline" icon="arrow_forward" icon-pos="right">Avançar</fx-button>' +
+        '<fx-button icon="search" aria-label="Buscar"></fx-button>' +
+        '<fx-button><i slot="icon" class="fx-icon fx-icon-save"></i>Slot vence o attr</fx-button>' +
+      '</div></div>' +
+      '<div class="card"><h4>fx-input — attr icon, icon-pos e slot</h4><div class="col">' +
+        '<fx-input icon="search" placeholder="Com ícone (left)"></fx-input>' +
+        '<fx-input icon="mail" icon-pos="right" placeholder="Ícone à direita"></fx-input>' +
+        '<fx-input icon="lock" type="password" placeholder="Password"></fx-input>' +
+        '<fx-input placeholder="slot icon"><i slot="icon" class="fx-icon fx-icon-person"></i></fx-input>' +
+      '</div></div>' +
+      '<div class="card"><h4>Outros componentes com icon</h4><div class="col">' +
+        '<fx-chip icon="label" removable>Tag</fx-chip>' +
+        '<fx-alert variant="info" icon="info" title="Alerta">com ícone da lib</fx-alert>' +
+        '<fx-empty-state icon="inbox" heading="Vazio" description="Nada por aqui"></fx-empty-state>' +
+        '<fx-fileupload icon="upload" label="Escolher arquivo"></fx-fileupload>' +
+        '<fx-floatlabel icon="search"><fx-input id="fl-' + sfx + '"></fx-input>' +
+          '<label for="fl-' + sfx + '">Buscar</label></fx-floatlabel>' +
+      '</div></div>' +
+      '<div class="card"><h4>Ícones internos (pager do fx-pagination)</h4><div class="col">' +
+        '<fx-pagination total="120" rows="10" page="1" position="center"></fx-pagination>' +
+      '</div></div>';
+  }
+  document.getElementById('demo-sem').innerHTML = demoHtml('sem');
+  document.getElementById('demo-com').innerHTML = demoHtml('com');
+
+  // ---- Diagnóstico --------------------------------------------------------
+  var lines = [];
+
+  function row(label, value, state) {
+    var tr = document.createElement('tr');
+    var td1 = document.createElement('td');
+    td1.textContent = label;
+    var td2 = document.createElement('td');
+    if (state === true) td2.className = 'ok';
+    if (state === false) td2.className = 'bad';
+    td2.textContent = String(value);
+    tr.appendChild(td1);
+    tr.appendChild(td2);
+    document.getElementById('diag-rows').appendChild(tr);
+    lines.push(label + ': ' + value);
+  }
+
+  function diagnose() {
+    document.getElementById('diag-rows').innerHTML = '';
+    lines = [];
+
+    row('Bundle', BUNDLE_ABS);
+    row('window.FenixUI', typeof window.FenixUI, typeof window.FenixUI === 'object');
+    row('FenixUI.theme · setTokens · setFenixIconsFontUrl',
+      window.FenixUI
+        ? [typeof FenixUI.theme, typeof FenixUI.setTokens, typeof FenixUI.setFenixIconsFontUrl].join(' · ')
+        : '—',
+      !!(window.FenixUI && typeof FenixUI.setFenixIconsFontUrl === 'function'));
+    row('window.FenixToast', typeof window.FenixToast, typeof window.FenixToast === 'object');
+
+    var styles = ['fenix-icons-font', 'fenix-icons']
+      .map(function (id) { return document.getElementById(id); })
+      .filter(Boolean);
+    row('<style> de ícones injetado',
+      styles.length ? styles.map(function (el) { return '#' + el.id; }).join(' + ') : 'nenhum',
+      styles.length > 0);
+
+    styles.forEach(function (el) {
+      var m = /src:url\('([^']+)'\)/.exec(el.textContent || '');
+      if (!m) return;
+      var abs = new URL(m[1], document.baseURI).href;
+      row('@font-face src (#' + el.id + ')', m[1]);
+      row('→ URL resolvida pelo navegador', abs, abs.indexOf(BUNDLE_DIR) === 0);
+      fetch(abs, { method: 'GET' })
+        .then(function (r) { row('→ HTTP', r.status + ' ' + (r.ok ? 'OK' : 'FALHOU'), r.ok); })
+        .catch(function (e) { row('→ fetch', 'bloqueado/falhou: ' + e.message, false); });
+    });
+
+    document.fonts.load("24px 'Fenix Icons'", 'home').then(function (faces) {
+      row('document.fonts.load("Fenix Icons", "home")', faces.length + ' face(s)', faces.length > 0);
+    });
+    document.fonts.load("24px 'Fenix Icons CDN'", 'home').then(function (faces) {
+      row('document.fonts.load("Fenix Icons CDN", "home")', faces.length + ' face(s)', faces.length > 0);
+    });
+    row('document.fonts.check("24px \'Fenix Icons\'")',
+      String(document.fonts.check("24px 'Fenix Icons'")));
+  }
+
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text);
+    }
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); } catch (e) { /* ignora */ }
+    ta.remove();
+    return Promise.resolve();
+  }
+
+  document.getElementById('btn-diag').addEventListener('click', diagnose);
+  document.getElementById('btn-copy').addEventListener('click', function () {
+    var btn = document.getElementById('btn-copy');
+    copyText(lines.join('\n')).then(function () {
+      btn.textContent = 'Copiado!';
+      setTimeout(function () { btn.textContent = 'Copiar diagnóstico'; }, 1500);
+    });
+  });
+  document.getElementById('wa-toggle').addEventListener('change', function (e) {
+    document.documentElement.classList.toggle('use-cdn-font', e.target.checked);
+  });
+
+  // Carrega o bundle UMD sob teste. Script dinâmico: durante a execução do UMD
+  // `document.currentScript` aponta para ele — é assim que a URL relativa da
+  // fonte é resolvida para a pasta do bundle (a correção do bug).
+  var tag = document.createElement('script');
+  tag.src = BUNDLE_ABS;
+  tag.onload = diagnose;
+  tag.onerror = function () {
+    row('ERRO', 'não foi possível carregar ' + BUNDLE_ABS, false);
+  };
+  document.head.appendChild(tag);
+})();
+</script>
+</body>
+</html>
