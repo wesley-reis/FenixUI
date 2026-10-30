@@ -18,7 +18,7 @@ import { FenixUI } from '@wrrdev/fenix-ui';  // API de tema/tokens (índice)
 FenixUI.theme('dark');
 ```
 
-> 📦 npm: [`@wrrdev/fenix-ui`](https://www.npmjs.com/package/@wrrdev/fenix-ui) — **v1.5.1**, acesso público.
+> 📦 npm: [`@wrrdev/fenix-ui`](https://www.npmjs.com/package/@wrrdev/fenix-ui) — **v1.5.2**, acesso público.
 > Subpaths disponíveis: `./theme`, `./tokens`, `./jsx`, `./vue`, `./react`, `./button`, `./badge`, `./spinner`, `./select`, `./input`, `./switch`, `./textarea`, `./editor`, `./checkbox`, `./radio`, `./calendar`, `./datepicker`, `./multiselect`, `./table`, `./floatlabel`, `./dialog`, `./toast`, `./tooltip`, `./tabs`, `./progress`, `./skeleton`, `./alert`, `./drawer`, `./dropdown`, `./icon`, `./icons`, `./pagination`, `./autocomplete`, `./knob`, `./orderlist`, `./picklist`, `./auto-import` e o curinga `./components/*`.
 
 
@@ -79,7 +79,7 @@ Carregue o bundle **UMD** único: ele registra todos os componentes — **e a bi
 </script>
 
 <!--
-  🔗 Links diretos para CDN (versão 1.5.1):
+  🔗 Links diretos para CDN (versão 1.5.2):
   • https://cdn.jsdelivr.net/npm/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js
   • https://unpkg.com/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js
 -->
@@ -220,6 +220,11 @@ FenixUI.configure({
     table: {
       text: '#0f172a',            // corpo do fx-table (padrão: acompanha text.default)
       'header-weight': '600',     // cabeçalho mais leve que o bold do navegador
+    },
+    z: {
+      toast: '2000',              // camada das notificações (padrão: 1200)
+      // overlay: '1090',         // overlay desfocado dos drawers (padrão: 1090)
+      // modal: '1100',           // painéis de drawer/dialog (padrão: 1100)
     },
   },
 });
@@ -454,7 +459,7 @@ enxerga o `<input>`/`<textarea>` interno, nunca o atributo escrito no host. Como
 da spec é `autocomplete="on"`, sem tratamento o Chrome autopreenche campos comuns (busca de
 tabela, filtros, diálogos) com o usuário/senha salvos e ainda oferece “Salvar senha?”.
 
-A partir da **v1.5.1** o autofill é tratado em duas camadas:
+A partir da **v1.5.2** o autofill é tratado em duas camadas:
 
 - **preventiva** — `fx-input` e `fx-textarea` **repassam** `autocomplete`, `name` e `id` ao campo
   interno, com default **`off`** (o atributo declarado no host vence). Os campos internos de

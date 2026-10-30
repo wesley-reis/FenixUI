@@ -15,6 +15,19 @@ describe('fx-toast / FenixToast', () => {
     hosts.forEach((h) => h.remove());
   });
 
+  it('a região dos toasts usa o token --fx-z-toast (acima de modais)', async () => {
+    FenixToast.info('Camada', 'msg', { duration: 3000 });
+    await Promise.resolve();
+    const style = document.getElementById('fx-toast-region-style');
+    expect(style?.textContent).toContain('[data-fx-toast-region]');
+    expect(style?.textContent).toContain('var(--fx-z-toast, 1200)');
+    const region = document.querySelector<HTMLElement>('[data-fx-toast-region="top-right"]')!;
+    // O z-index deixou de ser um valor fixo no inline style: era 1100 — o MESMO
+    // de --fx-z-modal — e o overlay do modal (posterior no DOM) cobria o toast.
+    expect(region.style.zIndex).toBe('');
+    document.querySelectorAll('fx-toast').forEach((h) => h.remove());
+  });
+
   it('mensagem sem título usa card compacto', async () => {
     FenixToast.info('', 'Apenas mensagem');
     await Promise.resolve();

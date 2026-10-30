@@ -305,7 +305,7 @@ export interface FxFloatlabelProps extends FxElementProps {
   'error-text'?: string;
 }
 export interface FxDialogProps extends FxElementProps { open?: boolean; size?: FxSize; heading?: string; }
-export interface FxDrawerProps extends FxElementProps { open?: boolean; title?: string; position?: FxDrawerPosition; }
+export interface FxDrawerProps extends FxElementProps { open?: boolean; title?: string; position?: FxDrawerPosition; dismissible?: boolean; }
 export interface FxToastProps extends FxElementProps {
   kind?: FxToastKind;
   title?: string;

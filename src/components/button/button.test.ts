@@ -129,4 +129,19 @@ describe('fx-button', () => {
     expect(styles).not.toContain('outline: 2px solid');
     expect(styles).toContain('box-shadow: var(--fx-effect-focus-ring, none)');
   });
+
+  it('variant outline usa fundo claro sólido (não transparente) com borda do tema', () => {
+    const styles = (FxButton as unknown as { styles: string }).styles;
+    // Fundo transparente deixava a superfície cinza do card aparecer através
+    // do botão; agora o outline tem fundo sólido claro (token próprio).
+    expect(styles).toMatch(
+      /:host\(\[variant='outline'\]\)\s*\.btn\s*\{[^}]*background:\s*var\(--fx-button-outline-bg,\s*var\(--fx-surface-background\)\)/,
+    );
+    expect(styles).not.toMatch(
+      /:host\(\[variant='outline'\]\)\s*\.btn\s*\{[^}]*background:\s*transparent/,
+    );
+    expect(styles).toMatch(
+      /:host\(\[variant='outline'\]\)\s*\.btn\s*\{[^}]*border-color:\s*var\(--fx-color-primary\)/,
+    );
+  });
 });

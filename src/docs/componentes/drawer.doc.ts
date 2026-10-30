@@ -9,7 +9,7 @@ export const drawerDoc: ComponentDoc = {
 	tag: "fx-drawer",
 	title: "Drawer",
 	group: "Feedback",
-	lead: "Painel deslizante sobre a página com overlay desfocado e abertura/fechamento animado deslizando da borda configurada por position. Posição left/right/top/bottom, tamanho mínimo fixo e expansível via CSS, header com título e botão fechar, conteúdo livre por slot.",
+	lead: "Painel deslizante sobre a página com overlay desfocado e abertura/fechamento animado deslizando da borda configurada por position. Posição left/right/top/bottom, tamanho mínimo fixo e expansível via CSS, header com botão fechar (o título é opcional) e conteúdo livre por slot. O z-index do header é tokenizado para o conteúdo do corpo nunca passar por cima dele.",
 	imports: ["import '@wrrdev/fenix-ui/drawer';"],
 	demoHtml: (a) => {
 		const m = /position="([a-z]+)"/.exec(a);
@@ -30,7 +30,12 @@ export const drawerDoc: ComponentDoc = {
 			'<p style="padding:0;margin:0 0 8px">Conteúdo do drawer.</p>';
 		const mk = (id: string, pos: string, title: string) =>
 			`<fx-drawer id="${id}" position="${pos}" title="${title}">${body}</fx-drawer><fx-button size="sm" data-fx-open="${id}">${pos.toUpperCase()}</fx-button>`;
-		return `<div style="display:flex;gap:12px;flex-wrap:wrap">${mk("drw-l", "left", "Filtros")}${mk("drw-r", "right", "Detalhes")}${mk("drw-t", "top", "Notificações")}${mk("drw-b", "bottom", "Carrinho")}</div>`;
+		const semTitulo = `<fx-drawer id="drw-sem-titulo" position="right">${body}</fx-drawer><fx-button size="sm" variant="secondary" data-fx-open="drw-sem-titulo">Sem título (só ✕)</fx-button>`;
+		const fixo = `<fx-drawer id="drw-fixo" position="right" title="Fluxo obrigatório" dismissible="false">${body}</fx-drawer><fx-button size="sm" variant="secondary" data-fx-open="drw-fixo">dismissible="false"</fx-button>`;
+		return `<div style="display:flex;gap:12px;flex-wrap:wrap">${mk("drw-l", "left", "Filtros")}${mk("drw-r", "right", "Detalhes")}${mk("drw-t", "top", "Notificações")}${mk("drw-b", "bottom", "Carrinho")}</div>
+      <h4>Título opcional e dismissible</h4>
+      <p style="margin:0 0 8px">Sem <code>title</code> o header mostra só o <code>✕</code> — o título é opcional. Com <code>dismissible="false"</code> o <code>✕</code> some e o overlay/ESC não fecham: o drawer só fecha por código.</p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">${semTitulo}${fixo}</div>`;
 	},
 	controls: [
 		{
@@ -59,7 +64,13 @@ export const drawerDoc: ComponentDoc = {
 			name: "title",
 			type: "string",
 			default: "''",
-			desc: "Título no cabeçalho (com botão fechar).",
+			desc: "Texto do cabeçalho. OPCIONAL: sem título o header exibe apenas o botão fechar (✕).",
+		},
+		{
+			name: "dismissible",
+			type: "boolean",
+			default: "true",
+			desc: "Permite fechar pelo usuário (✕ no header, clique no overlay e ESC). Com \"false\" o drawer só fecha por código (open = false) e o header aparece apenas se houver title.",
 		},
 	],
 	cssVars: [
@@ -72,6 +83,16 @@ export const drawerDoc: ComponentDoc = {
 			name: "--fx-drawer-height",
 			default: "280px",
 			desc: "Altura nos modos top/bottom (mín. 180px, máx. 85vh).",
+		},
+		{
+			name: "--fx-drawer-header-z",
+			default: "20",
+			desc: "Camada do header sticky dentro do painel. Precisa ganhar de z-index do conteúdo (ex.: o .loading-overlay do fx-table usa 10) e perder das camadas flutuantes (--fx-z-dropdown/--fx-z-tooltip). Suba se algum conteúdo do seu app cobrir o header.",
+		},
+		{
+			name: "--fx-z-overlay",
+			default: "1090",
+			desc: "Camada do overlay desfocado (token global z.overlay). Fica abaixo do painel (--fx-z-modal = 1100).",
 		},
 	],
 	events: [

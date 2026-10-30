@@ -140,9 +140,10 @@ export const TOKEN_DESCRIPTIONS: Record<string, string> = {
 	'table.header-weight': 'Peso do cabeçalho do <code>fx-table</code> (padrão: <b>bold</b> do navegador).',
 
 	'z.base': 'Camada base do conteúdo.',
+	'z.overlay': 'Overlay desfocado dos drawers — abaixo dos painéis modais.',
 	'z.dropdown': 'Painéis de select/autocomplete e popovers.',
-	'z.modal': 'Diálogos e drawers.',
-	'z.toast': 'Notificações de toast.',
+	'z.modal': 'Painéis de diálogos e drawers (acima do overlay).',
+	'z.toast': 'Notificações de toast — acima de modais e overlays.',
 };
 
 export interface TokenRow {

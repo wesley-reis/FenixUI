@@ -531,7 +531,28 @@ export class FxToast extends HTMLElement {
 }
 
 /* ---------- Regiões por posição na tela ---------- */
+/**
+ * Regra única que define a camada das regiões de toast.
+ *
+ * A região é um `<div>` criado no light DOM (os cards é que vivem em shadow),
+ * então a camada sai de um `<style>` compartilhado: o z-index vem do token
+ * global `--fx-z-toast` (1200). Antes era um `1100` fixo no inline style — o
+ * MESMO valor de `--fx-z-modal`, e o overlay do modal (que entra depois no DOM)
+ * cobria o toast. Com o token, a notificação fica acima do overlay desfocado e
+ * continua reativa ao tema.
+ */
+const REGION_STYLE_ID = "fx-toast-region-style";
+
+function ensureRegionStyle(): void {
+  if (!isDomAvailable() || document.getElementById(REGION_STYLE_ID)) return;
+  const style = document.createElement("style");
+  style.id = REGION_STYLE_ID;
+  style.textContent = `[data-fx-toast-region] { z-index: var(--fx-z-toast, 1200); }`;
+  (document.head ?? document.body)?.appendChild(style);
+}
+
 function regionFor(position: ToastPosition): HTMLElement {
+  ensureRegionStyle();
   let region = document.querySelector<HTMLElement>(
     `[data-fx-toast-region="${position}"]`,
   );
@@ -551,7 +572,7 @@ function regionFor(position: ToastPosition): HTMLElement {
     style.display = "flex";
     style.flexDirection = "column";
     style.gap = "8px";
-    style.zIndex = "1100";
+    // O z-index sai da regra [data-fx-toast-region] (token --fx-z-toast).
     style.pointerEvents = "none";
     // Os cards reabilitam pointer-events via `:host { pointer-events: auto }` (herança),
     // sem necessidade de MutationObserver.

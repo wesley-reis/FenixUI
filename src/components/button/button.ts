@@ -84,8 +84,18 @@ export class FxButton extends FxElement {
     :host([variant='info']) .btn { background: var(--fx-color-info); }
     :host([variant='ghost']) .btn { background: transparent; color: var(--fx-text-default); }
     :host([variant='ghost']) .btn:hover { background: var(--fx-surface-surface-hover); filter: none; }
-    :host([variant='outline']) .btn { background: transparent; color: var(--fx-color-primary); border-color: var(--fx-color-primary); }
-    :host([variant='outline']) .btn:hover { background: var(--fx-surface-surface-hover); filter: none; }
+    /* Outline: fundo SÓLIDO claro (branco no tema claro) em vez de transparent —
+       com fundo transparente a superfície cinza do card/página aparecia através
+       do botão. A variante ghost continua sem fundo nem borda. */
+    :host([variant='outline']) .btn {
+      background: var(--fx-button-outline-bg, var(--fx-surface-background));
+      color: var(--fx-color-primary);
+      border-color: var(--fx-color-primary);
+    }
+    :host([variant='outline']) .btn:hover {
+      background: color-mix(in srgb, var(--fx-color-primary) 10%, var(--fx-button-outline-bg, var(--fx-surface-background)));
+      filter: none;
+    }
 
     /* Ícone e spinner */
     .btn__icon { display: inline-flex; align-items: center; font-size: var(--fx-button-icon-size, calc(var(--fx-font-size) + 6px)); line-height: 1; }

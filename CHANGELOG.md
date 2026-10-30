@@ -23,6 +23,22 @@ Histórico anterior à 1.2.0: [releases do GitHub](https://github.com/wesley-rei
   `FenixUI.theme`/`setTokens`/`configure`/`resetTheme`,
   `FenixUI.applyPreset`/`defineCustomPreset`/`listPresets` e
   `FenixUI.setFenixIconsFontUrl` (subset de ícones).
+- **`fx-drawer` — header sem título e conteúdo passando por cima dele**: o
+  header (com o ✕) só era renderizado quando havia `title`, então um drawer sem
+  título ficava sem nenhum jeito de fechar pelo mouse. O header passa a ser
+  renderizado sempre (o `<span class="title">` só recebe texto se houver
+  título). O `z-index: 1` do header virou o token `--fx-drawer-header-z`
+  (**20**): o Shadow DOM não cria stacking context, então o `.loading-overlay`
+  do `fx-table` (`z-index: 10`) pintava por cima do header sticky.
+- **`fx-toast` atrás do modal com overlay desfocado**: a região dos toasts era
+  criada com `z-index: 1100` fixo no inline style — exatamente o valor de
+  `--fx-z-modal`, então o overlay do drawer/dialog (que entra depois no DOM)
+  cobria a notificação. A região passa a usar o token `--fx-z-toast` (**1200**)
+  por uma regra `[data-fx-toast-region]`, continuando reativa ao tema.
+- **`fx-button` variante `outline` "acinzentado"**: o fundo era `transparent`,
+  deixando a superfície cinza do card/página aparecer através do botão. Agora o
+  `outline` tem fundo sólido claro (`--fx-button-outline-bg`, padrão
+  `--fx-surface-background`) com hover em `color-mix` de 10% da cor primária.
 
 ### Adicionado
 
@@ -42,6 +58,16 @@ Histórico anterior à 1.2.0: [releases do GitHub](https://github.com/wesley-rei
   - `npm run test:consumer` (build Vite de um consumidor real, em
     `exemplos/consumer-smoke/`) — cobre o caminho "instalado via bundler", que
     não pode regredir: precisa copiar/reescrever o `.woff2` no bundle final.
+- **`fx-drawer` — atributo `dismissible`** (padrão `true`):
+  `dismissible="false"` remove o ✕ do header e bloqueia o fechamento por clique
+  no overlay e por `ESC` — o drawer passa a fechar apenas por código
+  (`open = false`).
+- **Tokens novos**: `z.overlay` (`--fx-z-overlay`, padrão **1090** — camada do
+  overlay desfocado dos drawers, abaixo dos painéis modais),
+  `--fx-drawer-header-z` (padrão **20**, camada do header sticky do `fx-drawer`)
+  e `--fx-button-outline-bg` (padrão `var(--fx-surface-background)`, fundo da
+  variante `outline` do `fx-button`). Todos aparecem em *Tokens de tema*,
+  *Variáveis de componente* e nos docs de `fx-drawer`/`fx-button`/`fx-toast`.
 
 ## [1.5.0] — 2026-10-23
 
