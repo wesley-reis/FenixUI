@@ -21,6 +21,7 @@ export const buttonDoc: ComponentDoc = {
 			.map((v) => `<fx-button variant="${v}">${v}</fx-button>`)
 			.join("") +
 		`</div>
+        <p style="font-size:12px;color:var(--fx-text-muted);margin:0 0 8px"><code>outline</code> usa fundo sólido claro (<code>--fx-button-outline-bg</code>, padrão <code>--fx-surface-background</code>) com borda e texto na cor primária — antes o fundo era transparente e a superfície cinza aparecia através do botão. O <code>ghost</code> é o variante sem fundo nem borda.</p>
         <h4>Tamanhos</h4>
         <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
           <fx-button size="sm">Pequeno</fx-button>
@@ -165,6 +166,12 @@ export const buttonDoc: ComponentDoc = {
 			type: "length",
 			default: "calc(var(--fx-font-size) + 6px)",
 			desc: "Tamanho do ícone (attr icon ou slot) — mesma métrica do --fx-input-icon-size. Aumente ex.: style=\"--fx-button-icon-size: 24px\".",
+		},
+		{
+			name: "--fx-button-outline-bg",
+			type: "color",
+			default: "var(--fx-surface-background)",
+			desc: "Fundo da variante outline (sólido e claro — branco no tema claro, escuro no dark). Sem fundo sólido a superfície cinza do card aparecia através do botão. O hover deriva 10% da cor primária sobre este fundo.",
 		},
 	],
 };

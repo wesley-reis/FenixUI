@@ -221,6 +221,11 @@ FenixUI.configure({
       text: '#0f172a',            // corpo do fx-table (padrão: acompanha text.default)
       'header-weight': '600',     // cabeçalho mais leve que o bold do navegador
     },
+    z: {
+      toast: '2000',              // camada das notificações (padrão: 1200)
+      // overlay: '1090',         // overlay desfocado dos drawers (padrão: 1090)
+      // modal: '1100',           // painéis de drawer/dialog (padrão: 1100)
+    },
   },
 });
 ```

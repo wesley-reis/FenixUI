@@ -141,6 +141,13 @@ export const toastDoc: ComponentDoc = {
 			desc: "Com o cursor sobre o toast (ou o foco do teclado dentro dele) a contagem é pausada e retoma de onde parou ao sair — a barra de progresso pausa junto. Toasts com duration: 0 continuam fixos até fechar.",
 		},
 	],
+	cssVars: [
+		{
+			name: "--fx-z-toast",
+			default: "1200",
+			desc: "Camada da região onde os toasts empilham (token global z.toast). Precisa ficar acima de modais/overlays — z.modal = 1100 — senão a notificação abre atrás do fundo desfocado. Suba se algum overlay do seu app cobrir o toast.",
+		},
+	],
 	extraSections: [
 		{
 			title: "Mensagens longas (truncar, expandir e copiar)",
@@ -148,6 +155,15 @@ export const toastDoc: ComponentDoc = {
     <div style="display:flex;gap:12px;flex-wrap:wrap">
       <fx-button size="sm" variant="warning" onclick="FenixToast.info('Relatório consolidado','O relatório do período foi gerado com sucesso e já está disponível para download. Ele inclui todos os lançamentos do mês, os totais por categoria, a comparação com o mês anterior e as observações registradas pela equipe financeira. Você pode acessá-lo novamente em Relatórios > Histórico.',{duration:8000,progress:'always'})">Toast com mensagem longa</fx-button>
       <fx-button size="sm" variant="secondary" onclick="FenixToast.success('Texto curto','Sem truncar, card no tamanho mínimo.',{duration:4000,progress:'always'})">Toast curto (altura mínima)</fx-button>
+    </div>`,
+		},
+		{
+			title: "Toast acima de modais (z-index)",
+			html: `<p>A região onde os toasts empilham usa o token global <code>--fx-z-toast</code> (<b>1200</b>), acima de <code>--fx-z-modal</code> (<b>1100</b>) — a camada dos overlays de drawer/dialog. É isso que mantém a mensagem visível com um modal aberto e o fundo desfocado.</p>
+    <p>Se algum overlay do seu app cobrir o toast, suba a camada pelo tema:</p>
+    <pre><code>FenixUI.setTokens({ z: { toast: '2000' } });</code></pre>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <fx-button size="sm" variant="info" onclick="FenixToast.info('Camada do toast','O z-index vem do token --fx-z-toast (1200).',{duration:6000,progress:'always'})">Ver toast</fx-button>
     </div>`,
 		},
 	],

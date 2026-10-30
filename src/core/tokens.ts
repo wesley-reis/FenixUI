@@ -29,7 +29,7 @@ export interface FenixTokens {
   };
   /** Texto das tabelas (`fx-table`): cor do corpo/cabeçalho e peso do cabeçalho. */
   table: Record<'text' | 'header-text' | 'header-weight', string>;
-  /** Z-index */ z: Record<'base' | 'dropdown' | 'modal' | 'toast', string>;
+  /** Z-index */ z: Record<'base' | 'overlay' | 'dropdown' | 'modal' | 'toast', string>;
 }
 
 /** Tema claro (padrão). */
@@ -100,7 +100,7 @@ export const lightTokens: FenixTokens = {
 		/** O UA aplica bold no <th>; aqui o valor fica explícito e tokenizado. */
 		"header-weight": "bold",
 	},
-	z: { base: "auto", dropdown: "1000", modal: "1100", toast: "1200" },
+	z: { base: "auto", overlay: "1090", dropdown: "1000", modal: "1100", toast: "1200" },
 };
 
 /** Tema escuro — os componentes reagem automaticamente às variáveis CSS. */

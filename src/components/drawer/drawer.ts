@@ -18,8 +18,9 @@ import {
  *
  * Atributos:
  *  - position: 'left' | 'right' | 'top' | 'bottom' (padrão: right);
- *  - title: texto do cabeçalho;
- *  - open: exibe o drawer.
+ *  - title: texto do cabeçalho (OPCIONAL — sem título o header exibe só o ✕);
+ *  - open: exibe o drawer;
+ *  - dismissible: permite fechar pelo usuário (✕, overlay e ESC). Padrão: true.
  * Conteúdo: livre, via slot.
  * Eventos: `open` e `close` (composed). Fecha por ESC ou clique no overlay.
  */
@@ -109,10 +110,12 @@ export class FxDrawer extends FxElement {
 			position: sticky;
 			top: 0;
 			background: var(--fx-surface-background);
-			/* O conteúdo do drawer (ex.: abas da customização de tema)
-			   rola por trás do header: sem z-index o texto passava POR CIMA
-			   e o header parecia transparente. */
-			z-index: 1;
+			/* O Shadow DOM NÃO cria stacking context: sem um z-index alto o
+			   suficiente, conteúdo com z-index próprio passa POR CIMA do header
+			   (ex.: o .loading-overlay do fx-table usa z-index 10). 20 fica acima
+			   desse conteúdo e abaixo das camadas flutuantes (--fx-z-dropdown,
+			   --fx-z-tooltip), que devem sobrepor o header. Ajustável por token. */
+			z-index: var(--fx-drawer-header-z, 20);
 		}
 		.title {
 			font-weight: 700;
@@ -149,7 +152,7 @@ export class FxDrawer extends FxElement {
 	`;
 
 	static override get observedAttributes(): string[] {
-		return ["open", "title", "position"];
+		return ["open", "title", "position", "dismissible"];
 	}
 
 	get open(): boolean {
@@ -174,15 +177,31 @@ export class FxDrawer extends FxElement {
 		this.setAttribute("position", v);
 	}
 
+	/**
+	 * Permite fechar pelo usuário: ✕ no header, clique no overlay e ESC.
+	 * Padrão `true`. Com `dismissible="false"` o drawer só fecha por código
+	 * (`open = false`) e o header aparece apenas se houver `title`.
+	 */
+	get dismissible(): boolean {
+		return this.getAttr("dismissible", "true") !== "false";
+	}
+	set dismissible(v: boolean) {
+		this.setAttribute("dismissible", v ? "true" : "false");
+	}
+
 	protected override render(): void {
 		const title = this.getAttr("title");
+		// Título é OPCIONAL: o header (e o ✕) existem mesmo sem título — desde que
+		// o drawer seja dispensável. `dismissible="false"` sem título = sem header.
+		const closable = this.dismissible;
+		const showHeader = closable || title !== "";
 		const wasOpen = this._wasOpen;
 		this._wasOpen = this.open;
 
 		this.setTemplate(`
       <div class="overlay" part="overlay"></div>
       <div class="panel" part="panel" role="dialog" aria-modal="true" aria-label="${esc(title || "Drawer")}" tabindex="-1">
-        ${title !== "" ? `<div class="header" part="header"><span class="title">${esc(title)}</span><button type="button" class="close" part="close" aria-label="Fechar">✕</button></div>` : ""}
+        ${showHeader ? `<div class="header" part="header"><span class="title">${esc(title)}</span>${closable ? `<button type="button" class="close" part="close" aria-label="Fechar">✕</button>` : ""}</div>` : ""}
         <div class="body" part="body"><slot></slot></div>
       </div>
     `);
@@ -250,6 +269,8 @@ export class FxDrawer extends FxElement {
 
 	private _close = (): void => {
 		if (!this.open) return;
+		// dismissible="false": fecha apenas por código (open = false).
+		if (!this.dismissible) return;
 		this.open = false; // render(false) → _release()
 		this.dispatchEvent(
 			new CustomEvent("close", { bubbles: true, composed: true }),
