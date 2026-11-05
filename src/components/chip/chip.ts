@@ -41,11 +41,18 @@ export class FxChip extends FxElement {
     :host([size='md']) .chip { min-height: var(--fx-size-md); padding: var(--fx-space-xs) var(--fx-space-lg); }
     :host([size='lg']) .chip { min-height: var(--fx-size-lg); font-size: var(--fx-font-size); padding: var(--fx-space-sm) var(--fx-space-xl); }
 
+    /* Cor: severity canônico; variant=<cor> segue aceito como alias legado. */
+    :host([severity='primary']) .chip,
     :host([variant='primary']) .chip { background: color-mix(in srgb, var(--fx-color-primary) 14%, transparent); color: var(--fx-color-primary); }
+    :host([severity='secondary']) .chip,
     :host([variant='secondary']) .chip { background: color-mix(in srgb, var(--fx-color-secondary) 14%, transparent); color: var(--fx-color-secondary); }
+    :host([severity='success']) .chip,
     :host([variant='success']) .chip { background: color-mix(in srgb, var(--fx-color-success) 14%, transparent); color: var(--fx-color-success); }
+    :host([severity='warning']) .chip,
     :host([variant='warning']) .chip { background: color-mix(in srgb, var(--fx-color-warning) 14%, transparent); color: var(--fx-color-warning); }
+    :host([severity='danger']) .chip,
     :host([variant='danger']) .chip { background: color-mix(in srgb, var(--fx-color-danger) 14%, transparent); color: var(--fx-color-danger); }
+    :host([severity='info']) .chip,
     :host([variant='info']) .chip { background: color-mix(in srgb, var(--fx-color-info) 14%, transparent); color: var(--fx-color-info); }
 
     .chip.clickable { cursor: pointer; }
@@ -81,7 +88,7 @@ export class FxChip extends FxElement {
   `;
 
   static override get observedAttributes(): string[] {
-    return ['variant', 'size', 'removable', 'selectable', 'selected', 'disabled', 'icon'];
+    return ['variant', 'severity', 'size', 'removable', 'selectable', 'selected', 'disabled', 'icon'];
   }
 
   get selected(): boolean { return this.hasAttr('selected'); }

@@ -40,6 +40,7 @@ export const GUIDE_ITEMS: ShellNavItem[] = [
 	{ id: 'theming', title: 'Temas' },
 	{ id: 'tokens', title: 'Tokens de tema' },
 	{ id: 'component-vars', title: 'Variáveis de componente' },
+	{ id: 'migration', title: 'Migração' },
 ];
 
 /**

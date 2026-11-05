@@ -12,18 +12,19 @@ export const chipDoc: ComponentDoc = {
 	demoHtml: (attrs) =>
 		`<fx-chip ${attrs} icon="🏷️">Categoria</fx-chip>`,
 	variantsHtml: () => {
-		return `<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center"><fx-chip>Padrão</fx-chip><fx-chip variant="primary">Primary</fx-chip><fx-chip variant="secondary">Secondary</fx-chip><fx-chip variant="success">Success</fx-chip><fx-chip variant="warning">Warning</fx-chip><fx-chip variant="danger">Danger</fx-chip><fx-chip variant="info">Info</fx-chip></div><div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:16px"><fx-chip removable icon="🔥">Removível</fx-chip><fx-chip selectable selected>Filtro ativo</fx-chip><fx-chip selectable>Filtro inativo</fx-chip><fx-chip size="sm">Pequeno</fx-chip><fx-chip size="lg">Grande</fx-chip><fx-chip disabled>Desabilitado</fx-chip></div>`;
+		return `<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center"><fx-chip>Padrão</fx-chip><fx-chip severity="primary">Primary</fx-chip><fx-chip severity="secondary">Secondary</fx-chip><fx-chip severity="success">Success</fx-chip><fx-chip severity="warning">Warning</fx-chip><fx-chip severity="danger">Danger</fx-chip><fx-chip severity="info">Info</fx-chip></div><div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:16px"><fx-chip removable icon="🔥">Removível</fx-chip><fx-chip selectable selected>Filtro ativo</fx-chip><fx-chip selectable>Filtro inativo</fx-chip><fx-chip size="sm">Pequeno</fx-chip><fx-chip size="lg">Grande</fx-chip><fx-chip disabled>Desabilitado</fx-chip></div>`;
 	},
 	controls: [
 		{ kind: "select", attr: "size", label: "Tamanho", options: ["sm", "md", "lg"], value: "md" },
-		{ kind: "select", attr: "variant", label: "Variante", options: ["", "primary", "secondary", "success", "warning", "danger", "info"], value: "primary" },
+		{ kind: "select", attr: "severity", label: "Cor (severity)", options: ["", "primary", "secondary", "success", "warning", "danger", "info"], value: "primary" },
 		{ kind: "toggle", attr: "removable", label: "Removível", on: true },
 		{ kind: "toggle", attr: "selectable", label: "Selecionável" },
 		{ kind: "toggle", attr: "selected", label: "Selecionado" },
 		{ kind: "toggle", attr: "disabled", label: "Desabilitado" },
 	],
 	attributes: [
-		{ name: "variant", type: `'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info'`, default: "''", desc: "Cor do chip." },
+		{ name: "severity", type: `'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info'`, default: "''", desc: "Cor do chip (canônica)." },
+		{ name: "variant", type: `'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info'`, default: "''", desc: "Alias legado de cor — mantido por compatibilidade; prefira `severity`." },
 		{ name: "size", type: `'sm' | 'md' | 'lg'`, default: "'sm'", desc: "Tamanho do chip." },
 		{ name: "icon", type: "string", default: "''", desc: "Ícone antes do texto: nome do glifo Fenix Icons (ex.: icon=\"check_circle\", requer '@wrrdev/fenix-ui/icons') ou emoji/texto livre." },
 		{ name: "removable", type: "boolean", default: "false", desc: "Exibe o botão × de remoção." },

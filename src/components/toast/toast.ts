@@ -43,6 +43,24 @@ const KIND_ICON: Record<ToastKind, string> = {
   info: "i",
 };
 
+/**
+ * Mapa do alias canônico `severity` (padrão da lib) para o `kind` do toast.
+ *
+ * O `kind` (success|error|info|warning) permanece canônico no toast; o
+ * atributo `severity` é aceito como alias para alinhar com os demais
+ * componentes (cor semântica). `danger`↔`error`; `primary`/`secondary`
+ * caem em `info` (o toast não tem essas cores próprias).
+ */
+const SEVERITY_KIND: Record<string, ToastKind> = {
+  success: "success",
+  warning: "warning",
+  info: "info",
+  danger: "error",
+  error: "error",
+  primary: "info",
+  secondary: "info",
+};
+
 /** Ícone de copiar (SVG inline: não depende da fonte de ícones). */
 const COPY_SVG =
   '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
@@ -195,6 +213,7 @@ export class FxToast extends HTMLElement {
   static get observedAttributes() {
     return [
       "kind",
+      "severity",
       "title",
       "message",
       "duration",
@@ -449,8 +468,18 @@ export class FxToast extends HTMLElement {
     }
   }
 
+  /**
+   * Kind efetivo do toast: `severity` (alias canônico) tem prioridade sobre
+   * `kind`; sem nenhum dos dois cai em `info`.
+   */
+  #resolvedKind(): ToastKind {
+    const sev = this.getAttribute("severity");
+    if (sev) return SEVERITY_KIND[sev] ?? "info";
+    return (this.getAttribute("kind") || "info") as ToastKind;
+  }
+
   #render() {
-    const kind = (this.getAttribute("kind") || "info") as ToastKind;
+    const kind = this.#resolvedKind();
     const title = this.getAttribute("title") ?? "";
     const msg = this.getAttribute("message") ?? "";
     const color = KIND_COLOR[kind] ?? KIND_COLOR.info;

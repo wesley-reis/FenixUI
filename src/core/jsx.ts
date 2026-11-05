@@ -19,7 +19,24 @@ import type { FenixIconName } from '../icons/types';
 export const FX_JSX_TYPES = true as const;
 
 /* Uniões auxiliares (variants, enums) */
-export type FxButtonVariant = 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info' | 'ghost' | 'outline';
+/**
+ * Cor semântica compartilhada (atributo `severity`).
+ *
+ * Padrão da lib: **cor ≠ forma**. `severity` carrega a COR em todos os
+ * componentes; `variant` carrega a FORMA/estilo (nunca cor). Exportada para
+ * reaproveitamento em wrappers e código imperativo.
+ */
+export type FxSeverity = 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info';
+
+/**
+ * Forma do <fx-button>: `solid` (padrão) · `outline` · `ghost`.
+ *
+ * Os valores de cor antigos (`primary`…`info`) continuam aceitos como ALIAS
+ * legado — equivalem a `variant="solid"` + `severity=<cor>`.
+ */
+export type FxButtonVariant = 'solid' | 'outline' | 'ghost' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info';
+/** Cor do <fx-button> — alias canônico de {@link FxSeverity}. */
+export type FxButtonSeverity = FxSeverity;
 export type FxBadgeVariant = 'default' | 'primary' | 'success' | 'warning' | 'danger' | 'info';
 export type FxAlertVariant = 'info' | 'success' | 'warning' | 'danger';
 export type FxProgressVariant = 'primary' | 'success' | 'warning' | 'danger';
@@ -40,6 +57,8 @@ export type FxDropdownPosition = 'left' | 'center' | 'right' | 'bottom-left' | '
 export type FxPaginationPosition = 'left' | 'center' | 'right';
 export type FxChipVariant = 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info';
 export type FxAvatarVariant = 'image' | 'text' | 'icon';
+/** Modo de exibição do <fx-avatar> (canônico) — `variant` é alias legado. */
+export type FxAvatarMode = 'image' | 'text' | 'icon';
 export type FxAvatarShape = 'circle' | 'rounded' | 'square';
 export type FxCardVariant = 'elevated' | 'flat' | 'outline' | 'ghost';
 /** Arredondamento do container do card. */
@@ -64,7 +83,10 @@ export type FxEditorPasteMode = 'clean' | 'plain';
 
 /* Props por componente */
 export interface FxButtonProps extends FxElementProps {
+  /** Forma (solid|outline|ghost). Valores de cor legados seguem aceitos. */
   variant?: FxButtonVariant;
+  /** Cor semântica (separada da forma). */
+  severity?: FxButtonSeverity;
   type?: 'button' | 'submit' | 'reset';
   size?: FxSize;
   loading?: boolean;
@@ -74,6 +96,8 @@ export interface FxButtonProps extends FxElementProps {
 }
 export interface FxBadgeProps extends FxElementProps {
   variant?: FxBadgeVariant;
+  /** Cor semântica (canônica). */
+  severity?: FxSeverity;
   round?: boolean;
 }
 export interface FxSpinnerProps extends FxElementProps { size?: FxSize; }
@@ -308,6 +332,8 @@ export interface FxDialogProps extends FxElementProps { open?: boolean; size?: F
 export interface FxDrawerProps extends FxElementProps { open?: boolean; title?: string; position?: FxDrawerPosition; dismissible?: boolean; }
 export interface FxToastProps extends FxElementProps {
   kind?: FxToastKind;
+  /** Alias canônico de cor (padrão da lib). `danger`↔`error`. */
+  severity?: FxSeverity;
   title?: string;
   message?: string;
   duration?: number;
@@ -337,6 +363,8 @@ export interface FxProgressProps extends FxElementProps {
   value?: number;
   indeterminate?: boolean;
   variant?: FxProgressVariant;
+  /** Cor semântica (canônica). */
+  severity?: FxSeverity;
   label?: string;
   'hide-label'?: boolean;
   size?: FxSize;
@@ -347,7 +375,7 @@ export interface FxSkeletonProps extends FxElementProps {
   height?: string;
   lines?: number;
 }
-export interface FxAlertProps extends FxElementProps { variant?: FxAlertVariant; title?: string; dismissible?: boolean; }
+export interface FxAlertProps extends FxElementProps { variant?: FxAlertVariant; severity?: FxSeverity; title?: string; dismissible?: boolean; }
 export interface FxDropdownProps extends FxElementProps { label?: string; position?: FxDropdownPosition; open?: boolean; }
 export interface FxDropdownItemProps extends FxElementProps { value?: string; }
 export interface FxPaginationProps extends FxElementProps {
@@ -371,7 +399,7 @@ export interface FxAutocompleteProps extends FxElementProps {
 export interface FxFileUploadProps extends FxElementProps {
   mode?: 'basic' | 'advanced';
   size?: FxSize;
-  severity?: 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info';
+  severity?: FxSeverity;
   label?: string;
   icon?: string;
   accept?: string;
@@ -398,6 +426,8 @@ export interface FxStepperProps extends FxElementProps {
 }
 export interface FxChipProps extends FxElementProps {
   variant?: FxChipVariant;
+  /** Cor semântica (canônica). */
+  severity?: FxSeverity;
   size?: FxSize;
   icon?: string;
   removable?: boolean;
@@ -406,6 +436,8 @@ export interface FxChipProps extends FxElementProps {
 }
 export interface FxAvatarProps extends FxElementProps {
   variant?: FxAvatarVariant;
+  /** Modo de exibição (canônico): image|text|icon. */
+  mode?: FxAvatarMode;
   src?: string;
   alt?: string;
   size?: FxSize;

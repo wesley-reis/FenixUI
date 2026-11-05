@@ -69,6 +69,51 @@ Histórico anterior à 1.2.0: [releases do GitHub](https://github.com/wesley-rei
   variante `outline` do `fx-button`). Todos aparecem em *Tokens de tema*,
   *Variáveis de componente* e nos docs de `fx-drawer`/`fx-button`/`fx-toast`.
 
+## [1.6.0] — 2026-11-05
+
+### Adicionado
+
+- **Padrão forma × cor (atributo `severity`)**: `variant` passa a significar
+  **forma** (nunca cor) e `severity` **cor** (nunca forma) em todos os
+  componentes com cor. Combinam livremente — ex.: `<fx-button variant="outline"
+  severity="danger">`. Vale para `fx-button`, `fx-badge`, `fx-chip`, `fx-alert`
+  e `fx-progress`; `fx-toast` aceita `severity` como alias (mapa `danger`↔`error`)
+  e `fx-avatar` ganha `mode` (o antigo `variant` vira alias legado).
+- **Tipos novos**: `FxSeverity` (união canônica de cores), `FxButtonSeverity` e
+  `FxAvatarMode`, exportados pela entrada principal e por `/jsx`, `/vue` e `/react`.
+- **Página "Migração" na documentação** (`#/migration`): tabela do que mudou por
+  componente, antes/depois, depreciações e a versão.
+- **Download/self-host da fonte de ícones documentado**: nova seção *"Baixar a
+  fonte (self-host, CDN ou offline)"* em `#/icons`, com as URLs diretas do
+  `fenix-icons.woff2` (jsDelivr/unpkg), os caminhos em `dist/`/`node_modules` e o
+  `setFenixIconsFontUrl()` — para apps offline/intranet ou com CSP que bloqueia o
+  CDN. Também citado na doc de `fx-icon`, na página de CDN e no README.
+
+### Alterado
+
+- **`fx-button` — `outline` e `ghost` aceitam qualquer cor**: a cor deixou de ser
+  fixa (primária) e passa a vir de `--_btn-color` (`severity`). `variant` agora é
+  a forma: `solid` (padrão) · `outline` · `ghost`.
+
+### Corrigido
+
+- **`fx-button` com `loading` + ícone**: o ícone padrão e o spinner apareciam
+  juntos. Agora o ícone é ocultado durante o `loading` e o spinner aparece **no
+  lugar do ícone** (respeitando `icon-pos`); sem ícone, o spinner cai no default
+  (após o rótulo). Ao término, o ícone volta. O spinner ganhou `role="status"` e
+  `aria-label="Carregando"`.
+
+### Depreciado (mantido por compatibilidade)
+
+- Valores de **cor** em `variant` (`primary`…`info`) no `fx-button`, `fx-badge`,
+  `fx-chip`, `fx-alert` e `fx-progress` — equivalem a forma sólida + `severity=<cor>`.
+- `<fx-avatar variant>` (modo image/text/icon) — use `mode`.
+
+### Notas de migração
+
+- Nada quebra: os usos antigos continuam funcionando como *alias*. Recomenda-se
+  passar a cor por `severity` e a forma por `variant`. Guia completo em `#/migration`.
+
 ## [1.5.0] — 2026-10-23
 
 ### Adicionado

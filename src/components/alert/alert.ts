@@ -19,9 +19,14 @@ export class FxAlert extends FxElement {
       --_color: var(--fx-color-primary);
       --_bg: color-mix(in srgb, var(--fx-color-primary) 10%, var(--fx-surface-background));
     }
+    /* Cor semântica: severity é canônico; variant segue aceito (alias). */
+    :host([severity='info']),
     :host([variant='info']) { --_color: var(--fx-color-info); --_bg: color-mix(in srgb, var(--fx-color-info) 10%, var(--fx-surface-background)); }
+    :host([severity='success']),
     :host([variant='success']) { --_color: var(--fx-color-success); --_bg: color-mix(in srgb, var(--fx-color-success) 10%, var(--fx-surface-background)); }
+    :host([severity='warning']),
     :host([variant='warning']) { --_color: var(--fx-color-warning); --_bg: color-mix(in srgb, var(--fx-color-warning) 12%, var(--fx-surface-background)); }
+    :host([severity='danger']),
     :host([variant='danger']) { --_color: var(--fx-color-danger); --_bg: color-mix(in srgb, var(--fx-color-danger) 10%, var(--fx-surface-background)); }
     .alert {
       display: flex;
@@ -50,11 +55,11 @@ export class FxAlert extends FxElement {
   `;
 
   static override get observedAttributes(): string[] {
-    return ['variant', 'title', 'dismissible', 'icon'];
+    return ['variant', 'severity', 'title', 'dismissible', 'icon'];
   }
 
   protected override render(): void {
-    const variant = this.getAttr('variant', 'info');
+    const variant = this.getAttr('severity', this.getAttr('variant', 'info'));
     const title = this.getAttr('title');
     const iconName = this.getAttr('icon');
     if (isFenixIconName(iconName)) void import('../../icons');

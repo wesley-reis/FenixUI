@@ -198,6 +198,9 @@ function openTag(tag: string, attrsSrc: string, selfClose: string, ctx: Ctx): st
   const parts: string[] = [];
   for (const a of attrs) {
     if (DOC_ONLY_ATTRS.has(a.name)) continue;
+    // Handlers inline da doc (`onclick="…"`): não portam para frameworks — Vue,
+    // React, Angular e Svelte usam bindings próprios. Ficam só no exemplo HTML.
+    if (ctx.fw !== 'html' && /^on[a-z]+$/i.test(a.name)) continue;
     // O binding substitui o valor estático (exceto no HTML, que é o exemplo cru).
     if (ctx.fw !== 'html' && kind === 'value' && a.name === 'value') continue;
     if (ctx.fw !== 'html' && kind === 'checked' && a.name === 'checked') continue;

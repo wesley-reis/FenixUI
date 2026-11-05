@@ -105,6 +105,12 @@ export const toastDoc: ComponentDoc = {
 			desc: "Força o esquema de cores do card independentemente do tema global.",
 		},
 		{
+			name: "atributo severity (alias)",
+			type: `'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info'`,
+			default: "—",
+			desc: "Alias canônico de cor (padrão da lib). Mapeia para o `kind`: success/warning/info diretos, `danger`↔`error`, `primary`/`secondary` caem em `info`. Sem efeito quando `kind` já é suficiente.",
+		},
+		{
 			name: "options.progress / atributo progress",
 			type: `'always' | 'hover' | 'paused'`,
 			default: "— (desligado)",

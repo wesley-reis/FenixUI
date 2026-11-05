@@ -156,13 +156,13 @@ describe("docs app", () => {
 	it("controles do playground (fx-select) atualizam atributos ao vivo", async () => {
 		await navigate("fx-button");
 		const select = main().querySelector(
-			'fx-select[data-attr="variant"]',
+			'fx-select[data-attr="severity"]',
 		) as any;
 		expect(select).toBeTruthy();
 		select.value = "danger";
 		select.dispatchEvent(new Event("change"));
 		const btn = main().querySelector("#stage fx-button")!;
-		expect(btn.getAttribute("variant")).toBe("danger");
+		expect(btn.getAttribute("severity")).toBe("danger");
 	});
 
 	it("página do floatlabel: label vive no shadow e a variante muda pelo controle", async () => {
@@ -647,8 +647,8 @@ describe("docs: código de exemplo", () => {
 			(b as HTMLElement).dataset.fw,
 		);
 		expect(tabs).toEqual(["html", "vue", "react", "angular", "svelte"]);
-		// Trocar variante atualiza o snippet Vue (valor real do playground).
-		const select = main().querySelector('fx-select[data-attr="variant"]') as any;
+		// Trocar a cor atualiza o snippet Vue (valor real do playground).
+		const select = main().querySelector('fx-select[data-attr="severity"]') as any;
 		select.value = "danger";
 		select.dispatchEvent(new Event("change"));
 		// Trocar de aba mostra o painel Vue (preenchido sob demanda).
@@ -658,7 +658,7 @@ describe("docs: código de exemplo", () => {
 			main().querySelector("#fw-code .fw-pane[data-pane='vue']")!.hasAttribute("hidden"),
 		).toBe(false);
 		const vueCode = main().querySelector("#fw-code .fw-pane[data-pane='vue'] code")!.textContent ?? "";
-		expect(vueCode).toContain('variant="danger"');
+		expect(vueCode).toContain('severity="danger"');
 		// Trocar de aba mostra o painel React e persiste.
 		const reactTab = main().querySelector("#fw-code .fw-tab[data-fw='react']") as HTMLButtonElement;
 		reactTab.dispatchEvent(new Event("click"));

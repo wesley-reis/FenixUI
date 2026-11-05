@@ -11,9 +11,15 @@ import { FENIX_ICON_BASE_CSS, fenixIconHtml } from '../../icons/base-css';
  * se associa ao form sozinho — a ação é acionada via ElementInternals).
  * `<form disabled>`/`<fieldset disabled>` desabilitam o botão.
  *
- * Atributos: variant, size, disabled, loading, type, full (largura 100%
- * acompanhando o elemento pai), icon (nome do glifo Fenix Icons ou
- * emoji/texto livre) e icon-pos (left|right, padrão left).
+ * Atributos: variant (forma: solid|outline|ghost, padrão solid), severity
+ * (cor: primary|secondary|success|warning|danger|info), size, disabled, loading,
+ * type, full (largura 100% acompanhando o elemento pai), icon (nome do glifo
+ * Fenix Icons ou emoji/texto livre) e icon-pos (left|right, padrão left).
+ *
+ * Forma e cor são dimensões SEPARADAS: `variant` nunca carrega cor e
+ * `severity` nunca carrega forma. Por retrocompatibilidade, os valores de cor
+ * antigos em `variant` (ex.: `variant="danger"`) continuam aceitos como alias
+ * de "forma sólida + essa cor".
  * Slots: default (rótulo), `icon` (ícone customizado — vence o atributo).
  * Evento: `click` nativo atravessa o Shadow DOM (composed) — ouça no host.
  */
@@ -27,6 +33,9 @@ export class FxButton extends FxElement {
     :host {
       display: inline-block;
       vertical-align: middle;
+      /* Cor base do botão (dimensão separada da forma). O atributo severity
+         sobrescreve; o alias legado variant=<cor> também escreve aqui. */
+      --_btn-color: var(--fx-color-primary);
     }
     /* Full width: o host inline-block é shrink-to-fit, então precisa virar
        block para o 100% do .btn interno ter contra o que esticar. */
@@ -51,7 +60,7 @@ export class FxButton extends FxElement {
       border-radius: var(--fx-radius-md);
       border: 1px solid transparent;
       color: #fff;
-      background: var(--fx-color-primary);
+      background: var(--_btn-color);
       cursor: pointer;
       user-select: none;
       text-decoration: none;
@@ -76,26 +85,46 @@ export class FxButton extends FxElement {
     /* Full width */
     :host([full]) .btn { width: 100%; }
 
-    /* Variantes */
-    :host([variant='secondary']) .btn { background: var(--fx-color-secondary); }
-    :host([variant='success']) .btn { background: var(--fx-color-success); }
-    :host([variant='warning']) .btn { background: var(--fx-color-warning); }
-    :host([variant='danger']) .btn { background: var(--fx-color-danger); }
-    :host([variant='info']) .btn { background: var(--fx-color-info); }
-    :host([variant='ghost']) .btn { background: transparent; color: var(--fx-text-default); }
-    :host([variant='ghost']) .btn:hover { background: var(--fx-surface-surface-hover); filter: none; }
+    /* ---------------------------------------------------------------------
+       Cor (dimensão separada da forma)
+       severity é o atributo canônico de cor. O alias legado variant=<cor>
+       continua aceito (sólido com essa cor) — declarado ANTES de severity
+       para o valor explícito de severity vencer quando ambos existirem.
+       --------------------------------------------------------------------- */
+    :host([variant='primary']) { --_btn-color: var(--fx-color-primary); }
+    :host([variant='secondary']) { --_btn-color: var(--fx-color-secondary); }
+    :host([variant='success']) { --_btn-color: var(--fx-color-success); }
+    :host([variant='warning']) { --_btn-color: var(--fx-color-warning); }
+    :host([variant='danger']) { --_btn-color: var(--fx-color-danger); }
+    :host([variant='info']) { --_btn-color: var(--fx-color-info); }
+
+    :host([severity='primary']) { --_btn-color: var(--fx-color-primary); }
+    :host([severity='secondary']) { --_btn-color: var(--fx-color-secondary); }
+    :host([severity='success']) { --_btn-color: var(--fx-color-success); }
+    :host([severity='warning']) { --_btn-color: var(--fx-color-warning); }
+    :host([severity='danger']) { --_btn-color: var(--fx-color-danger); }
+    :host([severity='info']) { --_btn-color: var(--fx-color-info); }
+
+    /* Forma (sem cor): solid (padrão) · outline · ghost */
+    :host([variant='solid']) .btn { background: var(--_btn-color); color: #fff; }
     /* Outline: fundo SÓLIDO claro (branco no tema claro) em vez de transparent —
        com fundo transparente a superfície cinza do card/página aparecia através
-       do botão. A variante ghost continua sem fundo nem borda. */
+       do botão. Borda e texto acompanham a cor (severity, padrão primary). */
     :host([variant='outline']) .btn {
       background: var(--fx-button-outline-bg, var(--fx-surface-background));
-      color: var(--fx-color-primary);
-      border-color: var(--fx-color-primary);
+      color: var(--_btn-color);
+      border-color: var(--_btn-color);
     }
     :host([variant='outline']) .btn:hover {
-      background: color-mix(in srgb, var(--fx-color-primary) 10%, var(--fx-button-outline-bg, var(--fx-surface-background)));
+      background: color-mix(in srgb, var(--_btn-color) 10%, var(--fx-button-outline-bg, var(--fx-surface-background)));
       filter: none;
     }
+    /* Ghost: sem fundo nem borda. Sem severity mantém a cor de texto padrão
+       (comportamento legado); com severity assume a cor informada. */
+    :host([variant='ghost']) .btn { background: transparent; color: var(--fx-text-default); }
+    :host([variant='ghost'][severity]) .btn { color: var(--_btn-color); }
+    :host([variant='ghost']) .btn:hover { background: var(--fx-surface-surface-hover); filter: none; }
+    :host([variant='ghost'][severity]) .btn:hover { background: color-mix(in srgb, var(--_btn-color) 12%, transparent); }
 
     /* Ícone e spinner */
     .btn__icon { display: inline-flex; align-items: center; font-size: var(--fx-button-icon-size, calc(var(--fx-font-size) + 6px)); line-height: 1; }
@@ -123,6 +152,9 @@ export class FxButton extends FxElement {
       cursor: not-allowed;
       pointer-events: none;
     }
+    /* Loading: esconde o ícone padrão e deixa só o spinner — o ícone volta a
+       aparecer quando o carregamento termina. */
+    :host([loading]) .btn__icon { display: none; }
 
     /* Efeito ripple (). Desative com effect.ripple: '0' no preset. */
     .btn {
@@ -150,7 +182,7 @@ export class FxButton extends FxElement {
   `;
 
   static override get observedAttributes(): string[] {
-    return ['variant', 'size', 'disabled', 'loading', 'type', 'full', 'icon', 'icon-pos'];
+    return ['variant', 'severity', 'size', 'disabled', 'loading', 'type', 'full', 'icon', 'icon-pos'];
   }
 
   protected readonly internals: ElementInternals | null;
@@ -174,6 +206,23 @@ export class FxButton extends FxElement {
   formDisabledCallback(disabled: boolean): void {
     if (disabled) this.setAttribute('disabled', '');
     else this.removeAttribute('disabled');
+  }
+
+  /** Forma do botão. Padrão: `'solid'`. */
+  get variant(): string {
+    return this.getAttr('variant', 'solid') || 'solid';
+  }
+  set variant(value: string) {
+    this.setAttribute('variant', value);
+  }
+
+  /** Cor semântica do botão. Padrão: `''` (cai em `primary`). */
+  get severity(): string {
+    return this.getAttr('severity');
+  }
+  set severity(value: string) {
+    if (value) this.setAttribute('severity', value);
+    else this.removeAttribute('severity');
   }
 
   /** Tamanho. Padrão: `'md'`. */
@@ -217,13 +266,23 @@ export class FxButton extends FxElement {
     const iconContent = slottedIcon
       ? '<slot name="icon"></slot>'
       : (icon ? fenixIconHtml(icon) : '');
+    const hasIcon = iconContent.trim() !== '';
+
+    // Spinner: aparece no LUGAR do ícone (respeitando `icon-pos`) quando há ícone
+    // para ocultar; sem ícone, cai no default (após o rótulo).
+    const spinner = '<span class="btn__spinner" part="spinner" role="status" aria-label="Carregando"></span>';
+    const iconSpinner = loading && hasIcon ? spinner : '';
+    const trailingSpinner = loading && !hasIcon ? spinner : '';
+    const iconWrap = `<span class="btn__icon" part="icon">${iconContent}</span>`;
 
     this.setTemplate(`
       <button class="btn" part="button" type="${btnType}">
-        ${!iconRight ? `<span class="btn__icon" part="icon">${iconContent}</span>` : ''}
+        ${iconRight ? '' : iconSpinner}
+        ${iconRight ? '' : iconWrap}
         <span class="btn__label" part="label"><slot></slot></span>
-        ${iconRight ? `<span class="btn__icon" part="icon">${iconContent}</span>` : ''}
-        ${loading ? '<span class="btn__spinner" aria-hidden="true"></span>' : ''}
+        ${iconRight ? iconWrap : ''}
+        ${iconRight ? iconSpinner : ''}
+        ${trailingSpinner}
       </button>
     `);
 
@@ -232,7 +291,6 @@ export class FxButton extends FxElement {
 
     // Esconde o container do ícone quando vazio, evitando espaço fantasma
     // do `gap` que descentraliza o rótulo.
-    const hasIcon = iconContent.trim() !== '';
     for (const wrap of this.root.querySelectorAll<HTMLElement>('.btn__icon')) {
       wrap.toggleAttribute('hidden', !hasIcon);
     }

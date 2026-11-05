@@ -1548,6 +1548,7 @@ async function renderRoute(): Promise<void> {
 	else if (route === "theming") await renderTheming();
 	else if (route === "tokens") await renderTokens();
 	else if (route === "component-vars") await renderComponentVars();
+	else if (route === "migration") renderMigration();
 	else if (route === "auto-import") renderAutoImport();
 	else if (route === "icons") renderIcons();
 	else if (route === "forms") await renderForms();
@@ -1719,6 +1720,14 @@ async function renderIntegrations(): Promise<void> {
       (a URL relativa é resolvida contra a URL do próprio script, então vale para qualquer
       página). Para um subset, use <code>FenixUI.setFenixIconsFontUrl('/fonts/…')</code> com um
       caminho absoluto do SEU servidor.
+      <br />
+      <strong>Precisa baixar a fonte?</strong> Se a aplicação é <b>offline</b>/intranet ou o
+      <code>Content-Security-Policy</code> bloqueia o CDN, baixe o <code>fenix-icons.woff2</code> da
+      <b>mesma versão</b> do bundle em
+      <code>https://cdn.jsdelivr.net/npm/@wrrdev/fenix-ui@&lt;versão&gt;/dist/fenix-icons.woff2</code>
+      (ou <code>https://unpkg.com/…</code>) e aponte com
+      <code>FenixUI.setFenixIconsFontUrl('/assets/fonts/fenix-icons.woff2')</code>. Detalhes na
+      <a href="#/icons">página de Ícones</a>.
     </div>
 
     <h3>2. JSP / .NET (MVC, WebForms, Razor)</h3>
@@ -1912,6 +1921,98 @@ const table: FxTableProps = { pagination: true, rows: 10 };`)}
     sendo manuais e pontuais (um por projeto).</div>
   `;
   wireCopyButtons(main);
+}
+
+/**
+ * Página Migração — o que mudou no USO da lib (separação forma × cor) e como
+ * sair dos aliases legados. Ordem das seções casa com o TOC (h2).
+ */
+function renderMigration(): void {
+	const main = document.getElementById('main')!;
+	main.innerHTML = `
+    <h2>Migração</h2>
+    <p class="lead">A partir da <b>1.6.0</b> a biblioteca separa <b>forma</b> de <b>cor</b>
+    em todos os componentes. Nada quebra: os valores antigos continuam funcionando como
+    <b>alias</b>; a mudança é de padronização e de como escrever o código daqui pra frente.</p>
+
+    <h2>O contrato: forma ≠ cor</h2>
+    <p>Regra única da lib: <b><code>variant</code> nunca carrega cor</b> e
+    <b><code>severity</code> nunca carrega forma</b>. Assim é possível ter uma mesma
+    forma (ex.: <code>outline</code>) em qualquer cor.</p>
+    <table class="api">
+      <thead><tr><th>Eixo</th><th>Atributo</th><th>Responsabilidade</th><th>Valores</th></tr></thead>
+      <tbody>
+        <tr><td>Forma</td><td><code>variant</code></td><td>Aparência estrutural</td><td><code>solid</code> · <code>outline</code> · <code>ghost</code> (button); <code>elevated | flat | outline | ghost</code> (card); <code>text | circle | rect</code> (skeleton); <code>on | in | over</code> (floatlabel)</td></tr>
+        <tr><td>Cor</td><td><code>severity</code></td><td>Cor semântica (tokens <code>--fx-color-*</code>)</td><td><code>primary</code> · <code>secondary</code> · <code>success</code> · <code>warning</code> · <code>danger</code> · <code>info</code></td></tr>
+      </tbody>
+    </table>
+    <p>Outros eixos ganham nome próprio (<code>size</code>, <code>shape</code>, <code>mode</code>,
+    <code>orientation</code>, <code>position</code>) — nunca reusam <code>variant</code>.</p>
+
+    <h2>O que mudou por componente</h2>
+    <table class="api">
+      <thead><tr><th>Componente</th><th>Antes</th><th>Agora (canônico)</th><th>Compatibilidade</th></tr></thead>
+      <tbody>
+        <tr><td><a href="#/fx-button">fx-button</a></td><td><code>variant="danger"</code> / <code>variant="outline"</code></td><td><code>variant</code> = forma; <code>severity</code> = cor</td><td><code>variant="danger"</code>, <code>"outline"</code>, <code>"ghost"</code> seguem funcionando</td></tr>
+        <tr><td><a href="#/fx-badge">fx-badge</a></td><td><code>variant="primary"</code></td><td><code>severity="primary"</code></td><td><code>variant="primary"</code> continua</td></tr>
+        <tr><td><a href="#/fx-chip">fx-chip</a></td><td><code>variant="success"</code></td><td><code>severity="success"</code></td><td>idem</td></tr>
+        <tr><td><a href="#/fx-alert">fx-alert</a></td><td><code>variant="danger"</code></td><td><code>severity="danger"</code></td><td>idem</td></tr>
+        <tr><td><a href="#/fx-progress">fx-progress</a></td><td><code>variant="success"</code></td><td><code>severity="success"</code></td><td>idem</td></tr>
+        <tr><td><a href="#/fx-toast">fx-toast</a></td><td><code>kind="error"</code></td><td><code>kind</code> (canônico) + <code>severity</code> (alias)</td><td><code>kind</code> continua; <code>severity="danger"</code> ≡ <code>kind="error"</code></td></tr>
+        <tr><td><a href="#/fx-avatar">fx-avatar</a></td><td><code>variant="image|text|icon"</code></td><td><code>mode="image|text|icon"</code></td><td><code>variant</code> segue aceito</td></tr>
+        <tr><td><a href="#/fx-fileupload">fx-fileupload</a></td><td><code>severity</code> (já correto)</td><td>—</td><td>sem mudança</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Antes e depois (código)</h2>
+    <p>O caso que motivou a mudança: um botão <code>outline</code> em outra cor. Antes o
+    <code>outline</code> estava preso à cor primária (a cor vinha do <code>variant</code>);
+    agora forma e cor combinam livremente.</p>
+    ${codeBlock(`<!-- Antes: outline só existia na cor primária -->
+<fx-button variant="outline">Cancelar</fx-button>
+
+<!-- Depois: forma em variant, cor em severity -->
+<fx-button variant="outline" severity="danger">Excluir</fx-button>
+<fx-button variant="ghost" severity="success">Aprovar</fx-button>
+<fx-button severity="warning">Atenção</fx-button>`)}
+    <p>Alias legado (continua válido — equivale a <code>variant="solid"</code> + a cor):</p>
+    ${codeBlock(`<fx-button variant="danger">Excluir</fx-button>`)}
+    <p>Nos demais componentes a cor também migra para <code>severity</code>:</p>
+    ${codeBlock(`<!-- Antes -->
+<fx-badge variant="success">Ativo</fx-badge>
+<fx-alert variant="danger" title="Erro">Falhou.</fx-alert>
+
+<!-- Depois -->
+<fx-badge severity="success">Ativo</fx-badge>
+<fx-alert severity="danger" title="Erro">Falhou.</fx-alert>`)}
+    <p>Avatar passa de <code>variant</code> (que era um “modo”) para <code>mode</code>:</p>
+    ${codeBlock(`<!-- Antes --> <fx-avatar variant="icon">WR</fx-avatar>
+<!-- Depois --> <fx-avatar mode="icon">WR</fx-avatar>`)}
+
+    <h2>TypeScript</h2>
+    <p>As tipagens acompanham a mudança em todas as stacks. O novo tipo
+    <code>FxSeverity</code> é exportado pela entrada principal e pelos subpaths
+    <code>/jsx</code>, <code>/vue</code> e <code>/react</code>:</p>
+    ${codeBlock(`import type { FxSeverity, FxButtonProps, FxAvatarMode } from '@wrrdev/fenix-ui';
+
+const cor: FxSeverity = 'danger';
+const botao: FxButtonProps = { variant: 'outline', severity: cor };
+const modo: FxAvatarMode = 'icon';`)}
+    <p>Os valores antigos seguem <b>tipados</b> (não geram erro de compilação) — assim
+    código existente continua válido; o novo atributo aparece no autocomplete em TSX,
+    nos templates Vue (Volar) e no código imperativo (<code>HTMLElementTagNameMap</code>).</p>
+
+    <h2>Depreciações</h2>
+    <table class="api">
+      <thead><tr><th>Uso antigo</th><th>Substituto</th><th>Estado</th></tr></thead>
+      <tbody>
+        <tr><td><code>variant="primary"…"info"</code> (cor) no button</td><td><code>severity</code></td><td>Alias — funciona; sem remoção prevista</td></tr>
+        <tr><td><code>variant="&lt;cor&gt;"</code> em badge/chip/alert/progress</td><td><code>severity</code></td><td>Alias</td></tr>
+        <tr><td><code>&lt;fx-avatar variant&gt;</code> (modo)</td><td><code>mode</code></td><td>Alias</td></tr>
+        <tr><td><code>&lt;fx-toast kind&gt;</code></td><td><code>kind</code> (mantém) · <code>severity</code> como alias</td><td>Canônico + alias</td></tr>
+      </tbody>
+    </table>
+  `;
 }
 
 /** Página Auto Import — uso do plugin no projeto do cliente. */
@@ -2120,7 +2221,41 @@ setFenixIconsFontUrl('/fonts/fenix-icons-subset.woff2');</code></pre>
       <code>&lt;fx-icon&gt;</code> ser montado; para voltar ao padrão, chame <code>setFenixIconsFontUrl('')</code>.
     </div>
 
-    <h3>5. Autocomplete no editor (<code>&lt;fx-icon&gt;</code>)</h3>
+    <h3>5. Baixar a fonte (self-host, CDN ou offline)</h3>
+    <p>Os ícones são uma <b>fonte</b> (<code>fenix-icons.woff2</code>). Ao consumir a lib por
+    <b>CDN/UMD</b>, a fonte já é servida ao lado do bundle e o <code>@font-face</code> aponta para
+    lá automaticamente. Mas há cenários em que você precisa <b>baixar e hospedar o arquivo</b> no
+    seu servidor:</p>
+    <ul>
+      <li>aplicação <b>offline</b> / intranet sem acesso ao CDN;</li>
+      <li><code>Content-Security-Policy</code> que bloqueia o domínio do CDN no <code>font-src</code>;</li>
+      <li>querer versionar/assinar o arquivo você mesmo.</li>
+    </ul>
+    <p>Baixe o <code>.woff2</code> direto do pacote publicado (fixe a <b>mesma versão</b> do bundle):</p>
+    <pre><code>&lt;!-- jsDelivr --&gt;
+https://cdn.jsdelivr.net/npm/@wrrdev/fenix-ui@latest/dist/fenix-icons.woff2
+
+&lt;!-- unpkg --&gt;
+https://unpkg.com/@wrrdev/fenix-ui@latest/dist/fenix-icons.woff2</code></pre>
+    <p>…ou copie do <code>node_modules</code> (instalar o pacote também traz a fonte):</p>
+    <pre><code>node_modules/@wrrdev/fenix-ui/dist/fenix-icons.woff2
+node_modules/@wrrdev/fenix-ui/dist/icons/fenix-icons.woff2</code></pre>
+    <p>Depois aponte a biblioteca para o arquivo hospedado no SEU servidor:</p>
+    <pre><code>import { setFenixIconsFontUrl } from '@wrrdev/fenix-ui/icons';
+
+// path absoluto (comece com "/" ou "https://")
+setFenixIconsFontUrl('/assets/fonts/fenix-icons.woff2');
+
+&lt;!-- Sem build (CDN/UMD): use o global --&gt;
+&lt;script&gt;
+  FenixUI.setFenixIconsFontUrl('/assets/fonts/fenix-icons.woff2');
+&lt;/script&gt;</code></pre>
+    <div class="note">
+      <strong>Licença:</strong> a fonte deriva do <b>Material Symbols Rounded</b> (Apache 2.0) — pode ser
+      redistribuída e hospedada livremente (inclusive no seu próprio CDN/servidor).
+    </div>
+
+    <h3>6. Autocomplete no editor (<code>&lt;fx-icon&gt;</code>)</h3>
     <p>As classes acima são CSS puro: nenhum editor consegue adivinhar o nome do glifo enquanto você digita.
     Para isso existe o elemento <code>&lt;fx-icon&gt;</code>, com o atributo <code>name</code>
     <strong>tipado</strong> — o editor (Volar/vue-tsc, React/TSX) lista os <b>${FENIX_ICON_NAMES.length}</b> nomes

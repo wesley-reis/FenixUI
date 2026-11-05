@@ -14,12 +14,12 @@ export const alertDoc: ComponentDoc = {
 	demoHtml: (a) =>
 		`<fx-alert ${a}>Operação concluída com sucesso.</fx-alert>`,
 	variantsHtml: () =>
-		`<fx-alert variant="info" title="Informação">Nova versão disponível.</fx-alert><fx-alert variant="success" title="Sucesso">Dados salvos.</fx-alert><fx-alert variant="warning" title="Atenção" dismissible>Seu contrato vence em 5 dias.</fx-alert><fx-alert variant="danger" title="Erro">Não foi possível processar.</fx-alert>`,
+		`<fx-alert severity="info" title="Informação">Nova versão disponível.</fx-alert><fx-alert severity="success" title="Sucesso">Dados salvos.</fx-alert><fx-alert severity="warning" title="Atenção" dismissible>Seu contrato vence em 5 dias.</fx-alert><fx-alert severity="danger" title="Erro">Não foi possível processar.</fx-alert>`,
 	controls: [
 		{
 			kind: "select",
-			attr: "variant",
-			label: "Variante",
+			attr: "severity",
+			label: "Cor (severity)",
 			options: ["info", "success", "warning", "danger"],
 		},
 		{ kind: "text", attr: "title", label: "Título" },
@@ -27,10 +27,16 @@ export const alertDoc: ComponentDoc = {
 	],
 	attributes: [
 		{
+			name: "severity",
+			type: `'info' | 'success' | 'warning' | 'danger'`,
+			default: "'info'",
+			desc: "Cor semântica (canônica).",
+		},
+		{
 			name: "variant",
 			type: `'info' | 'success' | 'warning' | 'danger'`,
 			default: "'info'",
-			desc: "Cor semântica.",
+			desc: "Alias legado de cor — mantido por compatibilidade; prefira `severity`.",
 		},
 		{
 			name: "title",
