@@ -1,7 +1,20 @@
 # FenixUI
 
-Design System Web **nativo** — Web Components + Shadow DOM + Design Tokens.
-Independente de framework: funciona em Vue, React, Angular, Svelte, HTML puro, Java/JSP, PHP, .NET.
+**FenixUI** é um **design system** e **biblioteca de componentes UI** para a web,
+feita com **Web Components nativos** (Custom Elements + **Shadow DOM**) e
+**Design Tokens**. É **agnóstico de framework** — funciona em **Vue, React,
+Angular, Svelte**, HTML puro, Java/JSP, PHP e .NET — e tem **tree-shaking por
+componente**. Escrito em **TypeScript**, com temas claro/escuro e **0 dependências
+de runtime**.
+
+- 🧩 **Web Components** nativos (`<fx-button>`, `<fx-table>`, `<fx-datepicker>`…) — sem runtime de framework
+- 🎨 **Design Tokens** (`--fx-*`) + temas **light** / **dark** personalizáveis (presets)
+- 🌳 **Tree-shaking** por componente — importe só o que usar
+- 🔤 **TypeScript** de primeira classe (props, uniões e tipos para JSX/Vue/React)
+- ♿ **Acessibilidade** (ARIA, foco, teclado) desde a primeira versão
+- 🪶 **Zero dependências de runtime** e sem scripts de instalação
+
+Design System Web **nativo** — independente de framework.
 
 ## Instalação
 

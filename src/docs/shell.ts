@@ -233,7 +233,7 @@ export function syncRoute(
 	document.title =
 		title && route !== 'home'
 			? `${title} — FenixUI`
-			: 'FenixUI — Documentação';
+			: 'FenixUI — Design System de Web Components';
 }
 
 /** Limpa o TOC (chamado junto com a limpeza do `#main` em cada rota). */

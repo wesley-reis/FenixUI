@@ -1,9 +1,10 @@
 {
   "name": "@wrrdev/fenix-ui",
   "version": "1.6.0",
-  "description": "FenixUI Design System Web nativo (Web Components + Shadow DOM + Design Tokens) com tree-shaking por componente.",
+  "description": "FenixUI — design system nativo em Web Components (Shadow DOM + Design Tokens), agnóstico de framework (Vue, React, Angular, Svelte, HTML puro) e com tree-shaking por componente. Framework-agnostic web components UI library.",
   "type": "module",
   "license": "ISC",
+  "author": "Wesley Reis (https://github.com/wesley-reis)",
   "homepage": "https://wesley-reis.github.io/FenixUI/",
   "repository": {
     "type": "git",
@@ -13,12 +14,35 @@
     "url": "https://github.com/wesley-reis/FenixUI/issues"
   },
   "keywords": [
-    "UI",
-    "UX",
-    "Componentes",
-    "Fenix",
-    "FenixUI",
-    "Web Componentes"
+    "web components",
+    "webcomponents",
+    "custom elements",
+    "shadow dom",
+    "design system",
+    "design tokens",
+    "ui library",
+    "ui kit",
+    "component library",
+    "componentes",
+    "frontend",
+    "typescript",
+    "javascript",
+    "vanilla-js",
+    "framework-agnostic",
+    "agnostic",
+    "vue",
+    "react",
+    "angular",
+    "svelte",
+    "css",
+    "theming",
+    "dark mode",
+    "accessibility",
+    "a11y",
+    "tree-shaking",
+    "esm",
+    "fenix",
+    "fenixui"
   ],
   "files": [
     "dist",
@@ -33,7 +57,7 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "dev": "vite",
-    "build": "npm run prepack && npm run build:esm && npm run build:types && npm run build:cdn",
+    "build": "npm run sync-readme && npm run build:esm && npm run build:types && npm run build:cdn",
     "build:esm": "vite build --config vite.config.ts && node scripts/fix-dist-preload.mjs",
     "build:types": "tsc -p tsconfig.build.json",
     "build:cdn": "vite build --config vite.cdn.config.ts",
@@ -44,24 +68,23 @@
     "test:watch": "vitest",
     "test:consumer": "vite build --config vite.consumer.config.mts",
     "test:cdn": "node scripts/cdn-smoke.mjs",
-    "prepack": "node scripts/update-readme-version.cjs",
+    "sync-readme": "node scripts/update-readme-version.cjs",
     "icons:generate": "node scripts/generate-icons.mjs",
-    "publish": "npm publish --access public --tag latest"
+    "publish": "npm run sync-readme && npm publish --access public --tag latest"
   },
   "devDependencies": {
     "@babel/types": "^8.0.4",
     "@types/node": "^22.7.4",
     "@types/react": "18.3.31",
     "jsdom": "^25.0.1",
+    "postcss": "^8.5.26",
     "typescript": "^5.6.2",
     "vite": "^5.4.8",
     "vitest": "^2.1.2",
     "vue": "^3.5.13",
     "vue-tsc": "^3.0.4"
   },
-  "dependencies": {
-    "postcss": "^8.5.26"
-  },
+  "dependencies": {},
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

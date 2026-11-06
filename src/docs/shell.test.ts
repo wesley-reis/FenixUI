@@ -19,7 +19,7 @@ const toc = (): HTMLElement => document.getElementById('doc-toc')!;
 
 beforeEach(() => {
 	localStorage.clear();
-	document.title = 'FenixUI — Documentação';
+	document.title = 'FenixUI — Design System de Web Components';
 	document.body.innerHTML = `
 		<a class="skip-link" href="#main">Pular para o conteúdo</a>
 		<header class="doc-topbar">
@@ -159,7 +159,7 @@ describe('shell · rota ativa', () => {
 
 	it('home mantém o título padrão da documentação', () => {
 		syncRoute('home', []);
-		expect(document.title).toBe('FenixUI — Documentação');
+		expect(document.title).toBe('FenixUI — Design System de Web Components');
 	});
 });
 

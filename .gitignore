@@ -9,3 +9,6 @@ playwright-report
 test-results
 *.log
 *.txt
+
+# robots.txt é um asset do site de docs (a pasta public/ é copiada para docs-dist/)
+!public/robots.txt

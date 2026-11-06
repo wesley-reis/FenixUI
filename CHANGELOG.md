@@ -50,7 +50,29 @@ Histórico anterior à 1.2.0: [releases do GitHub](https://github.com/wesley-rei
     o host) e deixava o rodapé desproporcional. Agora o limite é aplicado **no
     host** (`--fx-select-min-width`/`-sm: 56px`), como no rodapé do `fx-table`.
 
+### Alterado
+
+- **Supply chain (Socket) — dependências de runtime zeradas**: `postcss` era
+  declarado em `dependencies`, mas **não é usado** em nenhum ponto (nenhum
+  `import`/`require`, sem `postcss.config.*`, e o `dist` não emite CSS). Foi
+  movido para `devDependencies` → o pacote publicado passa a ter **0 dependências
+  de runtime** (o consumidor deixa de baixar um pacote inútil).
+- **`prepack` → `sync-readme`**: o hook de ciclo de vida `prepack` (que só
+  sincronizava a versão do README) virou o script normal `sync-readme`, chamado
+  pelo `build`, pelo `publish` e pelo `ci.yml`. **Sem impacto para quem
+  instala/usa** — `prepack` nunca rodou no `npm install` do consumidor.
+- **`SECURITY.md` agora é uma política de divulgação de vulnerabilidades**
+  (como reportar, versões suportadas, prazos). O **runbook interno de CI/CD**
+  (Trusted Publishing, branch protection, environments) saiu do repositório
+  público e passou a viver em um repositório **privado** de runbooks.
+
 ### Adicionado
+
+- **SEO / descoberta**: `index.html` passa a trazer `description`, `keywords`,
+  `author`, `robots`, `theme-color`, `canonical`, **Open Graph**, **Twitter
+  Card** e **JSON-LD** (`SoftwareApplication`); `public/` ganhou `robots.txt`,
+  `sitemap.xml` e imagem social; `package.json` com keywords em inglês/técnicas
+  e `author`; README com abertura rica em palavras-chave.
 
 - **`fx-datepicker` `picker`** (`"date"` | `"time"` | `"datetime"`, padrão
   `date`): escolhe o que o popover exibe — só o calendário, só a hora (valor
