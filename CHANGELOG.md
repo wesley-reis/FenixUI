@@ -39,8 +39,30 @@ Histórico anterior à 1.2.0: [releases do GitHub](https://github.com/wesley-rei
   deixando a superfície cinza do card/página aparecer através do botão. Agora o
   `outline` tem fundo sólido claro (`--fx-button-outline-bg`, padrão
   `--fx-surface-background`) com hover em `color-mix` de 10% da cor primária.
+- **`fx-pagination` / `fx-table` — botões de página e seletor de itens**:
+  - o botão de **número** podia ser comprimido pelo flex, "comendo" o último
+    dígito (ex.: `11640` → `1164`). Agora os números **crescem** com o valor
+    (`white-space: nowrap` + `flex: 0 0 auto`) sobre um **piso enxuto**
+    (`--fx-pagination-btn-min`, padrão `calc(var(--fx-size-sm) - 8px)`), e as
+    **setas** (primeira/anterior/próxima/última) seguem quadradas.
+  - o **`<fx-select>` "por página"** do `fx-pagination` herdava o `min-width`
+    padrão de **180px** (só o `::part(trigger)` era apertado, o que não encolhe
+    o host) e deixava o rodapé desproporcional. Agora o limite é aplicado **no
+    host** (`--fx-select-min-width`/`-sm: 56px`), como no rodapé do `fx-table`.
 
 ### Adicionado
+
+- **`fx-datepicker` `picker`** (`"date"` | `"time"` | `"datetime"`, padrão
+  `date`): escolhe o que o popover exibe — só o calendário, só a hora (valor
+  `HH:mm:ss`) ou data + hora (valor `YYYY-MM-DDTHH:mm:ss`). O atributo legado
+  `show-time` continua aceito como alias de `picker="datetime"`. O bloco de hora
+  foi redesenhado: controle segmentado com rótulos **Hora/Min/Seg**, números
+  tabulares, anel de foco no grupo e ação **Agora**. O **placeholder** agora
+  acompanha o contexto: usa o `format` quando definido ou, por padrão,
+  `dd/mm/aaaa` · `hh:mm:ss` (hora) · `dd/mm/aaaa hh:mm:ss` (data + hora).
+- **`fx-tooltip` com acessores tipados** (`content`/`position`): segue o padrão
+  dos demais componentes, habilitando autocomplete/validação no TS imperativo
+  (a tipagem de JSX/Vue já existia).
 
 - **`exemplos/cdn-icons.html`**: página de smoke test do CDN com painel de
   diagnóstico (URL do `@font-face`, status HTTP da fonte, `document.fonts`,

@@ -242,8 +242,14 @@ export class FxTable extends FxElement {
 			display: inline-flex;
 			align-items: center;
 			justify-content: center;
+			/* Setas (primeira/anterior/próxima/última): botão quadrado. */
 			min-width: var(--fx-size-sm);
 			height: var(--fx-size-sm);
+			/* Sem encolhimento pelo flex: o último dígito de páginas grandes
+			   era "comido" quando o botão comprimia abaixo do conteúdo. */
+			flex: 0 0 auto;
+			box-sizing: border-box;
+			white-space: nowrap;
 			font: inherit;
 			font-size: calc(var(--fx-font-size) - 2px);
 			color: var(--fx-text-default);
@@ -254,6 +260,12 @@ export class FxTable extends FxElement {
 			cursor: pointer;
 			transition: border-color var(--fx-motion-duration-fast)
 				var(--fx-motion-easing);
+		}
+		/* Números de página: piso enxuto (1–2 dígitos não ficam folgados) que
+		   ainda CRESCE para valores longos (ex.: 11640). Ajusta só os números —
+		   o <fx-select> de itens por página permanece como está. */
+		.pg-btn[part="page"] {
+			min-width: var(--fx-pagination-btn-min, calc(var(--fx-size-sm) - 8px));
 		}
 		/* O glifo precisa de 1px a mais que o dígito: a altura de traço do ícone é
 		   maior que a do número, então igualar os dois font-size deixa a seta
@@ -282,8 +294,10 @@ export class FxTable extends FxElement {
 			display: inline-flex;
 			align-items: center;
 			justify-content: center;
-			min-width: var(--fx-size-sm);
+			min-width: var(--fx-pagination-btn-min, calc(var(--fx-size-sm) - 8px));
 			height: var(--fx-size-sm);
+			flex: 0 0 auto;
+			box-sizing: border-box;
 			color: var(--fx-text-muted);
 			font-size: calc(var(--fx-font-size) - 2px);
 			user-select: none;

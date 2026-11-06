@@ -138,4 +138,67 @@ describe('fx-datepicker', () => {
     const input = el.shadowRoot.querySelector('.display') as HTMLInputElement;
     expect(input.value).toContain(', ');
   });
+
+  it('picker="date" (padrão) não mostra o bloco de hora', () => {
+    const el = mount('<fx-datepicker></fx-datepicker>') as any;
+    expect(el.picker).toBe('date');
+    expect(el.shadowRoot.querySelector('.time-group')).toBeNull();
+    expect(el.shadowRoot.querySelector('fx-calendar')).toBeTruthy();
+  });
+
+  it('picker="time" mostra só a hora, sem calendário, com valor HH:mm:ss', async () => {
+    const el = mount('<fx-datepicker picker="time" value="14:35:22"></fx-datepicker>') as any;
+    await new Promise((r) => setTimeout(r, 0));
+    expect(el.shadowRoot.querySelector('fx-calendar')).toBeNull();
+    expect(el.shadowRoot.querySelector('.time-group')).toBeTruthy();
+    expect((el.shadowRoot.querySelector('.display') as HTMLInputElement).value).toBe('14:35:22');
+  });
+
+  it('picker="time": alterar a hora define o valor como HH:mm:ss', async () => {
+    const el = mount('<fx-datepicker picker="time"></fx-datepicker>') as any;
+    await new Promise((r) => setTimeout(r, 0));
+    const h = el.shadowRoot.querySelector('.t-h') as HTMLInputElement;
+    h.value = '9';
+    h.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(el.value).toBe('09:00:00');
+  });
+
+  it('picker="datetime" mostra calendário + hora', async () => {
+    const el = mount('<fx-datepicker picker="datetime"></fx-datepicker>') as any;
+    await new Promise((r) => setTimeout(r, 0));
+    expect(el.shadowRoot.querySelector('fx-calendar')).toBeTruthy();
+    expect(el.shadowRoot.querySelector('.time-group')).toBeTruthy();
+  });
+
+  it('show-time segue como alias legado de picker="datetime"', () => {
+    const el = mount('<fx-datepicker show-time></fx-datepicker>') as any;
+    expect(el.picker).toBe('datetime');
+    expect(el.shadowRoot.querySelector('fx-calendar')).toBeTruthy();
+    expect(el.shadowRoot.querySelector('.time-group')).toBeTruthy();
+  });
+
+  it('botão "Agora" preenche a hora atual em picker="time"', async () => {
+    const el = mount('<fx-datepicker picker="time"></fx-datepicker>') as any;
+    await new Promise((r) => setTimeout(r, 0));
+    const btn = el.shadowRoot.querySelector('.time-now') as HTMLButtonElement;
+    expect(btn).toBeTruthy();
+    btn.click();
+    expect(el.value).toMatch(/^\d{2}:\d{2}:\d{2}$/);
+  });
+
+  it('placeholder acompanha o picker (data / hora / data+hora)', () => {
+    const ph = (el: HTMLElement) => (el.shadowRoot!.querySelector('.display') as HTMLInputElement).placeholder;
+    expect(ph(mount('<fx-datepicker></fx-datepicker>'))).toBe('dd/mm/aaaa');
+    document.body.innerHTML = '';
+    expect(ph(mount('<fx-datepicker picker="time"></fx-datepicker>'))).toBe('hh:mm:ss');
+    document.body.innerHTML = '';
+    expect(ph(mount('<fx-datepicker picker="datetime"></fx-datepicker>'))).toBe('dd/mm/aaaa hh:mm:ss');
+  });
+
+  it('placeholder explícito e format têm precedência sobre o padrão por picker', () => {
+    const ph = (el: HTMLElement) => (el.shadowRoot!.querySelector('.display') as HTMLInputElement).placeholder;
+    expect(ph(mount('<fx-datepicker picker="datetime" format="dd/mm/yyyy HH:MM:SS"></fx-datepicker>'))).toBe('dd/mm/yyyy HH:MM:SS');
+    document.body.innerHTML = '';
+    expect(ph(mount('<fx-datepicker picker="time" placeholder="Que horas?"></fx-datepicker>'))).toBe('Que horas?');
+  });
 });
