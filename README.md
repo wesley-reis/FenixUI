@@ -79,7 +79,7 @@ Carregue o bundle **UMD** único: ele registra todos os componentes — **e a bi
 </script>
 
 <!--
-  🔗 Links diretos para CDN (versão 1.5.2):
+  🔗 Links diretos para CDN (versão 1.6.0):
   • https://cdn.jsdelivr.net/npm/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js
   • https://unpkg.com/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js
 -->
@@ -478,7 +478,7 @@ enxerga o `<input>`/`<textarea>` interno, nunca o atributo escrito no host. Como
 da spec é `autocomplete="on"`, sem tratamento o Chrome autopreenche campos comuns (busca de
 tabela, filtros, diálogos) com o usuário/senha salvos e ainda oferece “Salvar senha?”.
 
-A partir da **v1.5.2** o autofill é tratado em duas camadas:
+A partir da **v1.6.0** o autofill é tratado em duas camadas:
 
 - **preventiva** — `fx-input` e `fx-textarea` **repassam** `autocomplete`, `name` e `id` ao campo
   interno, com default **`off`** (o atributo declarado no host vence). Os campos internos de
