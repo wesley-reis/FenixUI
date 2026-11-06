@@ -196,4 +196,35 @@ describe('fx-pagination', () => {
     expect(root.querySelectorAll('[part="ellipsis"]')).toHaveLength(0);
     el.remove();
   });
+
+  it('reserva piso mínimo e cresce para números longos (não corta o último dígito)', () => {
+    const el = document.createElement('fx-pagination');
+    el.setAttribute('page', '1');
+    el.setAttribute('total', '116400'); // 11.640 páginas
+    el.setAttribute('rows', '10');
+    document.body.appendChild(el);
+
+    const styles = (el.constructor as any).styles as string;
+    expect(styles).toContain(".nav[part='page']");
+    expect(styles).toContain('min-width: var(--fx-pagination-btn-min, calc(var(--fx-size-sm) - 8px))');
+    expect(styles).toContain('white-space: nowrap');
+    expect(styles).toContain('flex: 0 0 auto');
+
+    // Última página: o número de 5 dígitos aparece COMPLETO no botão ativo.
+    (el.shadowRoot!.querySelector('[part="last"]') as HTMLButtonElement).click();
+    const atual = el.shadowRoot!.querySelector('[part="page"][aria-current="page"]')!;
+    expect(atual.textContent).toBe('11640');
+    el.remove();
+  });
+
+  it('o seletor de itens por página limita a largura no HOST (não herda os 180px)', () => {
+    const el = document.createElement('fx-pagination');
+    el.setAttribute('total', '50');
+    document.body.appendChild(el);
+    const styles = (el.constructor as any).styles as string;
+    expect(styles).toContain('fx-select.rows-sel');
+    expect(styles).toContain('--fx-select-min-width: 56px');
+    expect(styles).toContain('--fx-select-min-width-sm: 56px');
+    el.remove();
+  });
 });

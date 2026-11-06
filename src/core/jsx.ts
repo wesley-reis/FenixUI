@@ -52,6 +52,16 @@ export type FxFieldStatus = 'error' | 'invalid' | 'success' | 'valid';
 export type FxToastKind = 'success' | 'error' | 'info' | 'warning';
 export type FxToastPosition = 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
 export type FxTooltipPosition = 'top' | 'bottom' | 'left' | 'right';
+/**
+ * O que o `<fx-datepicker>` exibe no popover.
+ *
+ * - `date` (padrão) — só o calendário;
+ * - `time` — só a seleção de hora (valor `HH:mm:ss`);
+ * - `datetime` — calendário + hora (valor `YYYY-MM-DDTHH:mm:ss`).
+ *
+ * O atributo legado `show-time` equivale a `datetime`.
+ */
+export type FxDatepickerPicker = 'date' | 'time' | 'datetime';
 export type FxDrawerPosition = 'left' | 'right' | 'top' | 'bottom';
 export type FxDropdownPosition = 'left' | 'center' | 'right' | 'bottom-left' | 'bottom-right';
 export type FxPaginationPosition = 'left' | 'center' | 'right';
@@ -230,6 +240,9 @@ export interface FxDatepickerProps extends FxElementProps {
   placeholder?: string;
   size?: FxSize;
   format?: string;
+  /** O que exibir: `date` (padrão) · `time` · `datetime`. */
+  picker?: FxDatepickerPicker;
+  /** Alias legado de `picker="datetime"`. */
   'show-time'?: boolean;
   'free-text'?: boolean;
   clearable?: boolean;

@@ -77,6 +77,26 @@ export class FxTooltip extends FxElement {
     return ['content', 'position'];
   }
 
+  /** Texto/conteúdo exibido na dica. Padrão: `''`. */
+  get content(): string {
+    return this.getAttr('content');
+  }
+  set content(v: string) {
+    this.setAttribute('content', v ?? '');
+  }
+
+  /**
+   * Posição da bolha em relação ao alvo. Padrão: `'top'`.
+   * Valores fora de `top|bottom|left|right` caem em `'top'`.
+   */
+  get position(): string {
+    const p = this.getAttr('position');
+    return ['top', 'bottom', 'left', 'right'].includes(p) ? p : 'top';
+  }
+  set position(v: string) {
+    this.setAttribute('position', v);
+  }
+
   protected override render(): void {
     const content = this.getAttr('content');
     this.setTemplate(`

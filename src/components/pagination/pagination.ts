@@ -35,8 +35,14 @@ export class FxPagination extends FxElement {
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      /* Setas (primeira/anterior/próxima/última): botão quadrado. */
       min-width: var(--fx-size-sm);
       height: var(--fx-size-sm);
+      /* Não deixa o flex encolher o botão abaixo do conteúdo — era isso que
+         "comia" o último dígito de páginas grandes. */
+      flex: 0 0 auto;
+      box-sizing: border-box;
+      white-space: nowrap;
       border: 1px solid var(--fx-border-default);
       background: var(--fx-surface-background);
       color: var(--fx-text-default);
@@ -48,6 +54,12 @@ export class FxPagination extends FxElement {
       transition:
         border-color var(--fx-motion-duration-fast) var(--fx-motion-easing),
         background var(--fx-motion-duration-fast) var(--fx-motion-easing);
+    }
+    /* Números de página: piso enxuto (1–2 dígitos não ficam folgados) que
+       ainda CRESCE para valores longos (ex.: 11640). Ajusta só os números —
+       o <fx-select> de itens por página permanece como está. */
+    .nav[part='page'] {
+      min-width: var(--fx-pagination-btn-min, calc(var(--fx-size-sm) - 8px));
     }
     /* O glifo precisa de 1px a mais que o dígito: a altura de traço do ícone é
        maior que a do número, então igualar os dois font-size deixa a seta
@@ -67,20 +79,36 @@ export class FxPagination extends FxElement {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-width: var(--fx-size-sm);
+      min-width: var(--fx-pagination-btn-min, calc(var(--fx-size-sm) - 8px));
       height: var(--fx-size-sm);
+      flex: 0 0 auto;
+      box-sizing: border-box;
       color: var(--fx-text-muted);
       font-size: calc(var(--fx-font-size) - 2px);
       user-select: none;
     }
     .info { color: var(--fx-text-muted); font-size: calc(var(--fx-font-size) - 2px); }
     fx-select { vertical-align: middle; }
-    fx-select::part(trigger) {
-      min-width: 64px !important;
-      min-height: var(--fx-size-sm) !important;
-      padding: 0 var(--fx-space-sm) !important;
-      border-radius: var(--fx-radius-sm) !important;
-      font-size: calc(var(--fx-font-size) - 2px) !important;
+    /* O seletor "por página" só mostra números: NÃO pode herdar a largura
+       padrão do <fx-select> (180px no size="sm"), que deixava o rodapé
+       desproporcional. O limite tem que ser no HOST — apertar só
+       ::part(trigger) não basta, porque o trigger é width:100% e continua
+       herdando o min-width do host (mesma correção do rodapé do fx-table). */
+    fx-select.rows-sel {
+      vertical-align: middle;
+      /* Não deixa o flex do pager esticar nem esmagar o controle. */
+      flex: none;
+      width: auto;
+      --fx-select-min-width: 56px;
+      --fx-select-min-width-sm: 56px;
+    }
+    fx-select.rows-sel::part(trigger) {
+      min-width: 0;
+      min-height: var(--fx-size-sm);
+      /* Padding curto: sobra espaço para o número + caret. */
+      padding: 0 var(--fx-space-xs);
+      border-radius: var(--fx-radius-sm);
+      font-size: calc(var(--fx-font-size) - 2px);
     }
   `;
 

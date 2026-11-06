@@ -10,7 +10,7 @@ export const datepickerDoc: ComponentDoc = {
 	tag: "fx-datepicker",
 	title: "Datepicker",
 	group: "Formulário",
-	lead: "Campo de data com ícone de calendário: o calendário abre em um popover ao clicar no input e a(s) data(s) selecionada(s) aparecem nele. Suporta data simples, múltiplas datas e período, herdando min/max do calendário.",
+	lead: "Campo de data com ícone de calendário: o calendário abre em um popover ao clicar no input e a(s) data(s) selecionada(s) aparecem nele. Suporta data simples, múltiplas datas e período (herdando min/max do calendário) e, via <code>picker</code>, também fecha/hora isolada ou data+hora.",
 	imports: ["import '@wrrdev/fenix-ui/datepicker';"],
 	extraSections: [
 		autofillSection(
@@ -24,6 +24,13 @@ export const datepickerDoc: ComponentDoc = {
 				<fx-datepicker placeholder="Data única" value="2026-08-15"></fx-datepicker>
 				<fx-datepicker mode="range" placeholder="Período"></fx-datepicker>
 				<fx-datepicker mode="multiple" placeholder="Várias datas"></fx-datepicker>
+			</div>
+			<h4>picker — data, hora ou ambos</h4>
+			<p style="font-size:12px;color:var(--fx-text-muted);margin:0 0 8px"><code>picker="date"</code> (padrão) mostra só o calendário; <code>picker="datetime"</code> mostra calendário + hora; <code>picker="time"</code> mostra só a seleção de hora (com os rótulos Hora/Min/Seg e o botão <b>Agora</b>).</p>
+			<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+				<fx-datepicker picker="date" placeholder="Só data" value="2026-08-15"></fx-datepicker>
+				<fx-datepicker picker="datetime" placeholder="Data e hora" value="2026-08-15T14:30:00"></fx-datepicker>
+				<fx-datepicker picker="time" placeholder="Só hora" value="14:30:00"></fx-datepicker>
 			</div>
 			<h4>Validação (error / success)</h4>
 			<p style="font-size:12px;color:var(--fx-text-muted);margin:0 0 8px">Borda vermelha com <code>error</code>, verde com <code>success</code>. Combine com <code>fx-alert</code> no submit (ver página Formulários).</p>
@@ -42,10 +49,11 @@ export const datepickerDoc: ComponentDoc = {
 		},
 		{ kind: "toggle", attr: "clearable", label: "Limpar" },
 		{
-			kind: "toggle",
-			attr: "show-time",
-			label: "Hora (hh:mm:ss)",
-			on: true,
+			kind: "select",
+			attr: "picker",
+			label: "Exibir (picker)",
+			options: ["date", "time", "datetime"],
+			value: "date",
 		},
 		{ kind: "toggle", attr: "free-text", label: "Digitar livre" },
 		{
@@ -110,10 +118,16 @@ export const datepickerDoc: ComponentDoc = {
 			desc: "Máscara de exibição. Tokens: `dd mm yyyy` (data) e `HH MM SS` (hora, minuto, segundo) — ex.: dd/mm/yyyy HH:MM:SS.",
 		},
 		{
+			name: "picker",
+			type: `'date' | 'time' | 'datetime'`,
+			default: `'date'`,
+			desc: "O que exibir no popover: <code>date</code> (só calendário), <code>time</code> (só hora — valor <code>HH:mm:ss</code>) ou <code>datetime</code> (calendário + hora — valor <code>YYYY-MM-DDTHH:mm:ss</code>).",
+		},
+		{
 			name: "show-time",
 			type: "boolean",
 			default: "false",
-			desc: "Inclui seleção de hora/minuto/segundo no popover; o valor passa a ser YYYY-MM-DDTHH:mm:ss.",
+			desc: "<b>Alias legado</b> de <code>picker=\"datetime\"</code>. Continua aceito: sem <code>picker</code>, liga a seleção de hora e o valor passa a ser <code>YYYY-MM-DDTHH:mm:ss</code>.",
 		},
 		{
 			name: "clearable",
@@ -130,8 +144,8 @@ export const datepickerDoc: ComponentDoc = {
 		{
 			name: "placeholder",
 			type: "string",
-			default: `'dd/mm/aaaa'`,
-			desc: "Texto do input vazio.",
+			default: "conforme o picker",
+			desc: "Texto do input vazio. Sem valor explícito, segue o <code>format</code> (quando definido) ou o <code>picker</code>: <code>dd/mm/aaaa</code> · <code>hh:mm:ss</code> (hora) · <code>dd/mm/aaaa hh:mm:ss</code> (data+hora).",
 		},
 		{
 			name: "disabled",

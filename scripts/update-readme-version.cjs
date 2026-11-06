@@ -1,9 +1,9 @@
 /**
- * Script: prepack
+ * Script: sync-readme
  * Sincroniza a versão do package.json no README.md automaticamente.
  *
- * Roda antes de `npm pack` e `npm publish` (hook "prepack").
- * Garante que o README publicado no npm sempre reflita a versão atual.
+ * Roda via `npm run sync-readme` — chamado pelo `build` e pelo `publish`
+ * (garante que o README publicado no npm reflita a versão atual).
  *
  * Substitui:
  *   **v1.0.0**            → **v1.0.1**   (menção de versão em destaque)

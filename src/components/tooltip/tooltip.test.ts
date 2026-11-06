@@ -11,6 +11,30 @@ describe('fx-tooltip', () => {
     expect(el.shadowRoot!.innerHTML).toContain('Ajuda aqui');
     el.remove();
   });
+
+  it('expõe acessores tipados content/position (padrão dos demais componentes)', () => {
+    const el = document.createElement('fx-tooltip');
+    document.body.appendChild(el);
+
+    // Padrões.
+    expect(el.content).toBe('');
+    expect(el.position).toBe('top');
+
+    // Setter reflete no atributo e o getter lê de volta.
+    el.content = 'Dica tipada';
+    el.position = 'bottom';
+    expect(el.getAttribute('content')).toBe('Dica tipada');
+    expect(el.getAttribute('position')).toBe('bottom');
+    expect(el.content).toBe('Dica tipada');
+    expect(el.position).toBe('bottom');
+    expect(el.shadowRoot!.innerHTML).toContain('Dica tipada');
+
+    // Valor inválido cai no padrão 'top'.
+    el.setAttribute('position', 'diagonal');
+    expect(el.position).toBe('top');
+
+    el.remove();
+  });
 });
 
 describe('fx-tooltip directive', () => {

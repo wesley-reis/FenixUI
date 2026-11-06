@@ -32,6 +32,19 @@ export const tooltipDoc: ComponentDoc = {
 		"// Para usar como diretiva (atributo fx-tooltip):",
 		"import { defineFxTooltipDirective } from '@wrrdev/fenix-ui/tooltip';",
 	],
+	extraSections: [
+		{
+			title: "Tipagem (TypeScript)",
+			html: `
+				<p>Os atributos do componente têm <b>acessores tipados</b> — o mesmo padrão dos demais componentes FenixUI —, além das props de JSX/Vue. Assim há autocomplete e validação tanto na tag quanto no código imperativo:</p>
+				<pre><code>const tip = document.createElement('fx-tooltip'); // FxTooltip
+tip.content = 'Salvar';       // string
+tip.position = 'bottom';      // 'top' | 'bottom' | 'left' | 'right'
+document.body.appendChild(tip);</code></pre>
+				<p>Na forma de componentes o conteúdo é o slot padrão: <code>&lt;fx-tooltip content="Salvar" position="bottom"&gt;…&lt;/fx-tooltip&gt;</code>. Na diretiva (<code>fx-tooltip="…"</code>) o conteúdo e a posição vêm dos atributos <code>fx-tooltip</code>, <code>fx-tooltip-position</code> e <code>fx-tooltip-html</code>.</p>
+			`,
+		},
+	],
 	initNote: "O componente <fx-tooltip> funciona automaticamente com o import. A diretiva (atributo fx-tooltip='texto') requer inicialização explícita: chame <code>defineFxTooltipDirective()</code> uma vez na aplicação para ativar o MutationObserver que observa elementos com o atributo fx-tooltip. O observer trabalha em lote (um passe por frame), então em listas dinâmicas um tooltip recém-inserido pode aparecer no frame seguinte. Para desligar a diretiva e liberar listeners, chame <code>destroyFxTooltipDirective()</code>.",
 	demoHtml: (a) =>
 		`<div style="display:flex;flex-direction:column;gap:24px">

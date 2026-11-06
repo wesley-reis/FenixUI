@@ -370,6 +370,21 @@ describe('fx-table — header, sort e toolbar', () => {
     expect(style).toMatch(/\.pg-btn \.fx-icon\s*\{\s*font-size:\s*calc\(var\(--fx-font-size\) - 1px\)/s);
   });
 
+  it('o botão de página reserva piso e cresce para números longos (sem cortar)', () => {
+    const el = mount(`<fx-table lazy total="116400" pagination rows="10">${COLS}</fx-table>`, ROWS);
+    const root = el.shadowRoot!;
+    const style = root.querySelector('style')!.textContent!;
+    expect(style).toContain('.pg-btn[part="page"]');
+    expect(style).toContain('min-width: var(--fx-pagination-btn-min, calc(var(--fx-size-sm) - 8px))');
+    expect(style).toContain('white-space: nowrap');
+    expect(style).toContain('flex: 0 0 auto');
+
+    // Última página: o número de 5 dígitos aparece COMPLETO no botão ativo.
+    (root.querySelector('[data-pg="last"]') as HTMLButtonElement).click();
+    const atual = root.querySelector('.pg-btn[aria-current="page"]')!;
+    expect(atual.textContent).toBe('11640');
+  });
+
   it('honra a ordenação inicial via sort-field / sort-order', () => {
     const el = mount(`<fx-table sort-field="nome" sort-order="asc">${COLS}</fx-table>`, ROWS);
     const celulas = [...el.shadowRoot!.querySelectorAll('tbody tr td:first-child')].map((td) => td.textContent);

@@ -1,7 +1,20 @@
 # FenixUI
 
-Design System Web **nativo** — Web Components + Shadow DOM + Design Tokens.
-Independente de framework: funciona em Vue, React, Angular, Svelte, HTML puro, Java/JSP, PHP, .NET.
+**FenixUI** é um **design system** e **biblioteca de componentes UI** para a web,
+feita com **Web Components nativos** (Custom Elements + **Shadow DOM**) e
+**Design Tokens**. É **agnóstico de framework** — funciona em **Vue, React,
+Angular, Svelte**, HTML puro, Java/JSP, PHP e .NET — e tem **tree-shaking por
+componente**. Escrito em **TypeScript**, com temas claro/escuro e **0 dependências
+de runtime**.
+
+- 🧩 **Web Components** nativos (`<fx-button>`, `<fx-table>`, `<fx-datepicker>`…) — sem runtime de framework
+- 🎨 **Design Tokens** (`--fx-*`) + temas **light** / **dark** personalizáveis (presets)
+- 🌳 **Tree-shaking** por componente — importe só o que usar
+- 🔤 **TypeScript** de primeira classe (props, uniões e tipos para JSX/Vue/React)
+- ♿ **Acessibilidade** (ARIA, foco, teclado) desde a primeira versão
+- 🪶 **Zero dependências de runtime** e sem scripts de instalação
+
+Design System Web **nativo** — independente de framework.
 
 ## Instalação
 
@@ -18,7 +31,7 @@ import { FenixUI } from '@wrrdev/fenix-ui';  // API de tema/tokens (índice)
 FenixUI.theme('dark');
 ```
 
-> 📦 npm: [`@wrrdev/fenix-ui`](https://www.npmjs.com/package/@wrrdev/fenix-ui) — **v1.6.0**, acesso público.
+> 📦 npm: [`@wrrdev/fenix-ui`](https://www.npmjs.com/package/@wrrdev/fenix-ui) — **v1.7.0**, acesso público.
 > Subpaths disponíveis: `./theme`, `./tokens`, `./jsx`, `./vue`, `./react`, `./button`, `./badge`, `./spinner`, `./select`, `./input`, `./switch`, `./textarea`, `./editor`, `./checkbox`, `./radio`, `./calendar`, `./datepicker`, `./multiselect`, `./table`, `./floatlabel`, `./dialog`, `./toast`, `./tooltip`, `./tabs`, `./progress`, `./skeleton`, `./alert`, `./drawer`, `./dropdown`, `./icon`, `./icons`, `./pagination`, `./autocomplete`, `./knob`, `./orderlist`, `./picklist`, `./auto-import` e o curinga `./components/*`.
 
 
@@ -79,7 +92,7 @@ Carregue o bundle **UMD** único: ele registra todos os componentes — **e a bi
 </script>
 
 <!--
-  🔗 Links diretos para CDN (versão 1.6.0):
+  🔗 Links diretos para CDN (versão 1.7.0):
   • https://cdn.jsdelivr.net/npm/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js
   • https://unpkg.com/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js
 -->
@@ -478,7 +491,7 @@ enxerga o `<input>`/`<textarea>` interno, nunca o atributo escrito no host. Como
 da spec é `autocomplete="on"`, sem tratamento o Chrome autopreenche campos comuns (busca de
 tabela, filtros, diálogos) com o usuário/senha salvos e ainda oferece “Salvar senha?”.
 
-A partir da **v1.6.0** o autofill é tratado em duas camadas:
+A partir da **v1.7.0** o autofill é tratado em duas camadas:
 
 - **preventiva** — `fx-input` e `fx-textarea` **repassam** `autocomplete`, `name` e `id` ao campo
   interno, com default **`off`** (o atributo declarado no host vence). Os campos internos de

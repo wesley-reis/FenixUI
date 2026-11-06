@@ -20,8 +20,11 @@ import { esc } from '../../core/sanitize';
  * - values="a,b,c"                        → múltiplas datas (CSV)
  * - min/max, placeholder, disabled, clearable, size (sm|md|lg)
  * - format="dd/mm/yyyy"  → máscara de exibição (tokens: dd mm yyyy, HH MM SS)
- * - show-time            → inclui seleção de hora:minuto:segundo no popover;
- *                          o valor passa a ser "YYYY-MM-DDTHH:mm:ss"
+ * - picker="date" | "time" | "datetime"  → o que exibir no popover:
+ *                          date (padrão) = só calendário; time = só hora
+ *                          (valor "HH:mm:ss"); datetime = calendário + hora
+ *                          (valor "YYYY-MM-DDTHH:mm:ss")
+ * - show-time            → alias legado de picker="datetime"
  *
  * Evento: `change` (composed):
  * - single:   { value }
@@ -69,7 +72,9 @@ export class FxDatepicker extends FxFormElement {
     :host([mode='multiple']) .field { min-width: 220px; }
     :host([mode='range'][size='lg']) .field { min-width: 360px; }
     :host([mode='multiple'][size='lg']) .field { min-width: 320px; }
-    :host([show-time]) .field { min-width: 250px; }
+    :host([show-time]) .field,
+    :host([picker='datetime']) .field { min-width: 250px; }
+    :host([picker='time']) .field { min-width: 150px; }
     /* Full width: o host estica até o pai (os min-width dos modos são
        descartados para permitir layouts estreitos sob controle do pai). */
     :host([full]) { display: block; width: 100%; }
@@ -149,10 +154,12 @@ export class FxDatepicker extends FxFormElement {
       bottom: calc(100% + 4px);
     }
     :host([open]) .pop { display: block; }
+    /* Bloco de hora (picker="time" | "datetime"): controle segmentado com
+       rótulos (Hora/Min/Seg), foco em anel no grupo inteiro e ação "Agora". */
     .time-row {
       display: flex;
       align-items: center;
-      gap: var(--fx-space-xs);
+      gap: var(--fx-space-sm);
       padding: var(--fx-space-sm) var(--fx-space-md);
       border-top: 1px solid var(--fx-border-default);
       background: var(--fx-surface-background);
@@ -160,26 +167,79 @@ export class FxDatepicker extends FxFormElement {
       font-size: calc(var(--fx-font-size) - 2px);
       color: var(--fx-text-default);
     }
-    .time-row label { color: var(--fx-text-muted); }
-    .time-row input {
-      width: 38px;
-      font: inherit;
-      color: var(--fx-text-default);
-      background: var(--fx-surface-background);
+    .time-row .time-icon {
+      color: var(--fx-text-muted);
+      display: inline-flex;
+      flex: none;
+    }
+    .time-group {
+      display: inline-flex;
+      align-items: stretch;
+      padding: 2px;
       border: 1px solid var(--fx-border-default);
+      border-radius: var(--fx-radius-md);
+      background: var(--fx-surface-surface, #f8fafc);
+      transition:
+        border-color var(--fx-motion-duration-normal) var(--fx-motion-easing),
+        box-shadow var(--fx-motion-duration-normal) var(--fx-motion-easing);
+    }
+    .time-group:focus-within {
+      border-color: var(--fx-color-primary);
+      box-shadow: var(--fx-effect-focus-ring, none);
+      background: var(--fx-surface-background);
+    }
+    .time-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1px;
+      padding: 2px 6px 3px;
       border-radius: var(--fx-radius-sm);
-      padding: 2px 2px;
+      cursor: text;
+    }
+    .time-cell + .time-cell { border-left: 1px solid var(--fx-border-default); }
+    .time-cell:hover { background: var(--fx-surface-surface-hover, rgba(0, 0, 0, 0.05)); }
+    .time-cap {
+      font-size: calc(var(--fx-font-size) - 5px);
+      line-height: 1;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--fx-text-muted);
+      user-select: none;
+    }
+    .time-cell input {
+      width: 26px;
+      font: inherit;
+      font-variant-numeric: tabular-nums;
+      color: var(--fx-text-default);
+      background: transparent;
+      border: none;
       outline: none;
+      padding: 0;
       text-align: center;
       -moz-appearance: textfield;
       appearance: textfield;
     }
-    .time-row input::-webkit-outer-spin-button,
-    .time-row input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-    .time-row .sep { color: var(--fx-text-muted); font-weight: bold; padding: 0 1px; }
-    .time-row input:focus {
+    .time-cell input::-webkit-outer-spin-button,
+    .time-cell input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .time-now {
+      margin-left: auto;
+      flex: none;
+      font: inherit;
+      font-size: calc(var(--fx-font-size) - 2px);
+      color: var(--fx-text-default);
+      background: var(--fx-surface-background);
+      border: 1px solid var(--fx-border-default);
+      border-radius: var(--fx-radius-sm);
+      padding: 3px var(--fx-space-sm);
+      cursor: pointer;
+      transition:
+        border-color var(--fx-motion-duration-fast) var(--fx-motion-easing),
+        color var(--fx-motion-duration-fast) var(--fx-motion-easing);
+    }
+    .time-now:hover {
       border-color: var(--fx-color-primary);
-      box-shadow: var(--fx-effect-focus-ring, none);
+      color: var(--fx-color-primary);
     }
     :host([disabled]) .field { opacity: 0.55; cursor: not-allowed; background: var(--fx-surface-surface-hover); }
     :host([disabled]) .display { cursor: not-allowed; }
@@ -188,7 +248,7 @@ export class FxDatepicker extends FxFormElement {
   `;
 
   static override get observedAttributes(): string[] {
-    return ['value', 'start', 'end', 'values', 'mode', 'min', 'max', 'placeholder', 'disabled', 'format', 'show-time', 'free-text', 'clearable', 'full', 'error', 'invalid', 'success', 'valid'];
+    return ['value', 'start', 'end', 'values', 'mode', 'min', 'max', 'placeholder', 'disabled', 'format', 'picker', 'show-time', 'free-text', 'clearable', 'full', 'error', 'invalid', 'success', 'valid'];
   }
 
   /** Evita renders em cascata quando vários atributos mudam juntos. */
@@ -208,6 +268,8 @@ export class FxDatepicker extends FxFormElement {
 
   /** No FormData do form, conforme o modo (single/range/multiple). */
   protected override getFormValue(): string | FormData | null {
+    // Só hora: o valor é "HH:mm:ss" (sem partes de data/período).
+    if (this.picker === 'time') return this.getAttr('value') || null;
     if (this.mode === 'range') {
       const start = this.getAttr('start');
       const end = this.getAttr('end');
@@ -277,6 +339,21 @@ export class FxDatepicker extends FxFormElement {
   }
   set disabled(value: boolean) {
     this.toggleAttr('disabled', Boolean(value));
+  }
+
+  /**
+   * O que o popover exibe no `<fx-datepicker>`.
+   *
+   * `show-time` segue como alias legado: se `picker` não for informado e
+   * `show-time` estiver presente, resolve para `'datetime'`. Padrão: `'date'`.
+   */
+  get picker(): 'date' | 'time' | 'datetime' {
+    const p = this.getAttr('picker');
+    if (p === 'date' || p === 'time' || p === 'datetime') return p;
+    return this.hasAttr('show-time') ? 'datetime' : 'date';
+  }
+  set picker(value: 'date' | 'time' | 'datetime') {
+    this.setAttribute('picker', value);
   }
 
   /** `:show-time` procura a propriedade LITERAL no Vue (sem camelização). */
@@ -376,23 +453,24 @@ export class FxDatepicker extends FxFormElement {
 
   /** Texto exibido no input conforme o modo. */
   private displayText(): string {
+    const picker = this.picker;
+    // Só hora: exibe "HH:mm:ss" (o valor não tem parte de data).
+    if (picker === 'time') return this.value ? this.timeText() : '';
     if (this.mode === 'range') {
       const s = this.getAttr('start');
       const e = this.getAttr('end');
-      const arrow = this.hasAttr('show-time') ? ' ' : ' → ';
       if (!s && !e) return '';
-      if (this.hasAttr('show-time')) {
+      if (picker === 'datetime') {
         const f = (iso?: string): string => (iso ? `${this.formatDate(iso)} ${this.timeText()}` : iso ? `${this.formatDate(iso)} …` : '');
         return s && e ? `${f(s)} → ${f(e)}` : f(s);
       }
-      void arrow;
       return s && e ? `${this.formatDate(s)} → ${this.formatDate(e)}` : s ? `${this.formatDate(s)} → …` : '';
     }
     if (this.mode === 'multiple') {
       return this.values.map((v) => this.formatDate(v)).join(', ');
     }
     const base = this.formatDate(this.value);
-    return base && this.hasAttr('show-time') ? `${base} ${this.timeText()}` : base;
+    return base && picker === 'datetime' ? `${base} ${this.timeText()}` : base;
   }
 
   /** "HH:MM:SS" do estado interno de show-time. */
@@ -401,30 +479,48 @@ export class FxDatepicker extends FxFormElement {
     return `${p(this.time.h)}:${p(this.time.m)}:${p(this.time.s)}`;
   }
 
-  /** Extrai hora de um valor ISO inicial, se houver. */
+  /**
+   * Placeholder do input. Precedência: atributo explícito `placeholder` >
+   * máscara `format` > padrão conforme o `picker` (data, hora ou ambos).
+   */
+  private placeholderText(): string {
+    const explicit = this.getAttr('placeholder');
+    if (explicit) return explicit;
+    const fmt = this.getAttr('format');
+    if (fmt) return fmt;
+    const picker = this.picker;
+    if (picker === 'time') return 'hh:mm:ss';
+    if (picker === 'datetime') return 'dd/mm/aaaa hh:mm:ss';
+    return 'dd/mm/aaaa';
+  }
+
+  /** Extrai hora de um valor inicial ("YYYY-MM-DDTHH:mm:ss" ou "HH:mm:ss"). */
   private loadTimeFromValue(): void {
     const src = this.value || this.getAttr('start') || '';
-    const t = src.split('T')[1];
+    // datetime: "...THH:mm:ss" · time-only: "HH:mm:ss".
+    const t = src.includes('T') ? src.split('T')[1] : this.picker === 'time' ? src : undefined;
     if (!t) return;
     const [h, m, s] = t.split(':').map((n) => parseInt(n, 10));
     this.time = { h: h || 0, m: m || 0, s: s || 0 };
   }
 
-  /** Anexa o horário interno ao ISO puro vindo do calendário. */
+  /** Anexa o horário interno ao ISO puro vindo do calendário (só no datetime). */
   private withTime(iso: string): string {
-    if (!iso) return iso;
-    return this.hasAttr('show-time')
-      ? `${iso}T${this.timeText()}`
-      : iso;
+    if (!iso || this.picker !== 'datetime') return iso;
+    return `${iso.split('T')[0]}T${this.timeText()}`;
   }
 
   protected override render(): void {
     const disabled = this.disabled;
     const clearable = this.hasAttr('clearable');
+    const picker = this.picker;
+    const showTime = picker !== 'date';
+    const showCalendar = picker !== 'time';
+    // Carrega a hora a partir do valor ANTES de montar o texto (displayText
+    // usa this.time) — sem isso o picker="time" abria sempre em 00:00:00.
+    this.loadTimeFromValue();
     const text = this.displayText();
     const hasValue = text.length > 0;
-    const showTime = this.hasAttr('show-time');
-    this.loadTimeFromValue();
 
     // Atributos repassados ao calendário interno, conforme o modo.
     let calAttrs = `min="${esc(this.getAttr('min'))}" max="${esc(this.getAttr('max'))}"`;
@@ -442,28 +538,53 @@ export class FxDatepicker extends FxFormElement {
     this.setTemplate(`
       <div class="field" part="field">
         <input class="display" part="display" type="text" autocomplete="off" ${this.hasAttr('free-text') && !disabled ? '' : 'readonly'}
-          placeholder="${esc(this.getAttr('placeholder', 'dd/mm/aaaa'))}"
+          placeholder="${esc(this.placeholderText())}"
           value="${esc(text)}" ${disabled ? 'disabled' : ''}>
         <button type="button" class="clear" part="clear" aria-label="Limpar"
           ${clearable && hasValue ? '' : 'hidden'}>
           ×
         </button>
         <span class="cal-icon" part="icon" aria-hidden="true">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <rect x="3" y="4" width="18" height="18" rx="2"/>
-            <path d="M16 2v4M8 2v4M3 10h18"/>
-          </svg>
+          ${showCalendar
+            ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                 <rect x="3" y="4" width="18" height="18" rx="2"/>
+                 <path d="M16 2v4M8 2v4M3 10h18"/>
+               </svg>`
+            : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                 <circle cx="12" cy="12" r="9"/>
+                 <path d="M12 7v5l3 2"/>
+               </svg>`}
         </span>
       </div>
       <div class="pop" part="popover">
-        <fx-calendar ${calAttrs}></fx-calendar>
+        ${showCalendar ? `<fx-calendar ${calAttrs}></fx-calendar>` : ''}
         ${
           showTime
             ? `<div class="time-row" part="time">
-                <input class="t-h" type="number" autocomplete="off" min="0" max="23" value="${this.time.h}" aria-label="Hora"><span class="sep">:</span>
-                <input class="t-m" type="number" autocomplete="off" min="0" max="59" value="${this.time.m}" aria-label="Minuto"><span class="sep">:</span>
-                <input class="t-s" type="number" autocomplete="off" min="0" max="59" value="${this.time.s}" aria-label="Segundo">
+                <span class="time-icon" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="9"/>
+                    <path d="M12 7v5l3 2"/>
+                  </svg>
+                </span>
+                <div class="time-group" role="group" aria-label="Horário">
+                  <label class="time-cell">
+                    <span class="time-cap">Hora</span>
+                    <input class="t-h" type="number" autocomplete="off" min="0" max="23" value="${this.time.h}" aria-label="Hora">
+                  </label>
+                  <label class="time-cell">
+                    <span class="time-cap">Min</span>
+                    <input class="t-m" type="number" autocomplete="off" min="0" max="59" value="${this.time.m}" aria-label="Minuto">
+                  </label>
+                  <label class="time-cell">
+                    <span class="time-cap">Seg</span>
+                    <input class="t-s" type="number" autocomplete="off" min="0" max="59" value="${this.time.s}" aria-label="Segundo">
+                  </label>
+                </div>
+                <button type="button" class="time-now" part="time-now">Agora</button>
               </div>`
             : ''
         }
@@ -560,17 +681,26 @@ export class FxDatepicker extends FxFormElement {
           m: clamp(m?.value, 59),
           s: clamp(s?.value, 59),
         };
-        // Reanexa o horário aos valores já selecionados.
-        const reattach = (iso: string): string => iso.split('T')[0] ? `${iso.split('T')[0]}T${this.timeText()}` : iso;
+        // Reanexa o horário aos valores já selecionados. Em time-only o valor
+        // É a hora ("HH:mm:ss"); no datetime, a hora vai depois do "T".
+        const reattach = (iso: string): string =>
+          this.picker === 'time'
+            ? this.timeText()
+            : `${iso.split('T')[0]}T${this.timeText()}`;
         // Sem supressão, cada setAttribute acima re-renderizaria e o input
         // de hora/minuto/segundo perderia o foco a cada dígito.
         this._suppressRender = true;
         try {
-          if (this.value) this.setAttribute('value', reattach(this.value));
-          if (this.getAttr('start')) this.setAttribute('start', reattach(this.getAttr('start')));
-          if (this.getAttr('end')) this.setAttribute('end', reattach(this.getAttr('end')));
-          if (this.values.length) {
-            this.values = this.values.map((v) => reattach(v));
+          if (this.picker === 'time') {
+            // Só hora: a mudança de hora cria/atualiza o valor.
+            this.setAttribute('value', this.timeText());
+          } else {
+            if (this.value) this.setAttribute('value', reattach(this.value));
+            if (this.getAttr('start')) this.setAttribute('start', reattach(this.getAttr('start')));
+            if (this.getAttr('end')) this.setAttribute('end', reattach(this.getAttr('end')));
+            if (this.values.length) {
+              this.values = this.values.map((v) => reattach(v));
+            }
           }
         } finally {
           this._suppressRender = false;
@@ -582,6 +712,19 @@ export class FxDatepicker extends FxFormElement {
       };
       ['.t-h', '.t-m', '.t-s'].forEach((sel) => {
         this.root.querySelector(sel)?.addEventListener('input', applyTime);
+      });
+
+      // Ação "Agora": preenche a hora atual e aplica.
+      this.root.querySelector<HTMLButtonElement>('.time-now')?.addEventListener('click', () => {
+        const now = new Date();
+        const pad = (n: number): string => String(n).padStart(2, '0');
+        const h = this.root.querySelector<HTMLInputElement>('.t-h');
+        const m = this.root.querySelector<HTMLInputElement>('.t-m');
+        const s = this.root.querySelector<HTMLInputElement>('.t-s');
+        if (h) h.value = pad(now.getHours());
+        if (m) m.value = pad(now.getMinutes());
+        if (s) s.value = pad(now.getSeconds());
+        applyTime();
       });
     }
   }
