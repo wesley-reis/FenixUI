@@ -16,19 +16,20 @@ export const avatarDoc: ComponentDoc = {
 	},
 	controls: [
 		{ kind: "select", attr: "size", label: "Tamanho", options: ["sm", "md", "lg"], value: "md" },
-		{ kind: "select", attr: "variant", label: "Variante", options: ["text", "image", "icon"], value: "text" },
+		{ kind: "select", attr: "mode", label: "Modo (mode)", options: ["text", "image", "icon"], value: "text" },
 		{ kind: "select", attr: "shape", label: "Formato", options: ["circle", "rounded", "square"], value: "circle" },
 	],
 	attributes: [
-		{ name: "variant", type: `'image' | 'text' | 'icon'`, default: "'text'", desc: "Forma de apresentação do avatar." },
-		{ name: "src", type: "string", default: "''", desc: "URL da imagem (variant=image)." },
+		{ name: "mode", type: `'image' | 'text' | 'icon'`, default: "'text'", desc: "Modo de exibição do avatar (canônico)." },
+		{ name: "variant", type: `'image' | 'text' | 'icon'`, default: "'text'", desc: "Alias legado de `mode` — mantido por compatibilidade; prefira `mode`." },
+		{ name: "src", type: "string", default: "''", desc: "URL da imagem (mode=image)." },
 		{ name: "alt", type: "string", default: "''", desc: "Texto alternativo (acessibilidade)." },
 		{ name: "size", type: `'sm' | 'md' | 'lg'`, default: "'md'", desc: "Diâmetro do avatar." },
 		{ name: "shape", type: `'circle' | 'rounded' | 'square'`, default: "'circle'", desc: "Forma (radius)." },
 	],
 	slots: [
-		{ name: "(padrão)", desc: "Iniciais do texto (variant=text)." },
-		{ name: "icon", desc: "Conteúdo do avatar (variant=icon)." },
+		{ name: "(padrão)", desc: "Iniciais do texto (mode=text)." },
+		{ name: "icon", desc: "Conteúdo do avatar (mode=icon)." },
 	],
 	cssVars: [
 		{ name: ".avatar-group", desc: "Classe utilitária embutida: posicione vários fx-avatar dentro para empilhamento com overlap." },

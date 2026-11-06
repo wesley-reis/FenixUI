@@ -18,7 +18,7 @@ import { FenixUI } from '@wrrdev/fenix-ui';  // API de tema/tokens (índice)
 FenixUI.theme('dark');
 ```
 
-> 📦 npm: [`@wrrdev/fenix-ui`](https://www.npmjs.com/package/@wrrdev/fenix-ui) — **v1.5.2**, acesso público.
+> 📦 npm: [`@wrrdev/fenix-ui`](https://www.npmjs.com/package/@wrrdev/fenix-ui) — **v1.6.0**, acesso público.
 > Subpaths disponíveis: `./theme`, `./tokens`, `./jsx`, `./vue`, `./react`, `./button`, `./badge`, `./spinner`, `./select`, `./input`, `./switch`, `./textarea`, `./editor`, `./checkbox`, `./radio`, `./calendar`, `./datepicker`, `./multiselect`, `./table`, `./floatlabel`, `./dialog`, `./toast`, `./tooltip`, `./tabs`, `./progress`, `./skeleton`, `./alert`, `./drawer`, `./dropdown`, `./icon`, `./icons`, `./pagination`, `./autocomplete`, `./knob`, `./orderlist`, `./picklist`, `./auto-import` e o curinga `./components/*`.
 
 
@@ -79,7 +79,7 @@ Carregue o bundle **UMD** único: ele registra todos os componentes — **e a bi
 </script>
 
 <!--
-  🔗 Links diretos para CDN (versão 1.5.2):
+  🔗 Links diretos para CDN (versão 1.6.0):
   • https://cdn.jsdelivr.net/npm/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js
   • https://unpkg.com/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js
 -->
@@ -402,6 +402,23 @@ Isso derruba a fonte para algumas dezenas de KB. **A tipagem não muda**:
 que o subset contenha os glifos que o app usa. Chame a função antes do primeiro
 `<fx-icon>` ser montado; use `setFenixIconsFontUrl('')` para voltar ao padrão.
 
+**Baixar a fonte (self-host / CDN / offline).** Por CDN a fonte já vem ao lado do
+bundle; se você precisa hospedá-la no seu servidor (intranet/offline, ou CSP que
+bloqueia o domínio do CDN em `font-src`), baixe o `fenix-icons.woff2` da **mesma
+versão** do bundle e aponte para ele:
+
+- jsDelivr: `https://cdn.jsdelivr.net/npm/@wrrdev/fenix-ui@<versão>/dist/fenix-icons.woff2`
+- unpkg: `https://unpkg.com/@wrrdev/fenix-ui@<versão>/dist/fenix-icons.woff2`
+- ou copie de `node_modules/@wrrdev/fenix-ui/dist/icons/fenix-icons.woff2`
+
+```html
+<script>
+  FenixUI.setFenixIconsFontUrl('/assets/fonts/fenix-icons.woff2');
+</script>
+```
+
+A fonte deriva do **Material Symbols Rounded** (Apache 2.0) e pode ser redistribuída.
+
 Com isso o editor mostra as propriedades de cada componente (`variant`, `size`, `loading`, …)
 nos templates. Para além do autocomplete, **validar** valores inválidos (ex.: `variant="foo"`),
 ative o modo estrito do Volar no `tsconfig.json`:
@@ -425,8 +442,8 @@ ative o modo estrito do Volar no `tsconfig.json`:
 
 | Elemento     | Atributos principais                          | Slots        |
 |--------------|-----------------------------------------------|--------------|
-| `fx-button`  | `variant` (primary/secondary/success/warning/danger/ghost/outline), `size`, `disabled`, `loading`, `type`, `full` | default, `icon` |
-| `fx-badge`   | `variant` (default/primary/success/warning/danger/info), `round` | default |
+| `fx-button`  | `variant` (forma: solid/outline/ghost), `severity` (cor: primary/secondary/success/warning/danger/info), `size`, `disabled`, `loading`, `type`, `full` | default, `icon` |
+| `fx-badge`   | `severity` (cor: primary/success/warning/danger/info), `round` | default |
 | `fx-input`   | `type` (text/number/password), `value`, `name`, `size`, `placeholder`, `disabled`, `readonly`, `min/max/step`, `autocomplete` (default `off`), `icon` | — |
 | `fx-select`  | `value`, `size` (sm/md/lg), `disabled`, `placeholder` — filhos `<option>` nativos | `(padrão)` |
 | `fx-switch`  | `checked`, `disabled`, `size` (sm/md/lg)      | `(padrão)`   |
@@ -434,6 +451,8 @@ ative o modo estrito do Volar no `tsconfig.json`:
 
 Todos os componentes com tamanho usam **`md` como padrão** (valores inválidos caem para `md`).
 Escala alinhada ao mercado (Material/Ant): **sm ≈ 32px · md ≈ 40px (padrão) · lg ≈ 48px**.
+
+> **Padrão da lib — forma × cor:** `variant` define a **forma** (nunca cor) e `severity` define a **cor** (nunca forma), em todos os componentes (button, badge, chip, alert, progress…). Combinam livremente: `<fx-button variant="outline" severity="danger">`. Por retrocompatibilidade, os valores de cor antigos em `variant` (ex.: `variant="danger"`) continuam funcionando como *alias* de sólido + cor. Veja o guia de [migração](https://wesley-reis.github.io/FenixUI/#/migration).
 
 ### Largura dos campos de formulário
 
@@ -459,7 +478,7 @@ enxerga o `<input>`/`<textarea>` interno, nunca o atributo escrito no host. Como
 da spec é `autocomplete="on"`, sem tratamento o Chrome autopreenche campos comuns (busca de
 tabela, filtros, diálogos) com o usuário/senha salvos e ainda oferece “Salvar senha?”.
 
-A partir da **v1.5.2** o autofill é tratado em duas camadas:
+A partir da **v1.6.0** o autofill é tratado em duas camadas:
 
 - **preventiva** — `fx-input` e `fx-textarea` **repassam** `autocomplete`, `name` e `id` ao campo
   interno, com default **`off`** (o atributo declarado no host vence). Os campos internos de

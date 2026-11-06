@@ -17,9 +17,19 @@ export class FxProgress extends FxElement {
       font-family: var(--fx-font-family);
       --_color: var(--fx-color-primary);
     }
+    /* Cor: severity é canônico; variant segue aceito (alias). */
+    :host([severity='primary']),
+    :host([variant='primary']) { --_color: var(--fx-color-primary); }
+    :host([severity='secondary']),
+    :host([variant='secondary']) { --_color: var(--fx-color-secondary); }
+    :host([severity='success']),
     :host([variant='success']) { --_color: var(--fx-color-success); }
+    :host([severity='warning']),
     :host([variant='warning']) { --_color: var(--fx-color-warning); }
+    :host([severity='danger']),
     :host([variant='danger']) { --_color: var(--fx-color-danger); }
+    :host([severity='info']),
+    :host([variant='info']) { --_color: var(--fx-color-info); }
     .row {
       display: flex;
       align-items: center;
@@ -64,7 +74,7 @@ export class FxProgress extends FxElement {
   `;
 
   static override get observedAttributes(): string[] {
-    return ['value', 'indeterminate', 'variant', 'label', 'hide-label', 'size'];
+    return ['value', 'indeterminate', 'variant', 'severity', 'label', 'hide-label', 'size'];
   }
 
   get value(): number { return Number(this.getAttr('value', '0')) || 0; }

@@ -13,14 +13,14 @@ export const progressDoc: ComponentDoc = {
 	imports: ["import '@wrrdev/fenix-ui/progress';"],
 	demoHtml: (a) => `<fx-progress ${a}></fx-progress>`,
 	variantsHtml: () =>
-		`<h4>Determinado</h4><fx-progress value="30"></fx-progress><fx-progress value="65"></fx-progress><h4>Com rótulo e variantes</h4><fx-progress value="80" label="Upload" variant="success"></fx-progress><fx-progress value="45" label="Processando" variant="warning"></fx-progress>`,
+		`<h4>Determinado</h4><fx-progress value="30"></fx-progress><fx-progress value="65"></fx-progress><h4>Com rótulo e cores</h4><fx-progress value="80" label="Upload" severity="success"></fx-progress><fx-progress value="45" label="Processando" severity="warning"></fx-progress>`,
 	controls: [
 		{ kind: "text", attr: "value", label: "Valor (%)", value: "60" },
 		{
 			kind: "select",
-			attr: "variant",
-			label: "Variante",
-			options: ["", "success", "warning", "danger"],
+			attr: "severity",
+			label: "Cor (severity)",
+			options: ["", "primary", "secondary", "success", "warning", "danger", "info"],
 		},
 		{ kind: "text", attr: "label", label: "Rótulo" },
 		{ kind: "toggle", attr: "indeterminate", label: "Indeterminado" },
@@ -33,10 +33,16 @@ export const progressDoc: ComponentDoc = {
 			desc: "Percentual concluído (0-100).",
 		},
 		{
+			name: "severity",
+			type: `'' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info'`,
+			default: "''",
+			desc: "Cor (canônica). Sem `severity`, usa a cor primária.",
+		},
+		{
 			name: "variant",
 			type: `'' | 'success' | 'warning' | 'danger'`,
 			default: "''",
-			desc: "Cor.",
+			desc: "Alias legado de cor — mantido por compatibilidade; prefira `severity`.",
 		},
 		{
 			name: "label",

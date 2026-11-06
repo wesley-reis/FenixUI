@@ -68,16 +68,22 @@ export class FxAvatar extends FxElement {
   `;
 
   static override get observedAttributes(): string[] {
-    return ['size', 'shape', 'variant', 'src', 'alt'];
+    return ['size', 'shape', 'variant', 'mode', 'src', 'alt'];
   }
 
   get variant(): string { return this.getAttr('variant', 'text'); }
   set variant(v: string) { this.setAttribute('variant', v); }
+  /**
+   * Modo de exibição do avatar (canônico): `image` | `text` | `icon`.
+   * Chave de padronização da lib — `variant` segue aceito como alias legado.
+   */
+  get mode(): string { return this.getAttr('mode', this.getAttr('variant', 'text')) || 'text'; }
+  set mode(v: string) { this.setAttribute('mode', v); }
   get src(): string { return this.getAttr('src'); }
   set src(v: string) { this.setAttribute('src', v); }
 
   protected override render(): void {
-    const variant = this.variant;
+    const variant = this.mode;
     const src = this.getAttr('src');
     const alt = this.getAttr('alt', '');
     const isIcon = variant === 'icon';

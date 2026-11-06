@@ -4,7 +4,14 @@
  * Gerado a partir do split de src/docs/app.ts — edite aqui os metadados.
  */
 import type { ComponentDoc } from '../types';
-import { buttonVariants, sizes } from '../shared';
+import { buttonVariants, buttonSeverities, sizes } from '../shared';
+
+/**
+ * Handler do exemplo clicável abaixo: alterna `loading` (ícone → spinner → ícone).
+ * `this` é o próprio `<fx-button>` no handler inline.
+ */
+const LOADING_DEMO_HANDLER =
+  "const b=this;if(b.hasAttribute('loading'))return;b.setAttribute('loading','');setTimeout(function(){b.removeAttribute('loading')},1500)";
 
 export const buttonDoc: ComponentDoc = {
 	tag: "fx-button",
@@ -15,13 +22,25 @@ export const buttonDoc: ComponentDoc = {
 	demoHtml: (a) => `<fx-button ${a}>Confirmar ação</fx-button>`,
 	variantsHtml: () =>
 		`<div style="display: flex; flex-direction: column; gap: 16px;">
-        <h4>Variantes</h4>
+        <h4>Formas (variant)</h4>
         <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">` +
 		buttonVariants
 			.map((v) => `<fx-button variant="${v}">${v}</fx-button>`)
 			.join("") +
 		`</div>
-        <p style="font-size:12px;color:var(--fx-text-muted);margin:0 0 8px"><code>outline</code> usa fundo sólido claro (<code>--fx-button-outline-bg</code>, padrão <code>--fx-surface-background</code>) com borda e texto na cor primária — antes o fundo era transparente e a superfície cinza aparecia através do botão. O <code>ghost</code> é o variante sem fundo nem borda.</p>
+        <h4>Cores (severity)</h4>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">` +
+		buttonSeverities
+			.map((s) => `<fx-button severity="${s}">${s}</fx-button>`)
+			.join("") +
+		`</div>
+        <h4>Forma × cor (ex.: outline com cada cor)</h4>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">` +
+		buttonSeverities
+			.map((s) => `<fx-button variant="outline" severity="${s}">${s}</fx-button>`)
+			.join("") +
+		`</div>
+        <p style="font-size:12px;color:var(--fx-text-muted);margin:0 0 8px"><b>Forma e cor são dimensões separadas</b>: a forma vai em <code>variant</code> (<code>solid</code> · <code>outline</code> · <code>ghost</code>) e a cor em <code>severity</code>. Combinam livremente — ex.: <code>variant="outline" severity="danger"</code>. Por retrocompatibilidade os valores de cor antigos em <code>variant</code> (ex.: <code>variant="danger"</code>) seguem funcionando como alias de sólido + cor. O <code>outline</code> usa fundo sólido claro (<code>--fx-button-outline-bg</code>).</p>
         <h4>Tamanhos</h4>
         <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
           <fx-button size="sm">Pequeno</fx-button>
@@ -49,6 +68,14 @@ export const buttonDoc: ComponentDoc = {
           <fx-button loading>Carregando</fx-button>
           <fx-button disabled>Desabilitado</fx-button>
         </div>
+        <h4>Loading com ícone (clique para testar)</h4>
+        <p style="font-size:12px;color:var(--fx-text-muted);margin:0 0 8px">Ao clicar, o <b>ícone some</b> e o <b>spinner aparece no lugar dele</b> (respeitando <code>icon-pos</code>); sem ícone, o spinner cai no fim do botão. Ao terminar, o <b>ícone volta</b>. Basta alternar o atributo <code>loading</code>.</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+          <fx-button icon="save" onclick="${LOADING_DEMO_HANDLER}">Salvar</fx-button>
+          <fx-button variant="outline" severity="danger" icon="delete" icon-pos="right" onclick="${LOADING_DEMO_HANDLER}">Excluir</fx-button>
+          <fx-button variant="ghost" severity="success" icon="check" onclick="${LOADING_DEMO_HANDLER}">Confirmar</fx-button>
+          <fx-button icon="search" aria-label="Buscar" onclick="${LOADING_DEMO_HANDLER}"></fx-button>
+        </div>
         <h4>Full width (full)</h4>
         <p style="font-size:12px;color:var(--fx-text-muted);margin:0 0 8px">O host vira <code>block</code> e o botão ocupa 100% do pai. Para botão ao lado de um campo, envolva num pai com <code>display:flex</code>.</p>
         <div style="display:flex;flex-direction:column;gap:12px">
@@ -66,8 +93,15 @@ export const buttonDoc: ComponentDoc = {
 		{
 			kind: "select",
 			attr: "variant",
-			label: "Variante",
+			label: "Forma (variant)",
 			options: buttonVariants,
+			value: "solid",
+		},
+		{
+			kind: "select",
+			attr: "severity",
+			label: "Cor (severity)",
+			options: buttonSeverities,
 			value: "primary",
 		},
 		{
@@ -99,9 +133,15 @@ export const buttonDoc: ComponentDoc = {
 	attributes: [
 		{
 			name: "variant",
-			type: `'${buttonVariants.join("' | '")}'`,
+			type: `'solid' | 'outline' | 'ghost'`,
+			default: `'solid'`,
+			desc: "Forma do botão — nunca carrega cor. Os valores de cor antigos (primary…info) seguem aceitos como alias de sólido + cor.",
+		},
+		{
+			name: "severity",
+			type: `'${buttonSeverities.join("' | '")}'`,
 			default: `'primary'`,
-			desc: "Estilo visual do botão.",
+			desc: "Cor semântica — dimensão separada da forma. Combina com qualquer forma (ex.: variant=\"outline\" severity=\"danger\").",
 		},
 		{
 			name: "size",

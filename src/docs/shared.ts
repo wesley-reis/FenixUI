@@ -3,8 +3,17 @@
 export const esc = (s: string): string =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-export const buttonVariants = ['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'outline', 'ghost'];
-export const badgeVariants = ['neutral', 'primary', 'success', 'warning', 'danger', 'info'];
+/** Formas (dimensão `variant`) — o `variant` nunca carrega cor. */
+export const buttonVariants = ['solid', 'outline', 'ghost'];
+/**
+ * Cores semânticas (dimensão `severity`) — padrão da lib.
+ * Cor é sempre `severity`; forma é sempre `variant`.
+ */
+export const buttonSeverities = ['primary', 'secondary', 'success', 'warning', 'danger', 'info'];
+/** Alias genérico de cores semânticas para os demais componentes. */
+export const severities = [...buttonSeverities];
+/** Cores do badge (dimensão `severity`). Sem cor => neutro. */
+export const badgeVariants = ['primary', 'success', 'warning', 'danger', 'info'];
 export const sizes = ['sm', 'md', 'lg'];
 
 /**

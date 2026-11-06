@@ -14,14 +14,15 @@ export const badgeDoc: ComponentDoc = {
 	imports: ["import '@wrrdev/fenix-ui/badge';"],
 	demoHtml: (a) => `<fx-badge ${a}>Novo</fx-badge>`,
 	variantsHtml: () =>
+		`<fx-badge>Padrão</fx-badge>` +
 		badgeVariants
-			.map((v) => `<fx-badge variant="${v}">${v}</fx-badge>`)
+			.map((v) => `<fx-badge severity="${v}">${v}</fx-badge>`)
 			.join(""),
 	controls: [
 		{
 			kind: "select",
-			attr: "variant",
-			label: "Variante",
+			attr: "severity",
+			label: "Cor (severity)",
 			options: badgeVariants,
 			value: "primary",
 		},
@@ -29,10 +30,16 @@ export const badgeDoc: ComponentDoc = {
 	],
 	attributes: [
 		{
+			name: "severity",
+			type: `'${badgeVariants.join("' | '")}'`,
+			default: `''`,
+			desc: "Cor semântica (canônica). Sem `severity`, o badge fica neutro.",
+		},
+		{
 			name: "variant",
 			type: `'${badgeVariants.join("' | '")}'`,
-			default: `'neutral'`,
-			desc: "Cor semântica do badge.",
+			default: `''`,
+			desc: "Alias legado de cor (mesmos valores de `severity`) — mantido por compatibilidade; prefira `severity`.",
 		},
 		{
 			name: "round",

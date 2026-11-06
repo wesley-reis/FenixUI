@@ -130,7 +130,7 @@ describe('fx-button', () => {
     expect(styles).toContain('box-shadow: var(--fx-effect-focus-ring, none)');
   });
 
-  it('variant outline usa fundo claro sólido (não transparente) com borda do tema', () => {
+  it('variant outline usa fundo claro sólido (não transparente) com borda na cor corrente', () => {
     const styles = (FxButton as unknown as { styles: string }).styles;
     // Fundo transparente deixava a superfície cinza do card aparecer através
     // do botão; agora o outline tem fundo sólido claro (token próprio).
@@ -140,8 +140,65 @@ describe('fx-button', () => {
     expect(styles).not.toMatch(
       /:host\(\[variant='outline'\]\)\s*\.btn\s*\{[^}]*background:\s*transparent/,
     );
+    // Borda e texto seguem a cor corrente (--_btn-color), não uma cor fixa.
     expect(styles).toMatch(
-      /:host\(\[variant='outline'\]\)\s*\.btn\s*\{[^}]*border-color:\s*var\(--fx-color-primary\)/,
+      /:host\(\[variant='outline'\]\)\s*\.btn\s*\{[^}]*border-color:\s*var\(--_btn-color\)/,
     );
+  });
+
+  it('severity define a cor; outline/ghost combinam com qualquer cor', () => {
+    const styles = (FxButton as unknown as { styles: string }).styles;
+    // Cor canônica via `severity` escreve --_btn-color.
+    expect(styles).toMatch(
+      /:host\(\[severity='danger'\]\)\s*\{\s*--_btn-color:\s*var\(--fx-color-danger\)/,
+    );
+    // Alias legado: variant=<cor> continua escrevendo --_btn-color (sólido).
+    expect(styles).toMatch(
+      /:host\(\[variant='danger'\]\)\s*\{\s*--_btn-color:\s*var\(--fx-color-danger\)/,
+    );
+    expect(styles).toMatch(
+      /:host\(\[variant='outline'\]\)\s*\.btn\s*\{[^}]*color:\s*var\(--_btn-color\)/,
+    );
+    expect(styles).toMatch(/:host\(\[variant='ghost'\]\[severity\]\)\s*\.btn/);
+  });
+
+  it('loading esconde o ícone padrão (só o spinner fica visível)', () => {
+    const styles = (FxButton as unknown as { styles: string }).styles;
+    expect(styles).toMatch(/:host\(\[loading\]\)\s*\.btn__icon\s*\{\s*display:\s*none/);
+    const el = mount('loading icon=save');
+    expect(el.shadowRoot!.querySelector('.btn__spinner')).toBeTruthy();
+    // O ícone segue no DOM, mas o CSS o oculta durante o loading.
+    expect(el.shadowRoot!.querySelector('.btn__icon')).toBeTruthy();
+  });
+
+  it('loading: o spinner ocupa o lugar do ícone, respeitando icon-pos', () => {
+    const classes = (el: HTMLElement) =>
+      [...el.shadowRoot!.querySelector('.btn')!.children].map((n) => n.className);
+
+    // icon-pos=left (padrão): spinner ANTES do rótulo.
+    const toLeft = classes(mount('loading icon=save'));
+    expect(toLeft.indexOf('btn__spinner')).toBeLessThan(toLeft.indexOf('btn__label'));
+
+    // icon-pos=right: spinner DEPOIS do rótulo.
+    const toRight = classes(mount('loading icon=save icon-pos=right'));
+    expect(toRight.indexOf('btn__spinner')).toBeGreaterThan(toRight.indexOf('btn__label'));
+  });
+
+  it('loading sem ícone: spinner cai no default (após o rótulo), sem duplicar', () => {
+    const el = mount('loading');
+    const children = [...el.shadowRoot!.querySelector('.btn')!.children];
+    const spinnerIdx = children.findIndex((n) => n.classList.contains('btn__spinner'));
+    const labelIdx = children.findIndex((n) => n.classList.contains('btn__label'));
+    expect(spinnerIdx).toBeGreaterThan(labelIdx);
+    expect(el.shadowRoot!.querySelectorAll('.btn__spinner').length).toBe(1);
+  });
+
+  it('severity tem getter/setter que reflete no atributo', () => {
+    const el = mount();
+    expect((el as any).severity).toBe('');
+    (el as any).severity = 'danger';
+    expect(el.getAttribute('severity')).toBe('danger');
+    (el as any).severity = '';
+    expect(el.hasAttribute('severity')).toBe(false);
   });
 });
