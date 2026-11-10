@@ -59,9 +59,9 @@ export const progressDoc: ComponentDoc = {
 	],
 	events: [
 		{
-			name: "complete",
+			name: "fx-progress-complete",
 			type: "CustomEvent<void>",
-			desc: "Quando chega a 100%.",
+			desc: "Quando chega a 100%. Vue: `@fx-progress-complete` · React: `onfx-progress-complete`.",
 		},
 	],
 };

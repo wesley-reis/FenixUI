@@ -21,7 +21,7 @@ describe('fx-carousel', () => {
     expect(el.shadowRoot!.querySelectorAll('.slide')).toHaveLength(3);
 
     let idx = -1;
-    el.addEventListener('change', (e: Event) => (idx = (e as CustomEvent).detail.index));
+    el.addEventListener('fx-carousel-change', (e: Event) => (idx = (e as CustomEvent).detail.index));
 
     (el.shadowRoot!.querySelector('.arrow.next') as HTMLElement).click();
     expect(el.active).toBe(1);

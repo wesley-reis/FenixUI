@@ -68,7 +68,7 @@ describe('fx-table: caminho rápido ao trocar apenas data', () => {
     // listener se o render não fosse refeito por completo.
     const el = mount(`<fx-table>${COLS}</fx-table>`, rows(3));
     const seen: unknown[] = [];
-    el.addEventListener('row-click', (e) => seen.push((e as CustomEvent).detail));
+    el.addEventListener('fx-table-row-click', (e) => seen.push((e as CustomEvent).detail));
 
     el.shadowRoot!.querySelector<HTMLElement>('tbody tr[data-index="0"]')!.click();
     expect(seen.length).toBe(1);

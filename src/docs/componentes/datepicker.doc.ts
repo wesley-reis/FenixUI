@@ -185,9 +185,9 @@ export const datepickerDoc: ComponentDoc = {
 			desc: "Composed. Detail conforme o modo: `{ value }` · `{ value, start, end }` · `{ values }`; vazio ao limpar.",
 		},
 		{
-			name: "invalid",
-			type: `CustomEvent<{ text }>`,
-			desc: "Emitido no modo free-text quando o texto digitado é rejeitado (formato/data real/min-max).",
+			name: "fx-datepicker-invalid",
+			type: `CustomEvent<{ text: string }>`,
+			desc: "Emitido no modo free-text quando o texto digitado é rejeitado (formato/data real/min-max). Vue: `@fx-datepicker-invalid` · React: `onfx-datepicker-invalid`.",
 		},
 	],
 	slots: [],

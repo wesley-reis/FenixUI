@@ -19,7 +19,7 @@ describe('fx-alert', () => {
     el.setAttribute('dismissible', '');
     document.body.appendChild(el);
     let dismissed = false;
-    el.addEventListener('dismiss', () => (dismissed = true));
+    el.addEventListener('fx-alert-dismiss', () => (dismissed = true));
     (el.shadowRoot!.querySelector('.close') as HTMLButtonElement)?.click();
     expect(dismissed).toBe(true);
     expect(el.hidden).toBe(true);

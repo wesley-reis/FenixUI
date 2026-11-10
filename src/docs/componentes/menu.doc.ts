@@ -24,7 +24,7 @@ export const menuDoc: ComponentDoc = {
 		{ name: "titles", type: "string", default: "''", desc: "Lista separada por vírgulas com os rótulos dos itens." },
 	],
 	events: [
-		{ name: "select", type: "CustomEvent<{ index: number; label: string }>", desc: "Ao clicar em um item do menu." },
+		{ name: "fx-menu-select", type: "CustomEvent<{ index: number; label: string }>", desc: "Ao clicar em um item do menu. Vue: `@fx-menu-select` · React: `onfx-menu-select`." },
 	],
 	slots: [
 		{ name: "item", desc: "Itens do menu. Adicione o atributo `submenu` para criar submenu." },

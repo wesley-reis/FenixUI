@@ -15,7 +15,7 @@ describe('fx-tabs / fx-tab-panel', () => {
     await new Promise((r) => setTimeout(r, 0));
     const tabs = document.querySelector('fx-tabs')!;
     let detail: { value: string } | null = null;
-    tabs.addEventListener('change', (e) => { detail = (e as CustomEvent).detail; });
+    tabs.addEventListener('fx-tabs-change', (e) => { detail = (e as CustomEvent).detail; });
     const btns = tabs.shadowRoot!.querySelectorAll('.tab');
     expect(btns.length).toBe(2);
     (btns[1] as HTMLElement).click();

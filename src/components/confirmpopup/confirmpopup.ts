@@ -1,4 +1,5 @@
 import { FxElement } from '../../core/base';
+import { FX_EVENT } from '../../core/events';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from '../../core/sanitize';
@@ -23,7 +24,7 @@ import { FENIX_ICON_BASE_CSS, isFenixIconName } from '../../icons/base-css';
  *  - `accept`: conteúdo do botão de confirmação (template "accept");
  *  - `reject`: conteúdo do botão de rejeição (template "reject").
  *
- * Eventos (composed): `accept` e `reject` — ambos fecham o popup.
+ * Eventos (composed): `fx-confirmpopup-accept` e `fx-confirmpopup-reject` — ambos fecham o popup.
  */
 export class FxConfirmPopup extends FxElement {
   static override styles = css`
@@ -152,7 +153,7 @@ export class FxConfirmPopup extends FxElement {
     this._cleanup?.();
     this._cleanup = undefined;
 
-    const close = (event: 'accept' | 'reject'): void => {
+    const close = (event: typeof FX_EVENT.confirmAccept | typeof FX_EVENT.confirmReject): void => {
       this.open = false;
       this._cleanup?.();
       this._cleanup = undefined;
@@ -160,18 +161,18 @@ export class FxConfirmPopup extends FxElement {
       this.dispatchEvent(new CustomEvent(event, { bubbles: true, composed: true }));
     };
 
-    this.root.querySelector('.reject')?.addEventListener('click', () => close('reject'));
-    this.root.querySelector('.accept')?.addEventListener('click', () => close('accept'));
+    this.root.querySelector('.reject')?.addEventListener('click', () => close(FX_EVENT.confirmReject));
+    this.root.querySelector('.accept')?.addEventListener('click', () => close(FX_EVENT.confirmAccept));
 
     // ESC fecha (reject) — clique fora fecha (reject)
     const onKey = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') { e.stopPropagation(); close('reject'); }
+      if (e.key === 'Escape') { e.stopPropagation(); close(FX_EVENT.confirmReject); }
     };
     const onPointerDown = (e: MouseEvent): void => {
       const path = e.composedPath();
       const anchor = this._anchor();
       const hitAnchor = anchor ? path.includes(anchor) : false;
-      if (!path.includes(popup) && !hitAnchor) close('reject');
+      if (!path.includes(popup) && !hitAnchor) close(FX_EVENT.confirmReject);
     };
     document.addEventListener('keydown', onKey);
     document.addEventListener('pointerdown', onPointerDown, true);

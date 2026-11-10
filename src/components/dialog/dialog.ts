@@ -1,4 +1,5 @@
 ﻿import { FxElement } from '../../core/base';
+import { FX_EVENT } from '../../core/events';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { isDomAvailable } from '../../core/dom';
@@ -18,7 +19,7 @@ import {
  *
  * Atributos: open, size (sm|md|lg), heading (título).
  * Slots: padrão (conteúdo), footer (botões de ação).
- * Eventos: `open`, `close` (composed).
+ * Eventos: `fx-dialog-open`, `fx-dialog-close` (composed).
  */
 export class FxDialog extends FxElement {
   static override styles = css`
@@ -145,7 +146,7 @@ export class FxDialog extends FxElement {
     const close = (): void => {
       if (!this.open) return;
       this.open = false; // attributeChanged → render(false) → _release()
-      this.dispatchEvent(new CustomEvent('close', { bubbles: true, composed: true }));
+      this.dispatchEvent(new CustomEvent(FX_EVENT.dialogClose, { bubbles: true, composed: true }));
     };
     overlay?.addEventListener('click', (e) => { if (e.target === overlay) close(); });
     closeBtn?.addEventListener('click', close);
@@ -181,7 +182,7 @@ export class FxDialog extends FxElement {
         first?.focus();
       });
     }
-    this.dispatchEvent(new CustomEvent('open', { bubbles: true, composed: true }));
+    this.dispatchEvent(new CustomEvent(FX_EVENT.dialogOpen, { bubbles: true, composed: true }));
   }
 
   private _cleanup?: () => void;

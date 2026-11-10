@@ -31,7 +31,7 @@ import { FenixUI } from '@wrrdev/fenix-ui';  // API de tema/tokens (índice)
 FenixUI.theme('dark');
 ```
 
-> 📦 npm: [`@wrrdev/fenix-ui`](https://www.npmjs.com/package/@wrrdev/fenix-ui) — **v1.7.0**, acesso público.
+> 📦 npm: [`@wrrdev/fenix-ui`](https://www.npmjs.com/package/@wrrdev/fenix-ui) — **v2.0.0**, acesso público.
 > Subpaths disponíveis: `./theme`, `./tokens`, `./jsx`, `./vue`, `./react`, `./button`, `./badge`, `./spinner`, `./select`, `./input`, `./switch`, `./textarea`, `./editor`, `./checkbox`, `./radio`, `./calendar`, `./datepicker`, `./multiselect`, `./table`, `./floatlabel`, `./dialog`, `./toast`, `./tooltip`, `./tabs`, `./progress`, `./skeleton`, `./alert`, `./drawer`, `./dropdown`, `./icon`, `./icons`, `./pagination`, `./autocomplete`, `./knob`, `./orderlist`, `./picklist`, `./auto-import` e o curinga `./components/*`.
 
 
@@ -92,7 +92,7 @@ Carregue o bundle **UMD** único: ele registra todos os componentes — **e a bi
 </script>
 
 <!--
-  🔗 Links diretos para CDN (versão 1.7.0):
+  🔗 Links diretos para CDN (versão 2.0.0):
   • https://cdn.jsdelivr.net/npm/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js
   • https://unpkg.com/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js
 -->
@@ -491,7 +491,7 @@ enxerga o `<input>`/`<textarea>` interno, nunca o atributo escrito no host. Como
 da spec é `autocomplete="on"`, sem tratamento o Chrome autopreenche campos comuns (busca de
 tabela, filtros, diálogos) com o usuário/senha salvos e ainda oferece “Salvar senha?”.
 
-A partir da **v1.7.0** o autofill é tratado em duas camadas:
+A partir da **v2.0.0** o autofill é tratado em duas camadas:
 
 - **preventiva** — `fx-input` e `fx-textarea` **repassam** `autocomplete`, `name` e `id` ao campo
   interno, com default **`off`** (o atributo declarado no host vence). Os campos internos de
@@ -529,8 +529,33 @@ preenchimento (nada de handler extra para sincronizar).
 > (`el.value = 'x'; dispatchEvent(new Event('input'))`) também é desfeita — use `emit-autofill`
 > quando precisar adotar o valor.
 
-Eventos usam o nativo `click` no botão; `input`, `change` e o `change` do select são
-`CustomEvent`s **composed** com `detail: { value }` (atravessam o Shadow DOM).
+Eventos: o `click` do botão é nativo; já os eventos de componente são `CustomEvent`s
+**composed** (atravessam o Shadow DOM). **Os nomes nunca competem entre componentes**:
+
+- **eventos de valor** — `input`, `change`, `valueChange`, `checkedChange`,
+  `valuesChange`, `autofill` — existem **apenas** nos componentes form-associated
+  (`fx-input`, `fx-select`, `fx-checkbox`…) e são o que o `v-model` (Vue),
+  `[(value)]` (Angular) e `onInput` (React) consomem;
+- **todos os demais** são eventspaced no padrão **`fx-<componente>-<ação>`**
+  (ex.: `fx-tabs-change`, `fx-dialog-open`, `fx-table-row-click`).
+
+Como o nome carrega o componente, a mesma string nunca é emitida por dois
+componentes — então um `<fx-input>` dentro de um `<fx-tabs>` **não** dispara mais
+o handler de troca de aba (antes ambos emitiam `change` e o valor digitado
+"vencia"):
+
+```html
+<fx-tabs id="abas"><!-- … --></fx-tabs>
+<script>
+  document.querySelector('#abas')
+    .addEventListener('fx-tabs-change', (e) => console.log(e.detail.value));
+</script>
+```
+
+Sintaxe por stack: Vue `@fx-tabs-change` · React 19 `onfx-tabs-change` ·
+Angular/Svelte/HTML `addEventListener('fx-tabs-change', …)`. A lista completa e a
+fonte única dos nomes ficam em `FX_EVENT`/`FX_COMPONENT_EVENTS`
+(`src/core/events.ts`) e na página **Tipagens** da documentação.
 
 ### Autofill do navegador × two-way binding (input/change)
 

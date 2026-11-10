@@ -42,9 +42,9 @@ export const tabsDoc: ComponentDoc = {
 	],
 	events: [
 		{
-			name: "change",
+			name: "fx-tabs-change",
 			type: `CustomEvent<{ value: string }>`,
-			desc: "Ao trocar de aba.",
+			desc: "Ao trocar de aba. Vue: `@fx-tabs-change` · React: `onfx-tabs-change`.",
 		},
 	],
 };

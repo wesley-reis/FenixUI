@@ -38,8 +38,8 @@ export const confirmpopupDoc: ComponentDoc = {
 		{ name: "position", type: `'auto' | 'top' | 'bottom'`, default: "'auto'", desc: "Lado de exibição. `auto` faz flip para cima quando não há espaço abaixo." },
 	],
 	events: [
-		{ name: "accept", type: "CustomEvent<void>", desc: "Ao confirmar (botão accept ou template com slot accept)." },
-		{ name: "reject", type: "CustomEvent<void>", desc: "Ao rejeitar (botão reject, ESC ou clique fora)." },
+		{ name: "fx-confirmpopup-accept", type: "CustomEvent<void>", desc: "Ao confirmar (botão accept ou template com slot accept). Vue: `@fx-confirmpopup-accept` · React: `onfx-confirmpopup-accept`." },
+		{ name: "fx-confirmpopup-reject", type: "CustomEvent<void>", desc: "Ao rejeitar (botão reject, ESC ou clique fora). Vue: `@fx-confirmpopup-reject` · React: `onfx-confirmpopup-reject`." },
 	],
 	slots: [
 		{ name: "(padrão)", desc: "Corpo da mensagem (equivalente ao template message)." },

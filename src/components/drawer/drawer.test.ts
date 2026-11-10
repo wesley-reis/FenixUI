@@ -29,7 +29,7 @@ describe('<fx-drawer>', () => {
     el.open = true;
     await new Promise((r) => setTimeout(r, 0));
     let closed = false;
-    el.addEventListener('close', () => { closed = true; });
+    el.addEventListener('fx-drawer-close', () => { closed = true; });
     (el.shadowRoot!.querySelector('.overlay') as HTMLElement).click();
     expect(el.open).toBe(false);
     expect(closed).toBe(true);
@@ -47,7 +47,7 @@ describe('<fx-drawer>', () => {
     await new Promise((r) => setTimeout(r, 0));
     expect(el.shadowRoot!.querySelector('.header')!.textContent).toContain('Meu painel');
     let closed = false;
-    el.addEventListener('close', () => { closed = true; });
+    el.addEventListener('fx-drawer-close', () => { closed = true; });
     el.open = true;
     (el.shadowRoot!.querySelector('.close') as HTMLElement).click();
     expect(closed).toBe(true);
@@ -64,7 +64,7 @@ describe('<fx-drawer>', () => {
     expect(el.shadowRoot!.querySelector('.close')).toBeNull();
 
     let closed = false;
-    el.addEventListener('close', () => { closed = true; });
+    el.addEventListener('fx-drawer-close', () => { closed = true; });
     (el.shadowRoot!.querySelector('.overlay') as HTMLElement).click();
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     expect(el.open).toBe(true);
@@ -104,7 +104,7 @@ describe('<fx-drawer>', () => {
   it('fecha por ESC', async () => {
     el.open = true;
     let closed = false;
-    el.addEventListener('close', () => { closed = true; });
+    el.addEventListener('fx-drawer-close', () => { closed = true; });
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     expect(el.open).toBe(false);
     expect(closed).toBe(true);

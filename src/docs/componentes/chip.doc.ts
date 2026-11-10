@@ -33,8 +33,8 @@ export const chipDoc: ComponentDoc = {
 		{ name: "disabled", type: "boolean", default: "false", desc: "Desabilita o chip." },
 	],
 	events: [
-		{ name: "remove", type: "CustomEvent<void>", desc: "Ao clicar no ×." },
-		{ name: "chip-click", type: "CustomEvent<void>", desc: "Ao clicar no chip (com selectable)." },
+		{ name: "fx-chip-remove", type: "CustomEvent<void>", desc: "Ao clicar no ×. Vue: `@fx-chip-remove` · React: `onfx-chip-remove`." },
+		{ name: "fx-chip-click", type: "CustomEvent<void>", desc: "Ao clicar no chip (com selectable). Vue: `@fx-chip-click` · React: `onfx-chip-click`." },
 	],
 	slots: [{ name: "(padrão)", desc: "Texto/conteúdo do chip." }],
 };

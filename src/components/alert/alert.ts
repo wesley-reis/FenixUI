@@ -1,4 +1,5 @@
 ﻿import { FxElement } from '../../core/base';
+import { FX_EVENT } from '../../core/events';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from '../../core/sanitize';
@@ -9,7 +10,7 @@ import { FENIX_ICON_BASE_CSS, isFenixIconName } from '../../icons/base-css';
  *
  * Atributos: variant (info|success|warning|danger, padrão info), title, dismissible,
  * icon (nome da Fenix Icons, ex.: icon="notification" — substitui o glifo padrão).
- * Slot padrão: conteúdo da mensagem. Evento `dismiss`.
+ * Slot padrão: conteúdo da mensagem. Evento `fx-alert-dismiss`.
  */
 export class FxAlert extends FxElement {
   static override styles = css`
@@ -83,7 +84,7 @@ export class FxAlert extends FxElement {
 
     this.root.querySelector('.close')?.addEventListener('click', () => {
       this.hidden = true;
-      this.dispatchEvent(new CustomEvent('dismiss', { bubbles: true, composed: true }));
+      this.dispatchEvent(new CustomEvent(FX_EVENT.alertDismiss, { bubbles: true, composed: true }));
     });
   }
 }

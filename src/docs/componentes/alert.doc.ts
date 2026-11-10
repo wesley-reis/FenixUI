@@ -59,9 +59,9 @@ export const alertDoc: ComponentDoc = {
 	],
 	events: [
 		{
-			name: "dismiss",
+			name: "fx-alert-dismiss",
 			type: "CustomEvent<void>",
-			desc: "Ao fechar o alerta.",
+			desc: "Ao fechar o alerta. Vue: `@fx-alert-dismiss` · React: `onfx-alert-dismiss`.",
 		},
 	],
 };

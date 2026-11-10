@@ -128,24 +128,24 @@ export const picklistDoc: ComponentDoc = {
 	],
 	events: [
 		{
-			name: "move-to-target",
+			name: "fx-picklist-move-to-target",
 			type: "CustomEvent<{ items: PickListItem[] }>",
-			desc: "Ao mover itens para destino.",
+			desc: "Ao mover itens para destino. Vue: `@fx-picklist-move-to-target` · React: `onfx-picklist-move-to-target`.",
 		},
 		{
-			name: "move-to-source",
+			name: "fx-picklist-move-to-source",
 			type: "CustomEvent<{ items: PickListItem[] }>",
-			desc: "Ao mover itens para origem.",
+			desc: "Ao mover itens para origem. Vue: `@fx-picklist-move-to-source` · React: `onfx-picklist-move-to-source`.",
 		},
 		{
-			name: "selection-change-source",
+			name: "fx-picklist-selection-change-source",
 			type: "CustomEvent<{ selection: PickListItem[] }>",
-			desc: "Ao mudar seleção na origem.",
+			desc: "Ao mudar seleção na origem. Vue: `@fx-picklist-selection-change-source` · React: `onfx-picklist-selection-change-source`.",
 		},
 		{
-			name: "selection-change-target",
+			name: "fx-picklist-selection-change-target",
 			type: "CustomEvent<{ selection: PickListItem[] }>",
-			desc: "Ao mudar seleção no destino.",
+			desc: "Ao mudar seleção no destino. Vue: `@fx-picklist-selection-change-target` · React: `onfx-picklist-selection-change-target`.",
 		},
 	],
 };

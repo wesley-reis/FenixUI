@@ -1,4 +1,5 @@
 ﻿import { FxElement } from '../../core/base';
+import { FX_EVENT } from '../../core/events';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 
@@ -14,7 +15,7 @@ import { defineElement } from '../../core/define';
  * Navegação : clique no cabeçalho (mês) → grade de meses;
  * clique no ano → grade de anos; ‹ › navegam conforme a visualização.
  *
- * Evento: `change` (composed):
+ * Evento: `fx-calendar-change` (composed):
  * - simples:  detail { value }
  * - range:    detail { start, end }
  */
@@ -329,7 +330,7 @@ export class FxCalendar extends FxElement {
 			this.setAttribute("start", detail.start);
 			this.setAttribute("end", detail.end);
 			this.dispatchEvent(
-				new CustomEvent("change", {
+				new CustomEvent(FX_EVENT.calendarChange, {
 					bubbles: true,
 					composed: true,
 					detail,
@@ -338,7 +339,7 @@ export class FxCalendar extends FxElement {
 		} else if (this.mode === "multiple") {
 			const values = this.values;
 			this.dispatchEvent(
-				new CustomEvent("change", {
+				new CustomEvent(FX_EVENT.calendarChange, {
 					bubbles: true,
 					composed: true,
 					detail: { values },
@@ -347,7 +348,7 @@ export class FxCalendar extends FxElement {
 		} else {
 			const value = this.getAttr("value");
 			this.dispatchEvent(
-				new CustomEvent("change", {
+				new CustomEvent(FX_EVENT.calendarChange, {
 					bubbles: true,
 					composed: true,
 					detail: { value },

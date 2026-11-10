@@ -73,9 +73,9 @@ export const calendarDoc: ComponentDoc = {
 	],
 	events: [
 		{
-			name: "change",
+			name: "fx-calendar-change",
 			type: `CustomEvent`,
-			desc: "Composed. Detail conforme o modo: `{ value }` · `{ value, start, end }` · `{ values: string[] }`.",
+			desc: "Composed. Detail conforme o modo: `{ value }` · `{ value, start, end }` · `{ values: string[] }`. Vue: `@fx-calendar-change` · React: `onfx-calendar-change`.",
 		},
 	],
 	slots: [],

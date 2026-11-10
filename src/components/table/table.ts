@@ -1,4 +1,5 @@
 import { FxElement } from '../../core/base';
+import { FX_EVENT } from '../../core/events';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { pageRange } from '../../core/page-range';
@@ -55,7 +56,7 @@ import "../select";
  * striped, hover, empty-message, lazy, total, loading, loading-message,
  * sort-field, sort-order, rounded (none|sm|md|lg, padrão md; `radius` é alias),
  * no-borders-x (remove apenas as bordas laterais, mantendo topo e base).
- * Eventos: page-change, sort-change, row-click, filter-change (todos composed).
+ * Eventos: fx-table-page-change, fx-table-sort-change, fx-table-row-click, fx-table-filter-change (todos composed).
  */
 export class FxTable extends FxElement {
 	static override styles = css`
@@ -853,7 +854,7 @@ export class FxTable extends FxElement {
 					}
 					this.render();
 					this.dispatchEvent(
-						new CustomEvent("sort-change", {
+						new CustomEvent(FX_EVENT.tableSortChange, {
 							bubbles: true,
 							composed: true,
 							detail: {
@@ -876,7 +877,7 @@ export class FxTable extends FxElement {
 				this.page = 0;
 				this.render();
 				this.dispatchEvent(
-					new CustomEvent("filter-change", {
+					new CustomEvent(FX_EVENT.tableFilterChange, {
 						bubbles: true,
 						composed: true,
 						detail: { field, value, lazy: this.lazy },
@@ -919,7 +920,7 @@ export class FxTable extends FxElement {
 										: Number(pg);
 					this.render();
 					this.dispatchEvent(
-						new CustomEvent("page-change", {
+						new CustomEvent(FX_EVENT.tablePageChange, {
 							bubbles: true,
 							composed: true,
 							detail: {
@@ -961,7 +962,7 @@ export class FxTable extends FxElement {
 			.forEach((tr) => {
 				tr.addEventListener("click", () => {
 					this.dispatchEvent(
-						new CustomEvent("row-click", {
+						new CustomEvent(FX_EVENT.tableRowClick, {
 							bubbles: true,
 							composed: true,
 							detail: {

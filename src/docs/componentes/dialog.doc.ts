@@ -48,11 +48,11 @@ export const dialogDoc: ComponentDoc = {
 		},
 	],
 	events: [
-		{ name: "open", type: "CustomEvent<void>", desc: "Ao abrir." },
+		{ name: "fx-dialog-open", type: "CustomEvent<void>", desc: "Ao abrir. Vue: `@fx-dialog-open` · React: `onfx-dialog-open`." },
 		{
-			name: "close",
+			name: "fx-dialog-close",
 			type: "CustomEvent<void>",
-			desc: "Ao fechar (ESC, overlay ou botão).",
+			desc: "Ao fechar (ESC, overlay ou botão). Vue: `@fx-dialog-close` · React: `onfx-dialog-close`.",
 		},
 	],
 	slots: [

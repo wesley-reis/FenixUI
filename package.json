@@ -1,6 +1,6 @@
 {
   "name": "@wrrdev/fenix-ui",
-  "version": "1.7.0",
+  "version": "2.0.0",
   "description": "FenixUI — design system nativo em Web Components (Shadow DOM + Design Tokens), agnóstico de framework (Vue, React, Angular, Svelte, HTML puro) e com tree-shaking por componente. Framework-agnostic web components UI library.",
   "type": "module",
   "license": "ISC",

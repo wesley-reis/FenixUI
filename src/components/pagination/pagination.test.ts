@@ -11,7 +11,7 @@ describe('fx-pagination', () => {
     document.body.appendChild(el);
     await Promise.resolve();
     let detail: any = null;
-    el.addEventListener('page-change', (e) => { detail = (e as CustomEvent).detail; });
+    el.addEventListener('fx-pagination-page-change', (e) => { detail = (e as CustomEvent).detail; });
     const next = el.shadowRoot!.querySelector('[part="next"]') as HTMLButtonElement;
     next?.click();
     await Promise.resolve();
@@ -70,7 +70,7 @@ describe('fx-pagination', () => {
     el.setAttribute('rows', '10');
     document.body.appendChild(el);
     let detail: any = null;
-    el.addEventListener('page-change', (e) => { detail = (e as CustomEvent).detail; });
+    el.addEventListener('fx-pagination-page-change', (e) => { detail = (e as CustomEvent).detail; });
     (el.shadowRoot!.querySelector('[part="last"]') as HTMLButtonElement).click();
     await Promise.resolve();
     expect(detail?.page).toBe(25);
@@ -98,7 +98,7 @@ describe('fx-pagination', () => {
     expect(el.shadowRoot!.querySelector('select')).toBeNull();
 
     let detail: any = null;
-    el.addEventListener('page-change', (e) => { detail = (e as CustomEvent).detail; });
+    el.addEventListener('fx-pagination-page-change', (e) => { detail = (e as CustomEvent).detail; });
 
     // Escolhe a opção "20" no dropdown customizado.
     const opt = sel.shadowRoot!.querySelector('.opt[data-value="20"]') as HTMLElement;

@@ -1,4 +1,5 @@
 ﻿import { FxElement } from '../../core/base';
+import { FX_EVENT } from '../../core/events';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from '../../core/sanitize';
@@ -8,7 +9,7 @@ import { esc } from '../../core/sanitize';
  *
  * Atributos: label (texto do trigger), position (bottom-left padrão | bottom-right).
  * Itens: <fx-dropdown-item value="x">Texto</fx-dropdown-item>
- * Evento: `select` (composed, detail: { value }).
+ * Evento: `fx-dropdown-select` (composed, detail: { value }).
  */
 export class FxDropdown extends FxElement {
   static override styles = css`
@@ -103,7 +104,7 @@ export class FxDropdown extends FxElement {
       );
       if (!item) return;
       this.open = false;
-      this.dispatchEvent(new CustomEvent('select', {
+      this.dispatchEvent(new CustomEvent(FX_EVENT.dropdownSelect, {
         bubbles: true, composed: true,
         detail: { value: item.getAttribute('value') ?? '' },
       }));

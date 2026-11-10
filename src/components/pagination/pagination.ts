@@ -1,4 +1,5 @@
 ﻿import { FxElement } from '../../core/base';
+import { FX_EVENT } from '../../core/events';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { pageRange } from '../../core/page-range';
@@ -12,7 +13,7 @@ import '../select';
  *
  * Atributos: page (atual), total (itens), rows (por página), rows-options,
  * position (left|center|right).
- * Evento: `page-change` (composed, detail: { page, rows }).
+ * Evento: `fx-pagination-page-change` (composed, detail: { page, rows }).
  *
  * Com muitas páginas o pager usa janela deslizante com elipses
  * (1 … 499 [500] 501 … 1000) em vez de um botão por página.
@@ -185,7 +186,7 @@ export class FxPagination extends FxElement {
   }
 
   private emit(): void {
-    this.dispatchEvent(new CustomEvent('page-change', {
+    this.dispatchEvent(new CustomEvent(FX_EVENT.paginationPageChange, {
       bubbles: true, composed: true,
       detail: { page: this.page, rows: this.rows },
     }));

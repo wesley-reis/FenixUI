@@ -16,7 +16,7 @@ describe('fx-confirmpopup', () => {
     document.body.appendChild(el);
 
     let accepted = false;
-    el.addEventListener('accept', () => (accepted = true));
+    el.addEventListener('fx-confirmpopup-accept', () => (accepted = true));
 
     el.setAttribute('open', '');
     const popup = el.shadowRoot!.querySelector('.popup') as HTMLElement;
@@ -39,7 +39,7 @@ describe('fx-confirmpopup', () => {
     document.body.appendChild(el);
 
     let rejected = false;
-    el.addEventListener('reject', () => (rejected = true));
+    el.addEventListener('fx-confirmpopup-reject', () => (rejected = true));
 
     el.setAttribute('open', '');
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));

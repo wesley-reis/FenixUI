@@ -1,4 +1,5 @@
 import { FxElement } from '../../core/base';
+import { FX_EVENT } from '../../core/events';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from '../../core/sanitize';
@@ -14,7 +15,7 @@ import { esc } from '../../core/sanitize';
  *   </fx-tabs>
  *   <fx-tab-panel tab="a">…</fx-tab-panel>
  *   <fx-tab-panel tab="b">…</fx-tab-panel>
- * Evento: `change` (composed, detail: { value }).
+ * Evento: `fx-tabs-change` (composed, detail: { value }).
  */
 export class FxTabs extends FxElement {
   static override styles = css`
@@ -160,7 +161,7 @@ export class FxTabs extends FxElement {
         if (btn.hasAttribute('data-disabled')) return;
         this.value = btn.dataset.tab ?? '';
         this.dispatchEvent(
-          new CustomEvent('change', { bubbles: true, composed: true, detail: { value: this.value } }),
+          new CustomEvent(FX_EVENT.tabsChange, { bubbles: true, composed: true, detail: { value: this.value } }),
         );
       });
     });

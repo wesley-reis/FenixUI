@@ -36,7 +36,7 @@ describe('fx-table', () => {
   it('ordena ao clicar no header sortable', () => {
     const el = mount(`<fx-table>${COLS}</fx-table>`, ROWS) as any;
     let detail: unknown;
-    el.addEventListener('sort-change', (e: Event) => { detail = (e as CustomEvent).detail; });
+    el.addEventListener('fx-table-sort-change', (e: Event) => { detail = (e as CustomEvent).detail; });
     const th = el.shadowRoot.querySelector('th[data-field="nome"]')!;
     th.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     expect((detail as any)?.direction).toBe('asc');
@@ -60,7 +60,7 @@ describe('fx-table', () => {
     const root = el.shadowRoot!;
     expect(root.querySelectorAll('tbody tr').length).toBe(2);
     let detail: unknown;
-    el.addEventListener('page-change', (e: Event) => { detail = (e as CustomEvent).detail; });
+    el.addEventListener('fx-table-page-change', (e: Event) => { detail = (e as CustomEvent).detail; });
     const next = root.querySelector('[data-pg="next"]') as HTMLButtonElement;
     next.click();
     expect((detail as any)?.page).toBe(2);
@@ -94,7 +94,7 @@ describe('fx-table', () => {
   it('emite row-click com o dado da linha', () => {
     const el = mount(`<fx-table>${COLS}</fx-table>`, ROWS) as any;
     let detail: unknown;
-    el.addEventListener('row-click', (e: Event) => { detail = (e as CustomEvent).detail; });
+    el.addEventListener('fx-table-row-click', (e: Event) => { detail = (e as CustomEvent).detail; });
     el.shadowRoot!.querySelector('tbody tr')!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     expect((detail as any)?.row?.nome).toBe('Ana');
   });
@@ -442,7 +442,7 @@ describe('fx-table — modo lazy (busca no servidor)', () => {
   it('emite page-change com flag lazy=true para o consumidor re-buscar', () => {
     const el = mount(`<fx-table lazy total="30" pagination rows="2">${COLS}</fx-table>`, ROWS) as any;
     let detail: unknown;
-    el.addEventListener('page-change', (e: Event) => { detail = (e as CustomEvent).detail; });
+    el.addEventListener('fx-table-page-change', (e: Event) => { detail = (e as CustomEvent).detail; });
     el.shadowRoot!.querySelector('[data-pg="next"]')!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     expect((detail as any)?.lazy).toBe(true);
     expect((detail as any)?.page).toBe(2);
@@ -451,7 +451,7 @@ describe('fx-table — modo lazy (busca no servidor)', () => {
   it('modo local (sem lazy) continua paginando e flag lazy=false', () => {
     const el = mount(`<fx-table pagination rows="2">${COLS}</fx-table>`, ROWS) as any;
     let detail: unknown;
-    el.addEventListener('page-change', (e: Event) => { detail = (e as CustomEvent).detail; });
+    el.addEventListener('fx-table-page-change', (e: Event) => { detail = (e as CustomEvent).detail; });
     el.shadowRoot!.querySelector('[data-pg="next"]')!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     expect((detail as any)?.lazy).toBe(false);
   });
@@ -465,7 +465,7 @@ describe('fx-table — modo lazy (busca no servidor)', () => {
   it('emite filter-change ao filtrar por coluna (composed, com flag lazy)', () => {
     const el = mount(`<fx-table>${COLS}</fx-table>`, ROWS) as any;
     let detail: unknown;
-    el.addEventListener('filter-change', (e: Event) => { detail = (e as CustomEvent).detail; });
+    el.addEventListener('fx-table-filter-change', (e: Event) => { detail = (e as CustomEvent).detail; });
     const inp = el.shadowRoot!.querySelector('.filter[data-field="nome"]') as HTMLInputElement;
     inp.value = 'ana';
     inp.dispatchEvent(new Event('input', { bubbles: true }));

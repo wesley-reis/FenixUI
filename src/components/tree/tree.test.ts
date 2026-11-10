@@ -39,7 +39,7 @@ describe('fx-tree', () => {
     el.setAttribute('data', DATA);
     document.body.appendChild(el);
     let node: unknown = null;
-    el.addEventListener('select', (e: Event) => (node = (e as CustomEvent).detail.node));
+    el.addEventListener('fx-tree-select', (e: Event) => (node = (e as CustomEvent).detail.node));
     const row = el.shadowRoot!.querySelector('.row[data-path="0"]') as HTMLElement;
     row.click();
     expect((node as { label: string }).label).toBe('Documentos');

@@ -18,7 +18,7 @@ describe('fx-menu', () => {
     expect(items[0].textContent).toContain('Inicio');
 
     let val: unknown = null;
-    el.addEventListener('select', (e: Event) => (val = (e as CustomEvent).detail));
+    el.addEventListener('fx-menu-select', (e: Event) => (val = (e as CustomEvent).detail));
     (items[1] as HTMLElement).click();
     expect((val as { index: number }).index).toBe(1);
     el.remove();

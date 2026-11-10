@@ -52,9 +52,9 @@ export const dropdownDoc: ComponentDoc = {
 	],
 	events: [
 		{
-			name: "select",
+			name: "fx-dropdown-select",
 			type: `CustomEvent<{ value: string }>`,
-			desc: "Ao escolher um item.",
+			desc: "Ao escolher um item. Vue: `@fx-dropdown-select` · React: `onfx-dropdown-select`.",
 		},
 	],
 };

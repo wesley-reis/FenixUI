@@ -1,4 +1,5 @@
 ﻿import { FxElement } from '../../core/base';
+import { FX_EVENT } from '../../core/events';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from '../../core/sanitize';
@@ -8,7 +9,7 @@ import { esc } from '../../core/sanitize';
  *
  * Atributos: value (0-100), indeterminate, variant (primary|success|warning|danger),
  * label (mostra %), size (sm|md|lg).
- * Evento: `complete` quando chega a 100.
+ * Evento: `fx-progress-complete` quando chega a 100.
  */
 export class FxProgress extends FxElement {
   static override styles = css`
@@ -99,7 +100,7 @@ export class FxProgress extends FxElement {
 
     if (!this._done && !this.hasAttr('indeterminate') && pct >= 100) {
       this._done = true;
-      this.dispatchEvent(new CustomEvent('complete', { bubbles: true, composed: true }));
+      this.dispatchEvent(new CustomEvent(FX_EVENT.progressComplete, { bubbles: true, composed: true }));
     }
     if (pct < 100) this._done = false;
   }

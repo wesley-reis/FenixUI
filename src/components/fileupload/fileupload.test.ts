@@ -26,7 +26,7 @@ describe('fx-fileupload', () => {
     const el = document.createElement('fx-fileupload');
     document.body.appendChild(el);
     let files: File[] = [];
-    el.addEventListener('select', (e: Event) => (files = (e as CustomEvent).detail.files));
+    el.addEventListener('fx-fileupload-select', (e: Event) => (files = (e as CustomEvent).detail.files));
 
     setPickerFiles(el, [new File(['hello'], 'relatorio.pdf', { type: 'application/pdf' })]);
 
@@ -46,7 +46,7 @@ describe('fx-fileupload', () => {
     setPickerFiles(el, [new File(['x'], 'a.txt')]);
 
     let completed = false;
-    el.addEventListener('complete', () => (completed = true));
+    el.addEventListener('fx-fileupload-complete', () => (completed = true));
 
     el.progress = 60;
     expect((el.shadowRoot!.querySelector('.pct') as HTMLElement).textContent).toBe('60%');
@@ -69,7 +69,7 @@ describe('fx-fileupload', () => {
     // remove arquivo
     setPickerFiles(el2, [new File(['x'], 'a.txt')]);
     let removedFile: File | undefined;
-    el2.addEventListener('remove', (e: Event) => (removedFile = (e as CustomEvent).detail.file));
+    el2.addEventListener('fx-fileupload-remove', (e: Event) => (removedFile = (e as CustomEvent).detail.file));
     (el2.shadowRoot!.querySelector('.remove') as HTMLButtonElement).click();
     expect(removedFile?.name).toBe('a.txt');
     expect(el2.shadowRoot!.querySelector('.file')).toBeNull();

@@ -1,4 +1,5 @@
 import { FxElement } from '../../core/base';
+import { FX_EVENT } from '../../core/events';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from '../../core/sanitize';
@@ -9,7 +10,7 @@ import { esc } from '../../core/sanitize';
  * Atributos: orientation (horizontal|vertical), size (sm|md|lg),
  * dense (reduce el alto), titles (separado por `,` para navegación).
  * Slots `item`: cada ítem de menú con [slot="item"].
- * Evento (composed): `select` (detail: { index, label }).
+ * Evento (composed): `fx-menu-select` (detail: { index, label }).
  */
 export class FxMenu extends FxElement {
   static override styles = css`
@@ -124,7 +125,7 @@ export class FxMenu extends FxElement {
           return;
         }
         this._setActive(item);
-        this.dispatchEvent(new CustomEvent('select', {
+        this.dispatchEvent(new CustomEvent(FX_EVENT.menuSelect, {
           bubbles: true, composed: true,
           detail: { index: i, label: item.textContent?.trim() ?? '' },
         }));

@@ -111,9 +111,9 @@ export const autocompleteDoc: ComponentDoc = {
 	],
 	events: [
 		{
-			name: "select",
+			name: "fx-autocomplete-select",
 			type: `CustomEvent<{ value: string }>`,
-			desc: "Ao escolher uma sugestão.",
+			desc: "Ao escolher uma sugestão. Vue: `@fx-autocomplete-select` · React: `onfx-autocomplete-select`.",
 		},
 		{
 			name: "input",

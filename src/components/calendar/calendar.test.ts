@@ -26,7 +26,7 @@ describe('fx-calendar', () => {
   it('seleção simples reflete value e emite change', () => {
     const el = mount('<fx-calendar></fx-calendar>') as any;
     let detail: any;
-    el.addEventListener('change', (e: Event) => { detail = (e as CustomEvent).detail; });
+    el.addEventListener('fx-calendar-change', (e: Event) => { detail = (e as CustomEvent).detail; });
     day(el, 15)!.click();
     expect(detail.value).toMatch(/-\d{2}$/);
     expect(el.value.endsWith('15')).toBe(true);
@@ -36,7 +36,7 @@ describe('fx-calendar', () => {
   it('range: dois cliques montam período com swap automático', () => {
     const el = mount('<fx-calendar range></fx-calendar>') as any;
     let detail: any;
-    el.addEventListener('change', (e: Event) => { detail = (e as CustomEvent).detail; });
+    el.addEventListener('fx-calendar-change', (e: Event) => { detail = (e as CustomEvent).detail; });
     day(el, 20)!.click();
     day(el, 10)!.click(); // anterior → swap
     expect(detail.start.endsWith('10')).toBe(true);

@@ -1,4 +1,5 @@
 import { FxElement } from '../../core/base';
+import { FX_EVENT } from '../../core/events';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from '../../core/sanitize';
@@ -15,10 +16,10 @@ export interface PickListItem {
  *
  * Atributos: source, target, source-key, target-key, filter, filter-by,
  * filter-placeholder, dragdrop, striped, selection-mode, source-label, target-label.
- * Evento: `move-to-target` (composed, detail: { items }).
- * Evento: `move-to-source` (composed, detail: { items }).
- * Evento: `selection-change-source` (composed, detail: { selection }).
- * Evento: `selection-change-target` (composed, detail: { selection }).
+ * Evento: `fx-picklist-move-to-target` (composed, detail: { items }).
+ * Evento: `fx-picklist-move-to-source` (composed, detail: { items }).
+ * Evento: `fx-picklist-selection-change-source` (composed, detail: { selection }).
+ * Evento: `fx-picklist-selection-change-target` (composed, detail: { selection }).
  */
 export class FxPickList extends FxElement {
   static override styles = css`
@@ -549,7 +550,7 @@ export class FxPickList extends FxElement {
   }
 
   private _emitMoveToTarget(): void {
-    this.dispatchEvent(new CustomEvent('move-to-target', {
+    this.dispatchEvent(new CustomEvent(FX_EVENT.picklistMoveToTarget, {
       bubbles: true,
       composed: true,
       detail: { items: [...this._sourceSelection], source: [...this._source], target: [...this._target] },
@@ -557,7 +558,7 @@ export class FxPickList extends FxElement {
   }
 
   private _emitMoveToSource(): void {
-    this.dispatchEvent(new CustomEvent('move-to-source', {
+    this.dispatchEvent(new CustomEvent(FX_EVENT.picklistMoveToSource, {
       bubbles: true,
       composed: true,
       detail: { items: [...this._targetSelection], source: [...this._source], target: [...this._target] },
@@ -565,7 +566,7 @@ export class FxPickList extends FxElement {
   }
 
   private _emitSelectionChangeSource(): void {
-    this.dispatchEvent(new CustomEvent('selection-change-source', {
+    this.dispatchEvent(new CustomEvent(FX_EVENT.picklistSelectionChangeSource, {
       bubbles: true,
       composed: true,
       detail: { selection: [...this._sourceSelection] },
@@ -573,7 +574,7 @@ export class FxPickList extends FxElement {
   }
 
   private _emitSelectionChangeTarget(): void {
-    this.dispatchEvent(new CustomEvent('selection-change-target', {
+    this.dispatchEvent(new CustomEvent(FX_EVENT.picklistSelectionChangeTarget, {
       bubbles: true,
       composed: true,
       detail: { selection: [...this._targetSelection] },

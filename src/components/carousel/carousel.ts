@@ -1,4 +1,5 @@
 import { FxElement } from '../../core/base';
+import { FX_EVENT } from '../../core/events';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { isDomAvailable } from '../../core/dom';
@@ -9,7 +10,7 @@ import { isDomAvailable } from '../../core/dom';
  * Atributos: active (índice do slide), autoplay (ms), loop, show-arrows,
  * show-indicators.
  * Slot `slide`: cada elemento com [slot="slide"] vira um slide.
- * Eventos (composed): `change` (detail: { index }).
+ * Eventos (composed): `fx-carousel-change` (detail: { index }).
  */
 export class FxCarousel extends FxElement {
   static override styles = css`
@@ -158,7 +159,7 @@ export class FxCarousel extends FxElement {
       d.classList.toggle('on', Number(d.dataset.i) === target);
     });
     if (emit) {
-      this.dispatchEvent(new CustomEvent('change', { bubbles: true, composed: true, detail: { index: target } }));
+      this.dispatchEvent(new CustomEvent(FX_EVENT.carouselChange, { bubbles: true, composed: true, detail: { index: target } }));
     }
   }
 

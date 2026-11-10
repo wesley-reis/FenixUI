@@ -1,4 +1,5 @@
 ﻿import { FxFormElement } from '../../core/form-element';
+import { FX_EVENT } from '../../core/events';
 import { createUserEditGuard } from '../../core/user-edit';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
@@ -12,7 +13,7 @@ import { esc } from '../../core/sanitize';
  *
  * Atributos: value, name, size, placeholder, source (JSON array de strings),
  * disabled, min-chars (padrão 1), autofocus, emit-autofill.
- * Eventos: `select`, `input` e `valueChange` (composed, detail: { value }) —
+ * Eventos: `fx-autocomplete-select`, `input` e `valueChange` (composed, detail: { value }) —
  * `input` é o que o `v-model` do Vue usa; `valueChange` é o evento do two-way
  * binding do Angular, que precisa ler `$event.detail.value`.
  *
@@ -197,7 +198,7 @@ export class FxAutocomplete extends FxFormElement {
           this.value = field.value;
           this.toggleAttr('open', false);
           this.emitValueEvents();
-          this.dispatchEvent(new CustomEvent('select', {
+          this.dispatchEvent(new CustomEvent(FX_EVENT.autocompleteSelect, {
             bubbles: true, composed: true, detail: { value: this.value },
           }));
         });
