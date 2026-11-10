@@ -20,6 +20,7 @@
  */
 
 import { FxElement } from './base';
+import { FX_EVENT } from './events';
 import { isSemanticAutocompleteToken } from './user-edit';
 import type { UserEditGuard } from './user-edit';
 
@@ -152,7 +153,7 @@ export abstract class FxFormElement extends FxElement {
     this.updateFormValue();
 
     const payload = { value, ...detail };
-    for (const type of ['input', 'valueChange'] as const) {
+    for (const type of [FX_EVENT.input, FX_EVENT.valueChange] as const) {
       this.dispatchEvent(
         new CustomEvent(type, { bubbles: true, composed: true, detail: payload }),
       );
@@ -219,7 +220,7 @@ export abstract class FxFormElement extends FxElement {
    */
   protected dispatchAutofill(value: string): void {
     this.dispatchEvent(
-      new CustomEvent('autofill', {
+      new CustomEvent(FX_EVENT.autofill, {
         bubbles: true,
         composed: true,
         detail: { value },

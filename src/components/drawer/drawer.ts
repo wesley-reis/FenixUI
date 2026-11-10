@@ -1,4 +1,5 @@
 import { FxElement } from '../../core/base';
+import { FX_EVENT } from '../../core/events';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { isDomAvailable } from '../../core/dom';
@@ -22,7 +23,7 @@ import {
  *  - open: exibe o drawer;
  *  - dismissible: permite fechar pelo usuário (✕, overlay e ESC). Padrão: true.
  * Conteúdo: livre, via slot.
- * Eventos: `open` e `close` (composed). Fecha por ESC ou clique no overlay.
+ * Eventos: `fx-drawer-open` e `fx-drawer-close` (composed). Fecha por ESC ou clique no overlay.
  */
 export class FxDrawer extends FxElement {
 	static override styles = css`
@@ -216,6 +217,7 @@ export class FxDrawer extends FxElement {
 				this._locked = true;
 			}
 			if (!wasOpen) {
+				this.dispatchEvent(new CustomEvent(FX_EVENT.drawerOpen, { bubbles: true, composed: true }));
 				requestAnimationFrame(() => {
 					// Pode disparar após o teardown do ambiente (testes): `document` some.
 					if (!isDomAvailable() || !this.open) return;
@@ -273,7 +275,7 @@ export class FxDrawer extends FxElement {
 		if (!this.dismissible) return;
 		this.open = false; // render(false) → _release()
 		this.dispatchEvent(
-			new CustomEvent("close", { bubbles: true, composed: true }),
+			new CustomEvent(FX_EVENT.drawerClose, { bubbles: true, composed: true }),
 		);
 	};
 

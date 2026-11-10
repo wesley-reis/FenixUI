@@ -1,4 +1,5 @@
 import { FxFormElement } from '../../core/form-element';
+import { FX_EVENT } from '../../core/events';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from '../../core/sanitize';
@@ -22,7 +23,7 @@ import { FENIX_ICON_BASE_CSS, fenixIconHtml } from '../../icons/base-css';
  *  - progress (0-100 — o consumidor atualiza durante o upload real);
  *  - value (nome(s) do(s) arquivo(s) carregado(s), somente leitura/espelho).
  *
- * Eventos (composed): `select` (detail: { files: File[] }), `remove`, `complete`.
+ * Eventos (composed): `fx-fileupload-select` (detail: { files: File[] }), `fx-fileupload-remove`, `fx-fileupload-complete`.
  */
 export class FxFileUpload extends FxFormElement {
   static override styles = css`
@@ -275,7 +276,7 @@ export class FxFileUpload extends FxFormElement {
 
     if (!this._done && showProgress && pct >= 100 && this._files.length) {
       this._done = true;
-      this.dispatchEvent(new CustomEvent('complete', { bubbles: true, composed: true }));
+      this.dispatchEvent(new CustomEvent(FX_EVENT.fileuploadComplete, { bubbles: true, composed: true }));
     }
     if (pct < 100) this._done = false;
   }
@@ -318,7 +319,7 @@ export class FxFileUpload extends FxFormElement {
     const picker = this._picker();
     if (picker) picker.value = '';
     this.dispatchEvent(
-      new CustomEvent('select', { bubbles: true, composed: true, detail: { files: picked } }),
+      new CustomEvent(FX_EVENT.fileuploadSelect, { bubbles: true, composed: true, detail: { files: picked } }),
     );
   }
 
@@ -356,7 +357,7 @@ export class FxFileUpload extends FxFormElement {
         this.progress = 0;
         this._syncFilesArea();
         this.dispatchEvent(
-          new CustomEvent('remove', { bubbles: true, composed: true, detail: { file: removed } }),
+          new CustomEvent(FX_EVENT.fileuploadRemove, { bubbles: true, composed: true, detail: { file: removed } }),
         );
       }),
     );

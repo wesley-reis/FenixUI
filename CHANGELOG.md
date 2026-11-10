@@ -4,6 +4,83 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) �
 Versionamento [SemVer](https://semver.org/lang/pt-BR/).
 Histórico anterior à 1.2.0: [releases do GitHub](https://github.com/wesley-reis/FenixUI/releases).
 
+## [2.0.0] — 2026-11-10
+
+### Alterado (BREAKING)
+
+- **Eventos: nomes nunca mais competem entre componentes.** Eventos de Web
+  Component são `CustomEvent` `composed`/`bubbles` e sobem a árvore até qualquer
+  ancestral. Como vários componentes usavam nomes genéricos (`change`, `select`,
+  `open`, `complete`…), um evento disparado num filho era capturado pelo listener
+  de um componente pai — o caso clássico do `<fx-input>` (digitação → `change`)
+  dentro de um `<fx-tabs>` (troca de aba → `change`): o handler da aba recebia o
+  texto digitado no input. Agora:
+  - **eventos de valor** (`input`, `change`, `valueChange`, `checkedChange`,
+    `valuesChange`, `autofill`) existem **só** nos componentes form-associated e
+    seguem alimentando o two-way binding (`v-model`, `[(value)]`, `onInput`);
+  - **todos os demais** são namespaced em `fx-<componente>-<ação>`
+    (ex.: `fx-tabs-change`, `fx-dialog-open`), então a mesma string **nunca** é
+    emitida por dois componentes.
+  Fonte única dos nomes: `src/core/events.ts` (`FX_EVENT` / `FX_COMPONENT_EVENTS`),
+  protegido pelo teste-guarda `src/core/events.test.ts`.
+
+  | Componente | Antes | Agora |
+  |---|---|---|
+  | fx-tabs | `change` | `fx-tabs-change` |
+  | fx-accordion | `change` | `fx-accordion-change` |
+  | fx-accordion-panel | `fx-accordion-toggle` | `fx-accordion-panel-toggle` |
+  | fx-alert | `dismiss` | `fx-alert-dismiss` |
+  | fx-breadcrumb | `select` | `fx-breadcrumb-select` |
+  | fx-calendar | `change` | `fx-calendar-change` |
+  | fx-carousel | `change` | `fx-carousel-change` |
+  | fx-chip | `remove`, `chip-click` | `fx-chip-remove`, `fx-chip-click` |
+  | fx-confirmpopup | `accept`, `reject` | `fx-confirmpopup-accept`, `fx-confirmpopup-reject` |
+  | fx-dialog | `open`, `close` | `fx-dialog-open`, `fx-dialog-close` |
+  | fx-drawer | `open`, `close` | `fx-drawer-open`, `fx-drawer-close` |
+  | fx-dropdown | `select` | `fx-dropdown-select` |
+  | fx-menu | `select` | `fx-menu-select` |
+  | fx-orderlist | `reorder`, `selection-change` | `fx-orderlist-reorder`, `fx-orderlist-selection-change` |
+  | fx-pagination | `page-change` | `fx-pagination-page-change` |
+  | fx-password-strength | `change` | `fx-password-strength-change` |
+  | fx-picklist | `move-to-source`, `move-to-target`, `selection-change-source`, `selection-change-target` | `fx-picklist-move-to-source`, `fx-picklist-move-to-target`, `fx-picklist-selection-change-source`, `fx-picklist-selection-change-target` |
+  | fx-popover | `show`, `hide` | `fx-popover-show`, `fx-popover-hide` |
+  | fx-progress | `complete` | `fx-progress-complete` |
+  | fx-stepper | `change`, `complete` | `fx-stepper-change`, `fx-stepper-complete` |
+  | fx-table | `sort-change`, `filter-change`, `page-change`, `row-click` | `fx-table-sort-change`, `fx-table-filter-change`, `fx-table-page-change`, `fx-table-row-click` |
+  | fx-tree | `select` | `fx-tree-select` |
+  | fx-autocomplete | `select` | `fx-autocomplete-select` |
+  | fx-datepicker | `invalid` | `fx-datepicker-invalid` |
+  | fx-editor | `ready`, `focus`, `blur`, `editor-error` | `fx-editor-ready`, `fx-editor-focus`, `fx-editor-blur`, `fx-editor-error` |
+  | fx-fileupload | `select`, `remove`, `complete` | `fx-fileupload-select`, `fx-fileupload-remove`, `fx-fileupload-complete` |
+
+  Sintaxe por stack (ex.: `fx-tabs-change`): Vue `@fx-tabs-change` · React 19
+  `onfx-tabs-change` · Angular/Svelte/HTML `addEventListener('fx-tabs-change', …)`.
+
+### Adicionado
+
+- **Handlers de evento tipados por framework** (`src/core/jsx.ts`): `FxEventHandlers<Tag>`
+  + `FxEventDetailMap` adicionam a cada `Fx*Props` as props de handler nas duas
+  convenções — Vue `onFxTabsChange` e React 19 `onfx-tabs-change` — com `e.detail`
+  tipado. Vale para `@wrrdev/fenix-ui/jsx`, `/vue` e `/react`.
+- **`fx-drawer`** passa a emitir `fx-drawer-open` (simetria com `fx-dialog`).
+- Páginas **Tipagens** e **Migração** e as tabelas de **Eventos** de cada componente
+  agora mostram a sintaxe do handler por framework.
+
+### Corrigido
+
+- O handler de um componente pai não é mais disparado por eventos de componentes
+  filhos (ex.: digitar num `<fx-input>` dentro de um `<fx-tabs>` não aciona mais o
+  listener de troca de aba).
+
+### Notas de migração
+
+- Troque o nome do evento nas escutas conforme a tabela acima. **Não há alias**:
+  manter o nome antigo reintroduziria exatamente a colisão.
+- Os eventos de **valor** (`input`, `change`, `valueChange`, `checkedChange`,
+  `valuesChange`, `autofill`) **não mudam** — `v-model`, `[(value)]` e `onInput`
+  seguem idênticos.
+
+
 ## [Não lançado]
 
 ### Corrigido

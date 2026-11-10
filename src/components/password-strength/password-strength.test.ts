@@ -32,7 +32,7 @@ describe('fx-password-strength', () => {
     const el = document.createElement('fx-password-strength');
     document.body.appendChild(el);
     const scores: number[] = [];
-    el.addEventListener('change', (e: Event) => scores.push((e as CustomEvent).detail.score));
+    el.addEventListener('fx-password-strength-change', (e: Event) => scores.push((e as CustomEvent).detail.score));
     el.setAttribute('value', 'abc');
     el.setAttribute('value', 'Abc123!@#x');
     expect(scores).toEqual([0, 4]);

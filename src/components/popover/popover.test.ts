@@ -16,7 +16,7 @@ describe('fx-popover', () => {
     document.body.appendChild(el);
 
     let shown = false;
-    el.addEventListener('show', () => (shown = true));
+    el.addEventListener('fx-popover-show', () => (shown = true));
 
     el.setAttribute('open', '');
     const popup = el.shadowRoot!.querySelector('.popup') as HTMLElement;
@@ -25,7 +25,7 @@ describe('fx-popover', () => {
 
     // hide se emite por ESC (más realista que removeAttribute)
     let hidden = false;
-    el.addEventListener('hide', () => (hidden = true));
+    el.addEventListener('fx-popover-hide', () => (hidden = true));
     const esc = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
     document.dispatchEvent(esc);
     expect(hidden).toBe(true);

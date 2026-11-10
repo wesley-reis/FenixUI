@@ -13,8 +13,8 @@ describe('fx-chip', () => {
     document.body.appendChild(el);
     let removed = false;
     let clicked = false;
-    el.addEventListener('remove', () => (removed = true));
-    el.addEventListener('chip-click', () => (clicked = true));
+    el.addEventListener('fx-chip-remove', () => (removed = true));
+    el.addEventListener('fx-chip-click', () => (clicked = true));
     const btn = el.shadowRoot!.querySelector('.remove') as HTMLButtonElement;
     expect(btn.hidden).toBe(false);
     btn.click();
@@ -29,7 +29,7 @@ describe('fx-chip', () => {
     el.textContent = 'Filtro';
     document.body.appendChild(el);
     let clicks = 0;
-    el.addEventListener('chip-click', () => clicks++);
+    el.addEventListener('fx-chip-click', () => clicks++);
     const chip = el.shadowRoot!.querySelector('.chip') as HTMLElement;
     chip.click();
     expect(el.selected).toBe(true);

@@ -188,7 +188,7 @@ export interface FxTextareaProps extends FxElementProps {
   /** `input`/`change`/`valueChange` também em autofill (ver core/user-edit.ts). */
   'emit-autofill'?: boolean;
 }
-export interface FxEditorProps extends FxElementProps {
+export interface FxEditorProps extends FxElementProps, FxEventHandlers<'fx-editor'> {
   value?: string;
   name?: string;
   required?: boolean;
@@ -218,7 +218,7 @@ export interface FxMultiselectProps extends FxElementProps {
   success?: boolean;
   valid?: boolean;
 }
-export interface FxCalendarProps extends FxElementProps {
+export interface FxCalendarProps extends FxElementProps, FxEventHandlers<'fx-calendar'> {
   value?: string;
   start?: string;
   end?: string;
@@ -229,7 +229,7 @@ export interface FxCalendarProps extends FxElementProps {
   locale?: string;
   disabled?: boolean;
 }
-export interface FxDatepickerProps extends FxElementProps {
+export interface FxDatepickerProps extends FxElementProps, FxEventHandlers<'fx-datepicker'> {
   value?: string;
   start?: string;
   end?: string;
@@ -252,7 +252,7 @@ export interface FxDatepickerProps extends FxElementProps {
   success?: boolean;
   valid?: boolean;
 }
-export interface FxTableProps extends FxElementProps {
+export interface FxTableProps extends FxElementProps, FxEventHandlers<'fx-table'> {
   pagination?: boolean;
   rows?: number;
   'rows-options'?: string;
@@ -341,8 +341,8 @@ export interface FxFloatlabelProps extends FxElementProps {
   active?: boolean;
   'error-text'?: string;
 }
-export interface FxDialogProps extends FxElementProps { open?: boolean; size?: FxSize; heading?: string; }
-export interface FxDrawerProps extends FxElementProps { open?: boolean; title?: string; position?: FxDrawerPosition; dismissible?: boolean; }
+export interface FxDialogProps extends FxElementProps, FxEventHandlers<'fx-dialog'> { open?: boolean; size?: FxSize; heading?: string; }
+export interface FxDrawerProps extends FxElementProps, FxEventHandlers<'fx-drawer'> { open?: boolean; title?: string; position?: FxDrawerPosition; dismissible?: boolean; }
 export interface FxToastProps extends FxElementProps {
   kind?: FxToastKind;
   /** Alias canônico de cor (padrão da lib). `danger`↔`error`. */
@@ -370,9 +370,9 @@ export type FxToastProgress = 'always' | 'hover' | 'paused';
 /** Lado pelo qual a barra de contagem do <fx-toast> esvazia. */
 export type FxToastOrigin = 'left' | 'right';
 export interface FxTooltipProps extends FxElementProps { content?: string; position?: FxTooltipPosition; }
-export interface FxTabsProps extends FxElementProps { value?: string; }
+export interface FxTabsProps extends FxElementProps, FxEventHandlers<'fx-tabs'> { value?: string; }
 export interface FxTabPanelProps extends FxElementProps { tab?: string; hidden?: boolean; }
-export interface FxProgressProps extends FxElementProps {
+export interface FxProgressProps extends FxElementProps, FxEventHandlers<'fx-progress'> {
   value?: number;
   indeterminate?: boolean;
   variant?: FxProgressVariant;
@@ -388,17 +388,17 @@ export interface FxSkeletonProps extends FxElementProps {
   height?: string;
   lines?: number;
 }
-export interface FxAlertProps extends FxElementProps { variant?: FxAlertVariant; severity?: FxSeverity; title?: string; dismissible?: boolean; }
-export interface FxDropdownProps extends FxElementProps { label?: string; position?: FxDropdownPosition; open?: boolean; }
+export interface FxAlertProps extends FxElementProps, FxEventHandlers<'fx-alert'> { variant?: FxAlertVariant; severity?: FxSeverity; title?: string; dismissible?: boolean; }
+export interface FxDropdownProps extends FxElementProps, FxEventHandlers<'fx-dropdown'> { label?: string; position?: FxDropdownPosition; open?: boolean; }
 export interface FxDropdownItemProps extends FxElementProps { value?: string; }
-export interface FxPaginationProps extends FxElementProps {
+export interface FxPaginationProps extends FxElementProps, FxEventHandlers<'fx-pagination'> {
   page?: number;
   total?: number;
   rows?: number;
   'rows-options'?: string;
   position?: FxPaginationPosition;
 }
-export interface FxAutocompleteProps extends FxElementProps {
+export interface FxAutocompleteProps extends FxElementProps, FxEventHandlers<'fx-autocomplete'> {
   value?: string;
   size?: FxSize;
   placeholder?: string;
@@ -409,7 +409,7 @@ export interface FxAutocompleteProps extends FxElementProps {
   /** `input`/`valueChange` também em autofill (ver core/user-edit.ts). */
   'emit-autofill'?: boolean;
 }
-export interface FxFileUploadProps extends FxElementProps {
+export interface FxFileUploadProps extends FxElementProps, FxEventHandlers<'fx-fileupload'> {
   mode?: 'basic' | 'advanced';
   size?: FxSize;
   severity?: FxSeverity;
@@ -432,12 +432,12 @@ export interface FxSliderProps extends FxElementProps {
   size?: FxSize;
   'show-value'?: boolean;
 }
-export interface FxStepperProps extends FxElementProps {
+export interface FxStepperProps extends FxElementProps, FxEventHandlers<'fx-stepper'> {
   active?: number;
   linear?: boolean;
   'show-numbers'?: boolean;
 }
-export interface FxChipProps extends FxElementProps {
+export interface FxChipProps extends FxElementProps, FxEventHandlers<'fx-chip'> {
   variant?: FxChipVariant;
   /** Cor semântica (canônica). */
   severity?: FxSeverity;
@@ -485,11 +485,11 @@ export interface FxCardProps extends FxElementProps {
   padded?: boolean;
   heading?: string;
 }
-export interface FxBreadcrumbProps extends FxElementProps {
+export interface FxBreadcrumbProps extends FxElementProps, FxEventHandlers<'fx-breadcrumb'> {
   size?: FxSize;
   separator?: string;
 }
-export interface FxPopoverProps extends FxElementProps {
+export interface FxPopoverProps extends FxElementProps, FxEventHandlers<'fx-popover'> {
   open?: boolean;
   target?: string;
   trigger?: FxPopoverTrigger;
@@ -503,7 +503,7 @@ export interface FxRatingProps extends FxElementProps {
   'allow-half'?: boolean;
   size?: FxSize;
 }
-export interface FxMenuProps extends FxElementProps {
+export interface FxMenuProps extends FxElementProps, FxEventHandlers<'fx-menu'> {
   orientation?: FxMenuOrientation;
   size?: FxSize;
   titles?: string;
@@ -518,7 +518,7 @@ export interface FxEmptyStateProps extends FxElementProps {
   heading?: string;
   description?: string;
 }
-export interface FxPasswordStrengthProps extends FxElementProps {
+export interface FxPasswordStrengthProps extends FxElementProps, FxEventHandlers<'fx-password-strength'> {
   value?: string;
   size?: FxSize;
 }
@@ -527,19 +527,19 @@ export interface FxTimelineProps extends FxElementProps {
   size?: FxSize;
   marker?: string;
 }
-export interface FxCarouselProps extends FxElementProps {
+export interface FxCarouselProps extends FxElementProps, FxEventHandlers<'fx-carousel'> {
   active?: number;
   'show-arrows'?: boolean;
   'show-indicators'?: boolean;
   loop?: boolean;
   autoplay?: number;
 }
-export interface FxTreeProps extends FxElementProps {
+export interface FxTreeProps extends FxElementProps, FxEventHandlers<'fx-tree'> {
   data?: string;
   'expand-all'?: boolean;
   size?: FxSize;
 }
-export interface FxConfirmPopupProps extends FxElementProps {
+export interface FxConfirmPopupProps extends FxElementProps, FxEventHandlers<'fx-confirmpopup'> {
   open?: boolean;
   target?: string;
   message?: string;
@@ -560,15 +560,15 @@ export interface FxKnobProps extends FxElementProps {
   'value-template'?: string;
   readonly?: boolean;
 }
-export interface FxAccordionProps extends FxElementProps {
+export interface FxAccordionProps extends FxElementProps, FxEventHandlers<'fx-accordion'> {
   value?: string;
   multiple?: boolean;
 }
-export interface FxAccordionPanelProps extends FxElementProps {
+export interface FxAccordionPanelProps extends FxElementProps, FxEventHandlers<'fx-accordion-panel'> {
   value?: string;
   header?: string;
 }
-export interface FxOrderListProps extends FxElementProps {
+export interface FxOrderListProps extends FxElementProps, FxEventHandlers<'fx-orderlist'> {
   data?: string;
   /**
    * Array de itens — alias de `data` para binding de framework
@@ -585,7 +585,7 @@ export interface FxOrderListProps extends FxElementProps {
   'selection-mode'?: FxSelectionMode;
   'show-select-all'?: boolean;
 }
-export interface FxPickListProps extends FxElementProps {
+export interface FxPickListProps extends FxElementProps, FxEventHandlers<'fx-picklist'> {
   source?: string;
   target?: string;
   'source-key'?: string;
@@ -598,6 +598,93 @@ export interface FxPickListProps extends FxElementProps {
   'show-select-all'?: boolean;
   striped?: boolean;
 }
+/* ------------------------------------------------------------------ *
+ * Eventos tipados por framework
+ * ------------------------------------------------------------------ *
+ * Os nomes *namespaced* (`fx-<componente>-<ação>`) são únicos por construção,
+ * então cada um pertence a um componente. A prop do handler depende do stack:
+ *
+ *  - Vue 3.5 (Volar): `@fx-tabs-change` → prop `onFxTabsChange`
+ *    (o compilador cameliza o nome; o runtime volta a hifenizar via
+ *    `hyphenate()`, então o evento DOM continua `fx-tabs-change`).
+ *  - React 19: prop = `on` + nome EXATO do evento → `onfx-tabs-change`
+ *    (`setValueForPropertyOnCustomComponent` faz `name.slice(2)`).
+ *  - HTML/TS puro, Angular, Svelte: `addEventListener('fx-tabs-change', …)`.
+ *
+ * Os eventos de VALOR (`input`/`change`/`valueChange`/…) seguem a sintaxe
+ * documentada por framework (v-model / [value]+(valueChange) / onInput / on:input).
+ */
+
+/** `'fx-tabs-change'` → `'FxTabsChange'` (Vue cameliza o nome do evento). */
+type FxCamelCase<S extends string> = S extends `${infer A}-${infer B}`
+  ? `${A}${FxCamelCase<Capitalize<B>>}`
+  : S;
+
+/** Payload (`detail`) de cada evento eventspaced — chaves = valores de `FX_EVENT`. */
+export interface FxEventDetailMap {
+  'fx-accordion-change': { value: string[] };
+  'fx-accordion-panel-toggle': { panel: HTMLElement };
+  'fx-alert-dismiss': void;
+  'fx-breadcrumb-select': { item: unknown; index: number };
+  'fx-calendar-change': { value?: string; start?: string; end?: string; values?: string[] };
+  'fx-carousel-change': { index: number };
+  'fx-chip-remove': void;
+  'fx-chip-click': void;
+  'fx-confirmpopup-accept': void;
+  'fx-confirmpopup-reject': void;
+  'fx-dialog-open': void;
+  'fx-dialog-close': void;
+  'fx-drawer-open': void;
+  'fx-drawer-close': void;
+  'fx-dropdown-select': { value: string };
+  'fx-menu-select': { index: number; label: string };
+  'fx-orderlist-reorder': { items: unknown[] };
+  'fx-orderlist-selection-change': { selection: unknown[] };
+  'fx-pagination-page-change': { page: number; rows: number };
+  'fx-password-strength-change': { score: number; value: string };
+  'fx-picklist-move-to-target': { items: unknown[]; source: unknown[]; target: unknown[] };
+  'fx-picklist-move-to-source': { items: unknown[]; source: unknown[]; target: unknown[] };
+  'fx-picklist-selection-change-source': { selection: unknown[] };
+  'fx-picklist-selection-change-target': { selection: unknown[] };
+  'fx-popover-show': void;
+  'fx-popover-hide': void;
+  'fx-progress-complete': void;
+  'fx-stepper-change': { index: number };
+  'fx-stepper-complete': void;
+  'fx-table-sort-change': { field: string; direction: 'asc' | 'desc'; lazy: boolean };
+  'fx-table-filter-change': { field: string; value: string; lazy: boolean };
+  'fx-table-page-change': { page: number; pages: number; rowsPerPage: number; total: number; lazy: boolean };
+  'fx-table-row-click': { row: Record<string, unknown>; index: number };
+  'fx-tabs-change': { value: string };
+  'fx-tree-select': { node: unknown };
+  'fx-autocomplete-select': { value: string };
+  'fx-datepicker-invalid': { text: string };
+  'fx-editor-ready': void;
+  'fx-editor-focus': void;
+  'fx-editor-blur': void;
+  'fx-editor-error': { message: string };
+  'fx-fileupload-select': { files: File[] };
+  'fx-fileupload-remove': { file: File };
+  'fx-fileupload-complete': void;
+}
+
+/**
+ * Handlers de evento de um elemento `fx-*`, nas convenções Vue e React.
+ *
+ * Ex.: para `fx-tabs` gera `onFxTabsChange` (Vue `@fx-tabs-change`) e
+ * `'onfx-tabs-change'` (React 19).
+ */
+export type FxEventHandlers<Tag extends string> = {
+  [K in Extract<keyof FxEventDetailMap, `${Tag}-${string}`> as `on${FxCamelCase<Capitalize<K>>}`]?: (
+    event: CustomEvent<FxEventDetailMap[K]>,
+  ) => void;
+} & {
+  [K in Extract<keyof FxEventDetailMap, `${Tag}-${string}`> as `on${K}`]?: (
+    event: CustomEvent<FxEventDetailMap[K]>,
+  ) => void;
+};
+
+
 /* Augmentation global de JSX (React clássico/TSX, Preact, Vue JSX, …).
    Cada tag fx-* recebe autocomplete + validação de atributos.
    A interface é exportada para que o módulo opt-in `@wrrdev/fenix-ui/react`

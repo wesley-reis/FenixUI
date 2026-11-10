@@ -24,6 +24,6 @@ export const passwordStrengthDoc: ComponentDoc = {
 		{ name: "size", type: "'sm' | 'md' | 'lg'", default: "'md'", desc: "Espessura das barras." },
 	],
 	events: [
-		{ name: "change", type: "CustomEvent<{ score: number; value: string }>", desc: "Quando o nível (0-4) muda." },
+		{ name: "fx-password-strength-change", type: "CustomEvent<{ score: number; value: string }>", desc: "Quando o nível (0-4) muda. Vue: `@fx-password-strength-change` · React: `onfx-password-strength-change`." },
 	],
 };

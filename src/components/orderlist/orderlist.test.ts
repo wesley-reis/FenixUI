@@ -92,7 +92,7 @@ describe('FxOrderList', () => {
     element.data = [{ label: 'A' }, { label: 'B' }];
     element.selection = [{ label: 'B' }];
     let emitted = false;
-    element.addEventListener('reorder', () => { emitted = true; });
+    element.addEventListener('fx-orderlist-reorder', () => { emitted = true; });
     const buttons = element.shadowRoot!.querySelectorAll('.control-btn');
     const upBtn = Array.from(buttons).find(b => b.getAttribute('data-action') === 'up') as HTMLButtonElement;
     upBtn.click();

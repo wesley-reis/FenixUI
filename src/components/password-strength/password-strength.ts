@@ -1,4 +1,5 @@
 import { FxElement } from '../../core/base';
+import { FX_EVENT } from '../../core/events';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 
@@ -7,7 +8,7 @@ import { defineElement } from '../../core/define';
  *
  * Atributos: value (a senha a avaliar), label (rótulo acima), size (sm|md|lg).
  * A força (0-4) é calculada por comprimento e variedade de caracteres.
- * Evento (composed): `change` (detail: { score: 0-4, value }).
+ * Evento (composed): `fx-password-strength-change` (detail: { score: 0-4, value }).
  */
 export class FxPasswordStrength extends FxElement {
   static override styles = css`
@@ -96,7 +97,7 @@ export class FxPasswordStrength extends FxElement {
       this._paint();
       const score = this._score();
       if (score !== prev) {
-        this.dispatchEvent(new CustomEvent('change', {
+        this.dispatchEvent(new CustomEvent(FX_EVENT.passwordStrengthChange, {
           bubbles: true, composed: true,
           detail: { score, value: this.value },
         }));

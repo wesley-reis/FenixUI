@@ -1,4 +1,5 @@
 import { FxElement } from '../../core/base';
+import { FX_EVENT } from '../../core/events';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 
@@ -15,7 +16,7 @@ import { defineElement } from '../../core/define';
  *
  * Slots: `header`, padrão (conteúdo), `footer`.
  *
- * Eventos (composed): `show` e `hide`.
+ * Eventos (composed): `fx-popover-show` e `fx-popover-hide`.
  */
 export class FxPopover extends FxElement {
   static override styles = css`
@@ -109,7 +110,7 @@ export class FxPopover extends FxElement {
       this._cleanup?.();
       this._cleanup = undefined;
       this._restoreFocus();
-      this.dispatchEvent(new CustomEvent('hide', { bubbles: true, composed: true }));
+      this.dispatchEvent(new CustomEvent(FX_EVENT.popoverHide, { bubbles: true, composed: true }));
     };
 
     const onKey = (e: KeyboardEvent): void => {
@@ -134,7 +135,7 @@ export class FxPopover extends FxElement {
     this._position(popup);
     this._previouslyFocused = document.activeElement as HTMLElement | null;
     requestAnimationFrame(() => popup.focus({ preventScroll: true }));
-    this.dispatchEvent(new CustomEvent('show', { bubbles: true, composed: true }));
+    this.dispatchEvent(new CustomEvent(FX_EVENT.popoverShow, { bubbles: true, composed: true }));
   }
 
   private _cleanup?: () => void;

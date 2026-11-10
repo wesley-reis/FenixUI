@@ -119,14 +119,14 @@ export const orderlistDoc: ComponentDoc = {
 	],
 	events: [
 		{
-			name: "reorder",
+			name: "fx-orderlist-reorder",
 			type: "CustomEvent<{ items: OrderListItem[] }>",
-			desc: "Ao reordenar itens.",
+			desc: "Ao reordenar itens. Vue: `@fx-orderlist-reorder` · React: `onfx-orderlist-reorder`.",
 		},
 		{
-			name: "selection-change",
+			name: "fx-orderlist-selection-change",
 			type: "CustomEvent<{ selection: OrderListItem[] }>",
-			desc: "Ao mudar seleção.",
+			desc: "Ao mudar seleção. Vue: `@fx-orderlist-selection-change` · React: `onfx-orderlist-selection-change`.",
 		},
 	],
 };

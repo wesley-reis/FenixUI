@@ -112,7 +112,7 @@ describe('FxPickList', () => {
     element.target = [];
     element.selectionMode = 'single';
     let emitted = false;
-    element.addEventListener('move-to-target', () => { emitted = true; });
+    element.addEventListener('fx-picklist-move-to-target', () => { emitted = true; });
     const sourceList = element.shadowRoot!.querySelector('.source-list')!;
     const firstItem = sourceList.querySelector('.list-item') as HTMLElement;
     firstItem.click();

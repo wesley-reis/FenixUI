@@ -24,7 +24,7 @@ export const treeDoc: ComponentDoc = {
 		{ name: "size", type: "'sm' | 'md' | 'lg'", default: "'md'", desc: "Tamanho das linhas." },
 	],
 	events: [
-		{ name: "select", type: "CustomEvent<{ node: TreeNode }>", desc: "Ao selecionar um nó." },
+		{ name: "fx-tree-select", type: "CustomEvent<{ node: TreeNode }>", desc: "Ao selecionar um nó. Vue: `@fx-tree-select` · React: `onfx-tree-select`." },
 	],
 	cssVars: [
 		{ name: "setAllExpanded(open)", desc: "Método para expandir/recolher todos os nós via JS." },

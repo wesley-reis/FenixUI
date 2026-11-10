@@ -1,4 +1,5 @@
 import { FxElement } from '../../core/base';
+import { FX_EVENT } from '../../core/events';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { FENIX_ICON_BASE_CSS, fenixIconHtml } from '../../icons/base-css';
@@ -10,7 +11,7 @@ import { FENIX_ICON_BASE_CSS, fenixIconHtml } from '../../icons/base-css';
  * size (sm|md|lg), removable (mostra o botão ×), selectable (clica alterna
  * o estado selected), selected, disabled, icon (glifo/emoji).
  * Slot padrão: texto do chip.
- * Eventos (composed): `remove` (ao clicar em ×) e `chip-click` (ao clicar).
+ * Eventos (composed): `fx-chip-remove` (ao clicar em ×) e `fx-chip-click` (ao clicar).
  */
 export class FxChip extends FxElement {
   static override styles = css`
@@ -115,7 +116,7 @@ export class FxChip extends FxElement {
 
     remove.addEventListener('click', (e) => {
       e.stopPropagation();
-      this.dispatchEvent(new CustomEvent('remove', { bubbles: true, composed: true }));
+      this.dispatchEvent(new CustomEvent(FX_EVENT.chipRemove, { bubbles: true, composed: true }));
     });
 
     if (clickable) {
@@ -124,7 +125,7 @@ export class FxChip extends FxElement {
           this.selected = !this.selected;
           chip.setAttribute('aria-pressed', String(this.selected));
         }
-        this.dispatchEvent(new CustomEvent('chip-click', { bubbles: true, composed: true }));
+        this.dispatchEvent(new CustomEvent(FX_EVENT.chipClick, { bubbles: true, composed: true }));
       };
       chip.addEventListener('click', toggle);
       chip.addEventListener('keydown', (e) => {

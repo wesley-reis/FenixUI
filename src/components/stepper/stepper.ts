@@ -1,4 +1,5 @@
 import { FxElement } from '../../core/base';
+import { FX_EVENT } from '../../core/events';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from '../../core/sanitize';
@@ -14,7 +15,7 @@ import { esc } from '../../core/sanitize';
  * Slots: `header` (customiza el indicador de pasos), un slot por paso
  * (slot="step-0", slot="step-1", ...).
  *
- * Eventos (composed): `change` (detail: { index }) y `complete` al llegar al último.
+ * Eventos (composed): `fx-stepper-change` (detail: { index }) y `fx-stepper-complete` al llegar al último.
  */
 export class FxStepper extends FxElement {
   static override styles = css`
@@ -102,9 +103,9 @@ export class FxStepper extends FxElement {
     const target = Math.min(this.stepCount - 1, Math.max(0, index));
     if (this.hasAttr('linear') && target > this.active + 1) return;
     this.active = target;
-    this.dispatchEvent(new CustomEvent('change', { bubbles: true, composed: true, detail: { index: this.active } }));
+    this.dispatchEvent(new CustomEvent(FX_EVENT.stepperChange, { bubbles: true, composed: true, detail: { index: this.active } }));
     if (this.isLast) {
-      this.dispatchEvent(new CustomEvent('complete', { bubbles: true, composed: true }));
+      this.dispatchEvent(new CustomEvent(FX_EVENT.stepperComplete, { bubbles: true, composed: true }));
     }
   }
 

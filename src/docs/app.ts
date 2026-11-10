@@ -1803,8 +1803,8 @@ export function Tabela({ dados }) {
     if (!el) return;
     el.data = dados;                          // propriedade complexa direto no elemento
     const onChange = (e) => console.log(e.detail);
-    el.addEventListener('selection-change', onChange);
-    return () => el.removeEventListener('selection-change', onChange);
+    el.addEventListener('fx-table-row-click', onChange);
+    return () => el.removeEventListener('fx-table-row-click', onChange);
   }, [dados]);
 
   return <fx-table ref={ref} />;
@@ -1903,7 +1903,26 @@ export class DemoComponent {}`)}
     pelo <code>HTMLElementTagNameMap</code>:</p>
     ${codeBlock(`const stepper = document.createElement('fx-stepper');
 stepper.setAttribute('active', '0');
-stepper.addEventListener('change', (e) => console.log((e as CustomEvent).detail));`)}
+stepper.addEventListener('fx-stepper-change', (e) => console.log((e as CustomEvent).detail));`)}
+
+    <h3>Eventos tipados por framework</h3>
+    <p>Os eventos <b>namespaced</b> (<code>fx-&lt;componente&gt;-&lt;ação&gt;</code>) também
+    têm handler tipado em cada stack, com o <code>detail</code> tipado: o Vue expõe a prop
+    camelizada e o React 19 a prop <code>on</code> + nome exato do evento.</p>
+    ${codeBlock(`// Vue (Volar): @fx-tabs-change → prop onFxTabsChange
+<fx-tabs @fx-tabs-change="(e) => aba = e.detail.value" />
+
+// React 19: prop = on + nome exato → onfx-tabs-change
+<fx-tabs onfx-tabs-change={(e) => setAba(e.detail.value)} />
+
+// HTML puro / Angular / Svelte
+el.addEventListener('fx-tabs-change', (e) => aba = e.detail.value);`)}
+    <div class="note"><strong>Eventos de valor</strong> (<code>input</code>,
+    <code>change</code>, <code>valueChange</code>, <code>checkedChange</code>,
+    <code>valuesChange</code>, <code>autofill</code>) mantêm a sintaxe por framework já
+    documentada: Vue <code>v-model</code>, Angular <code>[value]</code> +
+    <code>(valueChange)</code>, React <code>value</code> + <code>onInput</code>,
+    Svelte <code>value</code> + <code>on:input</code>.</div>
 
     <h3>Tipos nomeados e uniões</h3>
     <p>Todos os subpaths de tipagem reexportam os mesmos tipos, então você pode importar
@@ -1933,7 +1952,10 @@ function renderMigration(): void {
     <h2>Migração</h2>
     <p class="lead">A partir da <b>1.6.0</b> a biblioteca separa <b>forma</b> de <b>cor</b>
     em todos os componentes. Nada quebra: os valores antigos continuam funcionando como
-    <b>alias</b>; a mudança é de padronização e de como escrever o código daqui pra frente.</p>
+    <b>alias</b>; a mudança é de padronização e de como escrever o código daqui pra frente.
+    A <b>2.0.0</b> traz a mudança quebra-compatibilidade dos <b>eventos</b>: cada um passa a
+    ser namespaced (<code>fx-&lt;componente&gt;-&lt;ação&gt;</code>) para que nenhum evento
+    compita entre componentes.</p>
 
     <h2>O contrato: forma ≠ cor</h2>
     <p>Regra única da lib: <b><code>variant</code> nunca carrega cor</b> e
@@ -2001,6 +2023,40 @@ const modo: FxAvatarMode = 'icon';`)}
     <p>Os valores antigos seguem <b>tipados</b> (não geram erro de compilação) — assim
     código existente continua válido; o novo atributo aparece no autocomplete em TSX,
     nos templates Vue (Volar) e no código imperativo (<code>HTMLElementTagNameMap</code>).</p>
+
+    <h2>Eventos: nomes namespaced (2.0.0)</h2>
+    <p>Até a 1.x vários componentes usavam o mesmo nome de evento genérico
+    (<code>change</code>, <code>select</code>, <code>open</code>, <code>complete</code>…).
+    Como os eventos são <code>composed</code> e sobem a árvore, o evento de um filho
+    era capturado por um handler de um componente pai. A <b>2.0.0</b> resolve isto de vez:
+    eventos de componente passam a ser <b>namespaced</b> em
+    <code>fx-&lt;componente&gt;-&lt;ação&gt;</code> — então a mesma string nunca é emitida
+    por dois componentes. Os <b>eventos de valor</b> (<code>input</code>,
+    <code>change</code>, <code>valueChange</code>, <code>checkedChange</code>,
+    <code>valuesChange</code>, <code>autofill</code>) continuam iguais e só existem nos
+    campos form-associated (alimentam <code>v-model</code>/<code>[(value)]</code>/<code>onInput</code>).</p>
+    ${codeBlock(`<!-- Antes: o <fx-tabs> e o <fx-input> filho emitiam "change" — o handler
+     da aba recebia o texto digitado no input -->
+<fx-tabs @change="aoTrocarAba">  <fx-input v-model="busca" />  </fx-tabs>
+
+<!-- Depois: nomes distintos, sem competição -->
+<fx-tabs @fx-tabs-change="aoTrocarAba">  <fx-input v-model="busca" />  </fx-tabs>`)}
+    <p>Renomeações principais (lista completa no CHANGELOG — <b>2.0.0</b>):</p>
+    <table class="api">
+      <thead><tr><th>Antes</th><th>Agora</th><th>Componente</th></tr></thead>
+      <tbody>
+        <tr><td><code>change</code></td><td><code>fx-tabs-change</code> · <code>fx-accordion-change</code> · <code>fx-carousel-change</code> · <code>fx-calendar-change</code> · <code>fx-password-strength-change</code></td><td>tabs, accordion, carousel, calendar, password-strength</td></tr>
+        <tr><td><code>select</code></td><td><code>fx-dropdown-select</code> · <code>fx-menu-select</code> · <code>fx-tree-select</code> · <code>fx-breadcrumb-select</code> · <code>fx-autocomplete-select</code></td><td>dropdown, menu, tree, breadcrumb, autocomplete</td></tr>
+        <tr><td><code>open</code> / <code>close</code></td><td><code>fx-dialog-open</code>/<code>fx-dialog-close</code> · <code>fx-drawer-open</code>/<code>fx-drawer-close</code></td><td>dialog, drawer</td></tr>
+        <tr><td><code>complete</code></td><td><code>fx-progress-complete</code> · <code>fx-stepper-complete</code> · <code>fx-fileupload-complete</code></td><td>progress, stepper, fileupload</td></tr>
+        <tr><td><code>page-change</code> / <code>sort-change</code> / …</td><td><code>fx-table-page-change</code> · <code>fx-table-sort-change</code> · <code>fx-pagination-page-change</code></td><td>table, pagination</td></tr>
+        <tr><td><code>show</code> / <code>hide</code> · <code>dismiss</code> · <code>remove</code></td><td><code>fx-popover-show</code>/<code>fx-popover-hide</code> · <code>fx-alert-dismiss</code> · <code>fx-chip-remove</code>/<code>fx-fileupload-remove</code></td><td>popover, alert, chip, fileupload</td></tr>
+        <tr><td><code>ready</code> / <code>focus</code> / <code>blur</code> / <code>editor-error</code> / <code>invalid</code></td><td><code>fx-editor-ready</code> · <code>fx-editor-focus</code> · <code>fx-editor-blur</code> · <code>fx-editor-error</code> · <code>fx-datepicker-invalid</code></td><td>editor, datepicker</td></tr>
+      </tbody>
+    </table>
+    <p>Sintaxe por stack (ex.: <code>fx-tabs-change</code>): Vue <code>@fx-tabs-change</code> ·
+    React 19 <code>onfx-tabs-change</code> · Angular/Svelte/HTML
+    <code>addEventListener('fx-tabs-change', …)</code>.</p>
 
     <h2>Depreciações</h2>
     <table class="api">
@@ -2407,7 +2463,7 @@ import '@wrrdev/fenix-ui/icon';  // o elemento em si — o auto-import já injet
     pager.style.display = matches.length <= rows ? 'none' : '';
   };
 
-  pager.addEventListener('page-change', (e: CustomEvent) => {
+  pager.addEventListener('fx-pagination-page-change', (e: CustomEvent) => {
     const detail = e.detail ?? {};
     page = detail.page ?? 1;
     if (detail.rows && detail.rows !== rows) { rows = detail.rows; page = 1; }
@@ -2844,7 +2900,7 @@ async function setupThemeDrawer(): Promise<void> {
     drawer.open = true;
     setTimeout(() => initDrawerControls(), 60);
   });
-  drawer.addEventListener('close', () => { drawer.open = false; });
+  drawer.addEventListener('fx-drawer-close', () => { drawer.open = false; });
 }
 
 /** Eventos de ação globais da doc (funciona dentro de shadow DOM e no jsdom). */

@@ -1,4 +1,5 @@
 import { FxElement } from '../../core/base';
+import { FX_EVENT } from '../../core/events';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from '../../core/sanitize';
@@ -125,7 +126,7 @@ export class FxAccordionPanel extends FxElement {
         if (!path.some((el) => el.classList?.contains('header'))) return;
         if (this.disabled) return;
         this.dispatchEvent(
-          new CustomEvent('fx-accordion-toggle', {
+          new CustomEvent(FX_EVENT.accordionToggle, {
             bubbles: true,
             composed: true,
             detail: { panel: this },
@@ -189,7 +190,8 @@ export class FxAccordionPanel extends FxElement {
  *  - value: valor(es) ativo(s), separados por virgula no modo multiple.
  *  - multiple: permite manter varios paineis abertos ao mesmo tempo.
  *
- * Evento: `change` (composed, detail: { value: string[] }).
+ * Evento: `fx-accordion-change` (composed, detail: { value: string[] }). O painel
+ * `<fx-accordion-panel>` emite `fx-accordion-panel-toggle` (detail: { panel }).
  */
 export class FxAccordion extends FxElement {
   static override styles = css`
@@ -284,9 +286,9 @@ export class FxAccordion extends FxElement {
   private _attachListeners(): void {
     if (this._listenersAttached) return;
     this._listenersAttached = true;
-    // O painel emite 'fx-accordion-toggle' a partir do proprio host
+    // O painel emite 'fx-accordion-panel-toggle' a partir do proprio host
     // (event retargeting do Shadow DOM impede usar closest('.header') aqui).
-    this.addEventListener('fx-accordion-toggle', (e) => {
+    this.addEventListener(FX_EVENT.accordionToggle, (e) => {
       const panel = (e as CustomEvent).detail?.panel as FxAccordionPanel | undefined;
       if (!panel || panel.disabled) return;
       this.toggle(panel);
@@ -309,7 +311,7 @@ export class FxAccordion extends FxElement {
     this.values = actives;
     this._sync();
     this.dispatchEvent(
-      new CustomEvent('change', {
+      new CustomEvent(FX_EVENT.accordionChange, {
         bubbles: true,
         composed: true,
         detail: { value: actives },

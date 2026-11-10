@@ -1,4 +1,5 @@
 import { FxFormElement } from '../../core/form-element';
+import { FX_EVENT } from '../../core/events';
 import { defineElement } from '../../core/define';
 import { isDomAvailable } from '../../core/dom';
 import { esc } from '../../core/sanitize';
@@ -205,7 +206,7 @@ export class FxEditor extends FxFormElement {
       this.#applyValue(this.#defaultValue);
       this.updateFormValue();
       this.#pushHistory(this.#value);
-      this.dispatchEvent(new CustomEvent('ready', { bubbles: true, composed: true }));
+      this.dispatchEvent(new CustomEvent(FX_EVENT.editorReady, { bubbles: true, composed: true }));
     } else if (this.#built && !this.#eventsBound) {
       this.#bindEvents();
       this.#eventsBound = true;
@@ -367,14 +368,14 @@ export class FxEditor extends FxFormElement {
     });
 
     this.#on(editor, 'focus', () => {
-      this.dispatchEvent(new CustomEvent('focus', { bubbles: true, composed: true }));
+      this.dispatchEvent(new CustomEvent(FX_EVENT.editorFocus, { bubbles: true, composed: true }));
     });
 
     this.#on(editor, 'blur', () => {
       this.#lastRange = saveRange(editor) ?? this.#lastRange;
       this.#emitNow();
       this.#emitChange();
-      this.dispatchEvent(new CustomEvent('blur', { bubbles: true, composed: true }));
+      this.dispatchEvent(new CustomEvent(FX_EVENT.editorBlur, { bubbles: true, composed: true }));
     });
 
     this.#on(editor, 'keydown', (event) => this.#handleKeydown(event as KeyboardEvent));
@@ -2066,7 +2067,7 @@ export class FxEditor extends FxFormElement {
 
   #error(message: string): void {
     this.dispatchEvent(
-      new CustomEvent('editor-error', {
+      new CustomEvent(FX_EVENT.editorError, {
         bubbles: true,
         composed: true,
         detail: { message },

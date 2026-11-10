@@ -27,8 +27,8 @@ export const popoverDoc: ComponentDoc = {
 		{ name: "dismissible", type: "boolean", default: "true", desc: "Fecha ao clicar fora." },
 	],
 	events: [
-		{ name: "show", type: "CustomEvent<void>", desc: "Ao abrir." },
-		{ name: "hide", type: "CustomEvent<void>", desc: "Ao fechar (ESC, clique fora ou trigger)." },
+		{ name: "fx-popover-show", type: "CustomEvent<void>", desc: "Ao abrir. Vue: `@fx-popover-show` · React: `onfx-popover-show`." },
+		{ name: "fx-popover-hide", type: "CustomEvent<void>", desc: "Ao fechar (ESC, clique fora ou trigger). Vue: `@fx-popover-hide` · React: `onfx-popover-hide`." },
 	],
 	slots: [
 		{ name: "header", desc: "Cabeçalho do popover." },

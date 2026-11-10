@@ -1,4 +1,5 @@
 ﻿import { FxFormElement } from '../../core/form-element';
+import { FX_EVENT } from '../../core/events';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from '../../core/sanitize';
@@ -628,7 +629,7 @@ export class FxDatepicker extends FxFormElement {
 
     // Sincroniza seleção do calendário de volta para os atributos.
     const cal = this.root.querySelector<HTMLElement>('.pop fx-calendar');
-    cal?.addEventListener('change', (e) => {
+    cal?.addEventListener(FX_EVENT.calendarChange, (e) => {
       const d = (e as CustomEvent).detail ?? {};
       // Agrupa os setAttribute em um único render (o calendário dispara
       // value/start/end/values de uma vez).
@@ -782,7 +783,7 @@ export class FxDatepicker extends FxFormElement {
       // Inválido: sinaliza, reverte o texto e emite evento.
       input.classList.add('invalid');
       this.dispatchEvent(
-        new CustomEvent('invalid', { bubbles: true, composed: true, detail: { text: input.value } }),
+        new CustomEvent(FX_EVENT.datepickerInvalid, { bubbles: true, composed: true, detail: { text: input.value } }),
       );
       input.value = this.displayText();
       setTimeout(() => input.classList.remove('invalid'), 1500);

@@ -24,8 +24,8 @@ export const stepperDoc: ComponentDoc = {
 		{ name: "show-numbers", type: "boolean", default: "true", desc: "Mostra o número no indicador." },
 	],
 	events: [
-		{ name: "change", type: "CustomEvent<{ index: number }>", desc: "Al cambiar de paso (next/prev/clic en indicador)." },
-		{ name: "complete", type: "CustomEvent<void>", desc: "Ao chegar ao último passo." },
+		{ name: "fx-stepper-change", type: "CustomEvent<{ index: number }>", desc: "Al cambiar de paso (next/prev/clic en indicador). Vue: `@fx-stepper-change` · React: `onfx-stepper-change`." },
+		{ name: "fx-stepper-complete", type: "CustomEvent<void>", desc: "Ao chegar ao último passo. Vue: `@fx-stepper-complete` · React: `onfx-stepper-complete`." },
 	],
 	slots: [
 		{ name: "step-0, step-1, ...", desc: "Conteúdo de cada passo. Use step-title para o nome do indicador." },

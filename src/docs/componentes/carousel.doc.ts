@@ -28,7 +28,7 @@ export const carouselDoc: ComponentDoc = {
 		{ name: "loop", type: "boolean", default: "false", desc: "Volta ao início ao passar do último." },
 	],
 	events: [
-		{ name: "change", type: "CustomEvent<{ index: number }>", desc: "Ao mudar de slide." },
+		{ name: "fx-carousel-change", type: "CustomEvent<{ index: number }>", desc: "Ao mudar de slide. Vue: `@fx-carousel-change` · React: `onfx-carousel-change`." },
 	],
 	slots: [{ name: "slide", desc: "Slides do carrossel (repetível)." }],
 };

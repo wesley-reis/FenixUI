@@ -14,7 +14,7 @@ describe('fx-dropdown', () => {
     await Promise.resolve();
     expect(dd.hasAttribute('open')).toBe(true);
     let sel = '';
-    dd.addEventListener('select', (e) => { sel = (e as CustomEvent).detail.value; });
+    dd.addEventListener('fx-dropdown-select', (e) => { sel = (e as CustomEvent).detail.value; });
     (document.querySelector('fx-dropdown-item')?.shadowRoot?.querySelector('.item') as HTMLElement)?.click();
     await Promise.resolve();
     expect(sel).toBe('edit');

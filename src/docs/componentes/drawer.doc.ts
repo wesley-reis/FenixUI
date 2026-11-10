@@ -96,11 +96,11 @@ export const drawerDoc: ComponentDoc = {
 		},
 	],
 	events: [
-		{ name: "open", type: "Event", desc: "Ao abrir." },
+		{ name: "fx-drawer-open", type: "CustomEvent<void>", desc: "Ao abrir. Vue: `@fx-drawer-open` · React: `onfx-drawer-open`." },
 		{
-			name: "close",
-			type: `CustomEvent`,
-			desc: "Fechar por ✕, clique no overlay ou ESC.",
+			name: "fx-drawer-close",
+			type: `CustomEvent<void>`,
+			desc: "Fechar por ✕, clique no overlay ou ESC. Vue: `@fx-drawer-close` · React: `onfx-drawer-close`.",
 		},
 	],
 	slots: [{ name: "padrão", desc: "Conteúdo livre do painel." }],

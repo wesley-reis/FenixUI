@@ -18,7 +18,7 @@ import { esc } from '../../core/sanitize';
  *     <fx-breadcrumb-item>Detalhe</fx-breadcrumb-item>
  *   </fx-breadcrumb>
  *
- * Eventos (composed): `select` (detail: { item, index }) ao clicar num item.
+ * Eventos (composed): `fx-breadcrumb-select` (detail: { item, index }) ao clicar num item.
  */
 export class FxBreadcrumb extends FxElement {
   static override styles = css`

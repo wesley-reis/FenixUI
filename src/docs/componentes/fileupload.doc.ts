@@ -64,9 +64,9 @@ export const fileuploadDoc: ComponentDoc = {
 		{ name: "full", type: "boolean", default: "false", desc: "Largura 100% acompanhando o elemento pai (host vira block; botão/dropzone esticam)." },
 	],
 	events: [
-		{ name: "select", type: "CustomEvent<{ files: File[] }>", desc: "Ao escolher/soltar arquivo(s)." },
-		{ name: "remove", type: "CustomEvent<{ file: File }>", desc: "Ao remover um arquivo da lista." },
-		{ name: "complete", type: "CustomEvent<void>", desc: "Quando o progresso chega a 100." },
+		{ name: "fx-fileupload-select", type: "CustomEvent<{ files: File[] }>", desc: "Ao escolher/soltar arquivo(s). Vue: `@fx-fileupload-select` · React: `onfx-fileupload-select`." },
+		{ name: "fx-fileupload-remove", type: "CustomEvent<{ file: File }>", desc: "Ao remover um arquivo da lista. Vue: `@fx-fileupload-remove` · React: `onfx-fileupload-remove`." },
+		{ name: "fx-fileupload-complete", type: "CustomEvent<void>", desc: "Quando o progresso chega a 100. Vue: `@fx-fileupload-complete` · React: `onfx-fileupload-complete`." },
 	],
 	cssVars: [
 		{ name: "--fx-fileupload-*", desc: "Usa os tokens padrão do tema (cores, raios, espaçamentos)." },

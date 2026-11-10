@@ -60,9 +60,9 @@ export const paginationDoc: ComponentDoc = {
 	],
 	events: [
 		{
-			name: "page-change",
+			name: "fx-pagination-page-change",
 			type: `CustomEvent<{ page: number; rows: number }>`,
-			desc: "Ao mudar página ou rows.",
+			desc: "Ao mudar página ou rows. Vue: `@fx-pagination-page-change` · React: `onfx-pagination-page-change`.",
 		},
 	],
 };

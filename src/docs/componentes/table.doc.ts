@@ -244,7 +244,7 @@ export const tableDoc: ComponentDoc = {
 			name: "lazy",
 			type: "boolean",
 			default: "false",
-			desc: "Modo sob demanda: data é a página já carregada do servidor. A tabela não filtra/ordena/pagina localmente — re-busque ao ouvir page-change / sort-change / filter-change.",
+			desc: "Modo sob demanda: data é a página já carregada do servidor. A tabela não filtra/ordena/pagina localmente — re-busque ao ouvir fx-table-page-change / fx-table-sort-change / fx-table-filter-change.",
 		},
 		{
 			name: "total",
@@ -311,24 +311,24 @@ export const tableDoc: ComponentDoc = {
 	],
 	events: [
 		{
-			name: "sort-change",
+			name: "fx-table-sort-change",
 			type: `CustomEvent<{ field: string; direction: 'asc' | 'desc'; lazy: boolean }>`,
-			desc: "Ao ordenar.",
+			desc: "Ao ordenar. Vue: `@fx-table-sort-change` · React: `onfx-table-sort-change`.",
 		},
 		{
-			name: "filter-change",
+			name: "fx-table-filter-change",
 			type: `CustomEvent<{ field: string; value: string; lazy: boolean }>`,
-			desc: "Ao filtrar uma coluna.",
+			desc: "Ao filtrar uma coluna. Vue: `@fx-table-filter-change` · React: `onfx-table-filter-change`.",
 		},
 		{
-			name: "page-change",
+			name: "fx-table-page-change",
 			type: `CustomEvent<{ page: number; pages: number; rowsPerPage: number; total: number; lazy: boolean }>`,
-			desc: "Ao trocar de página. Em lazy, re-busque a página no servidor.",
+			desc: "Ao trocar de página. Em lazy, re-busque a página no servidor. Vue: `@fx-table-page-change` · React: `onfx-table-page-change`.",
 		},
 		{
-			name: "row-click",
+			name: "fx-table-row-click",
 			type: `CustomEvent<{ row: any; index: number }>`,
-			desc: "Clique na linha.",
+			desc: "Clique na linha. Vue: `@fx-table-row-click` · React: `onfx-table-row-click`.",
 		},
 	],
 	slots: [

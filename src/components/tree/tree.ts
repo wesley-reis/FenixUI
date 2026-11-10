@@ -1,4 +1,5 @@
 import { FxElement } from '../../core/base';
+import { FX_EVENT } from '../../core/events';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from '../../core/sanitize';
@@ -10,7 +11,7 @@ import { esc } from '../../core/sanitize';
  *   [{ label: 'Item', icon: '📁', children: [{ label: 'Filho' }] }]
  *
  * Atributos: data (JSON), expand-all (expande tudo), size (sm|md|lg).
- * Eventos (composed): `select` (detail: { node }).
+ * Eventos (composed): `fx-tree-select` (detail: { node }).
  */
 interface TreeNode {
   label: string;
@@ -122,7 +123,7 @@ export class FxTree extends FxElement {
         this.root.querySelectorAll<HTMLElement>('.row').forEach((r) =>
           r.classList.toggle('selected', r === row),
         );
-        this.dispatchEvent(new CustomEvent('select', {
+        this.dispatchEvent(new CustomEvent(FX_EVENT.treeSelect, {
           bubbles: true, composed: true, detail: { node: this._findNode(path) },
         }));
       });

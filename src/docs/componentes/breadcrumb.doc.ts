@@ -23,6 +23,9 @@ export const breadcrumbDoc: ComponentDoc = {
 		{ name: "separator", type: "string", default: "'/'", desc: "Glifo entre os itens." },
 		{ name: "label", type: "string", default: "'Breadcrumb'", desc: "Rótulo acessível (aria-label)." },
 	],
+	events: [
+		{ name: "fx-breadcrumb-select", type: "CustomEvent<{ item: Element; index: number }>", desc: "Ao clicar em um item. Vue: `@fx-breadcrumb-select` · React: `onfx-breadcrumb-select`." },
+	],
 	slots: [
 		{ name: "item", desc: "Itens da trilha (repetível). O último vira a página atual." },
 	],

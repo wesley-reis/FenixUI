@@ -1,4 +1,5 @@
 import { FxElement } from '../../core/base';
+import { FX_EVENT } from '../../core/events';
 import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from '../../core/sanitize';
@@ -15,8 +16,8 @@ export interface OrderListItem {
  *
  * Atributos: data, data-key, filter, filter-by, filter-placeholder, breakpoint,
  * dragdrop, selection-mode, striped, show-select-all.
- * Evento: `reorder` (composed, detail: { items }).
- * Evento: `selection-change` (composed, detail: { selection }).
+ * Evento: `fx-orderlist-reorder` (composed, detail: { items }).
+ * Evento: `fx-orderlist-selection-change` (composed, detail: { selection }).
  */
 export class FxOrderList extends FxElement {
   static override styles = css`
@@ -342,7 +343,7 @@ export class FxOrderList extends FxElement {
   }
 
   private _emitReorder(): void {
-    this.dispatchEvent(new CustomEvent('reorder', {
+    this.dispatchEvent(new CustomEvent(FX_EVENT.orderlistReorder, {
       bubbles: true,
       composed: true,
       detail: { items: [...this._data] },
@@ -350,7 +351,7 @@ export class FxOrderList extends FxElement {
   }
 
   private _emitSelectionChange(): void {
-    this.dispatchEvent(new CustomEvent('selection-change', {
+    this.dispatchEvent(new CustomEvent(FX_EVENT.orderlistSelectionChange, {
       bubbles: true,
       composed: true,
             detail: { selection: [...this._selection] },

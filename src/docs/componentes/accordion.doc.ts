@@ -69,9 +69,14 @@ export const accordionDoc: ComponentDoc = {
 	],
 	events: [
 		{
-			name: "change",
+			name: "fx-accordion-change",
 			type: "CustomEvent<{ value: string[] }>",
-			desc: "Emitido quando o conjunto de painéis abertos muda.",
+			desc: "Emitido quando o conjunto de painéis abertos muda. Vue: `@fx-accordion-change` · React: `onfx-accordion-change`.",
+		},
+		{
+			name: "fx-accordion-panel-toggle",
+			type: "CustomEvent<{ panel: HTMLElement }>",
+			desc: "Emitido pelo <fx-accordion-panel> ao clicar no cabeçalho. Vue: `@fx-accordion-panel-toggle` · React: `onfx-accordion-panel-toggle`.",
 		},
 	],
 };

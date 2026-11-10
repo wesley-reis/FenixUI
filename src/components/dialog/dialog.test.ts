@@ -9,8 +9,8 @@ describe('fx-dialog', () => {
     document.body.appendChild(el);
     let opened = false;
     let closed = false;
-    el.addEventListener('open', () => (opened = true));
-    el.addEventListener('close', () => (closed = true));
+    el.addEventListener('fx-dialog-open', () => (opened = true));
+    el.addEventListener('fx-dialog-close', () => (closed = true));
     el.setAttribute('open', '');
     expect(opened).toBe(true);
     // fechar via botão × emite 'close' e remove o atributo
@@ -31,7 +31,7 @@ describe('fx-dialog', () => {
     el.setAttribute('size', 'lg');
 
     let closes = 0;
-    el.addEventListener('close', () => (closes++));
+    el.addEventListener('fx-dialog-close', () => (closes++));
 
     const esc = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
     document.dispatchEvent(esc);

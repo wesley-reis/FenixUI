@@ -61,7 +61,7 @@ describe('fx-accordion / fx-accordion-panel', () => {
     await new Promise((r) => setTimeout(r, 0));
     const acc = document.querySelector('fx-accordion')!;
     let detail: { value: string[] } | null = null;
-    acc.addEventListener('change', (e) => { detail = (e as CustomEvent).detail; });
+    acc.addEventListener('fx-accordion-change', (e) => { detail = (e as CustomEvent).detail; });
     const panel = acc.querySelector('fx-accordion-panel')!;
     (panel.shadowRoot!.querySelector('.header') as HTMLElement).click();
     await Promise.resolve();

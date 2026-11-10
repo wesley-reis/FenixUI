@@ -16,8 +16,8 @@ describe('fx-stepper', () => {
 
     const changes: number[] = [];
     let complete = false;
-    el.addEventListener('change', (e: Event) => changes.push((e as CustomEvent).detail.index));
-    el.addEventListener('complete', () => (complete = true));
+    el.addEventListener('fx-stepper-change', (e: Event) => changes.push((e as CustomEvent).detail.index));
+    el.addEventListener('fx-stepper-complete', () => (complete = true));
 
     expect(el.active).toBe(0);
     el.next();

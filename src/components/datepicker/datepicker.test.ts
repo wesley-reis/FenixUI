@@ -56,7 +56,7 @@ describe('fx-datepicker', () => {
     const el = mount('<fx-datepicker mode="range" clearable></fx-datepicker>') as any;
     await new Promise((r) => setTimeout(r, 0));
     const cal = el.shadowRoot.querySelector('fx-calendar') as any;
-    cal.dispatchEvent(new CustomEvent('change', {
+    cal.dispatchEvent(new CustomEvent('fx-calendar-change', {
       bubbles: true, composed: true,
       detail: { value: '', start: '2030-01-10', end: '2030-01-20' },
     }));
@@ -74,7 +74,7 @@ describe('fx-datepicker', () => {
     const el = mount('<fx-datepicker show-time></fx-datepicker>') as any;
     await new Promise((r) => setTimeout(r, 0));
     const cal = el.shadowRoot.querySelector('fx-calendar') as any;
-    cal.dispatchEvent(new CustomEvent('change', {
+    cal.dispatchEvent(new CustomEvent('fx-calendar-change', {
       bubbles: true, composed: true, detail: { value: '2030-06-15' },
     }));
     expect(el.value).toMatch(/^2030-06-15T\d{2}:\d{2}:\d{2}$/);
@@ -101,7 +101,7 @@ describe('fx-datepicker', () => {
   it('free-text: rejeita data fora de min/max e emite invalid', () => {
     let invalidDetail: unknown = null;
     const el = mount('<fx-datepicker free-text min="2026-05-01"></fx-datepicker>') as any;
-    el.addEventListener('invalid', (e: Event) => { invalidDetail = (e as CustomEvent).detail; });
+    el.addEventListener('fx-datepicker-invalid', (e: Event) => { invalidDetail = (e as CustomEvent).detail; });
     const input = el.shadowRoot.querySelector('.display') as HTMLInputElement;
     input.value = '10/01/2026'; // antes do min
     input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));

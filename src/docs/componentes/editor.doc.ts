@@ -146,19 +146,19 @@ export const editorDoc: ComponentDoc = {
       desc: 'Ao sair do editor.',
     },
     {
-      name: 'focus / blur',
-      type: 'CustomEvent',
-      desc: 'Foco e perda de foco da área editável.',
+      name: 'fx-editor-focus / fx-editor-blur',
+      type: 'CustomEvent<void>',
+      desc: 'Foco e perda de foco da área editável. Vue: `@fx-editor-focus` / `@fx-editor-blur` · React: `onfx-editor-focus` / `onfx-editor-blur`.',
     },
     {
-      name: 'ready',
-      type: 'CustomEvent',
-      desc: 'Editor montado e conteúdo inicial aplicado.',
+      name: 'fx-editor-ready',
+      type: 'CustomEvent<void>',
+      desc: 'Editor montado e conteúdo inicial aplicado. Vue: `@fx-editor-ready` · React: `onfx-editor-ready`.',
     },
     {
-      name: 'editor-error',
-      type: 'CustomEvent<{ message }>',
-      desc: 'Falha de URL/arquivo/upload.',
+      name: 'fx-editor-error',
+      type: 'CustomEvent<{ message: string }>',
+      desc: 'Falha de URL/arquivo/upload. Vue: `@fx-editor-error` · React: `onfx-editor-error`.',
     },
   ],
   cssVars: [
