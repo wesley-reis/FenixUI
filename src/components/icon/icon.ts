@@ -3,7 +3,7 @@ import { css } from '../../core/css';
 import { defineElement } from '../../core/define';
 import { esc } from '../../core/sanitize';
 import { FENIX_ICON_BASE_CSS, isFenixIconName } from '../../icons/base-css';
-import { loadFenixIconsFont } from '../../icons/font';
+import { loadFenixIconsFont, __onFenixIconsReady } from '../../icons/font';
 
 /**
  * <fx-icon> — Glifo da Fenix Icons com AUTOCOMPLETE no editor.
@@ -43,7 +43,11 @@ export class FxIcon extends FxElement {
     :host([size='lg']) { font-size: var(--fx-icon-size-lg, 24px); }
     :host([size='xl']) { font-size: var(--fx-icon-size-xl, 32px); }
     :host([hidden]) { display: none; }
-    .icon { display: inline-block; }
+    .icon { display: inline-block; transition: opacity 0.12s ease; }
+    /* Esconde o glifo até a fonte estar pronta (evita mostrar o NOME do ícone
+       como texto de fallback). O atributo é removido por font.ts assim que a
+       fonte carrega — ou por um timeout curto de segurança. */
+    :host([icons-loading]) .icon { opacity: 0; }
     /* Variantes da fonte (FILL/wght): vencem a classe base .fx-icon. */
     :host([fill]) .icon { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
     :host([bold]) .icon { font-variation-settings: 'FILL' 0, 'wght' 600, 'GRAD' 0, 'opsz' 24; }
@@ -95,8 +99,15 @@ export class FxIcon extends FxElement {
   }
 
   protected override connectedCallback(): void {
-    // O glifo depende do @font-face: garante o CSS leve (sem as 4k classes).
+    // O glifo depende do @font-face: garante o CSS leve (sem as 4k classes) e
+    // dispara o download antecipado da fonte.
     loadFenixIconsFont();
+    // Esconde o glifo até a fonte estar pronta (só para nomes de ícone válidos;
+    // emoji/texto livre é renderizado como texto e não depende da fonte).
+    if (isFenixIconName(this.getAttr('name'))) {
+      this.toggleAttr('icons-loading', true);
+      __onFenixIconsReady(() => this.toggleAttr('icons-loading', false));
+    }
     super.connectedCallback();
   }
 

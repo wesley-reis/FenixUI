@@ -399,9 +399,11 @@ Requisitos:
 
 #### Reduzindo o peso da fonte de ícones (opcional)
 
-A fonte embarca **todos** os ~4.300 glifos, o que dá ~5 MB. Ela já usa
-`font-display: swap` (o ícone aparece na hora com a fonte de fallback — nunca
-mais a tela em branco esperando o download). Se o seu app usa apenas algumas
+A fonte embarca **todos** os ~4.300 glifos, o que dá ~5 MB. O download é
+**antecipado** — ao usar qualquer ícone a lib já injeta `<link rel="preload">`
+e usa a Font Loading API, e mantém o glifo **escondido até a fonte carregar**
+(sem o flash do nome como texto). O `font-display` (default `swap`) é
+configurável via `setFenixIconsFontDisplay()`. Se o seu app usa apenas algumas
 dezenas de ícones, gere um *subset* e aponte a biblioteca para ele:
 
 ```ts
@@ -414,6 +416,14 @@ Isso derruba a fonte para algumas dezenas de KB. **A tipagem não muda**:
 `FenixIconName` continua sugerindo todos os nomes no editor — garanta apenas
 que o subset contenha os glifos que o app usa. Chame a função antes do primeiro
 `<fx-icon>` ser montado; use `setFenixIconsFontUrl('')` para voltar ao padrão.
+
+Para quem usa os ícones por **classe** (`class="fx-icon fx-icon-…"`), as ~4.300
+regras CSS por ícone também podem ser carregadas **sob demanda**, só as usadas:
+
+```ts
+import { loadFenixIconClasses } from '@wrrdev/fenix-ui/icons';
+loadFenixIconClasses(['home', 'settings', 'delete']);
+```
 
 **Baixar a fonte (self-host / CDN / offline).** Por CDN a fonte já vem ao lado do
 bundle; se você precisa hospedá-la no seu servidor (intranet/offline, ou CSP que

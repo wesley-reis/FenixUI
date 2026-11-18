@@ -2262,8 +2262,11 @@ import '@wrrdev/fenix-ui/icons';
 
     <h3>4. Reduzindo o peso da fonte (opcional)</h3>
     <p>A fonte embarca <b>todos</b> os ${FENIX_ICON_NAMES.length} glifos — por isso ela tem cerca de <b>5 MB</b>.
-    Ela usa <code>font-display: swap</code>, ou seja, o ícone aparece de imediato com a fonte de fallback e
-    troca quando a fonte carrega (nunca mais a tela em branco esperando download).</p>
+    O download é <b>antecipado</b> e sem flash: ao usar qualquer ícone a lib injeta
+    <code>&lt;link rel="preload"&gt;</code> e usa a Font Loading API, e mantém o glifo
+    <b>escondido até a fonte carregar</b> (nunca mostra o nome do ícone como texto).
+    O <code>font-display</code> (default <code>swap</code>) é configurável via
+    <code>setFenixIconsFontDisplay()</code>.</p>
     <p>Se o seu app usa apenas algumas dezenas de ícones, o ideal é gerar um <b>subset</b> e apontar a
     biblioteca para ele:</p>
     <pre><code>import { setFenixIconsFontUrl } from '@wrrdev/fenix-ui/icons';

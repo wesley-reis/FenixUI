@@ -39,6 +39,13 @@ export const FENIX_ICON_BASE_CSS = `
 }
 .fx-icon.fx-icon-fill { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
 .fx-icon.fx-icon-bold { font-variation-settings: 'FILL' 0, 'wght' 600, 'GRAD' 0, 'opsz' 24; }
+/* Enquanto a fonte não está pronta, esconde o glifo — evita exibir o NOME do
+   ícone como texto de fallback (o "flash"). O <html> ganha a classe
+   'fenix-icons-ready' assim que a fonte carrega (ou após um timeout curto de
+   segurança definido em font.ts). Dentro de Shadow DOM a regra não casa (o
+   <fx-icon> cuida da própria exibição via atributo). */
+html:not(.fenix-icons-ready) .fx-icon { opacity: 0; }
+html:not(.fenix-icons-ready) [class*="fx-icon-"]::before { opacity: 0; }
 `;
 
 /** Verifica se o valor parece um nome de ícone da Fenix Icons (e não emoji/texto livre). */

@@ -14,12 +14,12 @@
  * Modificadores: fx-icon-fill (preenchido), fx-icon-bold (peso maior).
  * Tamanho via font-size, cor via currentColor.
  */
-
 import { FENIX_ICON_NAMES } from './names';
 import { FENIX_ICON_BASE_CSS } from './base-css';
 import {
   FENIX_ICONS_STYLE_ID,
   buildFullCss,
+  preloadFenixIconsFont,
   __resetFenixIconsFontInjection,
   __setFenixIconNames,
 } from './font';
@@ -30,11 +30,16 @@ export { FENIX_ICON_BASE_CSS, FENIX_ICON_FONT_FAMILY, isFenixIconName } from './
 // Carregamento leve da fonte (usado pelo <fx-icon>) — ver ./font.
 export {
   absolutizeFontUrl,
+  buildFenixIconsClassCss,
   buildFenixIconsFontCss,
+  loadFenixIconClasses,
   loadFenixIconsFont,
+  preloadFenixIconsFont,
   setFenixIconsFontUrl,
+  setFenixIconsFontDisplay,
   __resetFenixIconsFontInjection,
 } from './font';
+export type { FenixIconsFontDisplay } from './font';
 
 /** CSS base compartilhado (usado também dentro dos Shadow DOMs dos componentes). */
 export const FENIX_ICON_DOC_BASE_CSS = FENIX_ICON_BASE_CSS;
