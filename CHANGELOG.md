@@ -83,6 +83,23 @@ Histórico anterior à 1.2.0: [releases do GitHub](https://github.com/wesley-rei
 
 ## [Não lançado]
 
+### Melhorado
+
+- **Performance/UX do carregamento dos ícones**: o download da fonte agora é
+  **antecipado** (a lib injeta `<link rel="preload">` e usa a Font Loading API
+  assim que um ícone é usado) e o glifo fica **escondido até a fonte carregar**
+  — sem o "flash" do nome do ícone como texto. O `font-display` do `@font-face`
+  passou a ser configurável via `setFenixIconsFontDisplay()` (default `swap`).
+- **URL da fonte determinística no build ESM**: `vite.config.ts` agora emite a
+  fonte como `fenix-icons.woff2` (sem hash), junto de `dist/icons/…`. Isso elimina
+  o duplo hash (`fenix-icons-<hash>-<hash>.woff2`) aplicado pelo bundler do
+  consumidor, reduz o pacote (sai a cópia intermediária em `dist/assets/`) e
+  viabiliza preload estático.
+- **Classes de ícone sob demanda**: novo `loadFenixIconClasses(names)` injeta
+  apenas as regras `.fx-icon-<nome>::before` usadas, em vez das ~4.300 do
+  `@wrrdev/fenix-ui/icons`. Também exportados `buildFenixIconsClassCss()` e
+  `preloadFenixIconsFont()`.
+
 ### Corrigido
 
 - **Ícones no bundle CDN/UMD (`fenix-ui.umd.min.js`)**: o `@font-face` saía com

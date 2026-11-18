@@ -119,14 +119,51 @@ export const FENIX_ICONS_FONT_STYLE_ID = 'fenix-icons-font';
 /** Id do <style> com o CSS completo (@font-face + base + classes por ícone). */
 export const FENIX_ICONS_STYLE_ID = 'fenix-icons';
 
+/** Valores de `font-display` aceitos para o @font-face. */
+export type FenixIconsFontDisplay = 'swap' | 'block' | 'optional' | 'fallback';
+
+const DISPLAY_VALUES: ReadonlySet<string> = new Set(['swap', 'block', 'optional', 'fallback']);
+
+/** `font-display` vigente (default `swap`: nunca deixa o glifo invisível). */
+let fontDisplay: FenixIconsFontDisplay = 'swap';
+
+/**
+ * Sobrescreve o `font-display` do @font-face (default `swap`).
+ *
+ * `swap` é o padrão seguro: mostra o glifo de fallback imediatamente e troca
+ * quando a fonte chega — nunca fica invisível. Combine com o preload
+ * (`preloadFenixIconsFont`) para que a janela de troca seja ~0 ms. Use os
+ * demais valores só em casos específicos:
+ *  - `block`/`optional` escondem o glifo até a fonte carregar (pode "sumir" o
+ *    glifo em rede lenta);
+ *  - `fallback` dá ao navegador o menor período de troca.
+ *
+ * Deve ser chamado ANTES do primeiro `loadFenixIcons()`/`loadFenixIconsFont()`
+ * (ou de `<fx-icon>` ser montado). Se já houver CSS injetado, reinjeta com o
+ * novo valor.
+ */
+export function setFenixIconsFontDisplay(display: FenixIconsFontDisplay): void {
+  if (!DISPLAY_VALUES.has(display) || display === fontDisplay) return;
+  fontDisplay = display;
+  const target = typeof document !== 'undefined' ? document : undefined;
+  if (!target) return;
+  const hadFull = !!target.getElementById(FENIX_ICONS_STYLE_ID);
+  const hadFont = !!target.getElementById(FENIX_ICONS_FONT_STYLE_ID);
+  resetInjectedStyles(target);
+  if (hadFull) reinjectFull(target, fullNamesRef);
+  if (hadFont) injectFontStyle(target);
+}
+
+/** `font-display` efetivo (o sobrescrito tem prioridade sobre o default). */
+function currentFontDisplay(): FenixIconsFontDisplay {
+  return fontDisplay;
+}
+
 /** CSS do @font-face. */
 export function buildFenixIconsFontFaceCss(): string {
   return (
     `@font-face{font-family:'${FENIX_ICON_FONT_FAMILY}';font-style:normal;font-weight:100 700;` +
-    // `swap` (e não `block`): com `block` o texto fica INVISÍVEL até a fonte
-    // baixar — em 3G/4G isso vira tela branca por vários segundos. `swap`
-    // mostra o glifo de fallback imediatamente e troca quando a fonte chega.
-    `font-display:swap;src:url('${currentFontUrl()}') format('woff2');}`
+    `font-display:${currentFontDisplay()};src:url('${currentFontUrl()}') format('woff2');}`
   );
 }
 
@@ -136,16 +173,24 @@ export function buildFenixIconsFontCss(): string {
 }
 
 /**
+ * CSS apenas com as regras `.fx-icon-<nome>::before` dos nomes informados
+ * (sem @font-face e sem a classe base). Útil para injeção sob demanda.
+ */
+export function buildFenixIconsClassCss(names: readonly string[]): string {
+  let rules = '';
+  for (const name of names) {
+    rules += `.fx-icon-${name}::before{content:"${name}"}`;
+  }
+  return rules;
+}
+
+/**
  * CSS completo (@font-face + base + uma regra por ícone), com a URL de fonte
  * vigente. Vive aqui (e não só em ./index) para que `setFenixIconsFontUrl`
  * consiga recriar o estilo completo sem importar outro módulo.
  */
 export function buildFullCss(names: readonly string[]): string {
-  let rules = '';
-  for (const name of names) {
-    rules += `.fx-icon-${name}::before{content:"${name}"}`;
-  }
-  return buildFenixIconsFontFaceCss() + FENIX_ICON_BASE_CSS + rules;
+  return buildFenixIconsFontFaceCss() + FENIX_ICON_BASE_CSS + buildFenixIconsClassCss(names);
 }
 
 let fontInjected = false;
@@ -188,8 +233,9 @@ function reinjectFull(target: Document, names: readonly string[]): void {
 }
 
 /**
- * Injeta @font-face + classe base no <head> (idempotente). Não duplica quando
- * o CSS completo (`fenix-icons`) já foi carregado por `import '.../icons'`.
+ * Injeta @font-face + classe base no <head> (idempotente) e dispara o download
+ * antecipado da fonte. Não duplica quando o CSS completo (`fenix-icons`) já foi
+ * carregado por `import '.../icons'`.
  */
 export function loadFenixIconsFont(
   target: Document | undefined = typeof document !== 'undefined' ? document : undefined,
@@ -197,12 +243,139 @@ export function loadFenixIconsFont(
   if (fontInjected || !target) return;
   if (target.getElementById(FENIX_ICONS_STYLE_ID)) {
     fontInjected = true;
+    preloadFenixIconsFont(target);
     return;
   }
   injectFontStyle(target);
+  preloadFenixIconsFont(target);
+}
+
+/** Id do `<style>` com apenas as classes por ícone (injeção sob demanda). */
+export const FENIX_ICONS_CLASSES_STYLE_ID = 'fenix-icons-classes';
+
+/**
+ * Injeta, sob demanda, apenas as regras `.fx-icon-<nome>::before` dos nomes
+ * informados (além de garantir o `@font-face` + classe base via
+ * `loadFenixIconsFont`). Evita pagar as ~4.300 regras quando o app usa poucos
+ * ícones por CLASSE. Idempotente por nome.
+ */
+export function loadFenixIconClasses(
+  names: readonly string[],
+  target: Document | undefined = typeof document !== 'undefined' ? document : undefined,
+): void {
+  if (!target) return;
+  // O CSS completo (`fenix-icons`) já cobre qualquer classe — nada a fazer.
+  if (target.getElementById(FENIX_ICONS_STYLE_ID)) return;
+  loadFenixIconsFont(target);
+  let style = target.getElementById(FENIX_ICONS_CLASSES_STYLE_ID) as HTMLStyleElement | null;
+  if (!style) {
+    style = target.createElement('style');
+    style.id = FENIX_ICONS_CLASSES_STYLE_ID;
+    target.head.appendChild(style);
+  }
+  const existing = new Set<string>();
+  for (const match of (style.textContent ?? '').matchAll(/\.fx-icon-([a-z0-9_]+)::before/g)) {
+    existing.add(match[1]);
+  }
+  const missing = names.filter((name) => !existing.has(name) && /^[a-z][a-z0-9_]*$/.test(name));
+  if (missing.length > 0) {
+    style.textContent += buildFenixIconsClassCss(missing);
+  }
+}
+
+/** Id do `<link rel="preload">` da fonte. */
+export const FENIX_ICONS_PRELOAD_ID = 'fenix-icons-preload';
+
+/** Classe adicionada ao `<html>` quando a fonte está pronta (evita o flash de texto). */
+export const FENIX_ICONS_READY_CLASS = 'fenix-icons-ready';
+
+let fontReady = false;
+let readyTimeout: ReturnType<typeof setTimeout> | undefined;
+
+type ReadyListener = () => void;
+const readyListeners = new Set<ReadyListener>();
+
+function markFontReady(target: Document): void {
+  if (fontReady) return;
+  fontReady = true;
+  if (readyTimeout) {
+    clearTimeout(readyTimeout);
+    readyTimeout = undefined;
+  }
+  target.documentElement.classList.add(FENIX_ICONS_READY_CLASS);
+  for (const listener of [...readyListeners]) listener();
+  readyListeners.clear();
+}
+
+/**
+ * Registra um callback para quando a fonte estiver pronta (ou após o timeout de
+ * segurança). Uso interno do `<fx-icon>` para não exibir o nome do glifo como
+ * texto durante o carregamento.
+ */
+export function __onFenixIconsReady(listener: ReadyListener): void {
+  if (fontReady) {
+    listener();
+    return;
+  }
+  readyListeners.add(listener);
+}
+
+/**
+ * Força o download ANTECIPADO da fonte (sem esperar a renderização do glifo) e
+ * prepara o sinal de "pronto".
+ *
+ * 1. Injeta `<link rel="preload" as="font" type="font/woff2" crossorigin>`. O
+ *    `crossorigin` é obrigatório: fontes são buscadas em modo CORS mesmo
+ *    same-origin, e sem ele o preload vira uma segunda requisição.
+ * 2. `document.fonts.load()` força o fetch via Font Loading API e marca o
+ *    `<html>` como pronto assim que a face carrega.
+ * 3. Um timeout curto garante que o glifo NUNCA fique escondido para sempre
+ *    (offline/erro cai de volta para o comportamento de `swap`).
+ */
+export function preloadFenixIconsFont(
+  target: Document | undefined = typeof document !== 'undefined' ? document : undefined,
+): void {
+  if (!target) return;
+  const url = currentFontUrl();
+  if (!url) return;
+  if (!target.getElementById(FENIX_ICONS_PRELOAD_ID)) {
+    const link = target.createElement('link');
+    link.id = FENIX_ICONS_PRELOAD_ID;
+    link.rel = 'preload';
+    link.as = 'font';
+    link.type = 'font/woff2';
+    link.crossOrigin = 'anonymous';
+    link.href = url;
+    target.head.appendChild(link);
+  }
+  if (fontReady) return;
+  try {
+    if (typeof target.fonts !== 'undefined' && typeof target.fonts.load === 'function') {
+      target.fonts
+        .load(`24px '${FENIX_ICON_FONT_FAMILY}'`)
+        .then(() => markFontReady(target))
+        .catch(() => markFontReady(target));
+    }
+  } catch {
+    // jsdom/SSR podem não implementar a Font Loading API — o timeout abaixo
+    // garante o sinal de "pronto" mesmo assim.
+  }
+  if (readyTimeout === undefined) {
+    readyTimeout = setTimeout(() => markFontReady(target), 1500);
+  }
 }
 
 /** Reseta o estado de injeção da fonte (uso interno/testes). */
 export function __resetFenixIconsFontInjection(): void {
   fontInjected = false;
+  fontReady = false;
+  readyListeners.clear();
+  if (readyTimeout) {
+    clearTimeout(readyTimeout);
+    readyTimeout = undefined;
+  }
+  fontDisplay = 'swap';
+  const doc = typeof document !== 'undefined' ? document : undefined;
+  doc?.getElementById(FENIX_ICONS_PRELOAD_ID)?.remove();
+  doc?.documentElement.classList.remove(FENIX_ICONS_READY_CLASS);
 }

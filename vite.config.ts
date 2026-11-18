@@ -7,6 +7,23 @@ import { join } from 'node:path';
 
 const here = fileURLToPath(new URL('.', import.meta.url));
 
+/**
+ * Mantém a fonte de ícones com nome ESTÁVEL (sem hash) no dist ESM.
+ *
+ * Sem isso, o `new URL('./fenix-icons.woff2', import.meta.url)` de
+ * `src/icons/font.ts` vira `../assets/fenix-icons-<hash>.woff2` no `dist` da lib.
+ * O bundler do PROJETO CONSUMIDOR então aplica OUTRO hash por cima, gerando
+ * `fenix-icons-<hash>-<hash>.woff2` — URL instável, duplicada e que impede um
+ * `<link rel="preload">` estático. Com o nome fixo, o consumidor aplica um único
+ * hash próprio e a URL da lib fica previsível.
+ */
+function fenixAssetFileNames(asset: { name?: string; originalFileNames?: string[] }): string {
+  const isIconFont =
+    asset.name === 'fenix-icons.woff2' ||
+    asset.originalFileNames?.some((f) => f.endsWith('fenix-icons.woff2'));
+  return isIconFont ? '[name][extname]' : 'assets/[name]-[hash][extname]';
+}
+
 /** Copia a fonte de ícones para a saída (dist/icons e dist), sem hash e sem reescrita de URL. */
 function copyIconFontPlugin() {
   const fontSrc = join(here, 'src', 'icons', 'fenix-icons.woff2');
@@ -73,6 +90,7 @@ export default defineConfig({
           format: 'es',
           dir: here + 'dist',
           entryFileNames: '[name].js',
+          assetFileNames: fenixAssetFileNames,
           preserveModules: true,
           preserveModulesRoot: 'src',
         },
@@ -80,6 +98,7 @@ export default defineConfig({
           format: 'es',
           dir: here + 'dist',
           entryFileNames: 'fenix-ui.esm.js',
+          assetFileNames: fenixAssetFileNames,
           preserveModules: false,
         },
       ],

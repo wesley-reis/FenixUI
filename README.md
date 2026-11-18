@@ -31,7 +31,7 @@ import { FenixUI } from '@wrrdev/fenix-ui';  // API de tema/tokens (índice)
 FenixUI.theme('dark');
 ```
 
-> 📦 npm: [`@wrrdev/fenix-ui`](https://www.npmjs.com/package/@wrrdev/fenix-ui) — **v2.0.0**, acesso público.
+> 📦 npm: [`@wrrdev/fenix-ui`](https://www.npmjs.com/package/@wrrdev/fenix-ui) — **v2.1.0**, acesso público.
 > Subpaths disponíveis: `./theme`, `./tokens`, `./jsx`, `./vue`, `./react`, `./button`, `./badge`, `./spinner`, `./select`, `./input`, `./switch`, `./textarea`, `./editor`, `./checkbox`, `./radio`, `./calendar`, `./datepicker`, `./multiselect`, `./table`, `./floatlabel`, `./dialog`, `./toast`, `./tooltip`, `./tabs`, `./progress`, `./skeleton`, `./alert`, `./drawer`, `./dropdown`, `./icon`, `./icons`, `./pagination`, `./autocomplete`, `./knob`, `./orderlist`, `./picklist`, `./auto-import` e o curinga `./components/*`.
 
 
@@ -92,7 +92,7 @@ Carregue o bundle **UMD** único: ele registra todos os componentes — **e a bi
 </script>
 
 <!--
-  🔗 Links diretos para CDN (versão 2.0.0):
+  🔗 Links diretos para CDN (versão 2.1.0):
   • https://cdn.jsdelivr.net/npm/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js
   • https://unpkg.com/@wrrdev/fenix-ui@latest/dist/fenix-ui.umd.min.js
 -->
@@ -399,9 +399,11 @@ Requisitos:
 
 #### Reduzindo o peso da fonte de ícones (opcional)
 
-A fonte embarca **todos** os ~4.300 glifos, o que dá ~5 MB. Ela já usa
-`font-display: swap` (o ícone aparece na hora com a fonte de fallback — nunca
-mais a tela em branco esperando o download). Se o seu app usa apenas algumas
+A fonte embarca **todos** os ~4.300 glifos, o que dá ~5 MB. O download é
+**antecipado** — ao usar qualquer ícone a lib já injeta `<link rel="preload">`
+e usa a Font Loading API, e mantém o glifo **escondido até a fonte carregar**
+(sem o flash do nome como texto). O `font-display` (default `swap`) é
+configurável via `setFenixIconsFontDisplay()`. Se o seu app usa apenas algumas
 dezenas de ícones, gere um *subset* e aponte a biblioteca para ele:
 
 ```ts
@@ -414,6 +416,14 @@ Isso derruba a fonte para algumas dezenas de KB. **A tipagem não muda**:
 `FenixIconName` continua sugerindo todos os nomes no editor — garanta apenas
 que o subset contenha os glifos que o app usa. Chame a função antes do primeiro
 `<fx-icon>` ser montado; use `setFenixIconsFontUrl('')` para voltar ao padrão.
+
+Para quem usa os ícones por **classe** (`class="fx-icon fx-icon-…"`), as ~4.300
+regras CSS por ícone também podem ser carregadas **sob demanda**, só as usadas:
+
+```ts
+import { loadFenixIconClasses } from '@wrrdev/fenix-ui/icons';
+loadFenixIconClasses(['home', 'settings', 'delete']);
+```
 
 **Baixar a fonte (self-host / CDN / offline).** Por CDN a fonte já vem ao lado do
 bundle; se você precisa hospedá-la no seu servidor (intranet/offline, ou CSP que
@@ -491,7 +501,7 @@ enxerga o `<input>`/`<textarea>` interno, nunca o atributo escrito no host. Como
 da spec é `autocomplete="on"`, sem tratamento o Chrome autopreenche campos comuns (busca de
 tabela, filtros, diálogos) com o usuário/senha salvos e ainda oferece “Salvar senha?”.
 
-A partir da **v2.0.0** o autofill é tratado em duas camadas:
+A partir da **v2.1.0** o autofill é tratado em duas camadas:
 
 - **preventiva** — `fx-input` e `fx-textarea` **repassam** `autocomplete`, `name` e `id` ao campo
   interno, com default **`off`** (o atributo declarado no host vence). Os campos internos de
