@@ -71,6 +71,8 @@ export function loadFenixIcons(target: Document | undefined = typeof document !=
   style.textContent = buildFenixIconsCss();
   target.head.appendChild(style);
   injected = true;
+  // Dispara o download da fonte agora (e não só na primeira renderização do glifo).
+  preloadFenixIconsFont(target);
 }
 
 /** Reseta o estado de injeção (uso interno/testes). */
