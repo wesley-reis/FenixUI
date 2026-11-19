@@ -80,7 +80,7 @@ const CARD_CSS = `
   --fx-surface-background: #ffffff;
   --fx-text-default: #1e293b;
   --fx-text-muted: #64748b;
-  --fx-border-default: #e2e8f0;
+  --fx-border-default: #cbced2;
   --fx-shadow-lg: 0 10px 30px rgba(0, 0, 0, .14);
   --fx-surface-surface-hover: rgba(0, 0, 0, .05);
 }

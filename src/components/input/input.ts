@@ -88,7 +88,7 @@ export class FxInput extends FxFormElement {
       font-weight: var(--fx-font-weight);
       color: var(--fx-text-default);
       background-color: var(--fx-surface-background);
-      border: 1px solid var(--fx-border-default);
+      border: 2px solid var(--fx-border-default);
       border-radius: var(--fx-radius-md);
       padding: var(--fx-space-sm) var(--fx-space-lg);
       /* Acompanha a largura definida no :host. */

@@ -60,7 +60,7 @@ export class FxSelect extends FxFormElement {
       color: var(--fx-text-default);
       text-align: left;
       background-color: var(--fx-surface-background);
-      border: 1px solid var(--fx-border-default);
+      border: 2px solid var(--fx-border-default);
       border-radius: var(--fx-radius-md);
       padding: var(--fx-space-xs) var(--fx-space-md);
       cursor: pointer;
