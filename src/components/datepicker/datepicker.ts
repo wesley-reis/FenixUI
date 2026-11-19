@@ -58,7 +58,7 @@ export class FxDatepicker extends FxFormElement {
       /* Altura determinística: a caixa fica EXATAMENTE no token --fx-size-*. */
       line-height: var(--fx-font-line-height);
       background-color: var(--fx-surface-background);
-      border: 1px solid var(--fx-border-default);
+      border: 2px solid var(--fx-border-default);
       border-radius: var(--fx-radius-md);
       cursor: pointer;
       transition:

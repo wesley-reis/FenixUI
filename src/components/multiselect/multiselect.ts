@@ -45,7 +45,7 @@ export class FxMultiselect extends FxFormElement {
       line-height: var(--fx-font-line-height);
       color: var(--fx-text-default);
       background-color: var(--fx-surface-background);
-      border: 1px solid var(--fx-border-default);
+      border: 2px solid var(--fx-border-default);
       border-radius: var(--fx-radius-md);
       cursor: pointer;
       text-align: left;
